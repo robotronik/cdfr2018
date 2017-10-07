@@ -34,13 +34,13 @@ comp:
 	@echo "${rouge}+--------------------[ Compilation ]--------------------+ ${fin}"
 	cd $(PROJECT_DIR) ;\
 	make all
-	cd $(ori);\
+	cd $(ORI);\
 
 	@echo "${rouge}+----------------[ Compilation terminée ]---------------+ ${fin}"
 
 flash:
 	@echo "${rouge}+---------------------[ Transfert ]---------------------+ ${fin}"
-	openocd -f openocd/$(BOARD).cfg -c "program $(PROJECT_DIR)/build/$(PROJECT_NAME).bin exit 0x08000000 reset"
+	openocd -f openocd/st_nucleo_$(BOARD).cfg -c "program $(PROJECT_DIR)/build/$(PROJECT_NAME).bin exit 0x08000000 reset"
 	@echo "${rouge}+----------------[ Transfert terminé ]------------------+ ${fin}"
 
 debug:
