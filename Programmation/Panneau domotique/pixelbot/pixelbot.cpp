@@ -27,8 +27,9 @@ PixelBot::PixelBot(QWidget *parent)
     m_layout->addWidget(m_pBExport);
     setLayout(m_layout);
 
-    connect(m_settingsWidget, SIGNAL(newSettings(Settings)), m_previewWidget, SLOT(updateSettings(Settings)));
     connect(m_settingsWidget, SIGNAL(newSettings(Settings)), m_spriteGenerator, SLOT(updateSettings(Settings)));
+    m_settingsWidget->sendSettings();
+    connect(m_settingsWidget, SIGNAL(newSettings(Settings)), m_previewWidget, SLOT(updateSettings(Settings)));
     m_settingsWidget->sendSettings();
 }
 

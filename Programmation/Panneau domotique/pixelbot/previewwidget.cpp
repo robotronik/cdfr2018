@@ -32,15 +32,21 @@ PreviewWidget::PreviewWidget(SpriteGenerator *spriteGenerator, QWidget *parent) 
     connect(m_cBSet, SIGNAL(currentTextChanged(QString)), this, SLOT(updateLabel(QString)));
 }
 
-void PreviewWidget::updateLabel(QString){
+void PreviewWidget::updateLabel(QString str){
+    QImage img = m_spriteGenerator->drawCharacter(str[0]);
+
     QPixmap pixmap(m_settings.characterWidth*10+1, m_settings.characterHeight*10+1);
     QPainter *painter = new QPainter(&pixmap);
     painter->fillRect(pixmap.rect(), QColor(255,255,255));
-    painter->setPen(QColor(0,0,0));
+    painter->setPen(QColor(0, 0, 0));
 
     for(int i=0; i < m_settings.characterHeight; i++){
         for(int j=0; j < m_settings.characterWidth; j++){
             painter->drawRect(QRect(j*10,i*10,10,10));
+            int gray_level = 255/(m_settings.lumLevels-1);
+            gray_level *= (qGray(img.pixel(j,i)))/(255/m_settings.lumLevels + 1);
+            QRect rect(j*10+1, i*10+1, 9, 9);
+            painter->fillRect(rect, (QColor(255-gray_level, 0, 0)));
         }
     }
 
