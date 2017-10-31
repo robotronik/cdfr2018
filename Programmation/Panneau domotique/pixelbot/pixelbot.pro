@@ -37,4 +37,4 @@ HEADERS += \
     spritegenerator.h
 
 RESOURCES += \
-    img.qrc
+    resources.qrc
