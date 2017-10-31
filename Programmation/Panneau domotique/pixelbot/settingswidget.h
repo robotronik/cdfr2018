@@ -11,10 +11,15 @@
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QFontDialog>
+#include <QComboBox>
 #include <QtCore/qmath.h>
 
 typedef struct Settings_S{
+    int matrixSize;
+    int fps;
     int lumLevels;
+    bool transpose;
+    int rotation;
     int characterWidth;
     int characterHeight;
     QFont font;
@@ -44,6 +49,10 @@ private:
     QSpinBox *m_sBCharacterHeight;
     QHBoxLayout *m_lCharacterSize;
 
+        //Format
+    QComboBox *m_cBReadingDirection;
+    QComboBox *m_cBRotation;
+
     //Police de caractères
     QFont m_font;
     QLabel *m_lbFont;
@@ -61,21 +70,23 @@ private:
 
     QFormLayout *m_layout;
 
-    int m_refreshFrequency;
-    int m_spritesSize;//octets
+    //Paramètres
+    Settings* m_settings;
 
 public:
     explicit SettingsWidget(QWidget *parent = nullptr);
+    ~SettingsWidget();
+    Settings* getSettings();
+    static int getRefreshFrequency(Settings* settings);
+    static int getSpritesSize(Settings* settings);
 
 signals:
-    void newSettings(Settings);
+    void newSettings();
 
 public slots:
-    void calculateRefreshFrequency();
-    void calculateSpritesSize();
     void changeFont();
     void setCharacterSizeRange();
-    void sendSettings();
+    void updateSettings();
 };
 
 #endif // SETTINGSWIDGET_H

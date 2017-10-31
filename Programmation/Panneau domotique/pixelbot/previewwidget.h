@@ -31,16 +31,16 @@ private:
 
     //Paramètres et générateur de sprites
     SpriteGenerator *m_spriteGenerator;
-    Settings m_settings;
+    Settings *m_settings;
 
 public:
-    explicit PreviewWidget(SpriteGenerator *spriteGenerator, QWidget *parent = nullptr);
+    explicit PreviewWidget(SpriteGenerator *spriteGenerator, Settings* settings, QWidget *parent = nullptr);
     void setCharactersSet();
 
 signals:
 
 public slots:
-    void updateSettings(Settings);
+    void updateSettings();
     void next();
     void previous();
     void setButtonsStates();

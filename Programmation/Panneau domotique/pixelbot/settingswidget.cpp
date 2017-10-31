@@ -22,7 +22,6 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent)
 
         //Fréquence de rafraîchissement
     m_lbRefreshFrequency = new QLabel(this);
-    calculateRefreshFrequency();
 
         //Taille d'un caractère
     m_sBCharacterWidth = new QSpinBox(this);
@@ -37,6 +36,16 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent)
     m_lCharacterSize->addWidget(m_sBCharacterWidth);
     m_lCharacterSize->addWidget(m_sBCharacterHeight);
     setCharacterSizeRange();
+
+    //Format
+    m_cBReadingDirection = new QComboBox(this);
+    m_cBReadingDirection->addItem("Par ligne", QVariant(false));
+    m_cBReadingDirection->addItem("Par colonne", QVariant(true));
+    m_cBRotation = new QComboBox(this);
+    m_cBRotation->addItem("Pas de rotation", QVariant(0));
+    m_cBRotation->addItem("PI/2", QVariant(1));
+    m_cBRotation->addItem("PI", QVariant(2));
+    m_cBRotation->addItem("3PI/2", QVariant(3));
 
     //Police de caractères
     m_font = QFont();
@@ -60,7 +69,6 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent)
 
     //Taille des sprites
     m_lbSpritesSize = new QLabel();
-    calculateSpritesSize();
 
     //Layout
     m_layout = new QFormLayout();
@@ -68,6 +76,8 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent)
     m_layout->addRow(QString("Images par secondes :"), m_sBFPS);
     m_layout->addRow(QString("Niveaux de luminosité :"), m_sBLumLevels);
     m_layout->addRow(QString("Fréquence de rafraîchissement :"), m_lbRefreshFrequency);
+    m_layout->addRow(QString("Sens de lecture :"), m_cBReadingDirection);
+    m_layout->addRow(QString("Rotation :"), m_cBRotation);
     m_layout->addRow(QString("Taille d'un caractère :"), m_lCharacterSize);
     m_layout->addRow(QString("Police de caractères :"), m_lFont);
     m_layout->addRow(QString("Ensemble de caractères :"), m_lCharactersSet);
@@ -77,63 +87,84 @@ SettingsWidget::SettingsWidget(QWidget *parent) : QWidget(parent)
 
     //Signaux
     connect(m_sBMatrixSize, SIGNAL(valueChanged(int)), this, SLOT(setCharacterSizeRange()));
-
-    connect(m_sBMatrixSize, SIGNAL(valueChanged(int)), this, SLOT(calculateRefreshFrequency()));
-    connect(m_sBFPS, SIGNAL(valueChanged(int)), this, SLOT(calculateRefreshFrequency()));
-    connect(m_sBLumLevels, SIGNAL(valueChanged(int)), this, SLOT(calculateRefreshFrequency()));
-
     connect(m_pBFont, SIGNAL(released()), this, SLOT(changeFont()));
 
-    connect(m_sBCharacterHeight, SIGNAL(valueChanged(int)), this, SLOT(calculateSpritesSize()));
-    connect(m_sBCharacterWidth, SIGNAL(valueChanged(int)), this, SLOT(calculateSpritesSize()));
-    connect(m_sBLumLevels, SIGNAL(valueChanged(int)), this, SLOT(calculateSpritesSize()));
-    connect(m_cBLowercase, SIGNAL(clicked(bool)), this, SLOT(calculateSpritesSize()));
-    connect(m_cBUppercase, SIGNAL(clicked(bool)), this, SLOT(calculateSpritesSize()));
-    connect(m_cBNumbers, SIGNAL(clicked(bool)), this, SLOT(calculateSpritesSize()));
+    connect(m_sBMatrixSize, SIGNAL(valueChanged(int)), this, SLOT(updateSettings()));
+    connect(m_sBFPS, SIGNAL(valueChanged(int)), this, SLOT(updateSettings()));
+    connect(m_sBLumLevels, SIGNAL(valueChanged(int)), this, SLOT(updateSettings()));
+    connect(m_sBCharacterHeight, SIGNAL(valueChanged(int)), this, SLOT(updateSettings()));
+    connect(m_sBCharacterWidth, SIGNAL(valueChanged(int)), this, SLOT(updateSettings()));
+    connect(m_sBLumLevels, SIGNAL(valueChanged(int)), this, SLOT(updateSettings()));
+    connect(m_cBNumbers, SIGNAL(stateChanged(int)), this, SLOT(updateSettings()));
+    connect(m_cBLowercase, SIGNAL(stateChanged(int)), this, SLOT(updateSettings()));
+    connect(m_cBUppercase, SIGNAL(stateChanged(int)), this, SLOT(updateSettings()));
+    connect(m_cBReadingDirection, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSettings()));
+    connect(m_cBRotation, SIGNAL(currentIndexChanged(int)), this, SLOT(updateSettings()));
 
-    connect(m_sBCharacterHeight, SIGNAL(valueChanged(int)), this, SLOT(sendSettings()));
-    connect(m_sBCharacterWidth, SIGNAL(valueChanged(int)), this, SLOT(sendSettings()));
-    connect(m_sBLumLevels, SIGNAL(valueChanged(int)), this, SLOT(sendSettings()));
-    connect(m_cBNumbers, SIGNAL(stateChanged(int)), this, SLOT(sendSettings()));
-    connect(m_cBLowercase, SIGNAL(stateChanged(int)), this, SLOT(sendSettings()));
-    connect(m_cBUppercase, SIGNAL(stateChanged(int)), this, SLOT(sendSettings()));
-    sendSettings();
+    m_settings = new Settings;
+    updateSettings();
 }
 
-void SettingsWidget::sendSettings(){
-    Settings settings;
-    settings.characterHeight = m_sBCharacterHeight->value();
-    settings.characterWidth = m_sBCharacterWidth->value();
-    settings.lumLevels = m_sBLumLevels->value();
-    settings.font = m_font;
-    settings.numbers = m_cBNumbers->isChecked();
-    settings.lowercase = m_cBLowercase->isChecked();
-    settings.uppercase = m_cBUppercase->isChecked();
-    emit(newSettings(settings));
+SettingsWidget::~SettingsWidget(){
+    delete m_settings;
 }
 
-void SettingsWidget::calculateSpritesSize(){
-    int line = qCeil(((qreal) m_sBCharacterWidth->value())/32.)*32;//bits
-    int frame_character = line * m_sBCharacterHeight->value();
-    int character = frame_character * (m_sBLumLevels->value()-1);
+Settings* SettingsWidget::getSettings(){
+    return m_settings;
+}
+
+void SettingsWidget::updateSettings(){
+    m_settings->matrixSize = m_sBMatrixSize->value();
+    m_settings->fps = m_sBFPS->value();
+    m_settings->characterHeight = m_sBCharacterHeight->value();
+    m_settings->characterWidth = m_sBCharacterWidth->value();
+    m_settings->lumLevels = m_sBLumLevels->value();
+    m_settings->font = m_font;
+    m_settings->numbers = m_cBNumbers->isChecked();
+    m_settings->lowercase = m_cBLowercase->isChecked();
+    m_settings->uppercase = m_cBUppercase->isChecked();
+    m_settings->transpose = m_cBReadingDirection->currentData().toBool();
+    m_settings->rotation = m_cBRotation->currentData().toInt();
+
+    m_lbSpritesSize->setText(QString::number(SettingsWidget::getSpritesSize(m_settings))+ " octets");
+    m_lbRefreshFrequency->setText(QString::number(SettingsWidget::getRefreshFrequency(m_settings)) + QString(" Hz"));
+
+    emit(newSettings());
+}
+
+int SettingsWidget::getSpritesSize(Settings* settings){
+    int numberRotations = (settings->transpose)?1:0;
+    numberRotations += settings->rotation;
+    int width, height;
+    if(numberRotations%2 == 0){
+        width = settings->characterWidth;
+        height = settings->characterHeight;
+    }
+    else{
+        height = settings->characterWidth;
+        width = settings->characterHeight;
+    }
+
+    int line = qCeil(((qreal) width)/8.)*8;//bits
+    int frame_character = line * height;
+    int character = frame_character * (settings->lumLevels-1);
     int nbCharacters = 0;
-    if(m_cBNumbers->isChecked()){
+    if(settings->numbers){
         nbCharacters += 10;
     }
-    if(m_cBLowercase->isChecked()){
+    if(settings->lowercase){
         nbCharacters += 26;
     }
-    if(m_cBUppercase->isChecked()){
+    if(settings->uppercase){
         nbCharacters += 26;
     }
-    m_spritesSize = (character*nbCharacters)/8;
-    m_lbSpritesSize->setText(QString::number(m_spritesSize)+ " octets");
+    return (character*nbCharacters)/8;
 }
 
-void SettingsWidget::calculateRefreshFrequency(){
-    m_refreshFrequency = m_sBMatrixSize->value() * m_sBFPS->value() * (m_sBLumLevels->value() - 1);
-    m_lbRefreshFrequency->setText(QString::number(m_refreshFrequency) + QString(" Hz"));
+int SettingsWidget::getRefreshFrequency(Settings *settings){
+    return settings->matrixSize * settings->fps * (settings->lumLevels - 1);
 }
+
 
 void SettingsWidget::changeFont(){
     bool ok;
@@ -141,7 +172,7 @@ void SettingsWidget::changeFont(){
     if(ok){
         m_lbFont->setText(m_font.family());
         m_lbFont->setFont(m_font);
-        sendSettings();
+        updateSettings();
     }
 }
 
