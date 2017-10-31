@@ -5,6 +5,8 @@
 #include <QLayout>
 #include <QGroupBox>
 #include <QPushButton>
+#include <QFileDialog>
+#include <QDesktopServices>
 #include "settingswidget.h"
 #include "previewwidget.h"
 #include "spritegenerator.h"
@@ -30,6 +32,9 @@ private:
 public:
     PixelBot(QWidget *parent = 0);
     ~PixelBot();
+
+public slots:
+    void generateSprites();
 };
 
 #endif // PIXELBOT_H

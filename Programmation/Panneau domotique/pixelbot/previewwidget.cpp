@@ -1,8 +1,9 @@
 #include "previewwidget.h"
 
-PreviewWidget::PreviewWidget(SpriteGenerator *spriteGenerator, QWidget *parent) : QWidget(parent)
+PreviewWidget::PreviewWidget(SpriteGenerator *spriteGenerator, Settings *settings, QWidget *parent) : QWidget(parent)
 {
     m_spriteGenerator = spriteGenerator;
+    m_settings = settings;
 
     //Sprite
     m_sprite = new QLabel("test");
@@ -22,7 +23,7 @@ PreviewWidget::PreviewWidget(SpriteGenerator *spriteGenerator, QWidget *parent) 
 
     //Layout principal
     m_layout = new QVBoxLayout();
-    m_layout->addWidget(m_sprite, 0, Qt::AlignCenter);
+    m_layout->addWidget(m_sprite, 0, Qt::AlignHCenter);
     m_layout->addLayout(m_lSelector);
     setLayout(m_layout);
 
@@ -33,18 +34,28 @@ PreviewWidget::PreviewWidget(SpriteGenerator *spriteGenerator, QWidget *parent) 
 }
 
 void PreviewWidget::updateLabel(QString str){
-    QImage img = m_spriteGenerator->drawCharacter(str[0]);
-
-    QPixmap pixmap(m_settings.characterWidth*10+1, m_settings.characterHeight*10+1);
+    const int block_size = 10;
+    QPixmap pixmap(m_settings->characterWidth*block_size+1, m_settings->characterHeight*block_size+1);
     QPainter *painter = new QPainter(&pixmap);
-    painter->fillRect(pixmap.rect(), QColor(255,255,255));
+
+    //On efface le widget
+    painter->fillRect(pixmap.rect(), QColor(0,0,0));
+
+    if(str.isEmpty()){
+        delete(painter);
+        m_sprite->setPixmap(pixmap);
+        return;
+    }
+
+    //On récupère l'image
+    QImage img = m_spriteGenerator->drawCharacter(str[0]);
     painter->setPen(QColor(0, 0, 0));
 
-    for(int i=0; i < m_settings.characterHeight; i++){
-        for(int j=0; j < m_settings.characterWidth; j++){
+    for(int i=0; i < m_settings->characterHeight; i++){
+        for(int j=0; j < m_settings->characterWidth; j++){
             painter->drawRect(QRect(j*10,i*10,10,10));
-            int gray_level = 255/(m_settings.lumLevels-1);
-            gray_level *= (qGray(img.pixel(j,i)))/(255/m_settings.lumLevels + 1);
+            int gray_level = 255/(m_settings->lumLevels-1);
+            gray_level *= (qGray(img.pixel(j,i)))/(255/m_settings->lumLevels + 1);
             QRect rect(j*10+1, i*10+1, 9, 9);
             painter->fillRect(rect, (QColor(255-gray_level, 0, 0)));
         }
@@ -67,27 +78,17 @@ void PreviewWidget::previous(){
 void PreviewWidget::setButtonsStates(){
     m_pBNext->setEnabled(m_cBSet->count() && m_cBSet->currentIndex() < m_cBSet->count()-1);
     m_pBPrevious->setEnabled(m_cBSet->currentIndex() != 0 && m_cBSet->count());
+    m_cBSet->setEnabled(m_cBSet->count() > 0);
 }
 
-void PreviewWidget::updateSettings(Settings settings){
-    m_settings = settings;
-    m_cBSet->setFont(m_settings.font);
+void PreviewWidget::updateSettings(){
+    m_cBSet->setFont(m_settings->font);
     setCharactersSet();
     setButtonsStates();
 }
 
 void PreviewWidget::setCharactersSet(){
-    QString set;
-    if(m_settings.numbers){
-        set.append("0123456789");
-    }
-    QString letters = QString("abcdefghijklmnopqrstuvwxyz");
-    if(m_settings.lowercase){
-        set.append(letters);
-    }
-    if(m_settings.uppercase){
-        set.append(letters.toUpper());
-    }
+    QString set = m_spriteGenerator->getCharacterSet();
 
     m_cBSet->clear();
     for(int i=0; i < set.length(); i++){
