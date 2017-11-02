@@ -17,14 +17,16 @@ class PixelBot : public QWidget
 
 private:
     //Widgets
-    SettingsWidget *m_settingsWidget;
+    QVBoxLayout *m_leftLayout;
     QGroupBox *m_gbSettings;
-    QGroupBox *m_gbPreview;
-    PreviewWidget *m_previewWidget;
+    SettingsWidget *m_settingsWidget;
     QPushButton *m_pBExport;
 
+    QGroupBox *m_gbPreview;
+    PreviewWidget *m_previewWidget;
+
     //Layouts
-    QVBoxLayout *m_layout;
+    QHBoxLayout *m_layout;
 
     //Générateur de sprites
     SpriteGenerator *m_spriteGenerator;
