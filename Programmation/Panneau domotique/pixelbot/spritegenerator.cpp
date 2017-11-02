@@ -30,7 +30,6 @@ void SpriteGenerator::exportSprites(QString fileName){
 
 QString SpriteGenerator::getLine(unsigned char *line, int width){
     QString str;
-    str.append("{");
     //Pour chaque octet
     for(int i = 0; i < width; i += 8){
         unsigned char mask = 0b10000000;
@@ -53,7 +52,6 @@ QString SpriteGenerator::getLine(unsigned char *line, int width){
             str.append(",");
         }
     }
-    str.append("}");
     return str;
 }
 
