@@ -11,6 +11,16 @@
 
 #define XL_320_BUFFER_SIZE 256
 
+typedef struct XL_320_Interface_S{
+  void *(send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
+  void *(receive)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
+}XL_320_Interface;
+
+typedef struct XL_320_S{
+  uint8_t id;
+  XL_320_Interface interface;
+}XL_320;
+
 typedef enum XL_320_Instruction_E{
   PING = 0x01,
   READ = 0x02,
@@ -30,6 +40,7 @@ typedef enum XL_320_Error_E{
   ERR_ILLEGAL_ARGUMENTS,
   ERR_BUFFER_OVERFLOW,
   ERR_ILLEGAL_ID,
+  ERR_BAD_FRAME,
 }XL_320_Error;
 
 typedef struct XL_320_Instruction_Packet_S{
@@ -39,11 +50,24 @@ typedef struct XL_320_Instruction_Packet_S{
   uint8_t *params;
 }XL_320_Instruction_Packet;
 
+typedef enum XL_320_Status_Error_E{
+  FAIL = 0x01,
+  BAD_INSTRUCTION = 0x02,
+  CRC_ERROR = 0x03,
+  DATA_RANGE_ERROR = 0x04,
+  DATA_LENGTH_ERROR = 0x05,
+  DATA_LIMIT_ERROR = 0x06,
+  ACCESS_ERROR = 0x07
+}XL_320_Status_Error;
+
+#define STATUS_ALERT(error_byte) (error_byte>>7)
+#define STATUS_ERROR(error_byte) (error_byte&0b0111111)
+
 typedef struct XL_320_Status_Packet_S{
   uint8_t id;
-  uint8_t error;
+  uint8_t err;
   uint8_t nb_params;
-  uint8_t *params;
+  uint8_t params[XL_320_BUFFER_SIZE];
 }XL_320_Status_Packet;
 
 //Réception d'un paquet
@@ -70,6 +94,8 @@ typedef struct XL_320_Receiver_FSM_S{
 
 void XL_320_Init_Receiver_FSM(XL_320_Receiver_FSM *fsm);
 void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte);
+uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame[XL_320_BUFFER_SIZE], uint16_t length);
+uint8_t XL_320_Receive(XL_320_Status_Packet *packet, uint32_t timeout);
 
 //Envoi d'un paquet
 uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]);

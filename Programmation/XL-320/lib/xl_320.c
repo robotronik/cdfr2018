@@ -104,6 +104,46 @@ void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
   }
 }
 
+uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame[XL_320_BUFFER_SIZE], uint16_t length){
+  //CRC
+  uint16_t old_crc = (frame[length-1] << 8) | frame[length-2];
+  uint16_t new_crc = XL_320_Update_CRC(0, frame, length-2);
+  if(new_crc != old_crc){
+    err = ERR_BAD_FRAME;
+    return 1;
+  }
+
+  packet->id = frame[4];
+  packet->err = frame[8];
+
+  //Paramètres
+  uint8_t *start_stuffing = frame[7];
+  uint8_t *end_stuffing frame[length-2];
+  uint8_t *p_frame = frame[9];
+
+  packet->nb_params = 0;
+  while(p_frame != end_stuffing){
+    packet->params[nb_params++] = *(p_frame++);
+    if(p_frame - start_stuffing == 3){
+      if(start_stuffing[0] == header[0] && start_stuffing[1] == header[1] && start_stuffing[2] == header[3]){
+	if(*p_frame != stuffing_byte){
+	  err = ERR_BAD_FRAME;
+	  return 1;
+	}
+	p_frame++;
+	start_stuffing = p_frame;
+      }
+      else{
+	start_stuffing++;
+      }
+    }
+  }
+  
+  return 0;
+}
+
+
+
 uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]){
   //Vérification des arguments
   if(packet == 0 || packet->params == 0 || buffer == 0){
