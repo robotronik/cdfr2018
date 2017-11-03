@@ -57,14 +57,12 @@ typedef enum XL_320_Receiver_FSM_State_E{
   PACKET_LENGTH_HIGH,
   INSTRUCTION_BYTE,
   RECEIVING_PACKET,
-  CRC_LOW,
-  CRC_HIGH,
   ERROR,
   SUCCESS  
 }XL_320_Receiver_FSM_State;
 
 typedef struct XL_320_Receiver_FSM_S{
-  XL_320_FSM_State state;
+  XL_320_Receiver_FSM_State state;
   uint16_t length;
   uint8_t buffer[XL_320_BUFFER_SIZE];
   uint8_t *p_buffer;

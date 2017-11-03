@@ -1,5 +1,5 @@
 #include "xl_320.h"
-
+#include <stdio.h>
 //static const uint8_t broadcast_id = 0xFE;
 static const uint8_t header[4] = {0xFF, 0xFF, 0xFD, 0x00};
 static const uint8_t stuffing_byte = 0xFD;
@@ -82,6 +82,7 @@ void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
     break;
 
   case INSTRUCTION_BYTE:
+    printf("\n-- %d\n", fsm->length);
     if(byte == STATUS){
       *(fsm->p_buffer++) = byte;
       fsm->state = RECEIVING_PACKET;
@@ -92,22 +93,10 @@ void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
     break;
 
   case RECEIVING_PACKET:
-    if(fsm->length - (fsm->p_buffer - fsm->buffer) > 2){
-      *(fsm->p_buffer++) = byte;
-    }
-    else{
-      fsm->state = CRC_LOW;
-    }
-    break;
-
-  case CRC_LOW:
     *(fsm->p_buffer++) = byte;
-    fsm->state = CRC_HIGH;
-    break;
-
-  case CRC_HIGH:
-    *(fsm->p_buffer++) = byte;
-    fsm->state = SUCCESS;
+    if((fsm->p_buffer - fsm->buffer) >= (7 + fsm->length)){
+      fsm->state = SUCCESS;
+    }
     break;
     
   default:
@@ -171,7 +160,7 @@ uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_
   buffer[6] = packet_length >> 8;
 
   //Cyclic Redundancy Check
-  uint16_t crc = update_crc(0, buffer, packet_length+7-2);
+  uint16_t crc = XL_320_Update_CRC(0, buffer, packet_length+7-2);
   *(p_buffer++) = crc & 0x00FF;
   *(p_buffer++) = crc >> 8;
   
