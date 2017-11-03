@@ -1,29 +1,121 @@
 #include "xl_320.h"
 
-typedef enum XL_320_Instruction_E{
-  PING = 0x01,
-  READ = 0x02,
-  WRITE = 0x03,
-  REG_WRITE = 0x04,
-  ACTION = 0x05,
-  FACTORY_RESET = 0x06,
-  REBOOT = 0x08,
-  STATUS = 0x55,
-  SYNC_READ = 0x82,
-  SYNC_WRITE = 0x83,
-  BULK_READ = 0x92,
-  BULK_WRITE = 0x93
-}XL_320_Instruction;
-
-typedef enum XL_320_Error_E{
-  ERR_ILLEGAL_ARGUMENTS,
-  ERR_BUFFER_OVERFLOW,
-  ERR_ILLEGAL_ID,
-}XL_320_Error;
-
 //static const uint8_t broadcast_id = 0xFE;
+static const uint8_t header[4] = {0xFF, 0xFF, 0xFD, 0x00};
+static const uint8_t stuffing_byte = 0xFD;
 static XL_320_Error err;
-uint8_t build_frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]){
+
+void XL_320_Init_Receiver_FSM(XL_320_Receiver_FSM *fsm){
+  fsm->state = WAITING_FOR_HEADER_0;
+  fsm->p_buffer = fsm->buffer;
+}
+
+void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
+  switch(fsm->state){
+  case WAITING_FOR_HEADER_0:
+    if(byte == header[0]){
+      fsm->state = WAITING_FOR_HEADER_1;
+    }
+    break;
+
+  case WAITING_FOR_HEADER_1:
+    if(byte == header[1]){
+      fsm->state = WAITING_FOR_HEADER_2;
+    }
+    else{
+      fsm->state = WAITING_FOR_HEADER_0;
+    }
+    break;
+    
+  case WAITING_FOR_HEADER_2:
+    if(byte == header[2]){
+      fsm->state = WAITING_FOR_HEADER_3;
+    }
+    else{
+      fsm->state = WAITING_FOR_HEADER_0;
+    }
+    break;
+
+  case WAITING_FOR_HEADER_3:
+    if(byte == stuffing_byte){
+      fsm->state = WAITING_FOR_HEADER_0;
+    }
+    else{
+      *(fsm->p_buffer++) = header[0];
+      *(fsm->p_buffer++) = header[1];
+      *(fsm->p_buffer++) = header[2];
+      *(fsm->p_buffer++) = header[3];
+      fsm->state = PACKET_ID_BYTE;
+    }
+    break;
+
+  case PACKET_ID_BYTE:
+    if(byte == 0xFF || byte == 0xFD){
+      fsm->state = ERROR;
+    }
+    else{
+      *(fsm->p_buffer++) = byte;
+      fsm->state = PACKET_LENGTH_LOW;
+    }
+    break;
+
+  case PACKET_LENGTH_LOW:
+    fsm->length = byte;
+    *(fsm->p_buffer++) = byte;
+    fsm->state = PACKET_LENGTH_HIGH;
+    break;
+
+  case PACKET_LENGTH_HIGH:
+    fsm->length |= byte << 8;
+    *(fsm->p_buffer++) = byte;
+    if(fsm->length < 4){
+      //Il doit y avoir au minimum : Instruction + Erreur + CRC_L + CRC_H
+      fsm->state = ERROR;
+    }
+    else if(7 + fsm->length > XL_320_BUFFER_SIZE){
+      //Evite un overflow
+      fsm->state = ERROR;
+    }
+    else{
+      fsm->state = INSTRUCTION_BYTE;
+    }
+    break;
+
+  case INSTRUCTION_BYTE:
+    if(byte == STATUS){
+      *(fsm->p_buffer++) = byte;
+      fsm->state = RECEIVING_PACKET;
+    }
+    else{
+      fsm->state = ERROR;
+    }
+    break;
+
+  case RECEIVING_PACKET:
+    if(fsm->length - (fsm->p_buffer - fsm->buffer) > 2){
+      *(fsm->p_buffer++) = byte;
+    }
+    else{
+      fsm->state = CRC_LOW;
+    }
+    break;
+
+  case CRC_LOW:
+    *(fsm->p_buffer++) = byte;
+    fsm->state = CRC_HIGH;
+    break;
+
+  case CRC_HIGH:
+    *(fsm->p_buffer++) = byte;
+    fsm->state = SUCCESS;
+    break;
+    
+  default:
+    break;
+  }
+}
+
+uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]){
   //Vérification des arguments
   if(packet == 0 || packet->params == 0 || buffer == 0){
     err = ERR_ILLEGAL_ARGUMENTS;
@@ -40,7 +132,6 @@ uint8_t build_frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUF
     return 0;
   }
 
-  static const uint8_t header[4] = {0xFF, 0xFF, 0xFD, 0x00};
   uint8_t *p_buffer = buffer;
   //Header
   *(p_buffer++) = header[0];
@@ -65,7 +156,7 @@ uint8_t build_frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUF
     *(p_buffer++) = packet->params[i];
     if(p_buffer - start_stuffing == 3){
       if(start_stuffing[0] == header[0] && start_stuffing[1] == header[1] && start_stuffing[2] == header[2]){
-	*(p_buffer++) = 0xFD;
+	*(p_buffer++) = stuffing_byte;
 	start_stuffing = p_buffer;
       }else{
 	start_stuffing++;
@@ -87,7 +178,7 @@ uint8_t build_frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUF
   return p_buffer-buffer;    
 }
 
-uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){
+uint16_t XL_320_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){
   uint16_t i, j;
   uint16_t crc_table[256] = {
     0x0000, 0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
