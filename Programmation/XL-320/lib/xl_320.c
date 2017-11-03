@@ -1,11 +1,42 @@
 #include "xl_320.h"
 
-//static const uint8_t broadcast_id = 0xFE;
+typedef enum XL_320_Instruction_E{
+  PING = 0x01,
+  READ = 0x02,
+  WRITE = 0x03,
+  REG_WRITE = 0x04,
+  ACTION = 0x05,
+  FACTORY_RESET = 0x06,
+  REBOOT = 0x08,
+  STATUS = 0x55,
+  SYNC_READ = 0x82,
+  SYNC_WRITE = 0x83,
+  BULK_READ = 0x92,
+  BULK_WRITE = 0x93
+}XL_320_Instruction;
 
+typedef enum XL_320_Error_E{
+  ERR_ILLEGAL_ARGUMENTS,
+  ERR_BUFFER_OVERFLOW,
+  ERR_ILLEGAL_ID,
+}XL_320_Error;
+
+//static const uint8_t broadcast_id = 0xFE;
+static XL_320_Error err;
 uint8_t build_frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]){
   //Vérification des arguments
-  if(packet == 0 || packet->id == 0xFD || packet->id == 0xFF || packet->params == 0 || buffer == 0){
-    //Evite une collision avec l'en-tête
+  if(packet == 0 || packet->params == 0 || buffer == 0){
+    err = ERR_ILLEGAL_ARGUMENTS;
+    return 0;
+  }
+  //Evite une collision avec l'en-tête
+  if(packet->id == 0xFD || packet->id == 0xFF){
+    err = ERR_ILLEGAL_ID;
+    return 0;
+  }
+  //Evite un overflow
+  if(10+packet->nb_params+packet->nb_params/3 > XL_320_BUFFER_SIZE){
+    err = ERR_BUFFER_OVERFLOW;
     return 0;
   }
 

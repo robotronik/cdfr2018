@@ -11,21 +11,6 @@
 
 #define XL_320_BUFFER_SIZE 256
 
-typedef enum XL_320_Instruction_E{
-  PING = 0x01,
-  READ = 0x02,
-  WRITE = 0x03,
-  REG_WRITE = 0x04,
-  ACTION = 0x05,
-  FACTORY_RESET = 0x06,
-  REBOOT = 0x08,
-  STATUS = 0x55,
-  SYNC_READ = 0x82,
-  SYNC_WRITE = 0x83,
-  BULK_READ = 0x92,
-  BULK_WRITE = 0x93
-}XL_320_Instruction;
-
 typedef struct XL_320_Instruction_Packet_S{
   uint8_t id;
   XL_320_Instruction instruction;
@@ -41,6 +26,11 @@ typedef struct XL_320_Status_Packet_S{
 }XL_320_Status_Packet;
 
 uint8_t build_frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]);
+/*
+ * Construit une trame à partir d'un paquet instruction et l'écrit dans le buffer.
+ * La fonction retourne la taille effective de la trame construite en cas de succès, 0 en cas d'erreur.
+ */
+
 //Contrôle de redondance cyclique
 uint16_t update_crc(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
 
