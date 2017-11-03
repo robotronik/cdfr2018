@@ -1,12 +1,17 @@
 #include "xl_320.h"
 #include <stdio.h>
+
 //static const uint8_t broadcast_id = 0xFE;
 static const uint8_t header[4] = {0xFF, 0xFF, 0xFD, 0x00};
 static const uint8_t stuffing_byte = 0xFD;
 static XL_320_Error err;
 
-void XL_320_Init_Receiver_FSM(XL_320_Receiver_FSM *fsm){
+//========================================
+//        FONCTIONS DE RECEPTION
+//========================================
+void XL_320_Init_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t buffer[XL_320_BUFFER_SIZE]){
   fsm->state = WAITING_FOR_HEADER_0;
+  fsm->buffer = buffer;
   fsm->p_buffer = fsm->buffer;
 }
 
@@ -82,7 +87,6 @@ void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
     break;
 
   case INSTRUCTION_BYTE:
-    printf("\n-- %d\n", fsm->length);
     if(byte == STATUS){
       *(fsm->p_buffer++) = byte;
       fsm->state = RECEIVING_PACKET;
@@ -104,7 +108,7 @@ void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
   }
 }
 
-uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame[XL_320_BUFFER_SIZE], uint16_t length){
+uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame[XL_320_BUFFER_SIZE], uint16_t length){  
   //CRC
   uint16_t old_crc = (frame[length-1] << 8) | frame[length-2];
   uint16_t new_crc = XL_320_Update_CRC(0, frame, length-2);
@@ -117,15 +121,15 @@ uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame
   packet->err = frame[8];
 
   //Paramètres
-  uint8_t *start_stuffing = frame[7];
-  uint8_t *end_stuffing frame[length-2];
-  uint8_t *p_frame = frame[9];
+  uint8_t *start_stuffing = frame+7;
+  uint8_t *end_stuffing = frame+(length-2);
+  uint8_t *p_frame = frame+9;
 
   packet->nb_params = 0;
   while(p_frame != end_stuffing){
-    packet->params[nb_params++] = *(p_frame++);
+    packet->params[packet->nb_params++] = *(p_frame++);
     if(p_frame - start_stuffing == 3){
-      if(start_stuffing[0] == header[0] && start_stuffing[1] == header[1] && start_stuffing[2] == header[3]){
+      if(start_stuffing[0] == header[0] && start_stuffing[1] == header[1] && start_stuffing[2] == header[2]){
 	if(*p_frame != stuffing_byte){
 	  err = ERR_BAD_FRAME;
 	  return 1;
@@ -142,8 +146,27 @@ uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame
   return 0;
 }
 
+uint8_t XL_320_Receive(XL_320_Interface *interface, XL_320_Status_Packet *packet, uint32_t timeout){
+  XL_320_Receiver_FSM fsm;
+  uint8_t fsm_buffer[XL_320_BUFFER_SIZE];
+  XL_320_Init_Receiver_FSM(&fsm, fsm_buffer);
 
+  //On remplit le buffer
+  interface->receive(interface->buffer, XL_320_BUFFER_SIZE, timeout);
 
+  int i;
+  for(i = 0; i < XL_320_BUFFER_SIZE && fsm.state != SUCCESS && fsm.state != ERROR; i++){
+    XL_320_Update_Receiver_FSM(&fsm, interface->buffer[i]);
+  }
+  if(fsm.state != SUCCESS){
+    return 1;
+  }
+  return XL_320_Extract_Status_Packet(packet, fsm_buffer, fsm.length+7); 
+}
+
+//======================================
+//           FONCTIONS D'ENVOI          
+//======================================
 uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]){
   //Vérification des arguments
   if(packet == 0 || packet->params == 0 || buffer == 0){
@@ -205,6 +228,15 @@ uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_
   *(p_buffer++) = crc >> 8;
   
   return p_buffer-buffer;    
+}
+
+uint8_t XL_320_Send(XL_320_Interface *interface, XL_320_Instruction_Packet *packet, uint32_t timeout){
+  uint8_t length = XL_320_Build_Frame(packet, interface->buffer);
+  if(!length){
+    return 1;
+  }
+  interface->send(interface->buffer, length, timeout);
+  return 0;
 }
 
 uint16_t XL_320_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){

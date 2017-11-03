@@ -12,8 +12,9 @@
 #define XL_320_BUFFER_SIZE 256
 
 typedef struct XL_320_Interface_S{
-  void *(send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
-  void *(receive)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
+  void (*send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
+  void (*receive)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
+  uint8_t buffer[XL_320_BUFFER_SIZE];
 }XL_320_Interface;
 
 typedef struct XL_320_S{
@@ -41,6 +42,7 @@ typedef enum XL_320_Error_E{
   ERR_BUFFER_OVERFLOW,
   ERR_ILLEGAL_ID,
   ERR_BAD_FRAME,
+  ERR_TIMEOUT,
 }XL_320_Error;
 
 typedef struct XL_320_Instruction_Packet_S{
@@ -88,14 +90,14 @@ typedef enum XL_320_Receiver_FSM_State_E{
 typedef struct XL_320_Receiver_FSM_S{
   XL_320_Receiver_FSM_State state;
   uint16_t length;
-  uint8_t buffer[XL_320_BUFFER_SIZE];
+  uint8_t *buffer;
   uint8_t *p_buffer;
 }XL_320_Receiver_FSM;
 
-void XL_320_Init_Receiver_FSM(XL_320_Receiver_FSM *fsm);
+void XL_320_Init_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t buffer[XL_320_BUFFER_SIZE]);
 void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte);
 uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame[XL_320_BUFFER_SIZE], uint16_t length);
-uint8_t XL_320_Receive(XL_320_Status_Packet *packet, uint32_t timeout);
+uint8_t XL_320_Receive(XL_320_Interface *interface, XL_320_Status_Packet *packet, uint32_t timeout);
 
 //Envoi d'un paquet
 uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]);
@@ -103,6 +105,7 @@ uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_
  * Construit une trame à partir d'un paquet instruction et l'écrit dans le buffer.
  * La fonction retourne la taille effective de la trame construite en cas de succès, 0 en cas d'erreur.
  */
+uint8_t XL_320_Send(XL_320_Interface *interface, XL_320_Instruction_Packet *packet, uint32_t timeout);
 
 //Contrôle de redondance cyclique
 uint16_t XL_320_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
