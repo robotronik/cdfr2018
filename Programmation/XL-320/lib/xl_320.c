@@ -1,105 +1,108 @@
 #include "xl_320.h"
 #include <stdio.h>
 
+//========================================
+//    CONSTANTES ET VARIABLES GLOBALES
+//========================================
 //static const uint8_t broadcast_id = 0xFE;
 static const uint8_t header[4] = {0xFF, 0xFF, 0xFD, 0x00};
 static const uint8_t stuffing_byte = 0xFD;
-static XL_320_Error err;
+static XL_Error err;
 
 //========================================
 //        FONCTIONS DE RECEPTION
 //========================================
-void XL_320_Init_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t buffer[XL_320_BUFFER_SIZE]){
-  fsm->state = WAITING_FOR_HEADER_0;
+void XL_Init_Receiver_FSM(XL_Receiver_FSM *fsm, uint8_t buffer[XL_BUFFER_SIZE]){
+  fsm->state = XL_WFH_0;
   fsm->buffer = buffer;
   fsm->p_buffer = fsm->buffer;
 }
 
-void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
+void XL_Update_Receiver_FSM(XL_Receiver_FSM *fsm, uint8_t byte){
   switch(fsm->state){
-  case WAITING_FOR_HEADER_0:
+  case XL_WFH_0:
     if(byte == header[0]){
-      fsm->state = WAITING_FOR_HEADER_1;
+      fsm->state = XL_WFH_1;
     }
     break;
 
-  case WAITING_FOR_HEADER_1:
+  case XL_WFH_1:
     if(byte == header[1]){
-      fsm->state = WAITING_FOR_HEADER_2;
+      fsm->state = XL_WFH_2;
     }
     else{
-      fsm->state = WAITING_FOR_HEADER_0;
+      fsm->state = XL_WFH_0;
     }
     break;
     
-  case WAITING_FOR_HEADER_2:
+  case XL_WFH_2:
     if(byte == header[2]){
-      fsm->state = WAITING_FOR_HEADER_3;
+      fsm->state = XL_WFH_3;
     }
     else{
-      fsm->state = WAITING_FOR_HEADER_0;
+      fsm->state = XL_WFH_0;
     }
     break;
 
-  case WAITING_FOR_HEADER_3:
+  case XL_WFH_3:
     if(byte == stuffing_byte){
-      fsm->state = WAITING_FOR_HEADER_0;
+      fsm->state = XL_WFH_0;
     }
     else{
       *(fsm->p_buffer++) = header[0];
       *(fsm->p_buffer++) = header[1];
       *(fsm->p_buffer++) = header[2];
       *(fsm->p_buffer++) = header[3];
-      fsm->state = PACKET_ID_BYTE;
+      fsm->state = XL_PACKET_ID_BYTE;
     }
     break;
 
-  case PACKET_ID_BYTE:
+  case XL_PACKET_ID_BYTE:
     if(byte == 0xFF || byte == 0xFD){
-      fsm->state = ERROR;
+      fsm->state = XL_FSM_ERROR;
     }
     else{
       *(fsm->p_buffer++) = byte;
-      fsm->state = PACKET_LENGTH_LOW;
+      fsm->state = XL_PACKET_LENGTH_LOW;
     }
     break;
 
-  case PACKET_LENGTH_LOW:
+  case XL_PACKET_LENGTH_LOW:
     fsm->length = byte;
     *(fsm->p_buffer++) = byte;
-    fsm->state = PACKET_LENGTH_HIGH;
+    fsm->state = XL_PACKET_LENGTH_HIGH;
     break;
 
-  case PACKET_LENGTH_HIGH:
+  case XL_PACKET_LENGTH_HIGH:
     fsm->length |= byte << 8;
     *(fsm->p_buffer++) = byte;
     if(fsm->length < 4){
       //Il doit y avoir au minimum : Instruction + Erreur + CRC_L + CRC_H
-      fsm->state = ERROR;
+      fsm->state = XL_FSM_ERROR;
     }
-    else if(7 + fsm->length > XL_320_BUFFER_SIZE){
+    else if(7 + fsm->length > XL_BUFFER_SIZE){
       //Evite un overflow
-      fsm->state = ERROR;
+      fsm->state = XL_FSM_ERROR;
     }
     else{
-      fsm->state = INSTRUCTION_BYTE;
+      fsm->state = XL_INSTRUCTION_BYTE;
     }
     break;
 
-  case INSTRUCTION_BYTE:
-    if(byte == STATUS){
+  case XL_INSTRUCTION_BYTE:
+    if(byte == XL_STATUS){
       *(fsm->p_buffer++) = byte;
-      fsm->state = RECEIVING_PACKET;
+      fsm->state = XL_RECEIVING_PACKET;
     }
     else{
-      fsm->state = ERROR;
+      fsm->state = XL_FSM_ERROR;
     }
     break;
 
-  case RECEIVING_PACKET:
+  case XL_RECEIVING_PACKET:
     *(fsm->p_buffer++) = byte;
     if((fsm->p_buffer - fsm->buffer) >= (7 + fsm->length)){
-      fsm->state = SUCCESS;
+      fsm->state = XL_FSM_SUCCESS;
     }
     break;
     
@@ -108,12 +111,12 @@ void XL_320_Update_Receiver_FSM(XL_320_Receiver_FSM *fsm, uint8_t byte){
   }
 }
 
-uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame[XL_320_BUFFER_SIZE], uint16_t length){  
+uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFFER_SIZE], uint16_t length){  
   //CRC
   uint16_t old_crc = (frame[length-1] << 8) | frame[length-2];
-  uint16_t new_crc = XL_320_Update_CRC(0, frame, length-2);
+  uint16_t new_crc = XL_Update_CRC(0, frame, length-2);
   if(new_crc != old_crc){
-    err = ERR_BAD_FRAME;
+    err = XL_ERR_BAD_FRAME;
     return 1;
   }
 
@@ -131,7 +134,7 @@ uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame
     if(p_frame - start_stuffing == 3){
       if(start_stuffing[0] == header[0] && start_stuffing[1] == header[1] && start_stuffing[2] == header[2]){
 	if(*p_frame != stuffing_byte){
-	  err = ERR_BAD_FRAME;
+	  err = XL_ERR_BAD_FRAME;
 	  return 1;
 	}
 	p_frame++;
@@ -146,41 +149,41 @@ uint8_t XL_320_Extract_Status_Packet(XL_320_Status_Packet *packet, uint8_t frame
   return 0;
 }
 
-uint8_t XL_320_Receive(XL_320_Interface *interface, XL_320_Status_Packet *packet, uint32_t timeout){
-  XL_320_Receiver_FSM fsm;
-  uint8_t fsm_buffer[XL_320_BUFFER_SIZE];
-  XL_320_Init_Receiver_FSM(&fsm, fsm_buffer);
+uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t timeout){
+  XL_Receiver_FSM fsm;
+  uint8_t fsm_buffer[XL_BUFFER_SIZE];
+  XL_Init_Receiver_FSM(&fsm, fsm_buffer);
 
   //On remplit le buffer
-  interface->receive(interface->buffer, XL_320_BUFFER_SIZE, timeout);
+  interface->receive(interface->buffer, XL_BUFFER_SIZE, timeout);
 
   int i;
-  for(i = 0; i < XL_320_BUFFER_SIZE && fsm.state != SUCCESS && fsm.state != ERROR; i++){
-    XL_320_Update_Receiver_FSM(&fsm, interface->buffer[i]);
+  for(i = 0; i < XL_BUFFER_SIZE && fsm.state != XL_FSM_SUCCESS && fsm.state != XL_FSM_ERROR; i++){
+    XL_Update_Receiver_FSM(&fsm, interface->buffer[i]);
   }
-  if(fsm.state != SUCCESS){
+  if(fsm.state != XL_FSM_SUCCESS){
     return 1;
   }
-  return XL_320_Extract_Status_Packet(packet, fsm_buffer, fsm.length+7); 
+  return XL_Extract_Status_Packet(packet, fsm_buffer, fsm.length+7); 
 }
 
 //======================================
 //           FONCTIONS D'ENVOI          
 //======================================
-uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_320_BUFFER_SIZE]){
+uint8_t XL_Build_Frame(XL_Instruction_Packet *packet, uint8_t buffer[XL_BUFFER_SIZE]){
   //Vérification des arguments
   if(packet == 0 || packet->params == 0 || buffer == 0){
-    err = ERR_ILLEGAL_ARGUMENTS;
+    err = XL_ERR_ILLEGAL_ARGUMENTS;
     return 0;
   }
   //Evite une collision avec l'en-tête
   if(packet->id == 0xFD || packet->id == 0xFF){
-    err = ERR_ILLEGAL_ID;
+    err = XL_ERR_ILLEGAL_ID;
     return 0;
   }
   //Evite un overflow
-  if(10+packet->nb_params+packet->nb_params/3 > XL_320_BUFFER_SIZE){
-    err = ERR_BUFFER_OVERFLOW;
+  if(10+packet->nb_params+packet->nb_params/3 > XL_BUFFER_SIZE){
+    err = XL_ERR_BUFFER_OVERFLOW;
     return 0;
   }
 
@@ -223,15 +226,15 @@ uint8_t XL_320_Build_Frame(XL_320_Instruction_Packet *packet, uint8_t buffer[XL_
   buffer[6] = packet_length >> 8;
 
   //Cyclic Redundancy Check
-  uint16_t crc = XL_320_Update_CRC(0, buffer, packet_length+7-2);
+  uint16_t crc = XL_Update_CRC(0, buffer, packet_length+7-2);
   *(p_buffer++) = crc & 0x00FF;
   *(p_buffer++) = crc >> 8;
   
   return p_buffer-buffer;    
 }
 
-uint8_t XL_320_Send(XL_320_Interface *interface, XL_320_Instruction_Packet *packet, uint32_t timeout){
-  uint8_t length = XL_320_Build_Frame(packet, interface->buffer);
+uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t timeout){
+  uint8_t length = XL_Build_Frame(packet, interface->buffer);
   if(!length){
     return 1;
   }
@@ -239,7 +242,7 @@ uint8_t XL_320_Send(XL_320_Interface *interface, XL_320_Instruction_Packet *pack
   return 0;
 }
 
-uint16_t XL_320_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){
+uint16_t XL_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){
   uint16_t i, j;
   uint16_t crc_table[256] = {
     0x0000, 0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
