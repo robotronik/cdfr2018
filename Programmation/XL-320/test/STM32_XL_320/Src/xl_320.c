@@ -164,14 +164,6 @@ uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t t
       break;
     }
     interface->fsm.update_state(&(interface->fsm));
-
-    uint8_t *p;
-    printf("Buffer : ");
-    for(p = interface->buffer; p < interface->fsm.p_buffer; p++){
-      printf("0x%2.2X ", *p);
-    }
-    printf("\n");
-    
   }
 
   //Récupération du paquet
@@ -260,17 +252,16 @@ uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t
     }
   }
 
-  //Préparation de la trame
-  uint8_t length = XL_Build_Frame(packet, interface->buffer);
-  if(!length){
-    return 1;
-  }
-
-  //Envoi
+  //Préparation de l'envoi
   interface->sending = 1;
   interface->set_direction(XL_SEND);
-  interface->send(interface->buffer, length);
   
+  uint8_t length = XL_Build_Frame(packet, interface->buffer);
+  if(!length){
+    interface->sending = 0;
+    return 1;
+  }
+  interface->send(interface->buffer, length);
   return 0;
 }
 

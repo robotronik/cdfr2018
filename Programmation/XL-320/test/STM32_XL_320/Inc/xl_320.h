@@ -55,6 +55,9 @@ typedef enum XL_Status_Error_E{
   XL_ACCESS_ERROR = 0x07
 }XL_Status_Error;
 
+/*
+ * Etats de la FSM gérant la réception d'une trame
+ */
 typedef struct XL_Instruction_Packet_S{
   uint8_t id;
   XL_Instruction instruction;
