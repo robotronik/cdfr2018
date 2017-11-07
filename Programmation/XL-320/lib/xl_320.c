@@ -159,7 +159,7 @@ uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t t
   interface->fsm.done = 0;
 
   //Réception
-  while(interface->fsm.done != 1 && ((interface->get_tick() - tick) <= timeout)){
+  do{
     if(interface->receive(interface->fsm.p_buffer, 1, 1) != 0){
       break;
     }
@@ -171,8 +171,7 @@ uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t t
       printf("0x%2.2X ", *p);
     }
     printf("\n");
-    
-  }
+  }while(interface->fsm.done != 1 && ((interface->get_tick() - tick) <= timeout));
 
   //Récupération du paquet
   if(interface->fsm.done == 0){
