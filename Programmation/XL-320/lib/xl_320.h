@@ -11,9 +11,9 @@
 
 #define XL_BUFFER_SIZE 256
 
-/*
- * Codes d'instructions du XL_320
- */
+//==================================================
+//                INSTRUCTIONS
+//==================================================
 typedef enum XL_Instruction_E{
   XL_PING = 0x01,
   XL_READ = 0x02,
@@ -29,6 +29,50 @@ typedef enum XL_Instruction_E{
   XL_BULK_WRITE = 0x93
 }XL_Instruction;
 
+typedef enum XL_Info_Field_E{
+  //EEPROM
+  XL_MODEL_NUMBER = 0,
+  XL_FIRMWARE_VERSION = 2,
+  //RAM
+  XL_CURRENT_POSITION = 37,
+  XL_CURRENT_SPEED = 39,
+  XL_CURRENT_LOAD = 41,
+  XL_CURRENT_VOLTAGE = 45,
+  XL_CURRENT_TEMPERATURE = 46,
+  XL_REGISTERED_INSTRUCTION = 47,
+  XL_MOVING = 49,
+  XL_HARDWARE_ERROR_STATUS = 50,
+}XL_Info_Field;
+
+typedef enum XL_Configure_Field_E{
+  //EEPROM
+  XL_ID = 3,
+  XL_BAUD_RATE = 4,
+  XL_RETURN_DELAY_TIME = 5,
+  XL_CW_ANGLE_LIMIT = 6,
+  XL_CCW_ANGLE_LIMIT = 8,
+  XL_CONTROL_MODE = 11,
+  XL_LIMIT_TEMPERATURE = 12,
+  XL_LOWER_LIMIT_VOLTAGE = 13,
+  XL_UPPER_LIMIT_VOLTAGE = 14,
+  XL_MAX_TORQUE = 15,
+  XL_RETURN_LEVEL = 17,
+  XL_ALARM_SHUTDOWN = 18,
+}XL_Configure_Field;
+
+typedef enum XL_Control_Field_E{
+  //RAM
+  XL_TORQUE_ENABLE = 24,
+  XL_LED = 25,
+  XL_D_GAIN = 27,
+  XL_I_GAIN = 28,
+  XL_P_GAIN = 29,
+  XL_GOAL_POSITON = 30,
+  XL_MOVING_SPEED = 32,
+  XL_TORQUE_LIMIT = 35,
+  XL_PUNCH = 51,
+}XL_Control_Field;
+
 /*
  * Codes d'erreur internes à la librairie
  */
@@ -40,6 +84,9 @@ typedef enum XL_Error_E{
   XL_ERR_TIMEOUT,
 }XL_Error;
 
+//==================================================
+//           INTERFACE, RECEPTION, ENVOI
+//==================================================
 /*
  * Codes d'erreurs dans les paquets "status"
  */
@@ -69,9 +116,6 @@ typedef struct XL_Status_Packet_S{
   uint8_t params[XL_BUFFER_SIZE];
 }XL_Status_Packet;
 
-//==================================================
-//           INTERFACE, RECEPTION, ENVOI
-//==================================================
 //Contrôle de redondance cyclique
 uint16_t XL_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
 
@@ -133,8 +177,23 @@ uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t
 //                     XL-320
 //==================================================
 typedef struct XL_S{
-  uint8_t id;
-  XL_Interface interface;
+uint8_t id;
+uint8_t rom_lock;
+XL_Interface interface;
 }XL;
+
+typedef enum XL_Baud_Rate_E{
+  XL_BAUD_RATE_9600 = 0, XL_BAUD_RATE_57600 = 1, XL_BAUD_RATE_115200 = 2, XL_BAUD_RATE_1MPBS = 3,
+}XL_Baud_Rate;
+
+//Configuration
+/*
+ * Remarque générale : la configuration stoppe momentanément le moteur
+ * (ROM Lock).
+ */
+uint8_t XL_Configure(XL_Configure_Field field, uint16_t data, XL servo);
+uint8_t XL_Configure_ID(XL servo, uint8_t id);
+uint8_t XL_Configure_Baud_Rate(XL servo, XL_Baud_Rate baud_rate);
+uint8_t XL_Configure_Return_Delay_Time();
 
 #endif
