@@ -15,7 +15,10 @@ uint32_t get_tick(){
 }
 
 uint8_t receive(uint8_t *data, uint16_t size, uint32_t timeout){
-  scanf("%x", data);
+  while(size){
+    scanf("%x", data++);
+    size--;
+  }
   return 0;
 }
 
@@ -23,11 +26,9 @@ int main(){
   XL_Interface interface;
   interface.receive = receive;
   interface.set_direction = set_direction;
-  interface.get_tick = get_tick;
-  interface.sending = 0;
   
   XL_Status_Packet status_packet;
-  if(XL_Receive(&interface, &status_packet, 1)){
+  if(XL_Receive(&interface, &status_packet, 14, 1)){
     printf("Erreur");
     return EXIT_SUCCESS;
   }

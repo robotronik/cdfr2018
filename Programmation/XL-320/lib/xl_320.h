@@ -143,13 +143,11 @@ typedef enum XL_Direction_E{
 }XL_Direction;
 
 typedef struct XL_Interface_S{
-  void (*send)(uint8_t *, uint16_t);//data, size
+  uint8_t (*send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout_ms
   uint8_t (*receive)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
   void (*set_direction)(XL_Direction);
-  uint32_t (*get_tick)(void);
   XL_Receiver_FSM fsm;
   uint8_t buffer[XL_BUFFER_SIZE];
-  volatile uint8_t sending;
 }XL_Interface;
 
 uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFFER_SIZE], uint16_t length);
@@ -158,7 +156,7 @@ uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFF
  * Renvoie 0 en cas de succès, 1 en cas d'échec.
  */
 
-uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t timeout);
+uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint16_t packet_size, uint32_t timeout);
 /*
  * Reçoit un paquet depuis l'interface *interface et le stocke dans *packet dans le temps imparti (timeout).
  * Renvoie 0 en cas de succès, 1 en cas d'échec.
@@ -177,23 +175,139 @@ uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t
 //                     XL-320
 //==================================================
 typedef struct XL_S{
-uint8_t id;
-uint8_t rom_lock;
-XL_Interface interface;
+  uint8_t id;
+  uint8_t rom_lock;
+  XL_Interface interface;
 }XL;
 
 typedef enum XL_Baud_Rate_E{
   XL_BAUD_RATE_9600 = 0, XL_BAUD_RATE_57600 = 1, XL_BAUD_RATE_115200 = 2, XL_BAUD_RATE_1MPBS = 3,
 }XL_Baud_Rate;
 
+typedef enum XL_Mode_E{
+  XL_JOINT_MODE = 2, XL_WHEEL_MODE = 1
+}XL_Mode;
+
+typedef enum XL_Return_Level_E{
+  XL_PING_RETURN = 0, XL_READ_RETURN = 1, XL_ALL_RETURN = 2
+}XL_Return_Level;
+
+typedef enum XL_Alarm_Shutdown_E{
+  XL_ERROR_INPUT_VOLTAGE = 4, XL_ERROR_OVER_HEATING = 2, XL_ERROR_OVERLOAD = 1, XL_ERROR_OVER_9000 = 7
+}XL_Alarm_Shutdown;
+
 //Configuration
 /*
  * Remarque générale : la configuration stoppe momentanément le moteur
  * (ROM Lock).
  */
-uint8_t XL_Configure(XL_Configure_Field field, uint16_t data, XL servo);
-uint8_t XL_Configure_ID(XL servo, uint8_t id);
-uint8_t XL_Configure_Baud_Rate(XL servo, XL_Baud_Rate baud_rate);
-uint8_t XL_Configure_Return_Delay_Time();
+uint8_t XL_Configure(XL *servo, XL_Configure_Field field, uint16_t data, uint8_t size);
+/*
+ * Ecrit la valeur data de size octets dans l'EEPROM.
+ */
+
+uint8_t XL_Configure_ID(XL *servo, uint8_t id);
+/*
+ * Permet de modifier l'ID d'un servo.
+ * id doit être compris entre 0x00 et 0xFC (252).
+ */
+
+uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate);
+/*
+ * Configure le débit de transmission du servo.
+ * Les valeurs possibles sont :
+ * 0 : 9600bps
+ * 1 : 57600 bps
+ * 2 : 115200 bps
+ * 3 : 1 Mbps
+ */
+
+uint8_t XL_Configure_Return_Delay_Time(XL *servo, uint8_t delay);
+/*
+ * Configure le délai entre le moment ou le servo reçoit une
+ * instruction et le moment où il répond.
+ * Valeurs possibles : 0x00 -> 0xFE (254)
+ * Unité : 2 microsecondes
+ */
+
+uint8_t XL_Configure_CW_Angle_Limit(XL *servo, uint16_t angle);
+/*
+ * Configure la limite d'angle dans le sens horaire (cf. doc)
+ * Valeurs possibles : 0x000 -> 0x3FF (1023)
+ */
+
+uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle);
+/*
+ * Configure la limite d'angle dans le sens anti-horaire (cf. doc)
+ * Valeurs possibles : 0x000 -> 0x3FF (1023)
+ */
+
+uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode);
+/*
+ * Configure le servomoteur en mode Joint ou Wheel.
+ * 1 : Wheel mode, le servomoteur fixe une vitesse
+ * 2 : Joint mode, le servomoteur fixe un angle
+ * REMARQUE : CW_Angle_Limit et CCW_Angle_Limit doivent être
+ * à 0 pour le mode Wheel, différents de 0 pour le mode Joint.
+*/
+
+uint8_t XL_Configure_Limit_Temperature(XL *servo, uint8_t temp);
+/*
+ * Configure la température max du servo avant détection d'une erreur
+ * ERROR_OVER_HEATING.
+ * Valeurs possibles : 0 -> 150
+ * Cette fonction ne devrait pas exister.
+ */
+
+uint8_t XL_Configure_Lower_Limit_Voltage(XL *servo, uint8_t voltage);
+/*
+ * Configure la limite inférieure de tension avant détection d'une
+ * erreur ERROR_INPUT_VOLTAGE.
+ * Valeurs possibles : 50 -> 250 (0x32 -> 0x96)
+ * Unité : 0.1 V
+ */
+
+uint8_t XL_Configure_Upper_Limit_Voltage(XL *servo, uint8_t voltage);
+/*
+ * Configure la limite supérieure de tension avant détection d'une
+ * erreur ERROR_INPUT_VOLTAGE.
+ * Valeurs possibles : 50 -> 250 (0x32 -> 0x96)
+ * Unité : 0.1 V
+ * Remarque : Les vrais mettront du triphasé
+ */
+
+uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque);
+/*
+ * Configure le couple maximum du servomoteur.
+ * Valeurs possibles : 0 -> 1023 (0% -> 100%)
+ * Remarque : Cette fonction impose une limite mais
+ * ne contrôle pas le couple, cf. Goal Torque (RAM).
+ */
+
+uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level);
+/*
+ * Configure le niveau de retour du servomoteur.
+ * Valeurs possibles :
+ * 0 : Aucun retour, sauf ping
+ * 1 : Retour uniquement pour les commandes READ
+ * 2 : Retour pour toutes les commandes
+ * Remarque : Pour l'instant cette librairie ne fonctionne
+ * correctement que dans le mode 1
+*/
+
+uint8_t XL_Configure_Alarm_Shutdown(XL *servo, XL_Alarm_Shutdown alarm);
+/*
+ * Configure les alarmes permettant de stopper le servomoteur en cas de problème.
+ * Valeurs possibles : comibinaisons (OR) de
+ * XL_ERROR_INPUT_VOLTAGE
+ * XL_ERROR_OVER_HEATING
+ * XL_ERROR_OVERLOAD
+ * XL_ERROR_OVER_9000
+ * ASTUCE DE HACKER : Incroyable ! Grâce à cette fonction, transformez
+ * votre XL 320 en une superbe guirlande ! Vous n'en croirez pas vos
+ * yeux !
+ */
+
+
 
 #endif
