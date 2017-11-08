@@ -137,7 +137,18 @@ uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFF
   return 0;
 }
 
-uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint16_t packet_size, uint32_t timeout){
+uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t timeout){
+  //Initialisation du timer
+  uint32_t tick = interface->get_tick();
+
+  //Attente de la fin d'un envoi
+  while(interface->sending == 1){
+    //Evite une boucle infinie
+    if(interface->get_tick() - tick > timeout){
+      return 1;
+    }
+  }
+
   //Préparation de la réception
   interface->set_direction(XL_RECEIVE);
   
@@ -148,21 +159,12 @@ uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint16_t p
   interface->fsm.done = 0;
 
   //Réception
-  if(interface->receive(interface->fsm.p_buffer, packet_size, timeout) != 0){
-    return 1;
-  }
-
-  //FSM
-  do{
-    interface->fsm.update_state(&(interface->fsm));
-
-    /*uint8_t *p;
-    printf("Buffer : ");
-    for(p = interface->buffer; p < interface->fsm.p_buffer; p++){
-      printf("0x%2.2X ", *p);
+  while(interface->fsm.done != 1 && ((interface->get_tick() - tick) <= timeout)){
+    if(interface->receive(interface->fsm.p_buffer, 1, 1) != 0){
+      break;
     }
-    printf("\n");*/
-  }while(interface->fsm.p_buffer != interface->fsm.buffer && interface->fsm.done != 1);
+    interface->fsm.update_state(&(interface->fsm));
+  }
 
   //Récupération du paquet
   if(interface->fsm.done == 0){
@@ -239,16 +241,27 @@ uint8_t XL_Build_Frame(XL_Instruction_Packet *packet, uint8_t buffer[XL_BUFFER_S
 }
 
 uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t timeout){
-  //Préparation de la trame
-  uint8_t length = XL_Build_Frame(packet, interface->buffer);
-  if(!length){
-    return 1;
+  //Initialisation du timer
+  uint32_t tick = interface->get_tick();
+
+  //Attente de la fin d'un envoi
+  while(interface->sending == 1){
+    //Evite une boucle infinie
+    if(interface->get_tick() - tick > timeout){
+      return 1;
+    }
   }
 
-  //Envoi
+  //Préparation de l'envoi
+  interface->sending = 1;
   interface->set_direction(XL_SEND);
-  interface->send(interface->buffer, length, timeout);
   
+  uint8_t length = XL_Build_Frame(packet, interface->buffer);
+  if(!length){
+    interface->sending = 0;
+    return 1;
+  }
+  interface->send(interface->buffer, length);
   return 0;
 }
 
