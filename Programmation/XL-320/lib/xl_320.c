@@ -318,89 +318,176 @@ uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t
   packet.nb_params = 2 + size;
   packet.params = params;
   
-  return XL_Send(&(servo->interface), &packet, 1);;
+  return XL_Send(&(servo->interface), &packet, XL_DEFAULT_TIMEOUT);
 }
 
 uint8_t XL_Configure_ID(XL *servo, uint8_t id){
   if(id > 252){
     return 1;
   }
-  return XL_Write(servo, XL_ID, id, 1, 1);
+  return XL_Write(servo, XL_ID, id, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate){
   if(baud_rate != XL_BAUD_RATE_9600 || baud_rate != XL_BAUD_RATE_57600 || baud_rate != XL_BAUD_RATE_115200 || baud_rate != XL_BAUD_RATE_1MBPS){
     return 1;
   }
-  return XL_Write(servo, XL_BAUD_RATE, baud_rate, 1, 1);
+  return XL_Write(servo, XL_BAUD_RATE, baud_rate, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_Return_Delay_Time(XL *servo, uint8_t delay){
   if(delay > 0xFE){
     return 1;
   }
-  return XL_Write(servo, XL_RETURN_DELAY_TIME, delay, 1, 1);
+  return XL_Write(servo, XL_RETURN_DELAY_TIME, delay, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_CW_Angle_Limit(XL *servo, uint16_t angle){
   if(angle > 0x3FF){
     return 1;
   }
-  return XL_Write(servo, XL_CW_ANGLE_LIMIT, angle, 2, 1);
+  return XL_Write(servo, XL_CW_ANGLE_LIMIT, angle, 2, XL_NOW);
 }
 
 uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle){
   if(angle > 0x3FF){
     return 1;
   }
-  return XL_Write(servo, XL_CCW_ANGLE_LIMIT, angle, 2, 1);
+  return XL_Write(servo, XL_CCW_ANGLE_LIMIT, angle, 2, XL_NOW);
 }
   
 uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode){
   if(mode != XL_JOIN_MODE || mode != XL_WHEEL_MODE){
     return 1;
   }
-  return XL_Write(servo, XL_CONTROL_MODE, mode, 1, 1);
+  return XL_Write(servo, XL_CONTROL_MODE, mode, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_Limit_Temperature(XL *servo, uint8_t temp){
   if(temp > 150){
     return 1;
   }
-  return XL_Write(servo, XL_LIMIT_TEMPERATURE, temp, 1, 1);
+  return XL_Write(servo, XL_LIMIT_TEMPERATURE, temp, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_Lower_Limit_Voltage(XL *servo, uint8_t voltage){
   if(voltage < 50 || voltage > 250){
     return 1;
   }
-  return XL_Write(servo, XL_LOWER_LIMIT_VOLTAGE, voltage, 1, 1);
+  return XL_Write(servo, XL_LOWER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_Upper_Limit_Voltage(XL *servo, uint8_t voltage){
   if(voltage < 50 || voltage > 250){
     return 1;
   }
-  return XL_Write(servo, XL_UPPER_LIMIT_VOLTAGE, voltage, 1, 1);
+  return XL_Write(servo, XL_UPPER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque){
   if(max_torque > 1023){
     return 1;
   }
-  return XL_Write(servo, XL_MAX_TORQUE, max_torque, 2, 1);
+  return XL_Write(servo, XL_MAX_TORQUE, max_torque, 2, XL_NOW);
 }
 
 uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level){
   if(level != XL_PING_RETURN || level != XL_READ_RETURN || level != XL_ALL_RETURN){
     return 1;
   }
-  return XL_Write(servo, XL_RETURN_LEVEL, level, 1, 1);
+  return XL_Write(servo, XL_RETURN_LEVEL, level, 1, XL_NOW);
 }
 
 uint8_t XL_Configure_Alarm_Shutdown(XL *servo, XL_Alarm_Shutdown alarm){
   if(alarm > XL_ERROR_OVER_9000){
     return 1;
   }
-  return XL_Write(servo, XL_ALARM_SHUTDOWN, alarm, 1, 1);
+  return XL_Write(servo, XL_ALARM_SHUTDOWN, alarm, 1, XL_NOW);
 }
+
+
+//======================================
+//       COMMANDES SERVOMOTEUR       
+//======================================
+
+uint8_t XL_Power_On(XL *servo, uint8_t now){
+  return XL_Write(servo, XL_TORQUE_ENABLE, 1, 1, now);
+}
+
+uint8_t XL_Power_Off(XL *servo, uint8_t now){
+  return XL_Write(servo, XL_TORQUE_ENABLE, 0, 1, now);
+}
+
+uint8_t XL_Set_LED(XL *servo, XL_LED_Color color, uint8_t now){
+  if((uint8_t) color > 7){
+    return 1;
+  }
+  return XL_Write(servo, XL_LED, color, 1, now);
+}
+
+uint8_t XL_Set_D_Gain(XL *servo, uint8_t d_gain, uint8_t now){
+  if(d_gain > 254){
+    return 1;
+  }
+  return XL_Write(servo, XL_D_GAIN, d_gain, 1, now);
+}
+
+uint8_t XL_Set_I_Gain(XL *servo, uint8_t i_gain, uint8_t now){
+  if(i_gain > 254){
+    return 1;
+  }
+  return XL_Write(servo, XL_I_GAIN, i_gain, 1, now);
+}
+
+uint8_t XL_Set_P_Gain(XL *servo, uint8_t p_gain, uint8_t now){
+  if(p_gain > 254){
+    return 1;
+  }
+  return XL_Write(servo, XL_P_GAIN, p_gain, 1, now);
+}
+
+uint8_t XL_Set_Goal_Position(XL *servo, uint16_t position, uint8_t now){
+  if(position > 1023){
+    return 1;
+  }
+  return XL_Write(servo, XL_GOAL_POSITION, position, 2, now);
+}
+
+uint8_t XL_Set_Goal_Speed_Join(XL *servo, uint16_t speed, uint8_t now){
+  if(speed > 1023){
+    return 1;
+  }
+  return XL_Write(servo, XL_MOVING_SPEED, speed, 2, now); 
+}
+
+uint8_t XL_Set_Goal_Speed_Wheel(XL *servo, uint16_t speed, XL_Wheel_Direction dir, uint8_t now){
+  if(speed > 1023){
+    return 1;
+  }
+  switch(dir){
+  case XL_CLOCKWISE:
+    speed += 1023;
+    break;
+  case XL_COUNTERCLOCKWISE:
+  break;
+  default:
+    return 1;
+    break;
+  }
+  return XL_Write(servo, XL_MOVING_SPEED, speed, 2, now);
+}
+
+uint8_t XL_Set_Torque_Limit(XL *servo, uint16_t torque_limit, uint8_t now){
+  if(torque_limit > 1023){
+    return 1;
+  }
+  return XL_Write(servo, XL_TORQUE_LIMIT, torque_limit, 2, now);
+}
+
+uint8_t XL_Set_Punch(XL *servo, uint16_t punch, uint8_t now){
+  if(punch < 0x20 || punch > 0x3FF){
+    return 1;
+  }
+  return XL_Write(servo, XL_PUNCH, punch, 2, now);
+}
+

@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 #define XL_BUFFER_SIZE 256
+#define XL_DEFAULT_TIMEOUT 1
 
 //==================================================
 //                INSTRUCTIONS
@@ -134,6 +135,7 @@ typedef struct XL_S{
   uint8_t id;
   uint8_t rom_lock;
   XL_Interface interface;
+  XL_Status_Packet last_status;
 }XL;
 
 typedef enum XL_Baud_Rate_E{
@@ -155,6 +157,9 @@ typedef enum XL_Alarm_Shutdown_E{
 //======================================
 //    DEFINITIONS TABLE DE CONTROLE       
 //======================================
+
+#define XL_NOW 1
+#define XL_LATER 0
 
 typedef enum XL_Field_E{
   //EEPROM - Configuration
@@ -179,7 +184,7 @@ typedef enum XL_Field_E{
   XL_D_GAIN = 27,
   XL_I_GAIN = 28,
   XL_P_GAIN = 29,
-  XL_GOAL_POSITON = 30,
+  XL_GOAL_POSITION = 30,
   XL_MOVING_SPEED = 32,
   XL_TORQUE_LIMIT = 35,
   XL_PUNCH = 51,
@@ -195,6 +200,46 @@ typedef enum XL_Field_E{
 }XL_Field;
 
 //======================================
+//        JEU D'INSTRUCTIONS
+//======================================
+uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t now);
+/*
+ * Ecrit la valeur data de size octets dans l'EEPROM.  Remarque :
+ * Cette fonction n'effectue pas de vérifications sur data et field,
+ * elle ne doit pas être appelée directement par un utilisateur.
+ */
+
+uint8_t XL_Ping(XL *servo, XL_Status_Packet *status);
+/*
+ * Envoie une requête ping au servomoteur et récupère la réponse dans
+ * status.  Renvoie 0 en cas de succès, 1 en cas d'échec.
+ */
+
+uint8_t XL_Discover(XL_Interface *interface, XL *buffer_servos, uint8_t len_buffer, uint16_t *nb_servos);
+/*
+ * Envoie une requête ping en broadcast et récupère une liste d'au
+ * plus len_buffer servomoteurs ayant répondu.  Met à jour nb_servo
+ * pour indiquer le nombre de servomoteurs découverts.
+ */
+
+uint8_t XL_Whois(XL *servo);
+/*
+ * Vérifie l'existence du servomoteur et fait clignoter sa LED autant
+ * de fois que son ID, avec une fréquence de 0.5Hz.
+ * Renvoie 0 si le servomoteur existe, -1 sinon.
+ */
+
+uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data);
+/*
+ * Lis une donnée dans la table de contrôle du servomoteur. En cas de
+ * succès, le status return est stocké dans la structure du servo et
+ * la donnée est récupérée dans data.
+ * Renvoie 0 en cas de succès, -1 en cas d'échec.
+ */
+
+
+
+//======================================
 //       CONFIGURATION EEPROM   
 //======================================
 /***************************************************
@@ -202,10 +247,6 @@ typedef enum XL_Field_E{
  * Torque Enable doit être à 0
  * pour configurer les champs EEPROM.
  ***************************************************/
-uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t now);
-/*
- * Ecrit la valeur data de size octets dans l'EEPROM.
- */
 
 uint8_t XL_Configure_ID(XL *servo, uint8_t id);
 /*
@@ -371,18 +412,41 @@ typedef enum XL_Wheel_Direction_E{
   XL_CLOCKWISE, XL_COUNTERCLOCKWISE
 }XL_Wheel_Direction;
 
-uint8_t XL_Set_Goal_Speed(XL *servo, uint16_t speed, uint8_t now);
+uint8_t XL_Set_Goal_Speed_Join(XL *servo, uint16_t speed, uint8_t now);
 /*
- * Modifie la vitesse cible du servo.
- * Valeurs possibles :
- * JOIN Mode : 0 -> 1023, unité : 0.111 RPM, 0 : pas de contrôle de vitesse
- * WHEEL Mode :
- * 0 -> 1023 : sens anti-horaire
- * ...
+ * Modifie la vitesse cible du servo lorsqu'il est en mode Join
+ * Valeurs possibles : 0-> 1023
+ * Unité : 0.111 RPM
+ * 0 : pas de contrôle de vitesse
  */
 
+uint8_t XL_Set_Goal_Speed_Wheel(XL *servo, uint16_t speed, XL_Wheel_Direction dir, uint8_t now);
 /*
-  XL_TORQUE_LIMIT = 35,
-  XL_PUNCH = 51,*/
+ * Modifie la vitesse cible du servo lorsuqu'il est en mode Wheel
+ * Valeurs possibles :
+ * speed : 0 -> 1023, unité : 0.1% du max
+ * dir : XL_CLOCKWISE ou XL_COUNTERCLOCKWISE
+ * Remarque :
+ * La vitesse n'est pas asservie, on règle la puissance
+ * 1023*0.1% = 102,3%, bitches
+ */
+
+uint8_t XL_Set_Torque_Limit(XL *servo, uint16_t torque_limit, uint8_t now);
+/*
+ * Modifie la limite de couple.
+ * Valeurs possibles : 0 -> 1023
+ * Unité : environ 0.1%
+ * Remarque :
+ * En cas d'erreur matérielle (alarm shutdown),
+ * cette valeur est mise à 0.
+ */
+
+uint8_t XL_Set_Punch(XL *servo, uint16_t punch, uint8_t now);
+/*
+ * Courant minimum pour contrôler le moteur
+ * Valeurs possibles : 0x20 -> 0x3FF
+ * Unité : ?
+ * Remarque : la doc est pas claire sur ce point
+ */
 
 #endif
