@@ -137,18 +137,12 @@ uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFF
   return 0;
 }
 
-uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t timeout){
-  //Initialisation du timer
-  uint32_t tick = interface->get_tick();
-
-  //Attente de la fin d'un envoi
-  while(interface->sending == 1){
-    //Evite une boucle infinie
-    if(interface->get_tick() - tick > timeout){
-      return 1;
-    }
+uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint16_t packet_size, uint32_t timeout){
+  //Evite un overflow
+  if(packet_size > XL_BUFFER_SIZE){
+    return 1;
   }
-
+  
   //Préparation de la réception
   interface->set_direction(XL_RECEIVE);
   
@@ -159,12 +153,21 @@ uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint32_t t
   interface->fsm.done = 0;
 
   //Réception
-  while(interface->fsm.done != 1 && ((interface->get_tick() - tick) <= timeout)){
-    if(interface->receive(interface->fsm.p_buffer, 1, 1) != 0){
-      break;
-    }
-    interface->fsm.update_state(&(interface->fsm));
+  if(interface->receive(interface->fsm.p_buffer, packet_size, timeout) != 0){
+    return 1;
   }
+
+  //FSM
+  do{
+    interface->fsm.update_state(&(interface->fsm));
+
+    /*uint8_t *p;
+    printf("Buffer : ");
+    for(p = interface->buffer; p < interface->fsm.p_buffer; p++){
+      printf("0x%2.2X ", *p);
+    }
+    printf("\n");*/
+  }while(interface->fsm.p_buffer != interface->fsm.buffer && interface->fsm.done != 1);
 
   //Récupération du paquet
   if(interface->fsm.done == 0){
@@ -241,28 +244,15 @@ uint8_t XL_Build_Frame(XL_Instruction_Packet *packet, uint8_t buffer[XL_BUFFER_S
 }
 
 uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t timeout){
-  //Initialisation du timer
-  uint32_t tick = interface->get_tick();
-
-  //Attente de la fin d'un envoi
-  while(interface->sending == 1){
-    //Evite une boucle infinie
-    if(interface->get_tick() - tick > timeout){
-      return 1;
-    }
-  }
-
-  //Préparation de l'envoi
-  interface->sending = 1;
-  interface->set_direction(XL_SEND);
-  
+  //Préparation de la trame
   uint8_t length = XL_Build_Frame(packet, interface->buffer);
   if(!length){
-    interface->sending = 0;
     return 1;
   }
-  interface->send(interface->buffer, length);
-  return 0;
+
+  //Envoi
+  interface->set_direction(XL_SEND);
+  return interface->send(interface->buffer, length, timeout);
 }
 
 uint16_t XL_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){
@@ -307,4 +297,110 @@ uint16_t XL_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_
   }
 
   return crc_accum;
+}
+
+//======================================
+//         CONFIGURATION EEPROM       
+//======================================
+uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t now){
+  if(servo == 0){
+    return 1;
+  }
+  
+  static XL_Instruction_Packet packet;
+  static uint8_t params[4];
+  params[0] = field;
+  params[1] = 0x00;
+  params[2] = data & 0xFF;
+  params[3] = data >> 8;
+  packet.id = servo->id;
+  packet.instruction = now?XL_WRITE:XL_REG_WRITE;
+  packet.nb_params = 2 + size;
+  packet.params = params;
+  
+  return XL_Send(&(servo->interface), &packet, 1);;
+}
+
+uint8_t XL_Configure_ID(XL *servo, uint8_t id){
+  if(id > 252){
+    return 1;
+  }
+  return XL_Write(servo, XL_ID, id, 1, 1);
+}
+
+uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate){
+  if(baud_rate != XL_BAUD_RATE_9600 || baud_rate != XL_BAUD_RATE_57600 || baud_rate != XL_BAUD_RATE_115200 || baud_rate != XL_BAUD_RATE_1MBPS){
+    return 1;
+  }
+  return XL_Write(servo, XL_BAUD_RATE, baud_rate, 1, 1);
+}
+
+uint8_t XL_Configure_Return_Delay_Time(XL *servo, uint8_t delay){
+  if(delay > 0xFE){
+    return 1;
+  }
+  return XL_Write(servo, XL_RETURN_DELAY_TIME, delay, 1, 1);
+}
+
+uint8_t XL_Configure_CW_Angle_Limit(XL *servo, uint16_t angle){
+  if(angle > 0x3FF){
+    return 1;
+  }
+  return XL_Write(servo, XL_CW_ANGLE_LIMIT, angle, 2, 1);
+}
+
+uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle){
+  if(angle > 0x3FF){
+    return 1;
+  }
+  return XL_Write(servo, XL_CCW_ANGLE_LIMIT, angle, 2, 1);
+}
+  
+uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode){
+  if(mode != XL_JOIN_MODE || mode != XL_WHEEL_MODE){
+    return 1;
+  }
+  return XL_Write(servo, XL_CONTROL_MODE, mode, 1, 1);
+}
+
+uint8_t XL_Configure_Limit_Temperature(XL *servo, uint8_t temp){
+  if(temp > 150){
+    return 1;
+  }
+  return XL_Write(servo, XL_LIMIT_TEMPERATURE, temp, 1, 1);
+}
+
+uint8_t XL_Configure_Lower_Limit_Voltage(XL *servo, uint8_t voltage){
+  if(voltage < 50 || voltage > 250){
+    return 1;
+  }
+  return XL_Write(servo, XL_LOWER_LIMIT_VOLTAGE, voltage, 1, 1);
+}
+
+uint8_t XL_Configure_Upper_Limit_Voltage(XL *servo, uint8_t voltage){
+  if(voltage < 50 || voltage > 250){
+    return 1;
+  }
+  return XL_Write(servo, XL_UPPER_LIMIT_VOLTAGE, voltage, 1, 1);
+}
+
+uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque){
+  if(max_torque > 1023){
+    return 1;
+  }
+  return XL_Write(servo, XL_MAX_TORQUE, max_torque, 2, 1);
+}
+
+uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level){
+  if(level != XL_PING_RETURN || level != XL_READ_RETURN || level != XL_ALL_RETURN){
+    return 1;
+  }
+  return XL_Write(servo, XL_RETURN_LEVEL, level, 1, 1);
+}
+
+uint8_t XL_Configure_Alarm_Shutdown(XL *servo, XL_Alarm_Shutdown alarm){
+  if(alarm > XL_ERROR_OVER_9000){
+    return 1;
+  }
+  return XL_Write(servo, XL_ALARM_SHUTDOWN, alarm, 1, 1);
 }

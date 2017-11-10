@@ -4,9 +4,80 @@
 //========================================
 //    CONSTANTES ET VARIABLES GLOBALES
 //========================================
-//static const uint8_t broadcast_id = 0xFE;
 static const uint8_t header[4] = {0xFF, 0xFF, 0xFD, 0x00};
 static const uint8_t stuffing_byte = 0xFD;
+static const uint8_t field_addr[] = {
+  [XL_ID] = 3,
+  [XL_BAUD_RATE] = 4,
+  [XL_RETURN_DELAY_TIME] = 5,
+  [XL_CW_ANGLE_LIMIT] = 6,
+  [XL_CCW_ANGLE_LIMIT] = 8,
+  [XL_CONTROL_MODE] = 11,
+  [XL_LIMIT_TEMPERATURE] = 12,
+  [XL_LOWER_LIMIT_VOLTAGE] = 13,
+  [XL_UPPER_LIMIT_VOLTAGE] = 14,
+  [XL_MAX_TORQUE] = 15,
+  [XL_RETURN_LEVEL] = 17,
+  [XL_ALARM_SHUTDOWN] = 18,
+  //EEPROM - Info
+  [XL_MODEL_NUMBER] = 0,
+  [XL_FIRMWARE_VERSION] = 2,
+  //RAM - Contrôle
+  [XL_TORQUE_ENABLE] = 24,
+  [XL_LED] = 25,
+  [XL_D_GAIN] = 27,
+  [XL_I_GAIN] = 28,
+  [XL_P_GAIN] = 29,
+  [XL_GOAL_POSITION] = 30,
+  [XL_MOVING_SPEED] = 32,
+  [XL_TORQUE_LIMIT] = 35,
+  [XL_PUNCH] = 51,
+  //RAM - Info
+  [XL_CURRENT_POSITION] = 37,
+  [XL_CURRENT_SPEED] = 39,
+  [XL_CURRENT_LOAD] = 41,
+  [XL_CURRENT_VOLTAGE] = 45,
+  [XL_CURRENT_TEMPERATURE] = 46,
+  [XL_REGISTERED_INSTRUCTION] = 47,
+  [XL_MOVING] = 49,
+  [XL_HARDWARE_ERROR_STATUS] = 50,
+};
+static const uint8_t field_length[] = {
+  [XL_ID] = 1,
+  [XL_BAUD_RATE] = 1,
+  [XL_RETURN_DELAY_TIME] = 1,
+  [XL_CW_ANGLE_LIMIT] = 2,
+  [XL_CCW_ANGLE_LIMIT] = 2,
+  [XL_CONTROL_MODE] = 1,
+  [XL_LIMIT_TEMPERATURE] = 1,
+  [XL_LOWER_LIMIT_VOLTAGE] = 1,
+  [XL_UPPER_LIMIT_VOLTAGE] = 1,
+  [XL_MAX_TORQUE] = 2,
+  [XL_RETURN_LEVEL] = 1,
+  [XL_ALARM_SHUTDOWN] = 1,
+  //EEPROM - Info
+  [XL_MODEL_NUMBER] = 2,
+  [XL_FIRMWARE_VERSION] = 1,
+  //RAM - Contrôle
+  [XL_TORQUE_ENABLE] = 1,
+  [XL_LED] = 1,
+  [XL_D_GAIN] = 1,
+  [XL_I_GAIN] = 1,
+  [XL_P_GAIN] = 1,
+  [XL_GOAL_POSITION] = 2,
+  [XL_MOVING_SPEED] = 2,
+  [XL_TORQUE_LIMIT] = 2,
+  [XL_PUNCH] = 2,
+  //RAM - Info
+  [XL_CURRENT_POSITION] = 2,
+  [XL_CURRENT_SPEED] = 2,
+  [XL_CURRENT_LOAD] = 2,
+  [XL_CURRENT_VOLTAGE] = 1,
+  [XL_CURRENT_TEMPERATURE] = 1,
+  [XL_REGISTERED_INSTRUCTION] = 1,
+  [XL_MOVING] = 1,
+  [XL_HARDWARE_ERROR_STATUS] = 1,
+};
 static XL_Error err;
 
 //========================================
@@ -300,16 +371,145 @@ uint16_t XL_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_
 }
 
 //======================================
-//         CONFIGURATION EEPROM       
+//         JEU D'INSTRUCTIONS      
 //======================================
-uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t now){
+uint8_t XL_Ping(XL *servo){
   if(servo == 0){
+    return 1;
+  }
+  
+  XL_Instruction_Packet packet;
+  packet.id = servo->id;
+  packet.instruction = XL_PING;
+  packet.nb_params = 0;
+  packet.params = 0;
+
+  if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+  
+  if(XL_Receive(servo->interface, &(servo->interface->status), 14, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+
+  return 0;
+}
+
+uint8_t XL_Discover(XL_Interface *interface, XL *buffer_servos, uint8_t len_buffer, uint16_t *nb_servos){
+  XL_Instruction_Packet packet;
+  packet.id = XL_BROADCAST;
+  packet.instruction = XL_PING;
+  packet.nb_params = 0;
+  packet.params = 0;
+
+  if(XL_Send(interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+  
+  *nb_servos = 0;
+  while((*nb_servos < len_buffer) && XL_Receive(interface, &(interface->status), 14, XL_DEFAULT_TIMEOUT) == 0){
+    buffer_servos[(*nb_servos)++] = (XL) {.id = interface->status.id, .interface = interface};
+  }
+  
+  return (*nb_servos > 0)?0:1;
+}
+
+uint8_t XL_Say_Hello(XL *servo){
+  if(XL_Ping(servo) == 1){
+    return 1;
+  }
+
+  const XL_LED_Color color = (servo->interface->status.err == 0x00)?XL_GREEN:XL_RED;
+  uint8_t i;
+  for(i = 0; i < servo->id; i++){
+    XL_Set_LED(servo, color, XL_NOW);
+    servo->interface->delay(500);
+    XL_Set_LED(servo, XL_LED_OFF, XL_NOW);
+    servo->interface->delay(500);
+  }
+
+  return 0;
+}
+
+uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data){
+  if(field > XL_NB_FIELDS-1){
+    return 1;
+  }
+  
+  //Envoi d'une instruction READ
+  XL_Instruction_Packet packet;
+  packet.id = servo->id;
+  packet.instruction = XL_READ;
+  packet.nb_params = 4;
+  uint8_t params[4] = {field_addr[field], 0x00, field_length[field], 0x00};
+  packet.params = params;
+
+  if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+  
+  //Réception de la réponse
+  if(XL_Receive(servo->interface, &(servo->interface->status), 11+field_length[field], XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+
+  //Récupération de la donnée
+  *data = servo->interface->status.params[0];
+  if(field_length[field] == 2){
+    *data |= servo->interface->status.params[1] << 8;
+  }
+  return 0;
+}
+
+uint8_t XL_Action(XL *servo){
+  XL_Instruction_Packet packet;
+  packet.id = servo->id;
+  packet.instruction = XL_ACTION;
+  packet.nb_params = 0;
+  packet.params = 0;
+
+  return XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT);
+}
+
+uint8_t XL_Factory_Reset(XL *servo){
+  XL_Instruction_Packet packet;
+  packet.id = servo->id;
+  packet.instruction = XL_FACTORY_RESET;
+  packet.nb_params = 1;
+  uint8_t param = 0x02;
+  packet.params = &param;
+
+  if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+  servo->interface->delay(5000);
+  
+  return 0;
+}
+
+uint8_t XL_Reboot(XL *servo){
+  XL_Instruction_Packet packet;
+  packet.id = servo->id;
+  packet.instruction = XL_REBOOT;
+  packet.nb_params = 0;
+  packet.params = 0;
+
+  if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+
+  servo->interface->delay(5000);
+  return 0;
+}
+
+uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t now){
+  if(servo == 0 || field > (XL_NB_FIELDS-1)){
     return 1;
   }
   
   static XL_Instruction_Packet packet;
   static uint8_t params[4];
-  params[0] = field;
+  params[0] = field_addr[field];
   params[1] = 0x00;
   params[2] = data & 0xFF;
   params[3] = data >> 8;
@@ -318,9 +518,12 @@ uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t
   packet.nb_params = 2 + size;
   packet.params = params;
   
-  return XL_Send(&(servo->interface), &packet, XL_DEFAULT_TIMEOUT);
+  return XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT);
 }
 
+//======================================
+//         CONFIGURATION EEPROM       
+//======================================
 uint8_t XL_Configure_ID(XL *servo, uint8_t id){
   if(id > 252){
     return 1;

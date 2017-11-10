@@ -66,8 +66,9 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN 0 */
 XL_Interface interface;
 
-void XL_320_Send_HAL(uint8_t *data, uint16_t size){
-  HAL_UART_Transmit(&huart1, data, size,1);
+uint8_t XL_320_Send_HAL(uint8_t *data, uint16_t size, uint32_t timeout){
+  HAL_UART_Transmit(&huart1, data, size, timeout);
+  return 0;//Temporaire
 }
 
 void XL_320_Set_Direction_HAL(XL_Direction dir){
@@ -109,33 +110,43 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   //Initialisation interface
-  interface.sending = 0;
   interface.send = XL_320_Send_HAL;
   interface.set_direction = XL_320_Set_Direction_HAL;
-  interface.get_tick = HAL_GetTick;
   interface.receive = XL_320_Receive_HAL;
 
   XL_Instruction_Packet packet;
-  packet.id = 0x04;
-  //packet.instruction = XL_WRITE;
-  //packet.nb_params = 3;
-  //uint8_t params[3] = {25, 0, 2};
-  packet.instruction = XL_PING;
-  packet.nb_params = 0;  
-  packet.params = 0;
 
+  /*packet.id = 0x04;
+  packet.instruction = XL_FACTORY_RESET;
+  packet.nb_params = 1;
+  uint8_t p = 0x02;
+  packet.params = &p;*/
+
+  
+  packet.id = 0xFE;
+  packet.instruction = XL_WRITE;
+  packet.nb_params = 4;
+  uint8_t params[4] = {30, 0, 0xF0, 0};
+  packet.params = params;
+  
   XL_Send(&interface, &packet, 1);
-  interface.sending = 0;//Temporaire
+
+  /*
+  /*packet.instruction = XL_PING;
+  packet.nb_params = 0;  
+  packet.params = 0;*/
+  /*
+  XL_Send(&interface, &packet, 1);
+
   XL_Status_Packet s_packet;
-  XL_Receive(&interface, &s_packet, 10);
-  HAL_Delay(10);
-  if(s_packet.id != 0x04){
+  XL_Receive(&interface, &s_packet, 14, 2);
+  if(s_packet.id == 0x04){
     packet.instruction = XL_WRITE;
     packet.nb_params = 3;
-    uint8_t params[3] = {25, 0, 1};
+    uint8_t params[3] = {25, 0, 2};
     packet.params = params;
     XL_Send(&interface, &packet, 1);
-  }
+    }*/
   
   /* USER CODE END 2 */
 

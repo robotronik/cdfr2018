@@ -9,8 +9,9 @@
 
 #include <stdint.h>
 
-#define XL_BUFFER_SIZE 256
+#define XL_BUFFER_SIZE 32
 #define XL_DEFAULT_TIMEOUT 1
+#define XL_BROADCAST 0xFE
 
 //==================================================
 //                INSTRUCTIONS
@@ -103,8 +104,10 @@ typedef struct XL_Interface_S{
   uint8_t (*send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout_ms
   uint8_t (*receive)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
   void (*set_direction)(XL_Direction);
+  void (*delay)(uint32_t);//ms
   XL_Receiver_FSM fsm;
   uint8_t buffer[XL_BUFFER_SIZE];
+  XL_Status_Packet status;
 }XL_Interface;
 
 uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFFER_SIZE], uint16_t length);
@@ -133,9 +136,7 @@ uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t
 //==================================================
 typedef struct XL_S{
   uint8_t id;
-  uint8_t rom_lock;
-  XL_Interface interface;
-  XL_Status_Packet last_status;
+  XL_Interface *interface;
 }XL;
 
 typedef enum XL_Baud_Rate_E{
@@ -161,42 +162,43 @@ typedef enum XL_Alarm_Shutdown_E{
 #define XL_NOW 1
 #define XL_LATER 0
 
+#define XL_NB_FIELDS 31
 typedef enum XL_Field_E{
   //EEPROM - Configuration
-  XL_ID = 3,
-  XL_BAUD_RATE = 4,
-  XL_RETURN_DELAY_TIME = 5,
-  XL_CW_ANGLE_LIMIT = 6,
-  XL_CCW_ANGLE_LIMIT = 8,
-  XL_CONTROL_MODE = 11,
-  XL_LIMIT_TEMPERATURE = 12,
-  XL_LOWER_LIMIT_VOLTAGE = 13,
-  XL_UPPER_LIMIT_VOLTAGE = 14,
-  XL_MAX_TORQUE = 15,
-  XL_RETURN_LEVEL = 17,
-  XL_ALARM_SHUTDOWN = 18,
+  XL_ID,
+  XL_BAUD_RATE,
+  XL_RETURN_DELAY_TIME,
+  XL_CW_ANGLE_LIMIT,
+  XL_CCW_ANGLE_LIMIT,
+  XL_CONTROL_MODE ,
+  XL_LIMIT_TEMPERATURE ,
+  XL_LOWER_LIMIT_VOLTAGE ,
+  XL_UPPER_LIMIT_VOLTAGE ,
+  XL_MAX_TORQUE,
+  XL_RETURN_LEVEL,
+  XL_ALARM_SHUTDOWN,
   //EEPROM - Info
-  XL_MODEL_NUMBER = 0,
-  XL_FIRMWARE_VERSION = 2,
+  XL_MODEL_NUMBER,
+  XL_FIRMWARE_VERSION,
   //RAM - Contrôle
-  XL_TORQUE_ENABLE = 24,
-  XL_LED = 25,
-  XL_D_GAIN = 27,
-  XL_I_GAIN = 28,
-  XL_P_GAIN = 29,
-  XL_GOAL_POSITION = 30,
-  XL_MOVING_SPEED = 32,
-  XL_TORQUE_LIMIT = 35,
-  XL_PUNCH = 51,
+  XL_TORQUE_ENABLE,
+  XL_LED,
+  XL_D_GAIN,
+  XL_I_GAIN,
+  XL_P_GAIN,
+  XL_GOAL_POSITION,
+  XL_MOVING_SPEED,
+  XL_TORQUE_LIMIT,
+  XL_PUNCH,
   //RAM - Info
-  XL_CURRENT_POSITION = 37,
-  XL_CURRENT_SPEED = 39,
-  XL_CURRENT_LOAD = 41,
-  XL_CURRENT_VOLTAGE = 45,
-  XL_CURRENT_TEMPERATURE = 46,
-  XL_REGISTERED_INSTRUCTION = 47,
-  XL_MOVING = 49,
-  XL_HARDWARE_ERROR_STATUS = 50,
+  XL_CURRENT_POSITION,
+  XL_CURRENT_SPEED,
+  XL_CURRENT_LOAD,
+  XL_CURRENT_VOLTAGE,
+  XL_CURRENT_TEMPERATURE,
+  XL_REGISTERED_INSTRUCTION,
+  XL_MOVING,
+  XL_HARDWARE_ERROR_STATUS,
 }XL_Field;
 
 //======================================
@@ -204,15 +206,17 @@ typedef enum XL_Field_E{
 //======================================
 uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t now);
 /*
- * Ecrit la valeur data de size octets dans l'EEPROM.  Remarque :
- * Cette fonction n'effectue pas de vérifications sur data et field,
- * elle ne doit pas être appelée directement par un utilisateur.
+ * Ecrit la valeur data de size octets dans la table de contrôle.
+ * Remarque : Cette fonction n'effectue pas de vérifications sur data
+ * et field, elle ne doit pas être appelée directement par un
+ * utilisateur.
  */
 
-uint8_t XL_Ping(XL *servo, XL_Status_Packet *status);
+uint8_t XL_Ping(XL *servo);
 /*
  * Envoie une requête ping au servomoteur et récupère la réponse dans
- * status.  Renvoie 0 en cas de succès, 1 en cas d'échec.
+ * servo->interface->status.  Renvoie 0 en cas de succès, 1 en cas
+ * d'échec.
  */
 
 uint8_t XL_Discover(XL_Interface *interface, XL *buffer_servos, uint8_t len_buffer, uint16_t *nb_servos);
@@ -222,22 +226,46 @@ uint8_t XL_Discover(XL_Interface *interface, XL *buffer_servos, uint8_t len_buff
  * pour indiquer le nombre de servomoteurs découverts.
  */
 
-uint8_t XL_Whois(XL *servo);
+uint8_t XL_Say_Hello(XL *servo);
 /*
  * Vérifie l'existence du servomoteur et fait clignoter sa LED autant
- * de fois que son ID, avec une fréquence de 0.5Hz.
+ * de fois que son ID, avec une fréquence de 1Hz.
+ * La LED clignote en rouge s'il y a une erreur, en vert sinon.
  * Renvoie 0 si le servomoteur existe, -1 sinon.
  */
 
 uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data);
 /*
  * Lis une donnée dans la table de contrôle du servomoteur. En cas de
- * succès, le status return est stocké dans la structure du servo et
- * la donnée est récupérée dans data.
- * Renvoie 0 en cas de succès, -1 en cas d'échec.
+ * succès, le status return est stocké dans l'interface et la donnée
+ * est récupérée dans data. 
+ * Renvoie 0 en cas de succès, -1 en cas
+ * d'échec.
+ * Le XL_Status_Packet d'une interface n'est
+ * consultable que jusqu'à la prochaine action.
  */
 
+uint8_t XL_Action(XL *servo);
+/*
+ * Exécute l'action contenue dans le paquet d'instruction
+ * préalablement écris sur le servo grâce à une instruction REG_WRITE
+ * (XL_Write(...) avec now = 0).  Renvoie 0 en cas de succès, -1 en
+ * cas d'échec.  Remarque : Cette fonction ne vérifie pas si l'action
+ * a fonctionné, mais simplement si le paquet a pu être envoyé.
+ */
 
+uint8_t XL_Factory_Reset(XL *servo);
+/*
+ * Remet toutes les valeurs de l'EEPROM à leur valeur par défaut, sauf
+ * l'ID et la vitesse de transmission.  Attention : il faut laisser au
+ * servo environ 5 secondes pour se réinitialiser avant d'envoyer de
+ * nouvelles instructions.
+ */
+
+uint8_t XL_Reboot(XL *servo);
+/*
+ * Redémarre le servomoteur.
+ */
 
 //======================================
 //       CONFIGURATION EEPROM   
@@ -445,7 +473,7 @@ uint8_t XL_Set_Punch(XL *servo, uint16_t punch, uint8_t now);
 /*
  * Courant minimum pour contrôler le moteur
  * Valeurs possibles : 0x20 -> 0x3FF
- * Unité : ?
+ * Unité : inconnue
  * Remarque : la doc est pas claire sur ce point
  */
 
