@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 #define XL_BUFFER_SIZE 32
-#define XL_DEFAULT_TIMEOUT 1
+#define XL_DEFAULT_TIMEOUT 2
 #define XL_BROADCAST 0xFE
 
 //==================================================
@@ -386,7 +386,7 @@ typedef enum XL_LED_Color_E{
   XL_LED_OFF = 0,
   XL_RED = 1,
   XL_GREEN = 2,
-  XL_BLUE = 3,
+  XL_BLUE = 4,
   XL_YELLOW = XL_RED | XL_GREEN,
   XL_PINK = XL_RED | XL_BLUE,
   XL_CYAN = XL_GREEN | XL_BLUE,

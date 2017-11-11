@@ -253,7 +253,7 @@ uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint16_t p
 //======================================
 uint8_t XL_Build_Frame(XL_Instruction_Packet *packet, uint8_t buffer[XL_BUFFER_SIZE]){
   //Vérification des arguments
-  if(packet == 0 || packet->params == 0 || buffer == 0){
+  if(packet == 0 || (packet->params == 0 && packet->nb_params > 0) || buffer == 0){
     err = XL_ERR_ILLEGAL_ARGUMENTS;
     return 0;
   }
@@ -396,19 +396,14 @@ uint8_t XL_Ping(XL *servo){
 }
 
 uint8_t XL_Discover(XL_Interface *interface, XL *buffer_servos, uint8_t len_buffer, uint16_t *nb_servos){
-  XL_Instruction_Packet packet;
-  packet.id = XL_BROADCAST;
-  packet.instruction = XL_PING;
-  packet.nb_params = 0;
-  packet.params = 0;
+  XL servo;
+  servo.interface = interface;
 
-  if(XL_Send(interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
-    return 1;
-  }
-  
   *nb_servos = 0;
-  while((*nb_servos < len_buffer) && XL_Receive(interface, &(interface->status), 14, XL_DEFAULT_TIMEOUT) == 0){
-    buffer_servos[(*nb_servos)++] = (XL) {.id = interface->status.id, .interface = interface};
+  for(servo.id = 0x00; servo.id < 0xFD && (*nb_servos < len_buffer); servo.id++){
+    if(XL_Ping(&servo) == 0){
+      buffer_servos[(*nb_servos)++] = servo;
+    }
   }
   
   return (*nb_servos > 0)?0:1;
