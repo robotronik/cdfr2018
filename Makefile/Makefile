@@ -1,13 +1,13 @@
 BOARD= f4
 PROJECT_DIR=
 PROJECT_NAME=
-DOC_DIR= /home/$(USER)/Documents/docHAL
+DOC_DIR= /home/$(USER)/STM32Cube/
 
 rouge = \033[0;31m
 vert = \033[0;32m
 bleu = \033[0;34m
 fin = \033[0m
-vert_gras = \033[0;1;4;32m
+vert_gras = \033[0;1;32m
 fin_gras = \033[0;21m
 
 ORI=$(CURDIR)
@@ -31,25 +31,25 @@ cfd:
 	make debug
 
 comp:
-	@echo "${rouge}+--------------------[ Compilation ]--------------------+ ${fin}"
+	@echo -e "${vert_gras}+--------------------[ Compilation ]--------------------+ ${fin}"
 	cd $(PROJECT_DIR) ;\
 	make all
 	cd $(ORI);\
 
-	@echo "${rouge}+----------------[ Compilation terminée ]---------------+ ${fin}"
+	@echo -e "${vert_gras}+----------------[ Compilation terminée ]---------------+ ${fin}"
 
 flash:
-	@echo "${rouge}+---------------------[ Transfert ]---------------------+ ${fin}"
+	@echo -e "${vert_gras}+---------------------[ Transfert ]---------------------+ ${fin}"
 	openocd -f openocd/st_nucleo_$(BOARD).cfg -c "program $(PROJECT_DIR)/build/$(PROJECT_NAME).bin exit 0x08000000 reset"
-	@echo "${rouge}+----------------[ Transfert terminé ]------------------+ ${fin}"
+	@echo -e "${vert_gras}+----------------[ Transfert terminé ]------------------+ ${fin}"
 
 debug:
-	@echo "${rouge}+-----------------------[ Debug ]-----------------------+ ${fin}"
+	@echo -e "${vert_gras}+-----------------------[ Debug ]-----------------------+ ${fin}"
 	arm-none-eabi-gdb $(PROJECT_DIR)/build/$(PROJECT_NAME).elf --command=openocd/attach_$(BOARD).gdb
-	@echo "${rouge}+-------------------[ Debug terminé ]-------------------+ ${fin}"
+	@echo -e "${vert_gras}+-------------------[ Debug terminé ]-------------------+ ${fin}"
 
 doc:
-	xreader $(DOC_DIR)/docHAL-$(BOARD).pdf &
+	qpdfview $(DOC_DIR)/stm32$(BOARD)_doc.pdf &
 
 clean:
 	cd $(PROJECT_DIR) ;\
