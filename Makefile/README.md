@@ -4,10 +4,10 @@ Makefile STM32
 Installation
 ------------
  - Exemple sur Ubuntu/Mint
-   #apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi gdb-arm-none-eabi openocd
+   '''sudo apt-get install gcc-arm-none-eabi libnewlib-arm-none-eabi gdb-arm-none-eabi openocd'''
  
  - Exemple sur Arch/Manjaro
-   #pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-gdb openocd
+   '''sudo pacman -S arm-none-eabi-gcc arm-none-eabi-newlib arm-none-eabi-gdb openocd'''
 
 Configuration
 -------------
