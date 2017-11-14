@@ -36,10 +36,10 @@ typedef enum XL_Instruction_E{
 //==================================================
 //Types d'erreurs
 typedef enum XL_Error_Type_E{
-  XL_ERR_INTERNAL = 0x00, //Erreur interne à la librairie
-  XL_ERR_LINK = 0x01, //Erreur de communication (UART)
-  XL_ERR_STATUS = 0x02, //Erreur de traitement de l'instruction (XL)
-  XL_ERR_HARDWARE = 0x04, //Erreur matérielle (XL)
+  XL_ERR_INTERNAL = 0x0000, //Erreur interne à la librairie
+  XL_ERR_LINK = 0x0100, //Erreur de communication (UART)
+  XL_ERR_STATUS = 0x0200, //Erreur de traitement de l'instruction (XL)
+  XL_ERR_HARDWARE = 0x0400, //Erreur matérielle (XL)
 }XL_Error_Type;
 
 //Erreurs internes à la librairie

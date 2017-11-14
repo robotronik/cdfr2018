@@ -174,12 +174,13 @@ void XL_FSM_RECEIVING(XL_Receiver_FSM *fsm){
   }
 }
 
-uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFFER_SIZE], uint16_t length){  
+uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFFER_SIZE], uint16_t length){
+  //La taille est supposée vérifiée dans XL_Receive.
   //CRC
   uint16_t old_crc = (frame[length-1] << 8) | frame[length-2];
   uint16_t new_crc = XL_Update_CRC(0, frame, length-2);
   if(new_crc != old_crc){
-    err = XL_ERR_BAD_FRAME;
+    err = XL_ERR_LINK | XL_ERR_BAD_FRAME;
     return 1;
   }
 
@@ -197,7 +198,7 @@ uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFF
     if(p_frame - start_stuffing == 3){
       if(start_stuffing[0] == header[0] && start_stuffing[1] == header[1] && start_stuffing[2] == header[2]){
 	if(*p_frame != stuffing_byte){
-	  err = XL_ERR_BAD_FRAME;
+	  err = XL_ERR_LINK | XL_ERR_BAD_FRAME;
 	  return 1;
 	}
 	p_frame++;
@@ -215,6 +216,7 @@ uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFF
 uint8_t XL_Receive(XL_Interface *interface, uint16_t packet_size, uint32_t timeout){
   //Evite un overflow
   if(packet_size > XL_BUFFER_SIZE){
+    err = XL_ERR_INTERNAL | XL_ERR_BUFFER_OVERFLOW;
     return 1;
   }
   
@@ -229,6 +231,7 @@ uint8_t XL_Receive(XL_Interface *interface, uint16_t packet_size, uint32_t timeo
 
   //Réception
   if(interface->receive(interface->fsm.p_buffer, packet_size, timeout) != 0){
+    err = XL_ERR_LINK | XL_ERR_TIMEOUT;
     return 1;
   }
 
@@ -246,6 +249,7 @@ uint8_t XL_Receive(XL_Interface *interface, uint16_t packet_size, uint32_t timeo
 
   //Récupération du paquet
   if(interface->fsm.done == 0){
+    err = XL_ERR_LINK | XL_ERR_BAD_FRAME;
     return 1;
   }
 
@@ -258,17 +262,17 @@ uint8_t XL_Receive(XL_Interface *interface, uint16_t packet_size, uint32_t timeo
 uint8_t XL_Build_Frame(XL_Instruction_Packet *packet, uint8_t buffer[XL_BUFFER_SIZE]){
   //Vérification des arguments
   if(packet == 0 || (packet->params == 0 && packet->nb_params > 0) || buffer == 0){
-    err = XL_ERR_ILLEGAL_ARGUMENTS;
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 0;
   }
   //Evite une collision avec l'en-tête
   if(packet->id == 0xFD || packet->id == 0xFF){
-    err = XL_ERR_ILLEGAL_ARGUMENTS;
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 0;
   }
   //Evite un overflow
   if(10+packet->nb_params+packet->nb_params/3 > XL_BUFFER_SIZE){
-    err = XL_ERR_BUFFER_OVERFLOW;
+    err = XL_ERR_INTERNAL | XL_ERR_BUFFER_OVERFLOW;
     return 0;
   }
 
@@ -327,7 +331,11 @@ uint8_t XL_Send(XL_Interface *interface, XL_Instruction_Packet *packet, uint32_t
 
   //Envoi
   interface->set_direction(XL_SEND);
-  return interface->send(interface->buffer, length, timeout);
+  if(interface->send(interface->buffer, length, timeout) == 1){
+    err = XL_ERR_LINK | XL_ERR_TIMEOUT;
+    return 1;
+  }
+  return 0;
 }
 
 uint16_t XL_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){
