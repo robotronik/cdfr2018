@@ -460,13 +460,66 @@ uint8_t XL_Set_Punch(XL *servo, uint16_t punch, uint8_t now);
 //======================================
 //       LECTURE D'INFORMATIONS
 //======================================
-uint8_t XL_Get_Hardware_Error(XL *servo, uint8_t *hw_error);
-uint8_t XL_Get_Current_Position();
-uint8_t XL_Get_Current_Speed();
-uint8_t XL_Get_Current_Load();
-uint8_t XL_Get_Current_Voltage();
-uint8_t XL_Get_Current_Temperature();
-uint8_t XL_Is_Moving();
+uint8_t XL_Get_Current_Position(XL *servo, uint16_t *position);
+/*
+ * Lis la position actuelle du servomoteur.
+ * Valeurs : 0 (0°) -> 1023 (300°)
+ * Unité : 0.29°
+ */
+
+uint8_t XL_Get_Current_Speed(XL *servo, XL_Wheel_Direction *direction, uint16_t *speed);
+/*
+ * Lis la vitesse du servomoteur et le sens de rotation.
+ * Valeurs de vitesse : 0 -> 1023
+ * Direction : XL_CLOCKWISE ou XL_COUNTERCLOCKWISE (cf. doc pour précisions).
+ * Unité (Joint Mode) : 0.111 rpm
+ * Unité (Wheel Mode) : environ 0.1% du maximum
+ */
+
+uint8_t XL_Get_Current_Load(XL *servo, XL_Wheel_Direction *direction, uint16_t *load);
+/*
+ * Lis une image du couple généré par le moteur.
+ * Valeurs : 0 -> 1023
+ * Direction : XL_CLOCKWISER ou XL_COUNTERCLOCKWISE (cf. doc pour précisions).
+ * Unité : environ 0.1% du maximum
+ */
+
+uint8_t XL_Get_Current_Voltage(XL *servo, uint16_t *voltage);
+/*
+ * Lis le potentiel appliqué au servomoteur.
+ * Unité : 0.1 V
+ */
+
+uint8_t XL_Get_Current_Temperature(XL *servo, uint16_t *temperature);
+/*
+ * Lis la température interne du servomoteur.
+ * Unité : 1 °C.
+ */
+
+uint8_t XL_Is_Working(XL *servo, uint16_t *working);
+/*
+ * Lis le champs Torque Enable pour savoir si le servomoteur fonctionne.
+ * Valeurs : 1 ou 0 respectivement si le moteur fonctionne ou non.
+ */
+
+uint8_t XL_Is_Moving(XL *servo, uint16_t *moving);
+/*
+ * Lis le champs Moving pour savoir si le servomoteur bouge.
+ * Valeurs : 1 ou 0 respectivement si le moteur bouge ou non.
+ */
+
+uint8_t XL_Get_Hardware_Error(XL *servo, uint16_t *hw_error);
+/*
+ * Lis le champs Hardware Error Status du servomoteur.
+ * Valeurs : Combinaison (OR) de l'énumération XL_Hardware_Error.
+ */
+
+/*
+ * Remarque : Il y a plein d'autres champs qui peuvent être lus, mais
+ * ils ne nécessitent pas de fonction dédiée (leur lecture est un cas
+ * particulier d'utilisation). Pour les obtenir, il suffit d'utiliser
+ * directement la fonction XL_Read.
+ */
 
 //==================================================
 //              GESTION DES ERREURS

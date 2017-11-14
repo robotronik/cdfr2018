@@ -402,7 +402,7 @@ uint8_t XL_Check_Status(XL *servo){
 
 uint8_t XL_Check_Alert(XL *servo){
   if(XL_STATUS_ALERT(servo->interface->status.err) == 1){
-    uint8_t hw_error;
+    uint16_t hw_error;
     if(XL_Get_Hardware_Error(servo, &hw_error) == 1){
       return 1;
     }
@@ -787,7 +787,7 @@ uint8_t XL_Set_Goal_Speed_Wheel(XL *servo, uint16_t speed, XL_Wheel_Direction di
   }
   switch(dir){
   case XL_CLOCKWISE:
-    speed += 1023;
+    speed += 1024;
     break;
   case XL_COUNTERCLOCKWISE:
   break;
@@ -815,3 +815,47 @@ uint8_t XL_Set_Punch(XL *servo, uint16_t punch, uint8_t now){
   return XL_Write(servo, XL_PUNCH, punch, 2, now);
 }
 
+//======================================
+//       LECTURE D'INFORMATIONS
+//======================================
+uint8_t XL_Get_Current_Position(XL *servo, uint16_t *position){
+  return XL_Read(servo, XL_CURRENT_POSITION, position);
+}
+
+uint8_t XL_Get_Current_Speed(XL *servo, XL_Wheel_Direction *direction, uint16_t *speed){
+  if(XL_Read(servo, XL_CURRENT_SPEED, speed) == 1){
+    return 1;
+  }
+  *direction = (*speed > 1023)?XL_CLOCKWISE:XL_COUNTERCLOCKWISE;
+  *speed &= 0xFF;
+  return 0;
+}
+
+uint8_t XL_Get_Current_Load(XL *servo, XL_Wheel_Direction *direction, uint16_t *load){
+  if(XL_Read(servo, XL_CURRENT_LOAD, load) == 1){
+    return 1;
+  }
+  *direction = (*load > 1023)?XL_CLOCKWISE:XL_COUNTERCLOCKWISE;
+  *load &= 0xFF;
+  return 0;
+}
+
+uint8_t XL_Get_Current_Voltage(XL *servo, uint16_t *voltage){
+  return XL_Read(servo, XL_CURRENT_VOLTAGE, voltage);
+}
+
+uint8_t XL_Get_Current_Temperature(XL *servo, uint16_t *temperature){
+  return XL_Read(servo, XL_CURRENT_TEMPERATURE, temperature);
+}
+
+uint8_t XL_Is_Working(XL *servo, uint16_t *working){
+  return XL_Read(servo, XL_TORQUE_ENABLE, working);
+}
+
+uint8_t XL_Is_Moving(XL *servo, uint16_t *moving){
+  return XL_Read(servo, XL_MOVING, moving);
+}
+
+uint8_t XL_Get_Hardware_Error(XL *servo, uint16_t *hw_error){
+  return XL_Read(servo, XL_HARDWARE_ERROR_STATUS, hw_error);
+}
