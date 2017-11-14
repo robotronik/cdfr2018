@@ -78,7 +78,11 @@ static const uint8_t field_length[] = {
   [XL_MOVING] = 1,
   [XL_HARDWARE_ERROR_STATUS] = 1,
 };
-static XL_Error err;
+static uint16_t err;
+
+uint16_t XL_Get_Error(){
+  return err;
+}
 
 //========================================
 //        FONCTIONS DE RECEPTION
@@ -208,7 +212,7 @@ uint8_t XL_Extract_Status_Packet(XL_Status_Packet *packet, uint8_t frame[XL_BUFF
   return 0;
 }
 
-uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint16_t packet_size, uint32_t timeout){
+uint8_t XL_Receive(XL_Interface *interface, uint16_t packet_size, uint32_t timeout){
   //Evite un overflow
   if(packet_size > XL_BUFFER_SIZE){
     return 1;
@@ -245,7 +249,7 @@ uint8_t XL_Receive(XL_Interface *interface, XL_Status_Packet *packet, uint16_t p
     return 1;
   }
 
-  return XL_Extract_Status_Packet(packet, interface->buffer, interface->fsm.p_buffer - interface->fsm.buffer);
+  return XL_Extract_Status_Packet(&interface->status, interface->buffer, interface->fsm.p_buffer - interface->fsm.buffer);
 }
 
 //======================================
@@ -259,7 +263,7 @@ uint8_t XL_Build_Frame(XL_Instruction_Packet *packet, uint8_t buffer[XL_BUFFER_S
   }
   //Evite une collision avec l'en-tête
   if(packet->id == 0xFD || packet->id == 0xFF){
-    err = XL_ERR_ILLEGAL_ID;
+    err = XL_ERR_ILLEGAL_ARGUMENTS;
     return 0;
   }
   //Evite un overflow
@@ -388,7 +392,7 @@ uint8_t XL_Ping(XL *servo){
     return 1;
   }
   
-  if(XL_Receive(servo->interface, &(servo->interface->status), 14, XL_DEFAULT_TIMEOUT) == 1){
+  if(XL_Receive(servo->interface, 14, XL_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
@@ -444,7 +448,7 @@ uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data){
   }
   
   //Réception de la réponse
-  if(XL_Receive(servo->interface, &(servo->interface->status), 11+field_length[field], XL_DEFAULT_TIMEOUT) == 1){
+  if(XL_Receive(servo->interface, 11+field_length[field], XL_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
@@ -512,7 +516,6 @@ uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t
   packet.instruction = now?XL_WRITE:XL_REG_WRITE;
   packet.nb_params = 2 + size;
   packet.params = params;
-  
   return XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT);
 }
 

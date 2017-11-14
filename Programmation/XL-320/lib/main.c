@@ -28,7 +28,7 @@ int main(){
   interface.set_direction = set_direction;
   
   XL_Status_Packet status_packet;
-  if(XL_Receive(&interface, &status_packet, 14, 1)){
+  if(XL_Receive(&interface, 14, 1)){
     printf("Erreur");
     return EXIT_SUCCESS;
   }
