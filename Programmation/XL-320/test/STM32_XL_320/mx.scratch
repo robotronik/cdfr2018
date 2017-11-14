@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Project>
-<ProjectName>/home/antonin/Documents/Robotronik/git/cdfr2018/Programmation/XL-320/STM32_XL_320/\STM32_XL_320</ProjectName>
+<ProjectName>/home/antonin/Documents/Robotronik/git/cdfr2018/Programmation/XL-320/test/STM32_XL_320/\STM32_XL_320</ProjectName>
 <CMSIS>Drivers/CMSIS</CMSIS>
 <HAL_Driver>/home/antonin/STM32Cube/Repository//STM32Cube_FW_F4_V1.17.0/Drivers/CMSIS</HAL_Driver>
 
@@ -9,23 +9,6 @@
 
 <filestoremove>
 	<file>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_tim_ex.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_rcc_ex.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ramfunc.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma_ex.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c</name>
-	   		<name>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_stm32f401xe.s</name>
 	</file>
 </filestoremove>
 
@@ -34,10 +17,6 @@
 	   <include></include>
     </Aincludes>
 	<Cincludes>
-	   		<include>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Inc</include>
-	   		<include>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy</include>
-	   		<include>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/CMSIS/Device/ST/STM32F4xx/Include</include>
-	   		<include>/home/antonin/STM32Cube/Repository/STM32Cube_FW_F4_V1.17.0/Drivers/CMSIS/Include</include>
     </Cincludes>
 </inctoremove>
 

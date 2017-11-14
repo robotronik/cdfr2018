@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=/home/antonin/Documents/Robotronik/git/cdfr2018/Programmation/XL-320/STM32_XL_320/Inc
+HeaderPath=/home/antonin/Documents/Robotronik/git/cdfr2018/Programmation/XL-320/test/STM32_XL_320/Inc
 HeaderFiles=stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
-SourcePath=/home/antonin/Documents/Robotronik/git/cdfr2018/Programmation/XL-320/STM32_XL_320/Src
+SourcePath=/home/antonin/Documents/Robotronik/git/cdfr2018/Programmation/XL-320/test/STM32_XL_320/Src
 SourceFiles=stm32f4xx_it.c;stm32f4xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]
