@@ -38,11 +38,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "xl_320.h"
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "xl_320.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -67,8 +66,8 @@ static void MX_USART1_UART_Init(void);
 XL_Interface interface;
 
 uint8_t XL_320_Send_HAL(uint8_t *data, uint16_t size, uint32_t timeout){
-  HAL_UART_Transmit(&huart1, data, size, timeout);
-  return 0;//Temporaire
+  HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, data, size, timeout);
+  return (status==HAL_OK)?0:1;return 0;//Temporaire
 }
 
 void XL_320_Set_Direction_HAL(XL_Direction dir){
@@ -76,8 +75,12 @@ void XL_320_Set_Direction_HAL(XL_Direction dir){
 }
 
 uint8_t XL_320_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
-  HAL_UART_Receive(&huart1, buffer, size, timeout);
-  return 0;//Temporaire
+  HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
+  return (status==HAL_OK)?0:1;
+}
+
+void XL_320_Delay_HAL(uint32_t t){
+  HAL_Delay(t);
 }
 
 /* USER CODE END 0 */
@@ -113,47 +116,59 @@ int main(void)
   interface.send = XL_320_Send_HAL;
   interface.set_direction = XL_320_Set_Direction_HAL;
   interface.receive = XL_320_Receive_HAL;
+  interface.delay = XL_320_Delay_HAL;
 
-  XL_Instruction_Packet packet;
+  HAL_Delay(1000);
 
-  /*packet.id = 0x04;
-  packet.instruction = XL_FACTORY_RESET;
-  packet.nb_params = 1;
-  uint8_t p = 0x02;
-  packet.params = &p;*/
-
+  XL broadcast = (XL) {.interface = &interface, .id = XL_BROADCAST};
   
-  packet.id = 0xFE;
-  packet.instruction = XL_WRITE;
-  packet.nb_params = 4;
-  uint8_t params[4] = {30, 0, 0xF0, 0};
-  packet.params = params;
-  
-  XL_Send(&interface, &packet, 1);
+  XL servo[2];
+  uint16_t nb_servos = 0;
 
+  XL_Discover(&interface, servo, 2, &nb_servos);
+  XL_Say_Hello(&servo[0]);
+  //XL_Say_Hello(&servo[1]);
+  
+  XL_Power_Off(&servo[0], XL_NOW);
+  //XL_Power_On(&servo[1], XL_NOW);
+
+  uint16_t working;
+  if(XL_Is_Working(&servo[0], &working) == 0){
+    if(working){
+      XL_Set_LED(&servo[0], XL_GREEN, XL_NOW);
+    }
+    else{
+      XL_Set_LED(&servo[0], XL_BLUE, XL_NOW);
+    }
+  }
+  else{
+    XL_Set_LED(&servo[0], XL_RED, XL_NOW);
+  }
+  
   /*
-  /*packet.instruction = XL_PING;
-  packet.nb_params = 0;  
-  packet.params = 0;*/
-  /*
-  XL_Send(&interface, &packet, 1);
-
-  XL_Status_Packet s_packet;
-  XL_Receive(&interface, &s_packet, 14, 2);
-  if(s_packet.id == 0x04){
-    packet.instruction = XL_WRITE;
-    packet.nb_params = 3;
-    uint8_t params[3] = {25, 0, 2};
-    packet.params = params;
-    XL_Send(&interface, &packet, 1);
-    }*/
+  XL_Configure_Control_Mode(&servo[1], XL_JOIN_MODE);
+  XL_Configure_CW_Angle_Limit(&servo[1], 0);
+  XL_Configure_CCW_Angle_Limit(&servo[1],1023);
+  */
   
+  //while(1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /*HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[0], 400, XL_NOW);
+    HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[1], 600, XL_NOW);
+    //XL_Power_On(&servo[0], XL_NOW);
+    HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[0], 600, XL_NOW);
+    HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[1], 400, XL_NOW);
+    //XL_Power_On(&servo[0], XL_NOW);*/
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -224,7 +239,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 1000000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
