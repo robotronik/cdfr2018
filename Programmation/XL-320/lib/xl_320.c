@@ -80,10 +80,6 @@ static const uint8_t field_length[] = {
 };
 static uint16_t err;
 
-uint16_t XL_Get_Error(){
-  return err;
-}
-
 //========================================
 //        FONCTIONS DE RECEPTION
 //========================================
@@ -253,7 +249,14 @@ uint8_t XL_Receive(XL_Interface *interface, uint16_t packet_size, uint32_t timeo
     return 1;
   }
 
-  return XL_Extract_Status_Packet(&interface->status, interface->buffer, interface->fsm.p_buffer - interface->fsm.buffer);
+  //Vérification de la taille du paquet (au cas où)
+  uint16_t r_packet_size = interface->fsm.p_buffer - interface->fsm.buffer;
+  if(r_packet_size != packet_size){
+    err = XL_ERR_LINK | XL_ERR_BAD_FRAME;
+    return 1;
+  }
+
+  return XL_Extract_Status_Packet(&interface->status, interface->buffer, packet_size);
 }
 
 //======================================
@@ -383,10 +386,39 @@ uint16_t XL_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_
 }
 
 //======================================
+//         GESTION DES ERREURS      
+//======================================
+uint16_t XL_Get_Error(){
+  return err;
+}
+
+uint8_t XL_Check_Status(XL *servo){
+  if(XL_STATUS_ERROR(servo->interface->status.err) != 0){
+    err = XL_ERR_STATUS | XL_STATUS_ERROR(servo->interface->status.err);
+    return 1;
+  }
+  return 0;
+}
+
+uint8_t XL_Check_Alert(XL *servo){
+  if(XL_STATUS_ALERT(servo->interface->status.err) == 1){
+    uint8_t hw_error;
+    if(XL_Get_Hardware_Error(servo, &hw_error) == 1){
+      return 1;
+    }
+    err = XL_ERR_HARDWARE | hw_error;
+    return 1;
+  }
+  return 0;
+}
+
+
+//======================================
 //         JEU D'INSTRUCTIONS      
 //======================================
 uint8_t XL_Ping(XL *servo){
   if(servo == 0){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   
@@ -396,15 +428,18 @@ uint8_t XL_Ping(XL *servo){
   packet.nb_params = 0;
   packet.params = 0;
 
+  //Envoi de l'instruction
   if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
-  
+
+  //Réception de la réponse
   if(XL_Receive(servo->interface, 14, XL_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
-  return 0;
+  //Vérification de la réponse
+  return XL_Check_Status(servo);
 }
 
 uint8_t XL_Discover(XL_Interface *interface, XL *buffer_servos, uint8_t len_buffer, uint16_t *nb_servos){
@@ -440,10 +475,11 @@ uint8_t XL_Say_Hello(XL *servo){
 
 uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data){
   if(field > XL_NB_FIELDS-1){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   
-  //Envoi d'une instruction READ
+  //Préparation de l'instruction READ
   XL_Instruction_Packet packet;
   packet.id = servo->id;
   packet.instruction = XL_READ;
@@ -451,6 +487,7 @@ uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data){
   uint8_t params[4] = {field_addr[field], 0x00, field_length[field], 0x00};
   packet.params = params;
 
+  //Envoi de l'instruction
   if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
@@ -460,6 +497,11 @@ uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data){
     return 1;
   }
 
+  //Vérification de la réponse
+  if(XL_Check_Status(servo) == 1){
+    return 1;
+  }
+  
   //Récupération de la donnée
   *data = servo->interface->status.params[0];
   if(field_length[field] == 2){
@@ -469,13 +511,35 @@ uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data){
 }
 
 uint8_t XL_Action(XL *servo){
+  //Préparation de l'instruction
   XL_Instruction_Packet packet;
   packet.id = servo->id;
   packet.instruction = XL_ACTION;
   packet.nb_params = 0;
   packet.params = 0;
 
-  return XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT);
+  //Envoi de l'instruction
+  if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+
+  //Réception de la réponse
+  if(XL_Receive(servo->interface, 11, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+
+  //En cas d'erreur matérielle
+  if(XL_Check_Alert(servo) == 1){
+    return 1;
+  }
+
+  //Vérification du status
+  if(XL_Check_Status(servo) == 1){
+    return 1;
+  }
+
+  //Action OK
+  return 0;
 }
 
 uint8_t XL_Factory_Reset(XL *servo){
@@ -486,9 +550,12 @@ uint8_t XL_Factory_Reset(XL *servo){
   uint8_t param = 0x02;
   packet.params = &param;
 
+  //Envoi de l'instruction
   if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
+
+  //Attente de la réinitialisation
   servo->interface->delay(5000);
   
   return 0;
@@ -501,11 +568,14 @@ uint8_t XL_Reboot(XL *servo){
   packet.nb_params = 0;
   packet.params = 0;
 
+  //Envoi de l'instruction
   if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
+  //Attente du redémarrage
   servo->interface->delay(5000);
+  
   return 0;
 }
 
@@ -513,7 +583,8 @@ uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t
   if(servo == 0 || field > (XL_NB_FIELDS-1)){
     return 1;
   }
-  
+
+  //Préparation de l'instruction
   static XL_Instruction_Packet packet;
   static uint8_t params[4];
   params[0] = field_addr[field];
@@ -524,7 +595,29 @@ uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t
   packet.instruction = now?XL_WRITE:XL_REG_WRITE;
   packet.nb_params = 2 + size;
   packet.params = params;
-  return XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT);
+
+  //Envoi de l'instruction
+  if(XL_Send(servo->interface, &packet, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+
+  //Réception de la réponse
+  if(XL_Receive(servo->interface, 11, XL_DEFAULT_TIMEOUT) == 1){
+    return 1;
+  }
+
+  //En cas d'erreur matérielle
+  if(XL_Check_Alert(servo) == 1){
+    return 1;
+  }
+
+  //Vérification du status
+  if(XL_Check_Status(servo) == 1){
+    return 1;
+  }
+
+  //Write OK
+  return 0;
 }
 
 //======================================
@@ -532,6 +625,7 @@ uint8_t XL_Write(XL *servo, XL_Field field, uint16_t data, uint8_t size, uint8_t
 //======================================
 uint8_t XL_Configure_ID(XL *servo, uint8_t id){
   if(id > 252){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_ID, id, 1, XL_NOW);
@@ -539,6 +633,7 @@ uint8_t XL_Configure_ID(XL *servo, uint8_t id){
 
 uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate){
   if(baud_rate != XL_BAUD_RATE_9600 || baud_rate != XL_BAUD_RATE_57600 || baud_rate != XL_BAUD_RATE_115200 || baud_rate != XL_BAUD_RATE_1MBPS){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_BAUD_RATE, baud_rate, 1, XL_NOW);
@@ -546,6 +641,7 @@ uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate){
 
 uint8_t XL_Configure_Return_Delay_Time(XL *servo, uint8_t delay){
   if(delay > 0xFE){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_RETURN_DELAY_TIME, delay, 1, XL_NOW);
@@ -553,6 +649,7 @@ uint8_t XL_Configure_Return_Delay_Time(XL *servo, uint8_t delay){
 
 uint8_t XL_Configure_CW_Angle_Limit(XL *servo, uint16_t angle){
   if(angle > 0x3FF){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_CW_ANGLE_LIMIT, angle, 2, XL_NOW);
@@ -560,6 +657,7 @@ uint8_t XL_Configure_CW_Angle_Limit(XL *servo, uint16_t angle){
 
 uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle){
   if(angle > 0x3FF){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_CCW_ANGLE_LIMIT, angle, 2, XL_NOW);
@@ -567,6 +665,7 @@ uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle){
   
 uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode){
   if(mode != XL_JOIN_MODE || mode != XL_WHEEL_MODE){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_CONTROL_MODE, mode, 1, XL_NOW);
@@ -574,6 +673,7 @@ uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode){
 
 uint8_t XL_Configure_Limit_Temperature(XL *servo, uint8_t temp){
   if(temp > 150){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_LIMIT_TEMPERATURE, temp, 1, XL_NOW);
@@ -581,6 +681,7 @@ uint8_t XL_Configure_Limit_Temperature(XL *servo, uint8_t temp){
 
 uint8_t XL_Configure_Lower_Limit_Voltage(XL *servo, uint8_t voltage){
   if(voltage < 50 || voltage > 250){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_LOWER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
@@ -588,6 +689,7 @@ uint8_t XL_Configure_Lower_Limit_Voltage(XL *servo, uint8_t voltage){
 
 uint8_t XL_Configure_Upper_Limit_Voltage(XL *servo, uint8_t voltage){
   if(voltage < 50 || voltage > 250){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_UPPER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
@@ -595,6 +697,7 @@ uint8_t XL_Configure_Upper_Limit_Voltage(XL *servo, uint8_t voltage){
 
 uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque){
   if(max_torque > 1023){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_MAX_TORQUE, max_torque, 2, XL_NOW);
@@ -602,6 +705,7 @@ uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque){
 
 uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level){
   if(level != XL_PING_RETURN || level != XL_READ_RETURN || level != XL_ALL_RETURN){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_RETURN_LEVEL, level, 1, XL_NOW);
@@ -609,6 +713,7 @@ uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level){
 
 uint8_t XL_Configure_Alarm_Shutdown(XL *servo, XL_Alarm_Shutdown alarm){
   if(alarm > XL_ERROR_OVER_9000){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_ALARM_SHUTDOWN, alarm, 1, XL_NOW);
@@ -629,6 +734,7 @@ uint8_t XL_Power_Off(XL *servo, uint8_t now){
 
 uint8_t XL_Set_LED(XL *servo, XL_LED_Color color, uint8_t now){
   if((uint8_t) color > 7){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_LED, color, 1, now);
@@ -636,6 +742,7 @@ uint8_t XL_Set_LED(XL *servo, XL_LED_Color color, uint8_t now){
 
 uint8_t XL_Set_D_Gain(XL *servo, uint8_t d_gain, uint8_t now){
   if(d_gain > 254){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_D_GAIN, d_gain, 1, now);
@@ -643,6 +750,7 @@ uint8_t XL_Set_D_Gain(XL *servo, uint8_t d_gain, uint8_t now){
 
 uint8_t XL_Set_I_Gain(XL *servo, uint8_t i_gain, uint8_t now){
   if(i_gain > 254){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_I_GAIN, i_gain, 1, now);
@@ -650,6 +758,7 @@ uint8_t XL_Set_I_Gain(XL *servo, uint8_t i_gain, uint8_t now){
 
 uint8_t XL_Set_P_Gain(XL *servo, uint8_t p_gain, uint8_t now){
   if(p_gain > 254){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_P_GAIN, p_gain, 1, now);
@@ -657,6 +766,7 @@ uint8_t XL_Set_P_Gain(XL *servo, uint8_t p_gain, uint8_t now){
 
 uint8_t XL_Set_Goal_Position(XL *servo, uint16_t position, uint8_t now){
   if(position > 1023){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_GOAL_POSITION, position, 2, now);
@@ -664,6 +774,7 @@ uint8_t XL_Set_Goal_Position(XL *servo, uint16_t position, uint8_t now){
 
 uint8_t XL_Set_Goal_Speed_Join(XL *servo, uint16_t speed, uint8_t now){
   if(speed > 1023){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_MOVING_SPEED, speed, 2, now); 
@@ -671,6 +782,7 @@ uint8_t XL_Set_Goal_Speed_Join(XL *servo, uint16_t speed, uint8_t now){
 
 uint8_t XL_Set_Goal_Speed_Wheel(XL *servo, uint16_t speed, XL_Wheel_Direction dir, uint8_t now){
   if(speed > 1023){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   switch(dir){
@@ -680,6 +792,7 @@ uint8_t XL_Set_Goal_Speed_Wheel(XL *servo, uint16_t speed, XL_Wheel_Direction di
   case XL_COUNTERCLOCKWISE:
   break;
   default:
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
     break;
   }
@@ -688,6 +801,7 @@ uint8_t XL_Set_Goal_Speed_Wheel(XL *servo, uint16_t speed, XL_Wheel_Direction di
 
 uint8_t XL_Set_Torque_Limit(XL *servo, uint16_t torque_limit, uint8_t now){
   if(torque_limit > 1023){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_TORQUE_LIMIT, torque_limit, 2, now);
@@ -695,6 +809,7 @@ uint8_t XL_Set_Torque_Limit(XL *servo, uint16_t torque_limit, uint8_t now){
 
 uint8_t XL_Set_Punch(XL *servo, uint16_t punch, uint8_t now){
   if(punch < 0x20 || punch > 0x3FF){
+    err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
   return XL_Write(servo, XL_PUNCH, punch, 2, now);

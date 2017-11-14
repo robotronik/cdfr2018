@@ -32,59 +32,6 @@ typedef enum XL_Instruction_E{
 }XL_Instruction;
 
 //==================================================
-//               CODES D'ERREURS
-//==================================================
-//Types d'erreurs
-typedef enum XL_Error_Type_E{
-  XL_ERR_INTERNAL = 0x0000, //Erreur interne à la librairie
-  XL_ERR_LINK = 0x0100, //Erreur de communication (UART)
-  XL_ERR_STATUS = 0x0200, //Erreur de traitement de l'instruction (XL)
-  XL_ERR_HARDWARE = 0x0400, //Erreur matérielle (XL)
-}XL_Error_Type;
-
-//Erreurs internes à la librairie
-typedef enum XL_Internal_Error_E{
-  XL_ERR_ILLEGAL_ARGUMENTS, //Quand l'utilisateur en a trop pris
-  XL_ERR_BUFFER_OVERFLOW, //Quand le buffer ne s'est pas fait respecter
-}XL_Internal_Error;
-
-//Erreurs de communication (UART)
-typedef enum XL_Link_Error_E{
-  XL_ERR_BAD_FRAME, //Quand le XL en a trop pris
-  XL_ERR_TIMEOUT, //Quand on n'a pas eu le temps de se dépêcher
-}XL_Link_Error;
-
-//Erreurs d'instruction (XL)
-typedef enum XL_Status_Error_E{
-  XL_FAIL = 0x01,
-  XL_BAD_INSTRUCTION = 0x02,
-  XL_CRC_ERROR = 0x03,
-  XL_DATA_RANGE_ERROR = 0x04,
-  XL_DATA_LENGTH_ERROR = 0x05,
-  XL_DATA_LIMIT_ERROR = 0x06,
-  XL_ACCESS_ERROR = 0x07
-}XL_Status_Error;
-
-//Erreurs matérielles (XL)
-typedef enum XL_Hardware_Error_E{
-  XL_ERR_OVERLOAD = 0x01,
-  XL_ERR_OVER_HEATING = 0x02,
-  XL_ERR_INPUT_VOLTAGE = 0x04,
-}XL_Hardware_Error;
-
-//Macros sur les erreurs
-#define XL_ERROR_TYPE(err) (XL_Error_Type) (err >> 8)
-#define XL_ERROR_CODE(err) (err & 0xFF)
-#define XL_STATUS_ALERT(err) (XL_ERROR_CODE(err) >> 7)
-#define XL_STATUS_ERROR(err) (XL_Status_Error) (XL_ERROR_CODE(err) & 0b0111111)
-#define XL_INTERNAL_ERROR(err) (XL_Internal_Error) XL_ERROR_CODE(err)
-#define XL_LINK_ERROR(err) (XL_Link_Error) XL_ERROR_CODE(err)
-#define XL_HARDWARE_ERROR(err) (XL_Hardware_Error) XL_ERROR_CODE(err)
-
-//Fonction de récupération de l'erreur
-uint16_t XL_Get_Error();
-
-//==================================================
 //           INTERFACE, RECEPTION, ENVOI
 //==================================================
 typedef struct XL_Instruction_Packet_S{
@@ -513,12 +460,89 @@ uint8_t XL_Set_Punch(XL *servo, uint16_t punch, uint8_t now);
 //======================================
 //       LECTURE D'INFORMATIONS
 //======================================
-uint8_t XL_Get_Hardware_Error();
+uint8_t XL_Get_Hardware_Error(XL *servo, uint8_t *hw_error);
 uint8_t XL_Get_Current_Position();
 uint8_t XL_Get_Current_Speed();
 uint8_t XL_Get_Current_Load();
 uint8_t XL_Get_Current_Voltage();
 uint8_t XL_Get_Current_Temperature();
 uint8_t XL_Is_Moving();
+
+//==================================================
+//              GESTION DES ERREURS
+//==================================================
+//Types d'erreurs
+typedef enum XL_Error_Type_E{
+  XL_ERR_INTERNAL = 0x0000, //Erreur interne à la librairie
+  XL_ERR_LINK = 0x0100, //Erreur de communication (UART)
+  XL_ERR_STATUS = 0x0200, //Erreur de traitement de l'instruction (XL)
+  XL_ERR_HARDWARE = 0x0400, //Erreur matérielle (XL)
+}XL_Error_Type;
+
+//Erreurs internes à la librairie
+typedef enum XL_Internal_Error_E{
+  XL_ERR_ILLEGAL_ARGUMENTS, //Quand l'utilisateur en a trop pris
+  XL_ERR_BUFFER_OVERFLOW, //Quand le buffer ne s'est pas fait respecter
+}XL_Internal_Error;
+
+//Erreurs de communication (UART)
+typedef enum XL_Link_Error_E{
+  XL_ERR_BAD_FRAME, //Quand le XL en a trop pris
+  XL_ERR_TIMEOUT, //Quand on n'a pas eu le temps de se dépêcher
+}XL_Link_Error;
+
+//Erreurs d'instruction (XL)
+typedef enum XL_Status_Error_E{
+  XL_FAIL = 0x01,
+  XL_BAD_INSTRUCTION = 0x02,
+  XL_CRC_ERROR = 0x03,
+  XL_DATA_RANGE_ERROR = 0x04,
+  XL_DATA_LENGTH_ERROR = 0x05,
+  XL_DATA_LIMIT_ERROR = 0x06,
+  XL_ACCESS_ERROR = 0x07
+}XL_Status_Error;
+
+//Erreurs matérielles (XL)
+typedef enum XL_Hardware_Error_E{
+  XL_ERR_OVERLOAD = 0x01,
+  XL_ERR_OVER_HEATING = 0x02,
+  XL_ERR_INPUT_VOLTAGE = 0x04,
+}XL_Hardware_Error;
+
+//Macros sur les erreurs
+#define XL_ERROR_TYPE(err) (XL_Error_Type) (err >> 8)
+#define XL_ERROR_CODE(err) (err & 0xFF)
+#define XL_STATUS_ALERT(err) (XL_ERROR_CODE(err) >> 7)
+#define XL_STATUS_ERROR(err) (XL_Status_Error) (XL_ERROR_CODE(err) & 0b0111111)
+#define XL_INTERNAL_ERROR(err) (XL_Internal_Error) XL_ERROR_CODE(err)
+#define XL_LINK_ERROR(err) (XL_Link_Error) XL_ERROR_CODE(err)
+#define XL_HARDWARE_ERROR(err) (XL_Hardware_Error) XL_ERROR_CODE(err)
+
+//Fonction de récupération de l'erreur
+uint16_t XL_Get_Error();
+/*
+ * Retourne la dernière erreur détectée.  Le type d'erreur peut être
+ * vérifié avec la macro XL_ERROR_TYPE().  Pour obtenir des
+ * informations plus précises connaîssant le type d'erreur, il faut
+ * utiliser les macros définies ci-dessus.
+ */
+
+uint8_t XL_Check_Status(XL *servo);
+/*
+ * Cette fonction vérifie le status d'un servomoteur après réception
+ * d'un paquet.  Elle ne doit pas être appelée directement par
+ * l'utilisateur, mais elle est utilisée dans les fonctions
+ * d'utilisation du servomoteur. La fonction renvoie 1 en cas
+ * d'erreur, 0 en l'absence d'erreurs.
+ */
+
+uint8_t XL_Check_Alert(XL *servo);
+/*
+ * Cette fonction vérifie l'état du bit d'alarme dans le dernier
+ * paquet reçu par servo. Elle ne doit pas être appelée directement
+ * par l'utilisateur. Si le bit d'alarme vaut 1, la fonction tente de
+ * lire le champ Hardware Error Status du servomoteur pour récupérer
+ * l'erreur. Elle renvoie 0 en l'absence d'erreur matérielle, 1 sinon.
+ */
 
 #endif
