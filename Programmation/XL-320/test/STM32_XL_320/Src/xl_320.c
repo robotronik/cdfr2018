@@ -632,7 +632,7 @@ uint8_t XL_Configure_ID(XL *servo, uint8_t id){
 }
 
 uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate){
-  if(baud_rate != XL_BAUD_RATE_9600 || baud_rate != XL_BAUD_RATE_57600 || baud_rate != XL_BAUD_RATE_115200 || baud_rate != XL_BAUD_RATE_1MBPS){
+  if(baud_rate != XL_BAUD_RATE_9600 && baud_rate != XL_BAUD_RATE_57600 && baud_rate != XL_BAUD_RATE_115200 && baud_rate != XL_BAUD_RATE_1MBPS){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
@@ -704,7 +704,7 @@ uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque){
 }
 
 uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level){
-  if(level != XL_PING_RETURN || level != XL_READ_RETURN || level != XL_ALL_RETURN){
+  if(level != XL_PING_RETURN && level != XL_READ_RETURN && level != XL_ALL_RETURN){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
