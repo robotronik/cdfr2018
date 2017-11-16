@@ -127,18 +127,30 @@ int main(void)
 
   XL_Discover(&interface, &servo, 2, &nb_servos);
   XL_Say_Hello(&servo);
-  
+
+  //Test Wheel Mode
+  /*
   XL_Power_Off(&servo, XL_NOW);
   XL_Configure_CW_Angle_Limit(&servo, 0);
   XL_Configure_CCW_Angle_Limit(&servo, 0);
   XL_Configure_Control_Mode(&servo, XL_WHEEL_MODE);
   XL_Power_On(&servo, XL_NOW);
-  XL_Set_Goal_Speed_Wheel(&servo, 1023, XL_CLOCKWISE, XL_NOW);
-  /*
-  XL_Configure_Control_Mode(&servo[1], XL_JOIN_MODE);
-  XL_Configure_CW_Angle_Limit(&servo[1], 0);
-  XL_Configure_CCW_Angle_Limit(&servo[1],1023);
+  XL_Set_Goal_Speed_Wheel(&servo, 512, XL_CLOCKWISE, XL_NOW);
   */
+
+  //Test Join Mode
+  /*
+  XL_Power_Off(&servo, XL_NOW);
+  XL_Configure_CW_Angle_Limit(&servo, 0);
+  XL_Configure_CCW_Angle_Limit(&servo, 1023);
+  XL_Configure_Control_Mode(&servo, XL_JOIN_MODE);
+  XL_Power_On(&servo, XL_NOW);
+  XL_Set_Goal_Speed_Wheel(&servo, 512, XL_CLOCKWISE, XL_NOW);
+  */
+  
+  XL_Power_Off(&servo, XL_LATER);
+  HAL_Delay(5000);
+  XL_Action(&servo);
   
   //while(1);
 
@@ -146,14 +158,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint16_t data;
   while (1)
   {
+    XL_Get_Current_Position(&servo, &data);
+    data += 1;
+
     /*
     HAL_Delay(2000);
-    XL_Set_Goal_Position(&servo[0], 000, XL_NOW);
+    XL_Set_Goal_Position(&servo, 000, XL_NOW);
     HAL_Delay(2000);
-    XL_Set_Goal_Position(&servo[0], 1023, XL_NOW);
+    XL_Set_Goal_Position(&servo, 1023, XL_NOW);
     */
+    
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

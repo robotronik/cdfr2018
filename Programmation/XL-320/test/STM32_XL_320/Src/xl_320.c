@@ -628,7 +628,9 @@ uint8_t XL_Configure_ID(XL *servo, uint8_t id){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_ID, id, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_ID, id, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate){
@@ -636,7 +638,9 @@ uint8_t XL_Configure_Baud_Rate(XL *servo, XL_Baud_Rate baud_rate){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_BAUD_RATE, baud_rate, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_BAUD_RATE, baud_rate, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Return_Delay_Time(XL *servo, uint8_t delay){
@@ -644,7 +648,9 @@ uint8_t XL_Configure_Return_Delay_Time(XL *servo, uint8_t delay){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_RETURN_DELAY_TIME, delay, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_RETURN_DELAY_TIME, delay, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_CW_Angle_Limit(XL *servo, uint16_t angle){
@@ -652,7 +658,9 @@ uint8_t XL_Configure_CW_Angle_Limit(XL *servo, uint16_t angle){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_CW_ANGLE_LIMIT, angle, 2, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_CW_ANGLE_LIMIT, angle, 2, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle){
@@ -660,7 +668,9 @@ uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_CCW_ANGLE_LIMIT, angle, 2, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_CCW_ANGLE_LIMIT, angle, 2, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
   
 uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode){
@@ -668,7 +678,9 @@ uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_CONTROL_MODE, mode, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_CONTROL_MODE, mode, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Limit_Temperature(XL *servo, uint8_t temp){
@@ -676,7 +688,9 @@ uint8_t XL_Configure_Limit_Temperature(XL *servo, uint8_t temp){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_LIMIT_TEMPERATURE, temp, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_LIMIT_TEMPERATURE, temp, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Lower_Limit_Voltage(XL *servo, uint8_t voltage){
@@ -684,7 +698,9 @@ uint8_t XL_Configure_Lower_Limit_Voltage(XL *servo, uint8_t voltage){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_LOWER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_LOWER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Upper_Limit_Voltage(XL *servo, uint8_t voltage){
@@ -692,7 +708,9 @@ uint8_t XL_Configure_Upper_Limit_Voltage(XL *servo, uint8_t voltage){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_UPPER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_UPPER_LIMIT_VOLTAGE, voltage, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque){
@@ -700,7 +718,9 @@ uint8_t XL_Configure_Max_Torque(XL *servo, uint16_t max_torque){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_MAX_TORQUE, max_torque, 2, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_MAX_TORQUE, max_torque, 2, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level){
@@ -708,7 +728,9 @@ uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_RETURN_LEVEL, level, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_RETURN_LEVEL, level, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 uint8_t XL_Configure_Alarm_Shutdown(XL *servo, XL_Alarm_Shutdown alarm){
@@ -716,7 +738,9 @@ uint8_t XL_Configure_Alarm_Shutdown(XL *servo, XL_Alarm_Shutdown alarm){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return XL_Write(servo, XL_ALARM_SHUTDOWN, alarm, 1, XL_NOW);
+  uint8_t r = XL_Write(servo, XL_ALARM_SHUTDOWN, alarm, 1, XL_NOW);
+  servo->interface->delay(10);
+  return r;
 }
 
 

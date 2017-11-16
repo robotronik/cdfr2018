@@ -563,7 +563,7 @@ typedef enum XL_Hardware_Error_E{
 }XL_Hardware_Error;
 
 //Macros sur les erreurs
-#define XL_ERROR_TYPE(err) (XL_Error_Type) (err >> 8)
+#define XL_ERROR_TYPE(err) (XL_Error_Type) (err & 0xFF00)
 #define XL_ERROR_CODE(err) (err & 0xFF)
 #define XL_STATUS_ALERT(err) (XL_ERROR_CODE(err) >> 7)
 #define XL_STATUS_ERROR(err) (XL_Status_Error) (XL_ERROR_CODE(err) & 0b0111111)
