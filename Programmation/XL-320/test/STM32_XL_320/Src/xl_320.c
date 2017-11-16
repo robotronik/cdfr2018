@@ -664,7 +664,7 @@ uint8_t XL_Configure_CCW_Angle_Limit(XL *servo, uint16_t angle){
 }
   
 uint8_t XL_Configure_Control_Mode(XL *servo, XL_Mode mode){
-  if(mode != XL_JOIN_MODE || mode != XL_WHEEL_MODE){
+  if(mode != XL_JOIN_MODE && mode != XL_WHEEL_MODE){
     err = XL_ERR_INTERNAL | XL_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }

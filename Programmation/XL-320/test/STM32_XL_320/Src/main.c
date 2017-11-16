@@ -122,29 +122,18 @@ int main(void)
 
   XL broadcast = (XL) {.interface = &interface, .id = XL_BROADCAST};
   
-  XL servo[2];
+  XL servo;
   uint16_t nb_servos = 0;
 
-  XL_Discover(&interface, servo, 2, &nb_servos);
-  XL_Say_Hello(&servo[0]);
-  //XL_Say_Hello(&servo[1]);
+  XL_Discover(&interface, &servo, 2, &nb_servos);
+  XL_Say_Hello(&servo);
   
-  XL_Power_Off(&servo[0], XL_NOW);
-  //XL_Power_On(&servo[1], XL_NOW);
-
-  uint16_t working;
-  if(XL_Is_Working(&servo[0], &working) == 0){
-    if(working){
-      XL_Set_LED(&servo[0], XL_GREEN, XL_NOW);
-    }
-    else{
-      XL_Set_LED(&servo[0], XL_BLUE, XL_NOW);
-    }
-  }
-  else{
-    XL_Set_LED(&servo[0], XL_RED, XL_NOW);
-  }
-  
+  XL_Power_Off(&servo, XL_NOW);
+  XL_Configure_CW_Angle_Limit(&servo, 0);
+  XL_Configure_CCW_Angle_Limit(&servo, 0);
+  XL_Configure_Control_Mode(&servo, XL_WHEEL_MODE);
+  XL_Power_On(&servo, XL_NOW);
+  XL_Set_Goal_Speed_Wheel(&servo, 1023, XL_CLOCKWISE, XL_NOW);
   /*
   XL_Configure_Control_Mode(&servo[1], XL_JOIN_MODE);
   XL_Configure_CW_Angle_Limit(&servo[1], 0);
@@ -159,16 +148,12 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /*HAL_Delay(2000);
-    XL_Set_Goal_Position(&servo[0], 400, XL_NOW);
+    /*
     HAL_Delay(2000);
-    XL_Set_Goal_Position(&servo[1], 600, XL_NOW);
-    //XL_Power_On(&servo[0], XL_NOW);
+    XL_Set_Goal_Position(&servo[0], 000, XL_NOW);
     HAL_Delay(2000);
-    XL_Set_Goal_Position(&servo[0], 600, XL_NOW);
-    HAL_Delay(2000);
-    XL_Set_Goal_Position(&servo[1], 400, XL_NOW);
-    //XL_Power_On(&servo[0], XL_NOW);*/
+    XL_Set_Goal_Position(&servo[0], 1023, XL_NOW);
+    */
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
