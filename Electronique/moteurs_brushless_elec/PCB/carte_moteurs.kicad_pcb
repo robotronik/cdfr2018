@@ -1,11 +1,11 @@
 (kicad_pcb (version 4) (host pcbnew 4.0.2+dfsg1-stable)
 
   (general
-    (links 189)
+    (links 0)
     (no_connects 189)
-    (area 0 0 0 0)
+    (area 13.899999 43.899999 169.100001 162.100001)
     (thickness 1.6)
-    (drawings 6)
+    (drawings 5)
     (tracks 0)
     (zones 0)
     (modules 75)
@@ -241,8 +241,49 @@
     (add_net VCC)
   )
 
+  (module maxon:Molex-52207-0433 (layer F.Cu) (tedit 5A2443BF) (tstamp 59E09A20)
+    (at 97 71.5 270)
+    (descr http://www.molex.com/pdm_docs/sd/522070433_sd.pdf)
+    (path /596138FA/59614717)
+    (fp_text reference K1 (at 0 2.54 270) (layer F.SilkS)
+      (effects (font (size 1 1) (thickness 0.15)))
+    )
+    (fp_text value Maxon-200142 (at 0 5.805 270) (layer F.Fab)
+      (effects (font (size 1 1) (thickness 0.15)))
+    )
+    (fp_line (start -7.75 6.9) (end -7.75 1.55) (layer Eco2.User) (width 0.15))
+    (fp_line (start 7.75 6.9) (end -7.75 6.9) (layer Eco2.User) (width 0.15))
+    (fp_line (start 7.75 1.55) (end 7.75 6.9) (layer Eco2.User) (width 0.15))
+    (fp_line (start -7.75 1.55) (end 7.75 1.55) (layer Eco2.User) (width 0.15))
+    (fp_line (start 0 4.7) (end 0 9.4) (layer B.Fab) (width 0.15))
+    (pad 11 smd rect (at -5 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 6 +5V))
+    (pad 10 smd rect (at -4 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 37 "Net-(K1-Pad10)"))
+    (pad 9 smd rect (at -3 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 36 "Net-(K1-Pad9)"))
+    (pad 8 smd rect (at -2 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 35 "Net-(K1-Pad8)"))
+    (pad 7 smd rect (at -1 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 1 GND))
+    (pad 6 smd rect (at 0 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 34 "Net-(K1-Pad5)"))
+    (pad 5 smd rect (at 1 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 34 "Net-(K1-Pad5)"))
+    (pad 4 smd rect (at 2 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 33 "Net-(K1-Pad3)"))
+    (pad 3 smd rect (at 3 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 33 "Net-(K1-Pad3)"))
+    (pad 2 smd rect (at 4 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 32 "Net-(K1-Pad1)"))
+    (pad 1 smd rect (at 5 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
+      (net 32 "Net-(K1-Pad1)"))
+    (pad "" smd rect (at 8.15 2.35 270) (size 2.1 2.8) (layers F.Cu F.Paste F.Mask))
+    (pad "" smd rect (at -8.15 2.35 270) (size 2.1 2.8) (layers F.Cu F.Paste F.Mask))
+  )
+
   (module maxon:Molex-52207-0433 (layer F.Cu) (tedit 570E61AD) (tstamp 59E09A36)
-    (at 64.25 70.864 90)
+    (at 64 71 90)
     (descr http://www.molex.com/pdm_docs/sd/522070433_sd.pdf)
     (path /596138FA/59B49302)
     (fp_text reference K2 (at 0 -22.74 90) (layer F.SilkS)
@@ -283,7 +324,7 @@
   )
 
   (module Housings_SOIC:SOIC-24W_7.5x15.4mm_Pitch1.27mm (layer F.Cu) (tedit 58CC8F64) (tstamp 59E09CED)
-    (at 122.856 69.368 270)
+    (at 116.356 66.868 270)
     (descr "24-Lead Plastic Small Outline (SO) - Wide, 7.50 mm Body [SOIC] (see Microchip Packaging Specification 00000049BS.pdf)")
     (tags "SOIC 1.27")
     (path /596138FA/59613948)
@@ -368,49 +409,8 @@
     )
   )
 
-  (module maxon:Molex-52207-0433 (layer F.Cu) (tedit 570E61AD) (tstamp 59E09A20)
-    (at 99.036 69.758 270)
-    (descr http://www.molex.com/pdm_docs/sd/522070433_sd.pdf)
-    (path /596138FA/59614717)
-    (fp_text reference K1 (at 0 -22.74 270) (layer F.SilkS)
-      (effects (font (size 1 1) (thickness 0.15)))
-    )
-    (fp_text value Maxon-200142 (at 0 -17.055 270) (layer F.Fab)
-      (effects (font (size 1 1) (thickness 0.15)))
-    )
-    (fp_line (start -7.75 6.9) (end -7.75 1.55) (layer Eco2.User) (width 0.15))
-    (fp_line (start 7.75 6.9) (end -7.75 6.9) (layer Eco2.User) (width 0.15))
-    (fp_line (start 7.75 1.55) (end 7.75 6.9) (layer Eco2.User) (width 0.15))
-    (fp_line (start -7.75 1.55) (end 7.75 1.55) (layer Eco2.User) (width 0.15))
-    (fp_line (start 0 4.7) (end 0 9.4) (layer B.Fab) (width 0.15))
-    (pad 1 smd rect (at -5 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 32 "Net-(K1-Pad1)"))
-    (pad 2 smd rect (at -4 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 32 "Net-(K1-Pad1)"))
-    (pad 3 smd rect (at -3 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 33 "Net-(K1-Pad3)"))
-    (pad 4 smd rect (at -2 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 33 "Net-(K1-Pad3)"))
-    (pad 5 smd rect (at -1 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 34 "Net-(K1-Pad5)"))
-    (pad 6 smd rect (at 0 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 34 "Net-(K1-Pad5)"))
-    (pad 7 smd rect (at 1 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 1 GND))
-    (pad 8 smd rect (at 2 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 35 "Net-(K1-Pad8)"))
-    (pad 9 smd rect (at 3 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 36 "Net-(K1-Pad9)"))
-    (pad 10 smd rect (at 4 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 37 "Net-(K1-Pad10)"))
-    (pad 11 smd rect (at 5 0 270) (size 0.6 1.9) (layers F.Cu F.Paste F.Mask)
-      (net 6 +5V))
-    (pad "" smd rect (at 8.15 2.35 270) (size 2.1 2.8) (layers F.Cu F.Paste F.Mask))
-    (pad "" smd rect (at -8.15 2.35 270) (size 2.1 2.8) (layers F.Cu F.Paste F.Mask))
-  )
-
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E09576)
-    (at 112.476 78.638 180)
+    (at 105.976 76.138 180)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/5961BF92)
@@ -446,7 +446,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E09587)
-    (at 50.84 57.664)
+    (at 55.84 58.664)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59B493DB)
@@ -482,7 +482,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E09598)
-    (at 110.542 114.116 180)
+    (at 104.5 103 180)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /59613C4C/59C15931)
@@ -518,7 +518,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E095A9)
-    (at 100.112 124.326 90)
+    (at 93.5 110 90)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /59613C4C/59C15C12)
@@ -554,7 +554,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E095BA)
-    (at 156.362 115.026 90)
+    (at 137 105 90)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /59613C4C/59615D27)
@@ -590,7 +590,7 @@
   )
 
   (module Capacitors_THT:CP_Radial_D8.0mm_P3.50mm (layer F.Cu) (tedit 597BC7C2) (tstamp 59E09663)
-    (at 54.03 132.89 270)
+    (at 53 121.5 270)
     (descr "CP, Radial series, Radial, pin pitch=3.50mm, , diameter=8mm, Electrolytic Capacitor")
     (tags "CP Radial series Radial pin pitch 3.50mm  diameter 8mm Electrolytic Capacitor")
     (path /59613F6F/59627130)
@@ -777,7 +777,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E09674)
-    (at 34.4 132.97 270)
+    (at 35 122 270)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /59613F6F/596270DD)
@@ -813,7 +813,7 @@
   )
 
   (module Capacitors_THT:CP_Radial_D8.0mm_P3.50mm (layer F.Cu) (tedit 597BC7C2) (tstamp 59E0971D)
-    (at 68.834 115.062 270)
+    (at 67.334 107.562 270)
     (descr "CP, Radial series, Radial, pin pitch=3.50mm, , diameter=8mm, Electrolytic Capacitor")
     (tags "CP Radial series Radial pin pitch 3.50mm  diameter 8mm Electrolytic Capacitor")
     (path /59613F6F/5962615B)
@@ -1000,7 +1000,7 @@
   )
 
   (module Capacitors_THT:CP_Radial_D8.0mm_P3.50mm (layer F.Cu) (tedit 597BC7C2) (tstamp 59E097C6)
-    (at 38.1 101.854)
+    (at 38 98.5)
     (descr "CP, Radial series, Radial, pin pitch=3.50mm, , diameter=8mm, Electrolytic Capacitor")
     (tags "CP Radial series Radial pin pitch 3.50mm  diameter 8mm Electrolytic Capacitor")
     (path /59613F6F/5962624A)
@@ -1187,7 +1187,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E097D7)
-    (at 121.516 79.008 180)
+    (at 115.016 76.508 180)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/5961567C)
@@ -1223,7 +1223,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E097E8)
-    (at 41.88 61.774 180)
+    (at 46.88 62.774 180)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59B49375)
@@ -1259,7 +1259,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E097F9)
-    (at 107.006 55.928 180)
+    (at 100.506 53.428 180)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59624D3C)
@@ -1295,7 +1295,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E0980A)
-    (at 54.87 83.404)
+    (at 59.87 84.404)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59B493F6)
@@ -1331,7 +1331,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E0981B)
-    (at 132.236 58.488 90)
+    (at 125.736 55.988 90)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59618797)
@@ -1367,7 +1367,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E0982C)
-    (at 35.19 81.214 270)
+    (at 40.19 82.214 270)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59B4938F)
@@ -1403,7 +1403,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E0983D)
-    (at 128.876 83.608 270)
+    (at 122.376 81.108 270)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/5961562C)
@@ -1439,7 +1439,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E0984E)
-    (at 34.38 59.514 90)
+    (at 39.38 60.514 90)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59B4936F)
@@ -1475,7 +1475,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E0985F)
-    (at 117.796 58.328 90)
+    (at 111.296 55.828 90)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59619FC3)
@@ -1511,7 +1511,7 @@
   )
 
   (module Capacitors_SMD:C_1206_HandSoldering (layer F.Cu) (tedit 58AA84D1) (tstamp 59E09870)
-    (at 43.49 81.254 270)
+    (at 48.49 82.254 270)
     (descr "Capacitor SMD 1206, hand soldering")
     (tags "capacitor 1206")
     (path /596138FA/59B493AC)
@@ -1547,7 +1547,7 @@
   )
 
   (module Diodes_SMD:D_SOD-123 (layer F.Cu) (tedit 58645DC7) (tstamp 59E09889)
-    (at 118.276 84.608 90)
+    (at 111.776 82.108 90)
     (descr SOD-123)
     (tags SOD-123)
     (path /596138FA/5961553C)
@@ -1591,7 +1591,7 @@
   )
 
   (module Diodes_SMD:D_SOD-123 (layer F.Cu) (tedit 58645DC7) (tstamp 59E098A2)
-    (at 124.096 84.738 270)
+    (at 117.596 82.238 270)
     (descr SOD-123)
     (tags SOD-123)
     (path /596138FA/596155C9)
@@ -1635,7 +1635,7 @@
   )
 
   (module Diodes_SMD:D_SOD-123 (layer F.Cu) (tedit 58645DC7) (tstamp 59E098BB)
-    (at 39.38 57.194 270)
+    (at 44.38 58.194 270)
     (descr SOD-123)
     (tags SOD-123)
     (path /596138FA/59B4935D)
@@ -1679,7 +1679,7 @@
   )
 
   (module Diodes_SMD:D_SOD-123 (layer F.Cu) (tedit 58645DC7) (tstamp 59E098D4)
-    (at 44.12 57.254 90)
+    (at 49.12 58.254 90)
     (descr SOD-123)
     (tags SOD-123)
     (path /596138FA/59B49363)
@@ -1723,7 +1723,7 @@
   )
 
   (module Diodes_SMD:D_SMA-SMB_Universal_Handsoldering (layer F.Cu) (tedit 5864381A) (tstamp 59E098F0)
-    (at 144.592 131.836)
+    (at 130.5 119.5)
     (descr "Diode, Universal, SMA (DO-214AC) or SMB (DO-214AA), Handsoldering,")
     (tags "Diode Universal SMA (DO-214AC) SMB (DO-214AA) Handsoldering ")
     (path /59613C4C/596A8942)
@@ -1770,7 +1770,7 @@
   )
 
   (module Diodes_SMD:D_SMC_Handsoldering (layer F.Cu) (tedit 58642B03) (tstamp 59E09908)
-    (at 43.12 135.34 270)
+    (at 42.5 124 270)
     (descr "Diode SMC (DO-214AB) Handsoldering")
     (tags "Diode SMC (DO-214AB) Handsoldering")
     (path /59613F6F/5962E7D0)
@@ -1813,7 +1813,7 @@
   )
 
   (module Diodes_SMD:D_SMA-SMB_Universal_Handsoldering (layer F.Cu) (tedit 5864381A) (tstamp 59E09924)
-    (at 65.39 140.73 90)
+    (at 62 127 90)
     (descr "Diode, Universal, SMA (DO-214AC) or SMB (DO-214AA), Handsoldering,")
     (tags "Diode Universal SMA (DO-214AC) SMB (DO-214AA) Handsoldering ")
     (path /59613F6F/59630415)
@@ -1860,7 +1860,7 @@
   )
 
   (module Diodes_SMD:D_SMA-SMB_Universal_Handsoldering (layer F.Cu) (tedit 5864381A) (tstamp 59E09940)
-    (at 78.74 123.19 90)
+    (at 77.5 115.5 90)
     (descr "Diode, Universal, SMA (DO-214AC) or SMB (DO-214AA), Handsoldering,")
     (tags "Diode Universal SMA (DO-214AC) SMB (DO-214AA) Handsoldering ")
     (path /59613F6F/59630349)
@@ -1954,7 +1954,7 @@
   )
 
   (module Fuse_Holders_and_Fuses:Fuseholder5x20_horiz_SemiClosed_Casing10x25mm (layer F.Cu) (tedit 5880C4BF) (tstamp 59E09988)
-    (at 40.65 119 180)
+    (at 43.5 109.5 180)
     (descr "Fuseholder, 5x20, Semi closed, horizontal, Casing 10x25mm,")
     (tags "Fuseholder 5x20 Semi closed horizontal Casing 10x25mm Sicherungshalter halbgeschlossen ")
     (path /59613F6F/5962E74B)
@@ -2009,7 +2009,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-02_02x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE4) (tstamp 59E099A9)
-    (at 108.302 136.936 90)
+    (at 98.5 123 90)
     (descr "Connector Headers with Friction Lock, 22-27-2021, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2021")
     (path /59613C4C/5974F8CE)
@@ -2060,7 +2060,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-04_04x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE8) (tstamp 59E099D2)
-    (at 147.612 113.526 270)
+    (at 129 103 270)
     (descr "Connector Headers with Friction Lock, 22-27-2041, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2041")
     (path /59613C4C/59615ECD)
@@ -2121,7 +2121,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-02_02x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE4) (tstamp 59E099F3)
-    (at 75.56 134.06 270)
+    (at 70.5 122.5 270)
     (descr "Connector Headers with Friction Lock, 22-27-2021, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2021")
     (path /59613F6F/596A9627)
@@ -2172,7 +2172,7 @@
   )
 
   (module Pin_Headers:Pin_Header_Straight_1x03_Pitch2.54mm (layer F.Cu) (tedit 59650532) (tstamp 59E09A0A)
-    (at 126.292 104.916 270)
+    (at 115.792 93.916 270)
     (descr "Through hole straight pin header, 1x03, 2.54mm pitch, single row")
     (tags "Through hole pin header THT 1x03 2.54mm single row")
     (path /59613C4C/5974E017)
@@ -2214,7 +2214,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-02_02x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE4) (tstamp 59E09A57)
-    (at 133.282 105.356)
+    (at 122.782 94.356)
     (descr "Connector Headers with Friction Lock, 22-27-2021, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2021")
     (path /59613C4C/59C14D2B)
@@ -2265,7 +2265,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-02_02x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE4) (tstamp 59E09A78)
-    (at 140.052 144.726 180)
+    (at 131 127 180)
     (descr "Connector Headers with Friction Lock, 22-27-2021, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2021")
     (path /59613C4C/59C1439A)
@@ -2316,7 +2316,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-02_02x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE4) (tstamp 59E09A99)
-    (at 127.352 134.636 270)
+    (at 116.852 123.636 270)
     (descr "Connector Headers with Friction Lock, 22-27-2021, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2021")
     (path /59613C4C/59C2FCB1)
@@ -2367,7 +2367,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-04_04x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE8) (tstamp 59E09AC2)
-    (at 160.792 131.856 90)
+    (at 140.5 120.5 90)
     (descr "Connector Headers with Friction Lock, 22-27-2041, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2041")
     (path /5962A1C1/59C303CC)
@@ -2428,7 +2428,7 @@
   )
 
   (module Connectors_Molex:Molex_KK-6410-04_04x2.54mm_Straight (layer F.Cu) (tedit 58EE6EE8) (tstamp 59E09AEB)
-    (at 95.758 138.43 90)
+    (at 89.5 123.5 90)
     (descr "Connector Headers with Friction Lock, 22-27-2041, http://www.molex.com/pdm_docs/sd/022272021_sd.pdf")
     (tags "connector molex kk_6410 22-27-2041")
     (path /5962A1C1/59C30399)
@@ -2489,7 +2489,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09AFC)
-    (at 112.446 88.368 180)
+    (at 105.946 85.868 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/5961BC60)
@@ -2525,7 +2525,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B0D)
-    (at 112.496 83.398)
+    (at 105.996 80.898)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/5961BC99)
@@ -2561,7 +2561,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B1E)
-    (at 50.92 52.634)
+    (at 55.92 53.634)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59B493CF)
@@ -2597,7 +2597,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B2F)
-    (at 50.8 61.914 180)
+    (at 55.8 62.914 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59B493D5)
@@ -2633,7 +2633,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B40)
-    (at 123.692 111.726 90)
+    (at 113.192 100.726 90)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613C4C/5974DF8C)
@@ -2669,7 +2669,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B51)
-    (at 145.032 125.976)
+    (at 129 114.5)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613C4C/596A89D5)
@@ -2705,7 +2705,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B62)
-    (at 65.6 128.69 90)
+    (at 62 117.5 90)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613F6F/59630075)
@@ -2741,7 +2741,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B73)
-    (at 51.69 109.58 180)
+    (at 50.19 102.08 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613F6F/5962F28F)
@@ -2777,7 +2777,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B84)
-    (at 59.69 109.474 180)
+    (at 58.19 101.974 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613F6F/5962F2E4)
@@ -2813,7 +2813,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09B95)
-    (at 78.74 112.268 90)
+    (at 77.24 104.768 90)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613F6F/5963017A)
@@ -2849,7 +2849,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09BA6)
-    (at 21.336 94.488)
+    (at 23.5 90.5)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613F6F/5962F32D)
@@ -2885,7 +2885,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09BB7)
-    (at 30.226 94.488 180)
+    (at 31.726 90.488 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613F6F/5962F372)
@@ -2921,7 +2921,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09BC8)
-    (at 41.148 94.488 180)
+    (at 42.648 90.488 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613F6F/596302DA)
@@ -2957,7 +2957,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09BD9)
-    (at 110.272 126.366 180)
+    (at 99.772 115.366 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613C4C/59C17650)
@@ -2993,7 +2993,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09BEA)
-    (at 133.982 136.146 270)
+    (at 123.482 125.146 270)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /59613C4C/59C2FCEC)
@@ -3029,7 +3029,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09BFB)
-    (at 122.856 58.498 90)
+    (at 116.356 55.998 90)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/5962811E)
@@ -3065,7 +3065,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C0C)
-    (at 39.44 81.214 270)
+    (at 44.44 82.214 270)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59B4940F)
@@ -3101,7 +3101,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C1D)
-    (at 106.896 60.508 180)
+    (at 100.396 58.008 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59624BB3)
@@ -3137,7 +3137,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C2E)
-    (at 54.88 78.944)
+    (at 59.88 79.944)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59B493F0)
@@ -3173,7 +3173,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C3F)
-    (at 127.716 58.438 90)
+    (at 121.216 55.938 90)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59618982)
@@ -3209,7 +3209,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C50)
-    (at 31.25 81.234 270)
+    (at 36.25 82.234 270)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59B49395)
@@ -3245,7 +3245,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C61)
-    (at 125.346 91.138 180)
+    (at 118.846 88.638 180)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/596155F3)
@@ -3281,7 +3281,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C72)
-    (at 36.81 51.934)
+    (at 41.81 52.934)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59B49369)
@@ -3317,7 +3317,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C83)
-    (at 113.781 58.358 90)
+    (at 107.281 55.858 90)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/5961A03C)
@@ -3353,7 +3353,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 59E09C94)
-    (at 48.07 81.214 270)
+    (at 53.07 82.214 270)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /596138FA/59B493B2)
@@ -3389,7 +3389,7 @@
   )
 
   (module Resistors_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P20.32mm_Horizontal (layer F.Cu) (tedit 5874F706) (tstamp 59E09CAA)
-    (at 140.636 59.268 270)
+    (at 134.136 56.768 270)
     (descr "Resistor, Axial_DIN0414 series, Axial, Horizontal, pin pitch=20.32mm, 2W, length*diameter=11.9*4.5mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf")
     (tags "Resistor Axial_DIN0414 series Axial Horizontal pin pitch 20.32mm 2W length 11.9mm diameter 4.5mm")
     (path /596138FA/59614D6A)
@@ -3427,7 +3427,7 @@
   )
 
   (module Resistors_THT:R_Axial_DIN0414_L11.9mm_D4.5mm_P20.32mm_Horizontal (layer F.Cu) (tedit 5874F706) (tstamp 59E09CC0)
-    (at 21.31 81.514 90)
+    (at 26.31 82.514 90)
     (descr "Resistor, Axial_DIN0414 series, Axial, Horizontal, pin pitch=20.32mm, 2W, length*diameter=11.9*4.5mm^2, http://www.vishay.com/docs/20128/wkxwrx.pdf")
     (tags "Resistor Axial_DIN0414 series Axial Horizontal pin pitch 20.32mm 2W length 11.9mm diameter 4.5mm")
     (path /596138FA/59B49337)
@@ -3465,7 +3465,7 @@
   )
 
   (module Housings_SOIC:SOIC-24W_7.5x15.4mm_Pitch1.27mm (layer F.Cu) (tedit 58CC8F64) (tstamp 59E09D1A)
-    (at 38.96 70.714 90)
+    (at 43.96 71.714 90)
     (descr "24-Lead Plastic Small Outline (SO) - Wide, 7.50 mm Body [SOIC] (see Microchip Packaging Specification 00000049BS.pdf)")
     (tags "SOIC 1.27")
     (path /596138FA/59B492F0)
@@ -3551,7 +3551,7 @@
   )
 
   (module Housings_QFP:LQFP-32_7x7mm_Pitch0.8mm (layer F.Cu) (tedit 54130A77) (tstamp 59E09D51)
-    (at 125.917 124.221)
+    (at 115.417 113.221)
     (descr "LQFP32: plastic low profile quad flat package; 32 leads; body 7 x 7 x 1.4 mm (see NXP sot358-1_po.pdf and sot358-1_fr.pdf)")
     (tags "QFP 0.8")
     (path /59613C4C/59613C78)
@@ -3655,7 +3655,7 @@
   )
 
   (module "B plug:B plug 5mm" (layer F.Cu) (tedit 57092EFC) (tstamp 59E09D60)
-    (at 25.61 132.83)
+    (at 28.11 121.33)
     (path /59613F6F/5962E6CD)
     (fp_text reference U4 (at 0 -7.5) (layer F.SilkS)
       (effects (font (size 1 1) (thickness 0.15)))
@@ -3679,7 +3679,7 @@
   )
 
   (module TO_SOT_Packages_SMD:SOT-223-3Lead_TabPin2 (layer F.Cu) (tedit 58CE4E7E) (tstamp 59E09D76)
-    (at 56.896 116.586)
+    (at 55.396 109.086)
     (descr "module CMS SOT223 4 pins")
     (tags "CMS SOT")
     (path /59613F6F/5962EDF3)
@@ -3722,7 +3722,7 @@
   )
 
   (module TO_SOT_Packages_SMD:SOT-223-3Lead_TabPin2 (layer F.Cu) (tedit 58CE4E7E) (tstamp 59E09D8C)
-    (at 27.94 101.854)
+    (at 27 98.5)
     (descr "module CMS SOT223 4 pins")
     (tags "CMS SOT")
     (path /59613F6F/5962EF34)
@@ -3765,7 +3765,7 @@
   )
 
   (module Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm (layer F.Cu) (tedit 58CD0CDA) (tstamp 59E09DA9)
-    (at 117.752 135.716)
+    (at 107 124)
     (descr "8-Lead Plastic Small Outline (SN) - Narrow, 3.90 mm Body [SOIC] (see Microchip Packaging Specification 00000049BS.pdf)")
     (tags "SOIC 1.27")
     (path /59613C4C/59C2F137)
@@ -3819,7 +3819,7 @@
   )
 
   (module Crystals:Crystal_HC49-4H_Vertical (layer F.Cu) (tedit 58CD2E9C) (tstamp 59E09DC0)
-    (at 113.132 119.926 180)
+    (at 104.5 109 180)
     (descr "Crystal THT HC-49-4H http://5hertz.com/pdfs/04404_D.pdf")
     (tags "THT crystalHC-49-4H")
     (path /59613C4C/59C158A8)
@@ -3859,11 +3859,10 @@
     )
   )
 
+  (gr_line (start 148 44) (end 15 44) (angle 90) (layer B.Adhes) (width 0.2))
+  (gr_line (start 14 134) (end 148 134) (angle 90) (layer B.Adhes) (width 0.2))
+  (gr_line (start 148 134) (end 148 44) (angle 90) (layer B.Adhes) (width 0.2))
+  (gr_line (start 14 44) (end 14 134) (angle 90) (layer B.Adhes) (width 0.2))
   (gr_line (start 14 44) (end 15 44) (angle 90) (layer B.Adhes) (width 0.2))
-  (gr_line (start 14 162) (end 14 44) (angle 90) (layer B.Adhes) (width 0.2))
-  (gr_line (start 169 162) (end 14 162) (angle 90) (layer B.Adhes) (width 0.2))
-  (gr_line (start 169 44) (end 169 162) (angle 90) (layer B.Adhes) (width 0.2))
-  (gr_line (start 149 44) (end 169 44) (angle 90) (layer B.Adhes) (width 0.2))
-  (gr_line (start 15 44) (end 149 44) (angle 90) (layer B.Adhes) (width 0.2))
 
 )
