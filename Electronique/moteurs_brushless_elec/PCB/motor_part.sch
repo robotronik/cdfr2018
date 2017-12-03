@@ -448,11 +448,11 @@ DIR_1
 Wire Wire Line
 	3150 3050 3550 3050
 Text Label 5300 3200 0    60   ~ 0
-Vref
+Vref1
 Wire Wire Line
 	5000 3200 5300 3200
 Text Label 5000 4800 0    60   ~ 0
-Vref
+Vref1
 $Comp
 L R R1
 U 1 1 5961BC60
@@ -1006,11 +1006,11 @@ DIR_2
 Wire Wire Line
 	10300 2950 10700 2950
 Text Label 12450 3100 0    60   ~ 0
-Vref
+Vref2
 Wire Wire Line
 	12150 3100 12450 3100
 Text Label 12150 4700 0    60   ~ 0
-Vref
+Vref2
 $Comp
 L R R3
 U 1 1 59B493CF
