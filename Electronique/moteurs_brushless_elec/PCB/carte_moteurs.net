@@ -1,7 +1,7 @@
 (export (version D)
   (design
     (source /home/maxime/Bureau/Robotique/git/cdfr2018/Electronique/moteurs_brushless_elec/PCB/carte_moteurs.sch)
-    (date "ven. 15 déc. 2017 21:03:15 CET")
+    (date "ven. 15 déc. 2017 21:07:56 CET")
     (tool "Eeschema 4.0.2+dfsg1-stable")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -835,12 +835,12 @@
       (uri /usr/share/kicad/library/conn.lib))
     (library (logical regul)
       (uri /usr/share/kicad/library/regul.lib))
-    (library (logical Propulsion_control)
-      (uri /home/maxime/Bureau/Robotique/git/cdfr2018/Electronique/moteurs_brushless_elec/PCB/lib/Propulsion_control.lib))
     (library (logical 2)
       (uri /home/maxime/Bureau/Robotique/git/cdfr2018/Electronique/moteurs_brushless_elec/PCB/lib/2.lib))
     (library (logical carte_moteurs-cache)
-      (uri /home/maxime/Bureau/Robotique/git/cdfr2018/Electronique/moteurs_brushless_elec/PCB/carte_moteurs-cache.lib)))
+      (uri /home/maxime/Bureau/Robotique/git/cdfr2018/Electronique/moteurs_brushless_elec/PCB/carte_moteurs-cache.lib))
+    (library (logical Propulsion_control)
+      (uri /home/maxime/Bureau/Robotique/git/cdfr2018/Electronique/moteurs_brushless_elec/PCB/lib/Propulsion_control.lib)))
   (nets
     (net (code 1) (name /motor_part/BRAKE_1)
       (node (ref U1) (pin 14))
