@@ -6,7 +6,7 @@
     (area 25.924999 84.924999 180.075001 150.075001)
     (thickness 1.6)
     (drawings 8)
-    (tracks 1121)
+    (tracks 1122)
     (zones 0)
     (modules 86)
     (nets 74)
@@ -37,7 +37,7 @@
   )
 
   (setup
-    (last_trace_width 0.8)
+    (last_trace_width 1.2)
     (trace_clearance 0.3)
     (zone_clearance 0.508)
     (zone_45_only no)
@@ -167,7 +167,7 @@
 
   (net_class Default "This is the default net class."
     (clearance 0.3)
-    (trace_width 0.8)
+    (trace_width 1.2)
     (via_dia 1.3)
     (via_drill 0.8)
     (uvia_dia 0.508)
@@ -5397,11 +5397,12 @@
   (via (at 152.23 95.66) (size 1.3) (drill 0.8) (layers F.Cu B.Cu) (net 62))
   (segment (start 86.176 89.227578) (end 87.426 89.227578) (width 0.4) (layer B.Cu) (net 62))
   (segment (start 87.426 89.227578) (end 88.148422 89.95) (width 0.4) (layer B.Cu) (net 62))
-  (segment (start 126.08 110.13) (end 126.81 110.86) (width 1.2) (layer F.Cu) (net 63))
+  (segment (start 126.81 110.86) (end 126.08 110.13) (width 1.2) (layer F.Cu) (net 63))
+  (segment (start 126.08 110.13) (end 120.539998 110.13) (width 1.2) (layer F.Cu) (net 63))
+  (segment (start 120.539998 110.13) (end 117.92 112.749998) (width 1.2) (layer F.Cu) (net 63))
+  (segment (start 117.92 112.749998) (end 117.92 113.109998) (width 1.2) (layer F.Cu) (net 63))
   (segment (start 126.81 110.86) (end 126.81 114.4) (width 0.8) (layer F.Cu) (net 63))
-  (segment (start 120.899998 110.13) (end 126.08 110.13) (width 1.2) (layer F.Cu) (net 63))
   (segment (start 117.92 114.4) (end 117.92 113.109998) (width 0.8) (layer F.Cu) (net 63))
-  (segment (start 117.92 113.109998) (end 120.899998 110.13) (width 1.2) (layer F.Cu) (net 63))
   (segment (start 126.86 119.2) (end 126.86 114.45) (width 0.8) (layer F.Cu) (net 63))
   (segment (start 126.86 114.45) (end 126.81 114.4) (width 0.8) (layer F.Cu) (net 63))
   (segment (start 79.81999 109.39999) (end 78.84 108.42) (width 1.2) (layer F.Cu) (net 64))
