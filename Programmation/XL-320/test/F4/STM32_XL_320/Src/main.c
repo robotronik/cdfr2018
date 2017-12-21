@@ -41,7 +41,7 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "xl_320.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -63,6 +63,25 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+XL_Interface interface;
+
+uint8_t XL_320_Send_HAL(uint8_t *data, uint16_t size, uint32_t timeout){
+  HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, data, size, timeout);
+  return (status==HAL_OK)?0:1;return 0;//Temporaire
+}
+
+void XL_320_Set_Direction_HAL(XL_Direction dir){
+  HAL_GPIO_WritePin(USART1_DIR_GPIO_Port, USART1_DIR_Pin, (dir==XL_SEND)?GPIO_PIN_SET:GPIO_PIN_RESET);
+}
+
+uint8_t XL_320_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
+  HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
+  return (status==HAL_OK)?0:1;
+}
+
+void XL_320_Delay_HAL(uint32_t t){
+  HAL_Delay(t);
+}
 
 /* USER CODE END 0 */
 
@@ -86,7 +105,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -94,6 +112,46 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
+  //Initialisation interface
+  interface.send = XL_320_Send_HAL;
+  interface.set_direction = XL_320_Set_Direction_HAL;
+  interface.receive = XL_320_Receive_HAL;
+  interface.delay = XL_320_Delay_HAL;
+
+  HAL_Delay(1000);
+
+  XL broadcast = (XL) {.interface = &interface, .id = XL_BROADCAST};
+  
+  XL servo[2];
+  uint16_t nb_servos = 0;
+
+  XL_Discover(&interface, servo, 2, &nb_servos);
+  XL_Say_Hello(&servo[0]);
+  //XL_Say_Hello(&servo[1]);
+  
+  XL_Power_Off(&servo[0], XL_NOW);
+  //XL_Power_On(&servo[1], XL_NOW);
+
+  uint16_t working;
+  if(XL_Is_Working(&servo[0], &working) == 0){
+    if(working){
+      XL_Set_LED(&servo[0], XL_GREEN, XL_NOW);
+    }
+    else{
+      XL_Set_LED(&servo[0], XL_BLUE, XL_NOW);
+    }
+  }
+  else{
+    XL_Set_LED(&servo[0], XL_RED, XL_NOW);
+  }
+  
+  /*
+  XL_Configure_Control_Mode(&servo[1], XL_JOIN_MODE);
+  XL_Configure_CW_Angle_Limit(&servo[1], 0);
+  XL_Configure_CCW_Angle_Limit(&servo[1],1023);
+  */
+  
+  //while(1);
 
   /* USER CODE END 2 */
 
@@ -101,6 +159,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /*HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[0], 400, XL_NOW);
+    HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[1], 600, XL_NOW);
+    //XL_Power_On(&servo[0], XL_NOW);
+    HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[0], 600, XL_NOW);
+    HAL_Delay(2000);
+    XL_Set_Goal_Position(&servo[1], 400, XL_NOW);
+    //XL_Power_On(&servo[0], XL_NOW);*/
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -171,7 +239,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 1000000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
