@@ -1,4 +1,4 @@
-update=lun. 30 oct. 2017 15:30:17 CET
+update=sam. 23 déc. 2017 08:57:14 CET
 version=1
 last_client=kicad
 [pcbnew]
@@ -62,3 +62,4 @@ LibName30=lib/stm32f042k6tx
 LibName31=lib/2
 LibName32=lib/mcp2562
 LibName33=lib/Propulsion_control
+LibName34=lib/mc33926
