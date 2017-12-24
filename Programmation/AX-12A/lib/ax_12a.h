@@ -49,23 +49,19 @@ typedef struct AX_Status_Packet_S{
  */
 uint8_t AX_Compute_Check_Sum(uint8_t *data_blk_ptr, uint16_t data_blk_size);
 
-//Machine à états pour la réception
+//Final state machine used for reception
 typedef struct AX_Receiver_FSM_S{
   void (*update_state)(struct AX_Receiver_FSM_S*);
-  uint16_t remaining_bytes;//Octets restants lors de la réception
+  uint16_t remaining_bytes;//Remaining bytes while receiving.
   uint8_t *buffer;
-  uint8_t *p_buffer;//Curseur dans le buffer
+  uint8_t *p_buffer;//Current position in the buffer
   uint8_t done;
 }AX_Receiver_FSM;
 
 void AX_FSM_HEADER_0(AX_Receiver_FSM *fsm);
 void AX_FSM_HEADER_1(AX_Receiver_FSM *fsm);
-void AX_FSM_HEADER_2(AX_Receiver_FSM *fsm);
-void AX_FSM_HEADER_3(AX_Receiver_FSM *fsm);
 void AX_FSM_ID(AX_Receiver_FSM *fsm);
-void AX_FSM_LENGTH_LOW(AX_Receiver_FSM *fsm);
-void AX_FSM_LENGTH_HIGH(AX_Receiver_FSM *fsm);
-void AX_FSM_INSTRUCTION(AX_Receiver_FSM *fsm);
+void AX_FSM_LENGTH(AX_Receiver_FSM *fsm);
 void AX_FSM_RECEIVING(AX_Receiver_FSM *fsm);
 
 typedef enum AX_Direction_E{
@@ -82,8 +78,8 @@ typedef struct AX_Interface_S{
   AX_Status_Packet status;
 }AX_Interface;
 /*
- * Remarque : 
- * Le buffer de l'interface est utilisé pour l'envoi mais aussi la réception de paquets.
+ * Note :
+ * The interface's buffer is used both for sending and receiving packets.
  */
 
 uint8_t AX_Extract_Status_Packet(AX_Status_Packet *packet, uint8_t frame[AX_BUFFER_SIZE], uint16_t length);

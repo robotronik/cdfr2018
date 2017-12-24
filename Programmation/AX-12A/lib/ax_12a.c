@@ -4,8 +4,7 @@
 //========================================
 //    CONSTANTES ET VARIABLES GLOBALES
 //========================================
-static const uint8_t header[4] = {0xFF, 0xFF, 0xFD, 0x00};
-static const uint8_t stuffing_byte = 0xFD;
+static const uint8_t header[2] = {0xFF, 0xFF};
 static const uint8_t field_addr[] = {
   [AX_ID] = 3,
   [AX_BAUD_RATE] = 4,
@@ -98,26 +97,6 @@ void AX_FSM_HEADER_0(AX_Receiver_FSM *fsm){
 void AX_FSM_HEADER_1(AX_Receiver_FSM *fsm){
   if(FSM_BYTE == header[1]){
     FSM_NEXT;
-    FSM_UPDATE(AX_FSM_HEADER_2);
-  }
-  else{
-    FSM_RESET;
-  }
-}
-
-void AX_FSM_HEADER_2(AX_Receiver_FSM *fsm){
-  if(FSM_BYTE == header[2]){
-    FSM_NEXT;
-    FSM_UPDATE(AX_FSM_HEADER_3);
-  }
-  else{
-    FSM_RESET;
-  }
-}
-
-void AX_FSM_HEADER_3(AX_Receiver_FSM *fsm){
-  if(FSM_BYTE != stuffing_byte){
-    FSM_NEXT;
     FSM_UPDATE(AX_FSM_ID);
   }
   else{
@@ -126,38 +105,23 @@ void AX_FSM_HEADER_3(AX_Receiver_FSM *fsm){
 }
 
 void AX_FSM_ID(AX_Receiver_FSM *fsm){
-  if(FSM_BYTE != 0xFF && FSM_BYTE != 0xFD){
+  if(FSM_BYTE != 0xFF){
     FSM_NEXT;
-    FSM_UPDATE(AX_FSM_LENGTH_LOW);
+    FSM_UPDATE(AX_FSM_LENGTH);
   }
   else{
     FSM_RESET;
   }
 }
 
-void AX_FSM_LENGTH_LOW(AX_Receiver_FSM *fsm){
+void AX_FSM_LENGTH(AX_Receiver_FSM *fsm){
   fsm->remaining_bytes = FSM_BYTE;
-  FSM_NEXT;
-  FSM_UPDATE(AX_FSM_LENGTH_HIGH);
-}
-
-void AX_FSM_LENGTH_HIGH(AX_Receiver_FSM *fsm){
-  fsm->remaining_bytes |= FSM_BYTE << 8;
   const uint16_t remaining_bytes = fsm->remaining_bytes;
-  if((remaining_bytes >= 4) && (7 + remaining_bytes <= AX_BUFFER_SIZE)){
-    FSM_NEXT;
-    FSM_UPDATE(AX_FSM_INSTRUCTION);
-  }
-  else{
-    FSM_RESET;
-  }
-}
-void AX_FSM_INSTRUCTION(AX_Receiver_FSM *fsm){
-  if(FSM_BYTE == AX_STATUS){
-    fsm->remaining_bytes--;
+  if((remaining_bytes >= 2) && (4 + remaining_bytes <= AX_BUFFER_SIZE)){
     FSM_NEXT;
     FSM_UPDATE(AX_FSM_RECEIVING);
-  }else{
+  }
+  else{
     FSM_RESET;
   }
 }
