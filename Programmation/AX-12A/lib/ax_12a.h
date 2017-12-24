@@ -179,7 +179,7 @@ typedef enum AX_Field_E{
 }AX_Field;
 
 //======================================
-//        JEU D'INSTRUCTIONS
+//        INSTRUCTION SET
 //======================================
 uint8_t AX_Write(AX *servo, AX_Field field, uint16_t data, uint8_t size, uint8_t now);
 /*
@@ -514,80 +514,58 @@ uint8_t AX_Get_Hardware_Error(AX *servo, uint16_t *hw_error);
  */
 
 //==================================================
-//              GESTION DES ERREURS
+//              ERROR HANDLING
 //==================================================
-//Types d'erreurs
+//Error types
 typedef enum AX_Error_Type_E{
-  AX_ERR_INTERNAL = 0x0000, //Erreur interne à la librairie
-  AX_ERR_LINK = 0x0100, //Erreur de communication (UART)
-  AX_ERR_STATUS = 0x0200, //Erreur de traitement de l'instruction (AX)
-  AX_ERR_HARDWARE = 0x0400, //Erreur matérielle (AX)
+  AX_ERR_INTERNAL = 0x0000,
+  AX_ERR_LINK = 0x0100,
+  AX_ERR_STATUS = 0x0200,
 }AX_Error_Type;
 
-//Erreurs internes à la librairie
+//Internal errors (library)
 typedef enum AX_Internal_Error_E{
-  AX_ERR_ILLEGAL_ARGUMENTS, //Quand l'utilisateur en a trop pris
-  AX_ERR_BUFFER_OVERFLOW, //Quand le buffer ne s'est pas fait respecter
+  AX_ERR_ILLEGAL_ARGUMENTS, //When the user did a mistake
+  AX_ERR_BUFFER_OVERFLOW, //When the buffer is too small
 }AX_Internal_Error;
 
-//Erreurs de communication (UART)
+//Communication errors (UART)
 typedef enum AX_Link_Error_E{
-  AX_ERR_BAD_FRAME, //Quand le AX en a trop pris
-  AX_ERR_TIMEOUT, //Quand on n'a pas eu le temps de se dépêcher
+  AX_ERR_BAD_FRAME, //When we receive an incorrect frame
+  AX_ERR_TIMEOUT, //On timeout
 }AX_Link_Error;
 
-//Erreurs d'instruction (AX)
+//Status errors
 typedef enum AX_Status_Error_E{
-  AX_FAIL = 0x01,
-  AX_BAD_INSTRUCTION = 0x02,
-  AX_CRC_ERROR = 0x03,
-  AX_DATA_RANGE_ERROR = 0x04,
-  AX_DATA_LENGTH_ERROR = 0x05,
-  AX_DATA_LIMIT_ERROR = 0x06,
-  AX_ACCESS_ERROR = 0x07
+  AX_VOLTAGE_ERROR = 0x01,
+  AX_ANGLE_LIMIT_ERROR = 0x02,
+  AX_OVERHEATING_ERROR = 0x04,
+  AX_RANGE_ERROR = 0x08,
+  AX_CHECKSUM_ERROR = 0x10,
+  AX_OVERLOAD_ERROR = 0x20,
+  AX_INSTRUCTION_ERROR = 0x40,
 }AX_Status_Error;
 
-//Erreurs matérielles (AX)
-typedef enum AX_Hardware_Error_E{
-  AX_ERR_OVERLOAD = 0x01,
-  AX_ERR_OVER_HEATING = 0x02,
-  AX_ERR_INPUT_VOLTAGE = 0x04,
-}AX_Hardware_Error;
-
-//Macros sur les erreurs
+//Macros on errors
 #define AX_ERROR_TYPE(err) (AX_Error_Type) (err & 0xFF00)
 #define AX_ERROR_CODE(err) (err & 0xFF)
-#define AX_STATUS_ALERT(err) (AX_ERROR_CODE(err) >> 7)
 #define AX_STATUS_ERROR(err) (AX_Status_Error) (AX_ERROR_CODE(err) & 0b0111111)
 #define AX_INTERNAL_ERROR(err) (AX_Internal_Error) AX_ERROR_CODE(err)
 #define AX_LINK_ERROR(err) (AX_Link_Error) AX_ERROR_CODE(err)
-#define AX_HARDWARE_ERROR(err) (AX_Hardware_Error) AX_ERROR_CODE(err)
 
-//Fonction de récupération de l'erreur
+//Function to retrieve an error
 uint16_t AX_Get_Error();
 /*
- * Retourne la dernière erreur détectée.  Le type d'erreur peut être
- * vérifié avec la macro AX_ERROR_TYPE().  Pour obtenir des
- * informations plus précises connaîssant le type d'erreur, il faut
- * utiliser les macros définies ci-dessus.
+ * Return the last catched error. The error type can be checked using
+ * the macro AX_ERROR_TYPE. To gather more detailed informations
+ * knowing the error type, you can use the others macros.
  */
 
 uint8_t AX_Check_Status(AX *servo);
 /*
- * Cette fonction vérifie le status d'un servomoteur après réception
- * d'un paquet.  Elle ne doit pas être appelée directement par
- * l'utilisateur, mais elle est utilisée dans les fonctions
- * d'utilisation du servomoteur. La fonction renvoie 1 en cas
- * d'erreur, 0 en l'absence d'erreurs.
- */
-
-uint8_t AX_Check_Alert(AX *servo);
-/*
- * Cette fonction vérifie l'état du bit d'alarme dans le dernier
- * paquet reçu par servo. Elle ne doit pas être appelée directement
- * par l'utilisateur. Si le bit d'alarme vaut 1, la fonction tente de
- * lire le champ Hardware Error Status du servomoteur pour récupérer
- * l'erreur. Elle renvoie 0 en l'absence d'erreur matérielle, 1 sinon.
- */
+ * This function should not be called by a user. It is used right
+ * after the reception of a status packet in order to check for
+ * errors, and return 1 if an error is catched, 0 otherwise.
+*/
 
 #endif

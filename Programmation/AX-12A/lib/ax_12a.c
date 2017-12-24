@@ -285,7 +285,7 @@ uint8_t AX_Compute_Checksum(uint8_t *data_blk_ptr, uint16_t data_blk_size){
 }
 
 //======================================
-//         GESTION DES ERREURS      
+//         ERROR HANDLING  
 //======================================
 uint16_t AX_Get_Error(){
   return err;
@@ -299,21 +299,8 @@ uint8_t AX_Check_Status(AX *servo){
   return 0;
 }
 
-uint8_t AX_Check_Alert(AX *servo){
-  if(AX_STATUS_ALERT(servo->interface->status.err) == 1){
-    uint16_t hw_error;
-    if(AX_Get_Hardware_Error(servo, &hw_error) == 1){
-      return 1;
-    }
-    err = AX_ERR_HARDWARE | hw_error;
-    return 1;
-  }
-  return 0;
-}
-
-
 //======================================
-//         JEU D'INSTRUCTIONS      
+//         INSTRUCTION SET   
 //======================================
 uint8_t AX_Ping(AX *servo){
   if(servo == 0){
@@ -327,13 +314,13 @@ uint8_t AX_Ping(AX *servo){
   packet.nb_params = 0;
   packet.params = 0;
 
-  //Envoi de l'instruction
+  //Sending the instruction
   if(AX_Send(servo->interface, &packet, AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
-  //Réception de la réponse
-  if(AX_Receive(servo->interface, 14, AX_DEFAULT_TIMEOUT) == 1){
+  //Receiving status
+  if(AX_Receive(servo->interface, 6, AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
