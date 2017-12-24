@@ -116,23 +116,18 @@ typedef struct AX_S{
 }AX;
 
 typedef enum AX_Baud_Rate_E{
-  AX_BAUD_RATE_9600 = 0, AX_BAUD_RATE_57600 = 1, AX_BAUD_RATE_115200 = 2, AX_BAUD_RATE_1MBPS = 3,
+  AX_BAUD_RATE_9600 = 207,
+  AX_BAUD_RATE_57600 = 34,
+  AX_BAUD_RATE_115200 = 16,
+  AX_BAUD_RATE_1MBPS = 1
 }AX_Baud_Rate;
-
-typedef enum AX_Mode_E{
-  AX_JOIN_MODE = 2, AX_WHEEL_MODE = 1
-}AX_Mode;
 
 typedef enum AX_Return_Level_E{
   AX_PING_RETURN = 0, AX_READ_RETURN = 1, AX_ALL_RETURN = 2
 }AX_Return_Level;
 
-typedef enum AX_Alarm_Shutdown_E{
-  AX_ERROR_INPUT_VOLTAGE = 4, AX_ERROR_OVER_HEATING = 2, AX_ERROR_OVERLOAD = 1, AX_ERROR_OVER_9000 = 7
-}AX_Alarm_Shutdown;
-
 typedef enum AX_LED_State_E{
-  AX_LED_ON, AX_LED_OFF
+  AX_LED_ON = 1, AX_LED_OFF = 0
 }AX_LED_State;
 
 //======================================
@@ -234,115 +229,140 @@ uint8_t AX_Factory_Reset(AX *servo);
  * will also set the ID to 1 and the baudrate to 1Mbps.
  */
 
+//==================================================
+//              ERROR HANDLING
+//==================================================
+//Error types
+typedef enum AX_Error_Type_E{
+  AX_ERR_INTERNAL = 0x0000,
+  AX_ERR_LINK = 0x0100,
+  AX_ERR_STATUS = 0x0200,
+}AX_Error_Type;
+
+//Internal errors (library)
+typedef enum AX_Internal_Error_E{
+  AX_ERR_ILLEGAL_ARGUMENTS, //When the user did a mistake
+  AX_ERR_BUFFER_OVERFLOW, //When the buffer is too small
+}AX_Internal_Error;
+
+//Communication errors (UART)
+typedef enum AX_Link_Error_E{
+  AX_ERR_BAD_FRAME, //When we receive an incorrect frame
+  AX_ERR_TIMEOUT, //On timeout
+}AX_Link_Error;
+
+//Status errors
+typedef enum AX_Status_Error_E{
+  AX_VOLTAGE_ERROR = 0x01,
+  AX_ANGLE_LIMIT_ERROR = 0x02,
+  AX_OVERHEATING_ERROR = 0x04,
+  AX_RANGE_ERROR = 0x08,
+  AX_CHECKSUM_ERROR = 0x10,
+  AX_OVERLOAD_ERROR = 0x20,
+  AX_INSTRUCTION_ERROR = 0x40,
+}AX_Status_Error;
+
+//Macros on errors
+#define AX_ERROR_TYPE(err) (AX_Error_Type) (err & 0xFF00)
+#define AX_ERROR_CODE(err) (err & 0xFF)
+#define AX_STATUS_ERROR(err) (AX_Status_Error) (AX_ERROR_CODE(err) & 0b0111111)
+#define AX_INTERNAL_ERROR(err) (AX_Internal_Error) AX_ERROR_CODE(err)
+#define AX_LINK_ERROR(err) (AX_Link_Error) AX_ERROR_CODE(err)
+
+//Function to retrieve an error
+uint16_t AX_Get_Error();
+/*
+ * Return the last catched error. The error type can be checked using
+ * the macro AX_ERROR_TYPE. To gather more detailed informations
+ * knowing the error type, you can use the others macros.
+ */
+
+uint8_t AX_Check_Status(AX *servo);
+/*
+ * This function should not be called by a user. It is used right
+ * after the reception of a status packet in order to check for
+ * errors, and return 1 if an error is catched, 0 otherwise.
+*/
+
 //======================================
 //       CONFIGURATION EEPROM   
 //======================================
-/***************************************************
- * REMARQUE GENERALE :
- * Torque Enable doit être à 0
- * pour configurer les champs EEPROM.
- ***************************************************/
 
 uint8_t AX_Configure_ID(AX *servo, uint8_t id);
 /*
- * Permet de modifier l'ID d'un servo.
- * id doit être compris entre 0x00 et 0xFC (252).
+ * Set the ID of a servo.
+ * The range is between 0x00 and 0xFC (252).
  */
 
 uint8_t AX_Configure_Baud_Rate(AX *servo, AX_Baud_Rate baud_rate);
 /*
- * Configure le débit de transmission du servo.
- * Les valeurs possibles sont :
- * 0 : 9600bps
- * 1 : 57600 bps
- * 2 : 115200 bps
- * 3 : 1 Mbps
+ * Set the transmission baud rate of the servo.
+ * This library allows only the common values defined by AX_Baud_Rate enum.
  */
 
 uint8_t AX_Configure_Return_Delay_Time(AX *servo, uint8_t delay);
 /*
- * Configure le délai entre le moment ou le servo reçoit une
- * instruction et le moment où il répond.
- * Valeurs possibles : 0x00 -> 0xFE (254)
- * Unité : 2 microsecondes
+ * Set the delay time between an instruction packet and a status packet.
+ * Values : [0x00, 0xFE]
+ * Unit : 2 µs.
  */
 
-uint8_t AX_Configure_CW_Angle_Limit(AX *servo, uint16_t angle);
+uint8_t AX_Configure_Angle_Limit(AX *servo, uint16_t cw_angle, uint16_t ccw_angle);
 /*
- * Configure la limite d'angle dans le sens horaire (cf. doc)
- * Valeurs possibles : 0x000 -> 0x3FF (1023)
+ * Set the angle limits of the servo.  See the documentation for
+ * further informations.  Note that if both cw_angle and ccw_angle are
+ * 0, the servo is set to WHEEL mode. If neither are 0, it is set to
+ * JOIN mode.
+ * Range : [0x00, 0x3FF] (0°, 300°);
  */
-
-uint8_t AX_Configure_CCW_Angle_Limit(AX *servo, uint16_t angle);
-/*
- * Configure la limite d'angle dans le sens anti-horaire (cf. doc)
- * Valeurs possibles : 0x000 -> 0x3FF (1023)
- */
-
-uint8_t AX_Configure_Control_Mode(AX *servo, AX_Mode mode);
-/*
- * Configure le servomoteur en mode Joint ou Wheel.
- * 1 : Wheel mode, le servomoteur fixe une vitesse
- * 2 : Joint mode, le servomoteur fixe un angle
- * ATTENTION : CW_Angle_Limit et CCW_Angle_Limit doivent être
- * à 0 pour le mode Wheel, différents de 0 pour le mode Joint.
-*/
 
 uint8_t AX_Configure_Limit_Temperature(AX *servo, uint8_t temp);
 /*
- * Configure la température max du servo avant détection d'une erreur
- * ERROR_OVER_HEATING.
- * Valeurs possibles : 0 -> 150
- * Cette fonction ne devrait pas exister.
+ * Set the max operating temperature of the servo before catching an
+ * error AX_OVERHEATING_ERROR.  This function should not exist.
  */
 
 uint8_t AX_Configure_Lower_Limit_Voltage(AX *servo, uint8_t voltage);
 /*
- * Configure la limite inférieure de tension avant détection d'une
- * erreur ERROR_INPUT_VOLTAGE.
- * Valeurs possibles : 50 -> 250 (0x32 -> 0x96)
- * Unité : 0.1 V
+ * Configure the lower limit voltage before catching an error AX_VOLTAGE_ERROR.
+ * Values : [50, 250]
+ * Unit : 0.1 V
  */
 
 uint8_t AX_Configure_Upper_Limit_Voltage(AX *servo, uint8_t voltage);
 /*
- * Configure la limite supérieure de tension avant détection d'une
- * erreur ERROR_INPUT_VOLTAGE.
- * Valeurs possibles : 50 -> 250 (0x32 -> 0x96)
- * Unité : 0.1 V
- * Remarque : Les vrais mettront du triphasé
+ * Configure the upper limit voltage before catching an error AX_VOLTAGE_ERROR.
+ * Values : [50, 250]
+ * Unit : 0.1 V
  */
 
 uint8_t AX_Configure_Max_Torque(AX *servo, uint16_t max_torque);
 /*
- * Configure le couple maximum du servomoteur.
- * Valeurs possibles : 0 -> 1023 (0% -> 100%)
- * Remarque : Cette fonction impose une limite mais
- * ne contrôle pas le couple, cf. Goal Torque (RAM).
+ * Set the max torque.
+ * Values : [0, 1023]
+ * Unit : approx. 0.1%
  */
 
 uint8_t AX_Configure_Return_Level(AX *servo, AX_Return_Level level);
 /*
- * Configure le niveau de retour du servomoteur.
- * Valeurs possibles :
- * 0 : Aucun retour, sauf ping
- * 1 : Retour uniquement pour les commandes READ
- * 2 : Retour pour toutes les commandes
- * Remarque : Pour l'instant cette librairie ne fonctionne
- * correctement que dans le mode 1
-*/
+ * Set the return level.
+ * Values :
+ * 0 : No return, except for PING
+ * 1 : return only for READ instructions
+ * 2 : always return
+ * NOTE : this library need to be used with the parameter 2.
+ */
 
-uint8_t AX_Configure_Alarm_Shutdown(AX *servo, AX_Alarm_Shutdown alarm);
+uint8_t AX_Configure_Alarm_LED(AX *servo, AX_Status_Error errors);
 /*
- * Configure les alarmes permettant de stopper le servomoteur en cas de problème.
- * Valeurs possibles : comibinaisons (OR) de
- * AX_ERROR_INPUT_VOLTAGE
- * AX_ERROR_OVER_HEATING
- * AX_ERROR_OVERLOAD
- * AX_ERROR_OVER_9000
- * ASTUCE DE HACKER : Incroyable ! Grâce à cette fonction, transformez
- * votre AX 320 en une superbe guirlande ! Vous n'en croirez pas vos
- * yeux !
+ * Set for which errors an Alarm LED should be triggered.
+ * Values : Combinations (OR) of AX_Status_Error enums.
+ */
+
+uint8_t AX_Configure_Alarm_Shutdown(AX *servo, AX_Status_Error errors);
+/*
+ * Set for which errors an Alarm LED should be triggered.
+ * Values : Combinations (OR) of AX_Status_Error enums.
  */
 
 //======================================
@@ -362,24 +382,6 @@ uint8_t AX_Power_Off(AX *servo, uint8_t now);
 uint8_t AX_Set_LED(AX *servo, AX_LED_Color color, uint8_t now);
 /*
  * Allume la LED du servo selon la couleur choisie.
- */
-
-uint8_t AX_Set_D_Gain(AX *servo, uint8_t d_gain, uint8_t now);
-/*
- * Modifie le gain en dérivée du régulateur PID.
- * Valeurs : 0 -> 254
- */
-
-uint8_t AX_Set_I_Gain(AX *servo, uint8_t i_gain, uint8_t now);
-/*
- * Modifie le gain en intégration du régulateur PID.
- * Valeurs : 0 -> 254
- */
-
-uint8_t AX_Set_P_Gain(AX *servo, uint8_t p_gain, uint8_t now);
-/*
- * Modifie le gain proportionnel du régulateur PID.
- * Valeurs : 0 -> 254
  */
 
 uint8_t AX_Set_Goal_Position(AX *servo, uint16_t position, uint8_t now);
@@ -484,11 +486,7 @@ uint8_t AX_Is_Moving(AX *servo, uint16_t *moving);
  * Valeurs : 1 ou 0 respectivement si le moteur bouge ou non.
  */
 
-uint8_t AX_Get_Hardware_Error(AX *servo, uint16_t *hw_error);
-/*
- * Lis le champs Hardware Error Status du servomoteur.
- * Valeurs : Combinaison (OR) de l'énumération AX_Hardware_Error.
- */
+
 
 /*
  * Remarque : Il y a plein d'autres champs qui peuvent être lus, mais
@@ -496,60 +494,5 @@ uint8_t AX_Get_Hardware_Error(AX *servo, uint16_t *hw_error);
  * particulier d'utilisation). Pour les obtenir, il suffit d'utiliser
  * directement la fonction AX_Read.
  */
-
-//==================================================
-//              ERROR HANDLING
-//==================================================
-//Error types
-typedef enum AX_Error_Type_E{
-  AX_ERR_INTERNAL = 0x0000,
-  AX_ERR_LINK = 0x0100,
-  AX_ERR_STATUS = 0x0200,
-}AX_Error_Type;
-
-//Internal errors (library)
-typedef enum AX_Internal_Error_E{
-  AX_ERR_ILLEGAL_ARGUMENTS, //When the user did a mistake
-  AX_ERR_BUFFER_OVERFLOW, //When the buffer is too small
-}AX_Internal_Error;
-
-//Communication errors (UART)
-typedef enum AX_Link_Error_E{
-  AX_ERR_BAD_FRAME, //When we receive an incorrect frame
-  AX_ERR_TIMEOUT, //On timeout
-}AX_Link_Error;
-
-//Status errors
-typedef enum AX_Status_Error_E{
-  AX_VOLTAGE_ERROR = 0x01,
-  AX_ANGLE_LIMIT_ERROR = 0x02,
-  AX_OVERHEATING_ERROR = 0x04,
-  AX_RANGE_ERROR = 0x08,
-  AX_CHECKSUM_ERROR = 0x10,
-  AX_OVERLOAD_ERROR = 0x20,
-  AX_INSTRUCTION_ERROR = 0x40,
-}AX_Status_Error;
-
-//Macros on errors
-#define AX_ERROR_TYPE(err) (AX_Error_Type) (err & 0xFF00)
-#define AX_ERROR_CODE(err) (err & 0xFF)
-#define AX_STATUS_ERROR(err) (AX_Status_Error) (AX_ERROR_CODE(err) & 0b0111111)
-#define AX_INTERNAL_ERROR(err) (AX_Internal_Error) AX_ERROR_CODE(err)
-#define AX_LINK_ERROR(err) (AX_Link_Error) AX_ERROR_CODE(err)
-
-//Function to retrieve an error
-uint16_t AX_Get_Error();
-/*
- * Return the last catched error. The error type can be checked using
- * the macro AX_ERROR_TYPE. To gather more detailed informations
- * knowing the error type, you can use the others macros.
- */
-
-uint8_t AX_Check_Status(AX *servo);
-/*
- * This function should not be called by a user. It is used right
- * after the reception of a status packet in order to check for
- * errors, and return 1 if an error is catched, 0 otherwise.
-*/
 
 #endif

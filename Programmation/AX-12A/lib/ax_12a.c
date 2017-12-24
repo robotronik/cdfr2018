@@ -484,7 +484,7 @@ uint8_t AX_Configure_ID(AX *servo, uint8_t id){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_ID, id, 1, AX_NOW);
+  uint8_t r = AX_Write(servo, AX_ID, &id, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
@@ -494,7 +494,8 @@ uint8_t AX_Configure_Baud_Rate(AX *servo, AX_Baud_Rate baud_rate){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_BAUD_RATE, baud_rate, 1, AX_NOW);
+  uint8_t value = baud_rate;
+  uint8_t r = AX_Write(servo, AX_BAUD_RATE, &value, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
@@ -504,37 +505,18 @@ uint8_t AX_Configure_Return_Delay_Time(AX *servo, uint8_t delay){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_RETURN_DELAY_TIME, delay, 1, AX_NOW);
+  uint8_t r = AX_Write(servo, AX_RETURN_DELAY_TIME, &delay, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
 
-uint8_t AX_Configure_CW_Angle_Limit(AX *servo, uint16_t angle){
-  if(angle > 0x3FF){
+uint8_t AX_Configure_Angle_Limit(AX *servo, uint16_t cw_angle, uint16_t ccw_angle){
+  if(cw_angle > 0x3FF || ccw_angle > 0x3FF){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_CW_ANGLE_LIMIT, angle, 2, AX_NOW);
-  servo->interface->delay(10);
-  return r;
-}
-
-uint8_t AX_Configure_CCW_Angle_Limit(AX *servo, uint16_t angle){
-  if(angle > 0x3FF){
-    err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
-    return 1;
-  }
-  uint8_t r = AX_Write(servo, AX_CCW_ANGLE_LIMIT, angle, 2, AX_NOW);
-  servo->interface->delay(10);
-  return r;
-}
-  
-uint8_t AX_Configure_Control_Mode(AX *servo, AX_Mode mode){
-  if(mode != AX_JOIN_MODE && mode != AX_WHEEL_MODE){
-    err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
-    return 1;
-  }
-  uint8_t r = AX_Write(servo, AX_CONTROL_MODE, mode, 1, AX_NOW);
+  uint8_t data[4] = {cw_angle&0xFF, cw_angle>>8, ccw_angle&0xFF, ccw_angle>>8};
+  uint8_t r = AX_Write(servo, AX_CW_ANGLE_LIMIT, data, 4, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
@@ -544,7 +526,7 @@ uint8_t AX_Configure_Limit_Temperature(AX *servo, uint8_t temp){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_LIMIT_TEMPERATURE, temp, 1, AX_NOW);
+  uint8_t r = AX_Write(servo, AX_LIMIT_TEMPERATURE, &temp, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
@@ -554,7 +536,7 @@ uint8_t AX_Configure_Lower_Limit_Voltage(AX *servo, uint8_t voltage){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_LOWER_LIMIT_VOLTAGE, voltage, 1, AX_NOW);
+  uint8_t r = AX_Write(servo, AX_LOWER_LIMIT_VOLTAGE, &voltage, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
@@ -564,7 +546,7 @@ uint8_t AX_Configure_Upper_Limit_Voltage(AX *servo, uint8_t voltage){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_UPPER_LIMIT_VOLTAGE, voltage, 1, AX_NOW);
+  uint8_t r = AX_Write(servo, AX_UPPER_LIMIT_VOLTAGE, &voltage, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
@@ -574,7 +556,8 @@ uint8_t AX_Configure_Max_Torque(AX *servo, uint16_t max_torque){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_MAX_TORQUE, max_torque, 2, AX_NOW);
+  uint8_t data[2] = {max_torque&0xFF, max_torque>>8};
+  uint8_t r = AX_Write(servo, AX_MAX_TORQUE, data, 2, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
@@ -584,17 +567,30 @@ uint8_t AX_Configure_Return_Level(AX *servo, AX_Return_Level level){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_RETURN_LEVEL, level, 1, AX_NOW);
+  uint8_t lvl = level;
+  uint8_t r = AX_Write(servo, AX_RETURN_LEVEL, &lvl, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
 
-uint8_t AX_Configure_Alarm_Shutdown(AX *servo, AX_Alarm_Shutdown alarm){
-  if(alarm > AX_ERROR_OVER_9000){
+uint8_t AX_Configure_Alarm_LED(AX *servo, AX_Status_Error errors){
+  if(errors&10000000){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  uint8_t r = AX_Write(servo, AX_ALARM_SHUTDOWN, alarm, 1, AX_NOW);
+  uint8_t value = errors;
+  uint8_t r = AX_Write(servo, AX_ALARM_LED, &value, 1, AX_NOW);
+  servo->interface->delay(10);
+  return r;
+}
+
+uint8_t AX_Configure_Alarm_Shutdown(AX *servo, AX_Status_Error errors){
+  if(errors&10000000){
+    err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
+    return 1;
+  }
+  uint8_t value = errors;
+  uint8_t r = AX_Write(servo, AX_ALARM_SHUTDOWN, &value, 1, AX_NOW);
   servo->interface->delay(10);
   return r;
 }
