@@ -366,32 +366,46 @@ uint8_t AX_Configure_Alarm_Shutdown(AX *servo, AX_Status_Error errors);
  */
 
 //======================================
-//       COMMANDES SERVOMOTEUR       
+//       CONTROL SERVOMOTEUR       
 //======================================
 
 uint8_t AX_Power_On(AX *servo, uint8_t now);
 /*
- * Active le moteur.
+ * Turn on the motor.
  */
 
 uint8_t AX_Power_Off(AX *servo, uint8_t now);
 /*
- * Désactive le moteur.
+ * Turn off the motor.
  */
 
-uint8_t AX_Set_LED(AX *servo, AX_LED_Color color, uint8_t now);
+uint8_t AX_Set_LED(AX *servo, AX_LED_State state, uint8_t now);
 /*
- * Allume la LED du servo selon la couleur choisie.
+ * Set the led state according to "state".
+ */
+
+typedef struct AX_Compliance_S{
+  uint8_t cw_margin;
+  uint8_t ccw_margin;
+  uint8_t cw_slope;
+  uint8_t ccw_slope;
+}AX_Compliance;
+uint8_t AX_Set_Compliance(AX *servo, AX_Compliance compliance, uint8_t now);
+/*
+ * Defines the compliance scheme of the servo.
+ * Margins : [0, 255], 0.29°/value
+ * Slope : [0, 6],
+ *         0 : no flexibility
+ *         6 : max flexibility
+ * See the doc for more detailed informations
  */
 
 uint8_t AX_Set_Goal_Position(AX *servo, uint16_t position, uint8_t now);
 /*
- * Modifie la position cible du servo.
- * Valeurs possibles : 0 -> 1023 (0x3FF)
- * Unité : 0.29°
- * Remarque :
- * Cette valeur n'a un sens que si servo est en mode JOIN.
- * cf. doc
+ * Modify the goal position.
+ * Values : 0 -> 1023 (0x3FF)
+ * Unit : 0.29°
+ * Note : This value is used only in Join mode.
  */
 
 typedef enum AX_Wheel_Direction_E{
@@ -399,40 +413,35 @@ typedef enum AX_Wheel_Direction_E{
 }AX_Wheel_Direction;
 
 uint8_t AX_Set_Goal_Speed_Join(AX *servo, uint16_t speed, uint8_t now);
-/*
- * Modifie la vitesse cible du servo lorsqu'il est en mode Join
- * Valeurs possibles : 0-> 1023
- * Unité : 0.111 RPM
- * 0 : pas de contrôle de vitesse
+/* Change the goald speed when the servo is in JOIN mode.
+ * Range : 0 -> 1023
+ * Unit : 0.111 RPM
+ * 0 : no speed control.
  */
 
 uint8_t AX_Set_Goal_Speed_Wheel(AX *servo, uint16_t speed, AX_Wheel_Direction dir, uint8_t now);
 /*
- * Modifie la vitesse cible du servo lorsuqu'il est en mode Wheel
- * Valeurs possibles :
- * speed : 0 -> 1023, unité : 0.1% du max
- * dir : AX_CLOCKWISE ou AX_COUNTERCLOCKWISE
- * Remarque :
- * La vitesse n'est pas asservie, on règle la puissance
- * 1023*0.1% = 102,3%, bitches
+ * Change the goald speed when the servo is in Wheel mode.
+ * Range :
+ * speed : 0 -> 1023, unit : 0.1% of maximum speed
+ * dir : AX_CLOCKWISE or else AX_COUNTERCLOCKWISE
+ * Note : it just control the output of the motor.
  */
 
 uint8_t AX_Set_Torque_Limit(AX *servo, uint16_t torque_limit, uint8_t now);
 /*
- * Modifie la limite de couple.
- * Valeurs possibles : 0 -> 1023
- * Unité : environ 0.1%
- * Remarque :
- * En cas d'erreur matérielle (alarm shutdown),
- * cette valeur est mise à 0.
+ * Change the torque limit.
+ * Range : 0 -> 1023
+ * Unit : ~0.1%
+ * Note :
+ * It is set to 0 when an alarm shutdown occurs.
  */
 
 uint8_t AX_Set_Punch(AX *servo, uint16_t punch, uint8_t now);
 /*
- * Courant minimum pour contrôler le moteur
- * Valeurs possibles : 0x20 -> 0x3FF
- * Unité : inconnue
- * Remarque : la doc est pas claire sur ce point
+ * Set the minimum current to drive the motor.
+ * Range : 0x20 -> 0x3FF
+ * Unit : ?
  */
 
 //======================================

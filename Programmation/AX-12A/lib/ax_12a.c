@@ -601,43 +601,35 @@ uint8_t AX_Configure_Alarm_Shutdown(AX *servo, AX_Status_Error errors){
 //======================================
 
 uint8_t AX_Power_On(AX *servo, uint8_t now){
-  return AX_Write(servo, AX_TORQUE_ENABLE, 1, 1, now);
+  uint8_t value = 1;
+  return AX_Write(servo, AX_TORQUE_ENABLE, &value, 1, now);
 }
 
 uint8_t AX_Power_Off(AX *servo, uint8_t now){
-  return AX_Write(servo, AX_TORQUE_ENABLE, 0, 1, now);
+  uint8_t value = 0;
+  return AX_Write(servo, AX_TORQUE_ENABLE, &value, 1, now);
 }
 
-uint8_t AX_Set_LED(AX *servo, AX_LED_Color color, uint8_t now){
-  if((uint8_t) color > 7){
+uint8_t AX_Set_LED(AX *servo, AX_LED_State state, uint8_t now){
+  if((state != AX_LED_OFF) && (state != AX_LED_ON)){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return AX_Write(servo, AX_LED, color, 1, now);
+  uint8_t value = state;
+  return AX_Write(servo, AX_LED, &value, 1, now);
 }
 
-uint8_t AX_Set_D_Gain(AX *servo, uint8_t d_gain, uint8_t now){
-  if(d_gain > 254){
+uint8_t AX_Set_Compliance(AX *servo, AX_Compliance compliance, uint8_t now){
+  if(compliance.ccw_slope > 6 || compliance.cw_slope > 6){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return AX_Write(servo, AX_D_GAIN, d_gain, 1, now);
-}
-
-uint8_t AX_Set_I_Gain(AX *servo, uint8_t i_gain, uint8_t now){
-  if(i_gain > 254){
-    err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
-    return 1;
-  }
-  return AX_Write(servo, AX_I_GAIN, i_gain, 1, now);
-}
-
-uint8_t AX_Set_P_Gain(AX *servo, uint8_t p_gain, uint8_t now){
-  if(p_gain > 254){
-    err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
-    return 1;
-  }
-  return AX_Write(servo, AX_P_GAIN, p_gain, 1, now);
+  uint8_t data[4] = {
+    compliance.cw_margin,
+    compliance.ccw_margin,
+    compliance.cw_slope,
+    compliance.ccw_slope};
+  return AX_Write(servo, AX_CW_COMPLIANCE_MARGIN, data, 4, now);     
 }
 
 uint8_t AX_Set_Goal_Position(AX *servo, uint16_t position, uint8_t now){
@@ -645,7 +637,8 @@ uint8_t AX_Set_Goal_Position(AX *servo, uint16_t position, uint8_t now){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return AX_Write(servo, AX_GOAL_POSITION, position, 2, now);
+  uint8_t data[2] = {position&0xFF, position>>8};
+  return AX_Write(servo, AX_GOAL_POSITION, data, 2, now);
 }
 
 uint8_t AX_Set_Goal_Speed_Join(AX *servo, uint16_t speed, uint8_t now){
@@ -653,7 +646,8 @@ uint8_t AX_Set_Goal_Speed_Join(AX *servo, uint16_t speed, uint8_t now){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return AX_Write(servo, AX_MOVING_SPEED, speed, 2, now); 
+  uint8_t data[2] = {speed&0xFF, speed>>8};
+  return AX_Write(servo, AX_MOVING_SPEED, data, 2, now); 
 }
 
 uint8_t AX_Set_Goal_Speed_Wheel(AX *servo, uint16_t speed, AX_Wheel_Direction dir, uint8_t now){
@@ -661,6 +655,7 @@ uint8_t AX_Set_Goal_Speed_Wheel(AX *servo, uint16_t speed, AX_Wheel_Direction di
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
+  
   switch(dir){
   case AX_CLOCKWISE:
     speed += 1024;
@@ -672,7 +667,8 @@ uint8_t AX_Set_Goal_Speed_Wheel(AX *servo, uint16_t speed, AX_Wheel_Direction di
     return 1;
     break;
   }
-  return AX_Write(servo, AX_MOVING_SPEED, speed, 2, now);
+  uint8_t data[2] = {speed&0xFF, speed>>8};
+  return AX_Write(servo, AX_MOVING_SPEED, data, 2, now);
 }
 
 uint8_t AX_Set_Torque_Limit(AX *servo, uint16_t torque_limit, uint8_t now){
@@ -680,7 +676,8 @@ uint8_t AX_Set_Torque_Limit(AX *servo, uint16_t torque_limit, uint8_t now){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return AX_Write(servo, AX_TORQUE_LIMIT, torque_limit, 2, now);
+  uint8_t data[2] = {torque_limit&0xFF, torque_limit>>8};
+  return AX_Write(servo, AX_TORQUE_LIMIT, data, 2, now);
 }
 
 uint8_t AX_Set_Punch(AX *servo, uint16_t punch, uint8_t now){
@@ -688,7 +685,8 @@ uint8_t AX_Set_Punch(AX *servo, uint16_t punch, uint8_t now){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 1;
   }
-  return AX_Write(servo, AX_PUNCH, punch, 2, now);
+  uint8_t data[2] = {punch&0xFF, punch>>8};
+  return AX_Write(servo, AX_PUNCH, data, 2, now);
 }
 
 //======================================
@@ -730,8 +728,4 @@ uint8_t AX_Is_Working(AX *servo, uint16_t *working){
 
 uint8_t AX_Is_Moving(AX *servo, uint16_t *moving){
   return AX_Read(servo, AX_MOVING, moving);
-}
-
-uint8_t AX_Get_Hardware_Error(AX *servo, uint16_t *hw_error){
-  return AX_Read(servo, AX_HARDWARE_ERROR_STATUS, hw_error);
 }
