@@ -44,17 +44,18 @@ static const uint8_t field_addr[] = {
   [AX_MOVING] = 0x2E,
 };
 static const uint8_t field_length[] = {
+  //EEPROM - Configuration  
   [AX_ID] = 1,
   [AX_BAUD_RATE] = 1,
   [AX_RETURN_DELAY_TIME] = 1,
   [AX_CW_ANGLE_LIMIT] = 2,
   [AX_CCW_ANGLE_LIMIT] = 2,
-  [AX_CONTROL_MODE] = 1,
   [AX_LIMIT_TEMPERATURE] = 1,
   [AX_LOWER_LIMIT_VOLTAGE] = 1,
   [AX_UPPER_LIMIT_VOLTAGE] = 1,
   [AX_MAX_TORQUE] = 2,
   [AX_RETURN_LEVEL] = 1,
+  [AX_ALARM_LED] = 1,
   [AX_ALARM_SHUTDOWN] = 1,
   //EEPROM - Info
   [AX_MODEL_NUMBER] = 2,
@@ -62,12 +63,14 @@ static const uint8_t field_length[] = {
   //RAM - Contrôle
   [AX_TORQUE_ENABLE] = 1,
   [AX_LED] = 1,
-  [AX_D_GAIN] = 1,
-  [AX_I_GAIN] = 1,
-  [AX_P_GAIN] = 1,
+  [AX_CW_COMPLIANCE_MARGIN] = 1,
+  [AX_CCW_COMPLIANCE_MARGIN] = 1,
+  [AX_CW_COMPLIANCE_SLOPE] = 1,
+  [AX_CCW_COMPLIANCE_SLOPE] = 1,
   [AX_GOAL_POSITION] = 2,
   [AX_MOVING_SPEED] = 2,
   [AX_TORQUE_LIMIT] = 2,
+  [AX_EEPROM_LOCK] = 1,
   [AX_PUNCH] = 2,
   //RAM - Info
   [AX_CURRENT_POSITION] = 2,
@@ -77,7 +80,6 @@ static const uint8_t field_length[] = {
   [AX_CURRENT_TEMPERATURE] = 1,
   [AX_REGISTERED_INSTRUCTION] = 1,
   [AX_MOVING] = 1,
-  [AX_HARDWARE_ERROR_STATUS] = 1,
 };
 static uint16_t err;
 
