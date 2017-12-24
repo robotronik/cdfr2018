@@ -144,8 +144,9 @@ uint8_t AX_Extract_Status_Packet(AX_Status_Packet *packet, uint8_t frame[AX_BUFF
 
   packet->id = frame[2];
   packet->err = frame[4];
-
+  
   //Paramètres
+  packet->nb_params = 0;
   uint8_t *p_frame = frame+5;
   uint8_t *end_frame = frame+(packet_size-1);
   while(p_frame != end_frame){
