@@ -341,6 +341,15 @@ uint8_t AX_Send(AX_Interface *interface, AX_Instruction_Packet *packet, uint32_t
   return 0;
 }
 
+uint8_t AX_Compute_Check_Sum(uint8_t *data_blk_ptr, uint16_t data_blk_size){
+  uint8_t checksum = 0;
+  uint16_t i;
+  for(i=0; i < data_blk_size; i++){
+    checksum += data_blk_ptr[i];
+  }
+  return ~checksum;
+}
+
 uint16_t AX_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size){
   uint16_t i, j;
   uint16_t crc_table[256] = {

@@ -1,8 +1,8 @@
 /*
- * Librairie AX-12A @Robotronik
+ * Library for AX-12A @Robotronik
  * ax_12a.h
- * Ecrit pour un µC en little-endian
- * Il est autorisé de rager librement avec ce fichier.
+ * Written for a little-endian µC
+ * You may freely rage with this software
  */
 #ifndef AX_12A_HEADER
 #define AX_12A_HEADER
@@ -23,16 +23,11 @@ typedef enum AX_Instruction_E{
   AX_REG_WRITE = 0x04,
   AX_ACTION = 0x05,
   AX_FACTORY_RESET = 0x06,
-  AX_REBOOT = 0x08,
-  AX_STATUS = 0x55,
-  AX_SYNC_READ = 0x82,
   AX_SYNC_WRITE = 0x83,
-  AX_BULK_READ = 0x92,
-  AX_BULK_WRITE = 0x93
 }AX_Instruction;
 
 //==================================================
-//           INTERFACE, RECEPTION, ENVOI
+//           INTERFACE, RECEPTION, SENDING
 //==================================================
 typedef struct AX_Instruction_Packet_S{
   uint8_t id;
@@ -48,8 +43,11 @@ typedef struct AX_Status_Packet_S{
   uint8_t params[AX_BUFFER_SIZE];
 }AX_Status_Packet;
 
-//Contrôle de redondance cyclique
-uint16_t AX_Update_CRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size);
+/*
+ * Compute checksum for the data between data_blk_ptr and
+ * data_blk_ptr+(data_blk_size-1).
+ */
+uint8_t AX_Compute_Check_Sum(uint8_t *data_blk_ptr, uint16_t data_blk_size);
 
 //Machine à états pour la réception
 typedef struct AX_Receiver_FSM_S{
