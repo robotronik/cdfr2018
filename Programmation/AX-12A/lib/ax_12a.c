@@ -156,7 +156,7 @@ uint8_t AX_Extract_Status_Packet(AX_Status_Packet *packet, uint8_t frame[AX_BUFF
 }
 
 uint8_t AX_Receive(AX_Interface *interface, uint16_t packet_size, uint32_t timeout){
-  //Evite un overflow
+  //Avoid overflow
   if(packet_size > AX_BUFFER_SIZE){
     err = AX_ERR_INTERNAL | AX_ERR_BUFFER_OVERFLOW;
     return 1;
@@ -164,14 +164,15 @@ uint8_t AX_Receive(AX_Interface *interface, uint16_t packet_size, uint32_t timeo
   
   //Préparation de la réception
   interface->set_direction(AX_RECEIVE);
-  
+
+  //FSM initialization
   interface->fsm.update_state = AX_FSM_HEADER_0;
   interface->fsm.remaining_bytes = 0;
   interface->fsm.buffer = interface->buffer;
   interface->fsm.p_buffer = interface->buffer;
   interface->fsm.done = 0;
 
-  //Réception
+  //Reception
   if(interface->receive(interface->fsm.p_buffer, packet_size, timeout) != 0){
     err = AX_ERR_LINK | AX_ERR_TIMEOUT;
     return 1;
@@ -187,21 +188,22 @@ uint8_t AX_Receive(AX_Interface *interface, uint16_t packet_size, uint32_t timeo
       printf("0x%2.2X ", *p);
     }
     printf("\n");*/
-  }while(interface->fsm.p_buffer != interface->fsm.buffer && interface->fsm.done != 1);
+  }while(interface->fsm.p_buffer != interface->fsm.buffer && interface->fsm.done != 1);//If FSM is still working and has not reset, continue
 
-  //Récupération du paquet
+  //Checking that the frame is valid
   if(interface->fsm.done == 0){
     err = AX_ERR_LINK | AX_ERR_BAD_FRAME;
     return 1;
   }
 
-  //Vérification de la taille du paquet (au cas où)
+  //Checking the length of the packet
   uint16_t r_packet_size = interface->fsm.p_buffer - interface->fsm.buffer;
   if(r_packet_size != packet_size){
     err = AX_ERR_LINK | AX_ERR_BAD_FRAME;
     return 1;
   }
 
+  //Extract the packet, then return
   return AX_Extract_Status_Packet(&interface->status, interface->buffer, packet_size);
 }
 

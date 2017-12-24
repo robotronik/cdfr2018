@@ -90,10 +90,10 @@ uint8_t AX_Extract_Status_Packet(AX_Status_Packet *packet, uint8_t frame[AX_BUFF
 
 uint8_t AX_Receive(AX_Interface *interface, uint16_t packet_size, uint32_t timeout);
 /*
- * Reçoit un paquet depuis l'interface *interface dans le temps imparti (timeout).
- * Le paquet reçu est stocké dans interface->status.
- * packet_size est la taille effective du paquet, du header au crc compris. 
- * Renvoie 0 en cas de succès, 1 en cas d'échec.
+ * Receive a packet from *interface in the given time (timeout).
+ * The received packet is stored in interface->status.
+ * packet_size is the effective length of the packet, from header to checksum included.
+ * This function shall return 0 on success, 1 otherwise.
  */
 
 //Envoi d'un paquet
