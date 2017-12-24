@@ -851,7 +851,7 @@ uint8_t XL_Get_Current_Speed(XL *servo, XL_Wheel_Direction *direction, uint16_t 
     return 1;
   }
   *direction = (*speed > 1023)?XL_CLOCKWISE:XL_COUNTERCLOCKWISE;
-  *speed &= 0xFF;
+  *speed &= 0x3FF;
   return 0;
 }
 
@@ -860,7 +860,7 @@ uint8_t XL_Get_Current_Load(XL *servo, XL_Wheel_Direction *direction, uint16_t *
     return 1;
   }
   *direction = (*load > 1023)?XL_CLOCKWISE:XL_COUNTERCLOCKWISE;
-  *load &= 0xFF;
+  *load &= 0x3FF;
   return 0;
 }
 
