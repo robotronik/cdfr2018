@@ -439,39 +439,35 @@ uint8_t AX_Factory_Reset(AX *servo){
   return 0;
 }
 
-uint8_t AX_Write(AX *servo, AX_Field field, uint16_t data, uint8_t size, uint8_t now){
-  if(servo == 0 || field > (AX_NB_FIELDS-1)){
+uint8_t AX_Write(AX *servo, AX_Field field, uint8_t *data, uint8_t size, uint8_t now){
+  if(servo == 0 || field > (AX_NB_FIELDS-1) || ((6+size+1) > AX_BUFFER_SIZE)){
     return 1;
   }
 
-  //Préparation de l'instruction
+  //Preparing instruction
   static AX_Instruction_Packet packet;
-  static uint8_t params[4];
+  static uint8_t params[AX_BUFFER_SIZE];
   params[0] = field_addr[field];
-  params[1] = 0x00;
-  params[2] = data & 0xFF;
-  params[3] = data >> 8;
+  int i;
+  for(i=0; i < size; i++){
+    params[i+1] = data[i];
+  }
   packet.id = servo->id;
-  packet.instruction = now?AX_WRITE:AX_REG_WRITE;
-  packet.nb_params = 2 + size;
+  packet.instruction = (now==AX_NOW)?AX_WRITE:AX_REG_WRITE;
+  packet.nb_params = 1 + size;
   packet.params = params;
 
-  //Envoi de l'instruction
+  //Sending instruction
   if(AX_Send(servo->interface, &packet, AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
-  //Réception de la réponse
-  if(AX_Receive(servo->interface, 11, AX_DEFAULT_TIMEOUT) == 1){
+  //Receiving status
+  if(AX_Receive(servo->interface, 6, AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
-  //En cas d'erreur matérielle
-  if(AX_Check_Alert(servo) == 1){
-    return 1;
-  }
-
-  //Vérification du status
+  //Checking status
   if(AX_Check_Status(servo) == 1){
     return 1;
   }

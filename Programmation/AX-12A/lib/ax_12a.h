@@ -185,12 +185,12 @@ typedef enum AX_Field_E{
 //======================================
 //        INSTRUCTION SET
 //======================================
-uint8_t AX_Write(AX *servo, AX_Field field, uint16_t data, uint8_t size, uint8_t now);
+uint8_t AX_Write(AX *servo, AX_Field field, uint8_t *data, uint8_t size, uint8_t now);
 /*
- * Ecrit la valeur data de size octets dans la table de contrôle.
- * Remarque : Cette fonction n'effectue pas de vérifications sur data
- * et field, elle ne doit pas être appelée directement par un
- * utilisateur.
+ * Write the data from data to data+(size-1) to the control table the
+ * servo, starting at the address given by the field. This function
+ * should not be called by a user, but is used by others library
+ * functions.
  */
 
 uint8_t AX_Ping(AX *servo);
