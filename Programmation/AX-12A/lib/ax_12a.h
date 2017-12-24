@@ -444,64 +444,72 @@ uint8_t AX_Set_Punch(AX *servo, uint16_t punch, uint8_t now);
  * Unit : ?
  */
 
+uint8_t AX_Lock_ROM(AX *servo, uint8_t now);
+/*
+ * Locks the ROM. This ensures that the ROM can't be changed anymore
+ * while the servo is working. Note : the power must be turner off and
+ * then on in order to unlock the ROM after a lock.
+ */
+
+uint8_t AX_Unlock_ROM(AX *servo, uint8_t now);
+/*
+ * Unlock the ROM.
+ */
+
 //======================================
 //       LECTURE D'INFORMATIONS
 //======================================
 uint8_t AX_Get_Current_Position(AX *servo, uint16_t *position);
 /*
- * Lis la position actuelle du servomoteur.
- * Valeurs : 0 (0°) -> 1023 (300°)
- * Unité : 0.29°
+ * Reads the current position.
+ * Range : 0 (0°) -> 1023 (300°)
+ * Unit : 0.29°
  */
 
 uint8_t AX_Get_Current_Speed(AX *servo, AX_Wheel_Direction *direction, uint16_t *speed);
 /*
- * Lis la vitesse du servomoteur et le sens de rotation.
- * Valeurs de vitesse : 0 -> 1023
- * Direction : AX_CLOCKWISE ou AX_COUNTERCLOCKWISE (cf. doc pour précisions).
- * Unité (Joint Mode) : 0.111 rpm
- * Unité (Wheel Mode) : environ 0.1% du maximum
+ * Reads the current speed.
+ * Range : 0 -> 1023
+ * Direction : AX_CLOCKWISE or else AX_COUNTERCLOCKWISE
+ * Unit (Join Mode) : 0.111 rpm
+ * Unit (Wheel Mode) : approx. 0.1% of maximum
  */
 
 uint8_t AX_Get_Current_Load(AX *servo, AX_Wheel_Direction *direction, uint16_t *load);
 /*
- * Lis une image du couple généré par le moteur.
- * Valeurs : 0 -> 1023
- * Direction : AX_CLOCKWISER ou AX_COUNTERCLOCKWISE (cf. doc pour précisions).
- * Unité : environ 0.1% du maximum
+ * Reads the current load.
+ * Range : 0 -> 1023.
+ * Direction : AX_CLOCKWISE or else AX_COUNTERCLOCKWISE
+ * Unit : 0.1% of maximum
  */
 
 uint8_t AX_Get_Current_Voltage(AX *servo, uint16_t *voltage);
 /*
- * Lis le potentiel appliqué au servomoteur.
- * Unité : 0.1 V
+ * Reads the current voltage.
+ * Unit : 0.1V
  */
 
 uint8_t AX_Get_Current_Temperature(AX *servo, uint16_t *temperature);
 /*
- * Lis la température interne du servomoteur.
- * Unité : 1 °C.
+ * Reads the current temperature.
+ * Unit : 1°C.
  */
 
 uint8_t AX_Is_Working(AX *servo, uint16_t *working);
 /*
- * Lis le champs Torque Enable pour savoir si le servomoteur fonctionne.
- * Valeurs : 1 ou 0 respectivement si le moteur fonctionne ou non.
+ * Reads the field Torque Enable to figure out if the servo is working.
+ * Values : 1 or 0 respectively if the motor is working or not.
  */
 
 uint8_t AX_Is_Moving(AX *servo, uint16_t *moving);
 /*
- * Lis le champs Moving pour savoir si le servomoteur bouge.
- * Valeurs : 1 ou 0 respectivement si le moteur bouge ou non.
+ * Reads the field Moving to figure out if the servo is moving.
+ * Values : 1 or 0 respectively if the motor is moving or not.
  */
 
-
-
 /*
- * Remarque : Il y a plein d'autres champs qui peuvent être lus, mais
- * ils ne nécessitent pas de fonction dédiée (leur lecture est un cas
- * particulier d'utilisation). Pour les obtenir, il suffit d'utiliser
- * directement la fonction AX_Read.
+ * Note : Some fields can be read but doesn't need a dedicated
+ * function. They can be easily read with the function AX_Read.
  */
 
 #endif

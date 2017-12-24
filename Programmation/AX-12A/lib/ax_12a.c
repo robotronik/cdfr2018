@@ -689,6 +689,16 @@ uint8_t AX_Set_Punch(AX *servo, uint16_t punch, uint8_t now){
   return AX_Write(servo, AX_PUNCH, data, 2, now);
 }
 
+uint8_t AX_Lock_ROM(AX *servo, uint8_t now){
+  uint8_t value = 1;
+  return AX_Write(servo, AX_EEPROM_LOCK, &value, 1, now);
+}
+
+uint8_t AX_Unlock_ROM(AX *servo, uint8_t now){
+  uint8_t value = 0;
+  return AX_Write(servo, AX_EEPROM_LOCK, &value, 1, now);
+}
+
 //======================================
 //       LECTURE D'INFORMATIONS
 //======================================
@@ -701,7 +711,7 @@ uint8_t AX_Get_Current_Speed(AX *servo, AX_Wheel_Direction *direction, uint16_t 
     return 1;
   }
   *direction = (*speed > 1023)?AX_CLOCKWISE:AX_COUNTERCLOCKWISE;
-  *speed &= 0xFF;
+  *speed &= 0x3FF;
   return 0;
 }
 
@@ -710,7 +720,7 @@ uint8_t AX_Get_Current_Load(AX *servo, AX_Wheel_Direction *direction, uint16_t *
     return 1;
   }
   *direction = (*load > 1023)?AX_CLOCKWISE:AX_COUNTERCLOCKWISE;
-  *load &= 0xFF;
+  *load &= 0x3FF;
   return 0;
 }
 
