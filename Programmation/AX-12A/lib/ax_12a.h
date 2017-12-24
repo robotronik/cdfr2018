@@ -238,11 +238,6 @@ uint8_t AX_Factory_Reset(AX *servo);
  * nouvelles instructions.
  */
 
-uint8_t AX_Reboot(AX *servo);
-/*
- * Redémarre le servomoteur.
- */
-
 //======================================
 //       CONFIGURATION EEPROM   
 //======================================

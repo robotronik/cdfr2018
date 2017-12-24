@@ -137,7 +137,7 @@ void AX_FSM_RECEIVING(AX_Receiver_FSM *fsm){
 uint8_t AX_Extract_Status_Packet(AX_Status_Packet *packet, uint8_t frame[AX_BUFFER_SIZE], uint16_t packet_size){
   //The packet size is supposed to be checked in AX_Receive function.
   //Checksum
-  if(AX_Compute_Checksum(frame, packet_size-1) != frame[packet_size-1]){
+  if(AX_Compute_Checksum(frame+2, packet_size-3) != frame[packet_size-1]){
     err = AX_ERR_LINK | AX_ERR_BAD_FRAME;
     return 1;
   }
@@ -248,7 +248,7 @@ uint8_t AX_Build_Frame(AX_Instruction_Packet *packet, uint8_t buffer[AX_BUFFER_S
   }
 
   //Checksum
-  uint8_t checksum = AX_Compute_Checksum(buffer, p_buffer-buffer);
+  uint8_t checksum = AX_Compute_Checksum(buffer+2, p_buffer-buffer-2);
   *(p_buffer++) = checksum; 
   
   return p_buffer-buffer;    
@@ -450,24 +450,6 @@ uint8_t AX_Factory_Reset(AX *servo){
   }
 
   //Attente de la réinitialisation
-  servo->interface->delay(5000);
-  
-  return 0;
-}
-
-uint8_t AX_Reboot(AX *servo){
-  AX_Instruction_Packet packet;
-  packet.id = servo->id;
-  packet.instruction = AX_REBOOT;
-  packet.nb_params = 0;
-  packet.params = 0;
-
-  //Envoi de l'instruction
-  if(AX_Send(servo->interface, &packet, AX_DEFAULT_TIMEOUT) == 1){
-    return 1;
-  }
-
-  //Attente du redémarrage
   servo->interface->delay(5000);
   
   return 0;

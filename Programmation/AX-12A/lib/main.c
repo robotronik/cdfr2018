@@ -6,9 +6,7 @@
 //printf("0x%2.2X");
 //scanf("%x",&byte);
 
-void set_direction(){
-
-}
+void set_direction(){}
 
 uint32_t get_tick(){
   return 0;
@@ -28,7 +26,7 @@ int main(){
   interface.set_direction = set_direction;
   
   AX_Status_Packet status_packet;
-  if(AX_Receive(&interface, 14, 1)){
+  if(AX_Receive(&interface, 9, 1)){
     printf("Erreur");
     return EXIT_SUCCESS;
   }
