@@ -211,18 +211,18 @@ uint8_t AX_Receive(AX_Interface *interface, uint16_t packet_size, uint32_t timeo
 //           FONCTIONS D'ENVOI          
 //======================================
 uint8_t AX_Build_Frame(AX_Instruction_Packet *packet, uint8_t buffer[AX_BUFFER_SIZE]){
-  //Vérification des arguments
+  //Verifying arguments
   if(packet == 0 || (packet->params == 0 && packet->nb_params > 0) || buffer == 0){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 0;
   }
-  //Evite une collision avec l'en-tête
-  if(packet->id == 0xFD || packet->id == 0xFF){
+  //and ID range
+  if(packet->id == 0xFF){
     err = AX_ERR_INTERNAL | AX_ERR_ILLEGAL_ARGUMENTS;
     return 0;
   }
-  //Evite un overflow
-  if(10+packet->nb_params+packet->nb_params/3 > AX_BUFFER_SIZE){
+  //Avoid overflow
+  if(6+packet->nb_params > AX_BUFFER_SIZE){
     err = AX_ERR_INTERNAL | AX_ERR_BUFFER_OVERFLOW;
     return 0;
   }
@@ -231,44 +231,25 @@ uint8_t AX_Build_Frame(AX_Instruction_Packet *packet, uint8_t buffer[AX_BUFFER_S
   //Header
   *(p_buffer++) = header[0];
   *(p_buffer++) = header[1];
-  *(p_buffer++) = header[2];
-  *(p_buffer++) = header[3];
 
   //Packet ID
   *(p_buffer++) = packet->id;
 
-  //Packet length (temporaire)
-  p_buffer += 2;
+  //Packet length
+  *(p_buffer++) = packet->nb_params+2;
 
-  //<BEGIN BYTE STUFFING>
   //Instruction
-  uint8_t *start_stuffing = p_buffer;
   *(p_buffer++) = packet->instruction;
 
-  //Paramètres
+  //Parameters
   int i;
-  for(i = 0; i < packet->nb_params; i++){
+  for(i=0; i < packet->nb_params; i++){
     *(p_buffer++) = packet->params[i];
-    if(p_buffer - start_stuffing == 3){
-      if(start_stuffing[0] == header[0] && start_stuffing[1] == header[1] && start_stuffing[2] == header[2]){
-	*(p_buffer++) = stuffing_byte;
-	start_stuffing = p_buffer;
-      }else{
-	start_stuffing++;
-      }
-    }
   }
-  //<END BYTE STUFFING>
 
-  //Packet length
-  uint16_t packet_length = (p_buffer-buffer) - 7 + 2;//Ce qu'on a écrit - (header+id+length) + crc
-  buffer[5] = packet_length & 0x00FF;
-  buffer[6] = packet_length >> 8;
-
-  //Cyclic Redundancy Check
-  uint16_t crc = AX_Update_CRC(0, buffer, packet_length+7-2);
-  *(p_buffer++) = crc & 0x00FF;
-  *(p_buffer++) = crc >> 8;
+  //Checksum
+  uint8_t checksum = AX_Compute_Checksum(buffer, p_buffer-buffer);
+  *(p_buffer++) = checksum; 
   
   return p_buffer-buffer;    
 }

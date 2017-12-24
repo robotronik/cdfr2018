@@ -93,15 +93,17 @@ uint8_t AX_Receive(AX_Interface *interface, uint16_t packet_size, uint32_t timeo
  * Receive a packet from *interface in the given time (timeout).
  * The received packet is stored in interface->status.
  * packet_size is the effective length of the packet, from header to checksum included.
- * This function shall return 0 on success, 1 otherwise.
+ * This function should return 0 on success, 1 otherwise.
  */
 
-//Envoi d'un paquet
+//Sending a packet
 uint8_t AX_Build_Frame(AX_Instruction_Packet *packet, uint8_t buffer[AX_BUFFER_SIZE]);
 /*
- * Construit une trame à partir d'un paquet instruction et l'écrit dans le buffer.
- * La fonction retourne la taille effective de la trame construite en cas de succès, 0 en cas d'erreur.
+ * Build a frame from an instruction packet and write it on the
+ * buffer.  This function return the effective elngth of the built
+ * frame on success, 0 if an error occured.
  */
+
 uint8_t AX_Send(AX_Interface *interface, AX_Instruction_Packet *packet, uint32_t timeout);
 
 
