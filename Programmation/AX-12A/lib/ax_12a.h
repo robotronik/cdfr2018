@@ -47,12 +47,12 @@ typedef struct AX_Status_Packet_S{
  * Compute checksum for the data between data_blk_ptr and
  * data_blk_ptr+(data_blk_size-1).
  */
-uint8_t AX_Compute_Check_Sum(uint8_t *data_blk_ptr, uint16_t data_blk_size);
+uint8_t AX_Compute_Checksum(uint8_t *data_blk_ptr, uint16_t data_blk_size);
 
 //Final state machine used for reception
 typedef struct AX_Receiver_FSM_S{
   void (*update_state)(struct AX_Receiver_FSM_S*);
-  uint16_t remaining_bytes;//Remaining bytes while receiving.
+  uint8_t remaining_bytes;//Remaining bytes while receiving.
   uint8_t *buffer;
   uint8_t *p_buffer;//Current position in the buffer
   uint8_t done;
@@ -82,10 +82,10 @@ typedef struct AX_Interface_S{
  * The interface's buffer is used both for sending and receiving packets.
  */
 
-uint8_t AX_Extract_Status_Packet(AX_Status_Packet *packet, uint8_t frame[AX_BUFFER_SIZE], uint16_t length);
+uint8_t AX_Extract_Status_Packet(AX_Status_Packet *packet, uint8_t frame[AX_BUFFER_SIZE], uint16_t packet_size);
 /*
- * Extrait un paquet d'une trame de taille length contenant un paquet.
- * Renvoie 0 en cas de succès, 1 en cas d'échec.
+ * Extract a status packet from a valid frame wich total length is 'packet_size'.
+ * Return 0 on success, 1 if it fails.
  */
 
 uint8_t AX_Receive(AX_Interface *interface, uint16_t packet_size, uint32_t timeout);
