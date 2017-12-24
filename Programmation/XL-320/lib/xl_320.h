@@ -342,7 +342,7 @@ uint8_t XL_Configure_Return_Level(XL *servo, XL_Return_Level level);
  * 1 : Retour uniquement pour les commandes READ
  * 2 : Retour pour toutes les commandes
  * Remarque : Pour l'instant cette librairie ne fonctionne
- * correctement que dans le mode 1
+ * correctement que dans le mode 2
 */
 
 uint8_t XL_Configure_Alarm_Shutdown(XL *servo, XL_Alarm_Shutdown alarm);
