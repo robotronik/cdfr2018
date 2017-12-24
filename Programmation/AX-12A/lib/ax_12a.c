@@ -347,10 +347,9 @@ uint8_t AX_Say_Hello(AX *servo){
     return 1;
   }
 
-  const AX_LED_Color color = (servo->interface->status.err == 0x00)?AX_GREEN:AX_RED;
   uint8_t i;
   for(i = 0; i < servo->id; i++){
-    AX_Set_LED(servo, color, AX_NOW);
+    AX_Set_LED(servo, AX_LED_ON, AX_NOW);
     servo->interface->delay(500);
     AX_Set_LED(servo, AX_LED_OFF, AX_NOW);
     servo->interface->delay(500);
@@ -365,30 +364,30 @@ uint8_t AX_Read(AX *servo, AX_Field field, uint16_t *data){
     return 1;
   }
   
-  //Préparation de l'instruction READ
+  //Preparation of READ instruction
   AX_Instruction_Packet packet;
   packet.id = servo->id;
   packet.instruction = AX_READ;
-  packet.nb_params = 4;
-  uint8_t params[4] = {field_addr[field], 0x00, field_length[field], 0x00};
+  packet.nb_params = 2;
+  uint8_t params[2] = {field_addr[field], field_length[field]};
   packet.params = params;
 
-  //Envoi de l'instruction
+  //Sending the instruction
   if(AX_Send(servo->interface, &packet, AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
   
-  //Réception de la réponse
-  if(AX_Receive(servo->interface, 11+field_length[field], AX_DEFAULT_TIMEOUT) == 1){
+  //Receiving status packet
+  if(AX_Receive(servo->interface, 6+field_length[field], AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
-  //Vérification de la réponse
+  //Checking for errors
   if(AX_Check_Status(servo) == 1){
     return 1;
   }
   
-  //Récupération de la donnée
+  //Gathering data
   *data = servo->interface->status.params[0];
   if(field_length[field] == 2){
     *data |= servo->interface->status.params[1] << 8;
@@ -397,29 +396,24 @@ uint8_t AX_Read(AX *servo, AX_Field field, uint16_t *data){
 }
 
 uint8_t AX_Action(AX *servo){
-  //Préparation de l'instruction
+  //Preparing instruction
   AX_Instruction_Packet packet;
   packet.id = servo->id;
   packet.instruction = AX_ACTION;
   packet.nb_params = 0;
   packet.params = 0;
 
-  //Envoi de l'instruction
+  //Sending instruction
   if(AX_Send(servo->interface, &packet, AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
-  //Réception de la réponse
-  if(AX_Receive(servo->interface, 11, AX_DEFAULT_TIMEOUT) == 1){
+  //Receiving status
+  if(AX_Receive(servo->interface, 6, AX_DEFAULT_TIMEOUT) == 1){
     return 1;
   }
 
-  //En cas d'erreur matérielle
-  if(AX_Check_Alert(servo) == 1){
-    return 1;
-  }
-
-  //Vérification du status
+  //Checking status
   if(AX_Check_Status(servo) == 1){
     return 1;
   }
@@ -432,9 +426,7 @@ uint8_t AX_Factory_Reset(AX *servo){
   AX_Instruction_Packet packet;
   packet.id = servo->id;
   packet.instruction = AX_FACTORY_RESET;
-  packet.nb_params = 1;
-  uint8_t param = 0x02;
-  packet.params = &param;
+  packet.nb_params = 0;
 
   //Envoi de l'instruction
   if(AX_Send(servo->interface, &packet, AX_DEFAULT_TIMEOUT) == 1){

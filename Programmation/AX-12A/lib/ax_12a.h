@@ -131,6 +131,10 @@ typedef enum AX_Alarm_Shutdown_E{
   AX_ERROR_INPUT_VOLTAGE = 4, AX_ERROR_OVER_HEATING = 2, AX_ERROR_OVERLOAD = 1, AX_ERROR_OVER_9000 = 7
 }AX_Alarm_Shutdown;
 
+typedef enum AX_LED_State_E{
+  AX_LED_ON, AX_LED_OFF
+}AX_LED_State;
+
 //======================================
 //    DEFINITIONS TABLE DE CONTROLE       
 //======================================
@@ -138,7 +142,7 @@ typedef enum AX_Alarm_Shutdown_E{
 #define AX_NOW 1
 #define AX_LATER 0
 
-#define AX_NB_FIELDS 31
+#define AX_NB_FIELDS 32
 typedef enum AX_Field_E{
   //EEPROM - Configuration  
   AX_ID,
@@ -191,52 +195,43 @@ uint8_t AX_Write(AX *servo, AX_Field field, uint16_t data, uint8_t size, uint8_t
 
 uint8_t AX_Ping(AX *servo);
 /*
- * Envoie une requête ping au servomoteur et récupère la réponse dans
- * servo->interface->status.  Renvoie 0 en cas de succès, 1 en cas
- * d'échec.
+ * Send a ping request to the servo and retrieve status in
+ * servo->interface->status. Return 0 if it succeeds, 1 if it fails.
  */
 
 uint8_t AX_Discover(AX_Interface *interface, AX *buffer_servos, uint8_t len_buffer, uint16_t *nb_servos);
 /*
- * Envoie une requête ping en broadcast et récupère une liste d'au
- * plus len_buffer servomoteurs ayant répondu.  Met à jour nb_servo
- * pour indiquer le nombre de servomoteurs découverts.
+ * Send a broadcast ping request and retrieve a table of at most
+ * len_buffer servos which have responded. Update nb_servo to the
+ * number of discovered servos.
  */
 
 uint8_t AX_Say_Hello(AX *servo);
 /*
- * Vérifie l'existence du servomoteur et fait clignoter sa LED autant
- * de fois que son ID, avec une fréquence de 1Hz.
- * La LED clignote en rouge s'il y a une erreur, en vert sinon.
- * Renvoie 0 si le servomoteur existe, -1 sinon.
+ * Check the existence of the servo and make its LED blink as most
+ * times as his ID number, with a frequency of 1Hz.
  */
 
 uint8_t AX_Read(AX *servo, AX_Field field, uint16_t *data);
 /*
- * Lis une donnée dans la table de contrôle du servomoteur. En cas de
- * succès, le status return est stocké dans l'interface et la donnée
- * est récupérée dans data. 
- * Renvoie 0 en cas de succès, -1 en cas
- * d'échec.
- * Le AX_Status_Packet d'une interface n'est
- * consultable que jusqu'à la prochaine action.
+ * Read a field in the control table of the servo. If it succeeds, the
+ * return status is stored in the interface of the servo and the data
+ * is written in "data". Return 0 in case of success, -1 if it fails.
+ * Note : the AX_Status_Packet of an interface is valid only before
+ * the next action.
  */
 
 uint8_t AX_Action(AX *servo);
 /*
- * Exécute l'action contenue dans le paquet d'instruction
- * préalablement écris sur le servo grâce à une instruction REG_WRITE
- * (AX_Write(...) avec now = 0).  Renvoie 0 en cas de succès, -1 en
- * cas d'échec.  Remarque : Cette fonction ne vérifie pas si l'action
- * a fonctionné, mais simplement si le paquet a pu être envoyé.
+ * Launch a previously stored instruction in servo with a REG_WRITE
+ * instruction (AX_Write(...) with now = AX_LATER). Return 0 on
+ * success, -1 otherwise.
  */
 
 uint8_t AX_Factory_Reset(AX *servo);
 /*
- * Remet toutes les valeurs de l'EEPROM à leur valeur par défaut, sauf
- * l'ID et la vitesse de transmission.  Attention : il faut laisser au
- * servo environ 5 secondes pour se réinitialiser avant d'envoyer de
- * nouvelles instructions.
+ * Reset all the EEPROM fields to its factory value.  CAUTION : This
+ * will also set the ID to 1 and the baudrate to 1Mbps.
  */
 
 //======================================
@@ -353,17 +348,6 @@ uint8_t AX_Configure_Alarm_Shutdown(AX *servo, AX_Alarm_Shutdown alarm);
 //======================================
 //       COMMANDES SERVOMOTEUR       
 //======================================
-
-typedef enum AX_LED_Color_E{
-  AX_LED_OFF = 0,
-  AX_RED = 1,
-  AX_GREEN = 2,
-  AX_BLUE = 4,
-  AX_YELLOW = AX_RED | AX_GREEN,
-  AX_PINK = AX_RED | AX_BLUE,
-  AX_CYAN = AX_GREEN | AX_BLUE,
-  AX_WHITE = AX_RED | AX_GREEN | AX_BLUE
-}AX_LED_Color;
 
 uint8_t AX_Power_On(AX *servo, uint8_t now);
 /*
