@@ -76,7 +76,7 @@ uint8_t AX_Send_HAL(uint8_t *data, uint16_t size, uint32_t timeout){
 }
 
 void AX_Set_Direction_HAL(AX_Direction dir){
-  HAL_GPIO_WritePIN(USART1_DIR_GPIO_Port, USART1_DIR_Pin, (dir==AX_SEND)?GPIO_PIN_SET:GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(USART1_DIR_GPIO_Port, USART1_DIR_Pin, (dir==AX_SEND)?GPIO_PIN_SET:GPIO_PIN_RESET);
 }
 
 void AX_Delay_HAL(uint32_t t){
@@ -121,7 +121,13 @@ int main(void)
   HAL_Delay(1000);
 
   AX servo = {.id = 1, .interface = &interface};
-  AX_Set_LED(&servo, AX_LED_On, AX_NOW);
+  //AX_Power_On(&servo, AX_NOW);
+
+  AX_Say_Hello(&servo);
+  uint16_t temp;
+  AX_Get_Current_Temperature(&servo, &temp);
+  HAL_Delay(1000);
+  //AX_Power_Off(&servo, AX_NOW);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,7 +135,10 @@ int main(void)
   while (1)
   {
   /* USER CODE END WHILE */
-
+    /*AX_Set_Goal_Position(&servo, 1023, AX_NOW);
+    HAL_Delay(2000);
+    AX_Set_Goal_Position(&servo, 0, AX_NOW);
+    HAL_Delay(2000);*/
   /* USER CODE BEGIN 3 */
 
   }
