@@ -126,8 +126,9 @@ int main(void)
   AX_Say_Hello(&servo);
   uint16_t temp;
   AX_Get_Current_Temperature(&servo, &temp);
+  //AX_Configure_Angle_Limit(&servo, 0, 1023);
   HAL_Delay(1000);
-  //AX_Power_Off(&servo, AX_NOW);
+  AX_Power_Off(&servo, AX_NOW);
   /* USER CODE END 2 */
 
   /* Infinite loop */
