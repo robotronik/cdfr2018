@@ -26,6 +26,7 @@
 
 #define SHM_NAME "/score_cdfr_shm"
 #define SEM_NAME "/score_cdfr_sem"
+#define BUFFER_SIZE 16
 
 void handle_error(const char msg[]);
 int init_sockaddr(const char IP[], const char port[], struct sockaddr_in *addr);

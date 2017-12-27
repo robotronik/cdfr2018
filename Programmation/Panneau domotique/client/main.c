@@ -10,13 +10,13 @@ volatile sig_atomic_t stop = 0;
  */
 int main(int argc, char *argv[]){
   //Reading and verifying the arguments
-  if(argc < 5){
-    fprintf(stderr, "Too few arguments.\nclient <Host-IP> <Host-Port> <Server-IP> <Server-Port>\n");
+  if(argc < 3){
+    fprintf(stderr, "Too few arguments.\nclient <Server-IP> <Server-Port>\n");
     exit(EXIT_FAILURE);
   }
 
   //Semaphore
-  sem_t *score_sem;
+  sem_t *sem_score;
 
   //Signal
   struct sigaction act;
@@ -24,16 +24,20 @@ int main(int argc, char *argv[]){
   //Shared memory
   int shm_fd;
   uint16_t *score;
+
+  //Buffer
+  char buffer[BUFFER_SIZE];
+  int message_length;
   
   //Network variables
   int tcp_socket;
-  struct sockaddr_in host_addr, server_addr;
+  struct sockaddr_in server_addr;
 
   /***************************/
   /*    SEM INITIALIZATION   */
   /***************************/
-  score_sem = sem_open(SEM_NAME, 0);
-  if(score_sem == SEM_FAILED){
+  sem_score = sem_open(SEM_NAME, 0);
+  if(sem_score == SEM_FAILED){
     handle_error("Could not open semaphore");
   }
 
@@ -66,23 +70,8 @@ int main(int argc, char *argv[]){
   /***************************/
   
   //Preparing sockaddr
-  if(init_sockaddr(argv[1], argv[2], &host_addr) == -1){
+  if(init_sockaddr(argv[2], argv[3], &server_addr) == -1){
     exit(EXIT_FAILURE);
-  }
-
-  if(init_sockaddr(argv[3], argv[4], &server_addr) == -1){
-    exit(EXIT_FAILURE);
-  }
-
-  //Opening a TCP socket
-  tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
-  if(tcp_socket == -1){
-    handle_error("Could not create socket");
-  }
-
-  //Binding the socket to the given IP host_address and port
-  if(bind(tcp_socket, (struct sockaddr*) &host_addr, sizeof(host_addr)) == -1){
-    handle_error("Could not bind socket");
   }
 
   /***************************/
@@ -90,23 +79,43 @@ int main(int argc, char *argv[]){
   /***************************/
 
   while(!stop){
-    if(connect(tcp_socket, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1){
-      handle_error("Could not connect");
+    //Waiting for a new score to be sent
+    if(sem_wait(sem_score) == -1){
+      perror("WARNING : failed to wait for semaphore");
+    }
+
+    //Writing score in buffer
+    message_length = snprintf(buffer, BUFFER_SIZE, "%u", *score) + 1;
+
+    //Opening a TCP socket
+    tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if(tcp_socket == -1){
+      perror("WARNING : Could not create socket");
     }
     
-    char buffer[] = "127";
-    write(tcp_socket, buffer, 4);
-    
-    buffer[2] = '5';
-    write(tcp_socket, buffer, 4);
+    //Opening a TCP connection
+    while((connect(tcp_socket, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1) && !stop){
+      perror("WARNING : The connection failed. Trying again...");
+    }
+
+    //Sending the score
+    if(send(tcp_socket, buffer, message_length, MSG_NOSIGNAL) == -1){
+      //If it fails, we'll try again
+      perror("WARNING : Failed to write data on TCP socket.");
+      sem_post(sem_score);
+    }
+
+    //Closing the TCP connection
+    close(tcp_socket);
   }
+
+  printf("Client stopped\n");
   
-
-
   //Clear things and exit
   munmap(&score, sizeof(*score));
   close(shm_fd);
-  sem_close(score_sem);
+  sem_close(sem_score);
+  close(tcp_socket);
   
   return EXIT_SUCCESS;
 }
