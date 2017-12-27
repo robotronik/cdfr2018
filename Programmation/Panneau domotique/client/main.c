@@ -10,7 +10,7 @@ void handle_error(const char msg[]){
  * Parameters :
  * IP (v4)
  * Port number
- * Note that ports under 1024 need priviledged mode
+ * Note that ports under 1024 need priviledged mode, ie. root priviledge
  */
 int main(int argc, char *argv[]){
   //Reading and verifying the arguments
@@ -19,8 +19,45 @@ int main(int argc, char *argv[]){
     exit(EXIT_FAILURE);
   }
 
-  //Preparing sockaddr
+  //Semaphore
+  sem_t *score_sem;
+
+  //Shared memory
+  int shm_fd;
+  uint16_t *score;
+  
+  //Network variables
+  int tcp_socket;
   struct sockaddr_in host_addr, server_addr;
+
+  /***************************/
+  /*    SEM INITIALIZATION   */
+  /***************************/
+  score_sem = sem_open(SEM_NAME, 0);
+  if(score_sem == SEM_FAILED){
+    handle_error("Could not open semaphore");
+  }
+  
+  /***************************/
+  /*    SHM INITIALIZATION   */
+  /***************************/
+  //Open the shared memory
+  shm_fd = shm_open(SHM_NAME, O_RDONLY, 0);
+  if(shm_fd == -1){
+    handle_error("Could not open shared memory");
+  }
+
+  //Map the shm to the virtual address space
+  score = mmap(NULL, sizeof(*score), PROT_READ, MAP_SHARED, shm_fd, 0);
+  if(score == MAP_FAILED){
+    handle_error("Could not map shared memory object");
+  }
+  
+  /***************************/
+  /* NETWORK INITIALIZATIONS */
+  /***************************/
+  
+  //Preparing sockaddr
   if(init_sockaddr(argv[1], argv[2], &host_addr) == -1){
     exit(EXIT_FAILURE);
   }
@@ -30,7 +67,7 @@ int main(int argc, char *argv[]){
   }
 
   //Opening a TCP socket
-  int tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
+  tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
   if(tcp_socket == -1){
     handle_error("Could not create socket");
   }
@@ -40,9 +77,24 @@ int main(int argc, char *argv[]){
     handle_error("Could not bind socket");
   }
 
+  /***************************/
+  /* NETWORK INITIALIZATIONS */
+  /***************************/
+  
   if(connect(tcp_socket, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1){
     handle_error("Could not connect");
   }
+
+  char buffer[] = "127";
+  write(tcp_socket, buffer, 4);
+
+  buffer[2] = '5';
+  write(tcp_socket, buffer, 4);
+
+  //Clear things and exit
+  munmap(&score, sizeof(*score));
+  close(shm_fd);
+  sem_close(score_sem);
   
   return EXIT_SUCCESS;
 }

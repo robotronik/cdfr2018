@@ -1,7 +1,7 @@
 CC=gcc
-CFLAGS=-W -Wall -ansi -std=c99 -D_DEFAULT_SOURCE
+CFLAGS=-W -Wall -ansi -std=c99 -D_DEFAULT_SOURCE -lrt -pthread
 LD=ld
-LDFLAGS=
+LDFLAGS=-lrt -pthread
 EXEC=client
 SRC= $(wildcard *.c)
 HDR = $(wildcard *.h)
@@ -37,7 +37,7 @@ $(EXEC): $(OBJ)
 %.o: %.c $(HDR)
 	@echo -e "\t${YELLOW}Building obj. ${LGREEN}$@${YELLOW}${NC}"
 	@echo -e -n "${YELLOW}[${GREEN}OK${YELLOW}]${NC}\r"
-	-@$(CC) -o $@ -c $< $(CFLAGS)
+	@$(CC) -o $@ -c $< $(CFLAGS)
 	@echo -e -n "\n"
 
 run: $(EXEC)
