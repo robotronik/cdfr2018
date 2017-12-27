@@ -1,10 +1,6 @@
 #include "main.h"
 
-void handle_error(const char msg[]){
-  perror(msg);
-  exit(EXIT_FAILURE);
-  do{}while(1);
-}
+volatile sig_atomic_t stop = 0;
 
 /*
  * Parameters :
@@ -22,6 +18,9 @@ int main(int argc, char *argv[]){
   //Semaphore
   sem_t *score_sem;
 
+  //Signal
+  struct sigaction act;
+    
   //Shared memory
   int shm_fd;
   uint16_t *score;
@@ -36,6 +35,15 @@ int main(int argc, char *argv[]){
   score_sem = sem_open(SEM_NAME, 0);
   if(score_sem == SEM_FAILED){
     handle_error("Could not open semaphore");
+  }
+
+  /*****************************/
+  /*   SIGNAL INITIALIZATION   */
+  /*****************************/
+  memset(&act, 0, sizeof(act));
+  act.sa_handler = sigterm_handler;
+  if(sigaction(SIGTERM, &act, NULL) == -1){
+    handle_error("Could not affect SIGTERM handler");
   }
   
   /***************************/
@@ -78,18 +86,22 @@ int main(int argc, char *argv[]){
   }
 
   /***************************/
-  /* NETWORK INITIALIZATIONS */
+  /*         LOOP            */
   /***************************/
-  
-  if(connect(tcp_socket, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1){
-    handle_error("Could not connect");
+
+  while(!stop){
+    if(connect(tcp_socket, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1){
+      handle_error("Could not connect");
+    }
+    
+    char buffer[] = "127";
+    write(tcp_socket, buffer, 4);
+    
+    buffer[2] = '5';
+    write(tcp_socket, buffer, 4);
   }
+  
 
-  char buffer[] = "127";
-  write(tcp_socket, buffer, 4);
-
-  buffer[2] = '5';
-  write(tcp_socket, buffer, 4);
 
   //Clear things and exit
   munmap(&score, sizeof(*score));
@@ -107,4 +119,16 @@ int init_sockaddr(const char IP[], const char port[], struct sockaddr_in *addr){
     return -1;
   }
   return 0;
+}
+
+void handle_error(const char msg[]){
+  perror(msg);
+  exit(EXIT_FAILURE);
+  do{}while(1);
+}
+
+void sigterm_handler(int signo){
+  if(signo == SIGTERM){
+    stop = 1;
+  }
 }
