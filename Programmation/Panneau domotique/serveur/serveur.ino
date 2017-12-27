@@ -56,11 +56,19 @@ void loop() {
         new_score = false;
       }
     }
+    client.stop();//Aparemment nécessaire pour l'ESP
   }
   if(new_score){
-    Serial.print(score_1a+score_2a);
+    #if DEBUG==1
+    Serial.println(score_1a+score_2a);
+    #else
+    unsigned int score = (score_1a+score_2a)&0xFFFF;
+    unsigned char low_byte = score&0xFF, high_byte = score>>8;
+    Serial.write(low_byte);
+    Serial.write(high_byte);
+    #endif
     new_score = false;
   }
-
+  
   delay(100);  
 }
