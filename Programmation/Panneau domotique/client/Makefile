@@ -1,8 +1,8 @@
 CC=gcc
-CFLAGS=-W -Wall -ansi -std=c99
+CFLAGS=-W -Wall -ansi -std=c99 -D_DEFAULT_SOURCE
 LD=ld
 LDFLAGS=
-EXEC=udp-server
+EXEC=client
 SRC= $(wildcard *.c)
 HDR = $(wildcard *.h)
 OBJ= $(SRC:.c=.o)

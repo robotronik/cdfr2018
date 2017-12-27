@@ -1,0 +1,55 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+
+#define NB_CLIENTS 2
+
+void handle_error(const char msg[]){
+  perror(msg);
+  exit(EXIT_FAILURE);
+}
+
+/*
+ * Parameters :
+ * IP (v4)
+ * Port number
+ * Note that ports under 1024 need priviledged mode
+ */
+int main(int argc, char *argv[]){
+  //Reading and verifying the arguments
+  if(argc < 3){
+    fprintf(stderr, "Too few arguments.\nsockaddr <IP> <port>\n");
+    exit(EXIT_FAILURE);
+  }
+
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(atoi(argv[2]));
+  if(inet_aton(argv[1], &addr.sin_addr) == 0){
+    fprintf(stderr, "Invalid IP address\n");
+    exit(EXIT_FAILURE);
+  }
+  
+  int tcp_socket;
+
+  //Open a TCP socket
+  tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
+  if(tcp_socket == -1){
+    handle_error("server");
+  }
+
+  //Bind the socket to the given IP address and port
+  if(bind(tcp_socket, (struct sockaddr*) &addr, sizeof(addr)) == -1){
+    handle_error("server");
+  }
+
+  //Set the socket as passive
+  listen(tcp_socket, NB_CLIENTS);
+  
+  return EXIT_SUCCESS;
+}
