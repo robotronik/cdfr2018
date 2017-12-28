@@ -41,11 +41,12 @@ void setup() {
 void loop() {
   WiFiClient client = server.available();
   if(client && client.connected() && client.available()){
+    IPAddress remote = client.remoteIP();
+    Serial.println(remote);
     String data = client.readStringUntil('\0');
     int score = data.toInt();
     if((score >= 0) && ((score&0xFFFF) == score)){
       new_score = true;
-      IPAddress remote = client.remoteIP();
       if(remote == robot_1a){
         score_1a = score;
       }

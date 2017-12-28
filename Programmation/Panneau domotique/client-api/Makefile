@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-W -Wall -ansi -std=c99 -D_DEFAULT_SOURCE -lrt -pthread
 LD=ld
 LDFLAGS=-lrt -pthread
-EXEC=client
+EXEC=client_api_test
 SRC= $(wildcard *.c)
 HDR = $(wildcard *.h)
 OBJ= $(SRC:.c=.o)

@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
   if(sem_score == SEM_FAILED){
     handle_error("Could not open semaphore");
   }
-
+  
   /*****************************/
   /*   SIGNAL INITIALIZATION   */
   /*****************************/
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]){
   /***************************/
   
   //Preparing sockaddr
-  if(init_sockaddr(argv[2], argv[3], &server_addr) == -1){
+  if(init_sockaddr(argv[1], argv[2], &server_addr) == -1){
     exit(EXIT_FAILURE);
   }
 
@@ -81,12 +81,17 @@ int main(int argc, char *argv[]){
   while(!stop){
     //Waiting for a new score to be sent
     if(sem_wait(sem_score) == -1){
-      perror("WARNING : failed to wait for semaphore");
+      perror("WARNING : Failed to wait for semaphore");
+      if(stop){
+	break;
+      }
     }
 
     //Writing score in buffer
     message_length = snprintf(buffer, BUFFER_SIZE, "%u", *score) + 1;
 
+    printf("%s\n", buffer);
+    
     //Opening a TCP socket
     tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
     if(tcp_socket == -1){
@@ -104,6 +109,9 @@ int main(int argc, char *argv[]){
       perror("WARNING : Failed to write data on TCP socket.");
       sem_post(sem_score);
     }
+
+    //A remplacer
+    sleep(1);
 
     //Closing the TCP connection
     close(tcp_socket);
@@ -124,7 +132,7 @@ int init_sockaddr(const char IP[], const char port[], struct sockaddr_in *addr){
   addr->sin_family = AF_INET;
   addr->sin_port = htons(atoi(port));
   if(inet_aton(IP, &addr->sin_addr) == 0){
-    fprintf(stderr, "%s is not a valid IP host_address.", IP);
+    fprintf(stderr, "%s is not a valid IP host_address.\n", IP);
     return -1;
   }
   return 0;

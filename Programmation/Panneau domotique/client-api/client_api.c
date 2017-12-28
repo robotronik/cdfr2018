@@ -72,21 +72,23 @@ uint16_t* SC_Start(const char* server_ip, const char* server_port){
     return NULL;
   }
   else if(sc_client.pid == 0){
-    if(execl(SC_CLIENT_PATH, server_ip, server_port, NULL) == -1){
+    if(execl(SC_CLIENT_PATH, SC_CLIENT_PATH, server_ip, server_port, NULL) == -1){
       perror("Scoreboard_Client : Could not start client");
       exit(EXIT_FAILURE);
       do{}while(1);
     }
   }
 
-  //Add asynchronous termination handling
-  
   return sc_client.score;
 }
 
 void SC_Stop(){
   //Child process
   if(sc_client.pid != -1){
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = SIG_DFL;
+    sigaction(SIGCHLD, &act, NULL);
     if(kill(sc_client.pid, SIGTERM) == -1){
       kill(sc_client.pid, SIGKILL);
     }
@@ -129,6 +131,6 @@ int SC_Update(){
 void SC_SIGCHLD_Handler(int signo){
   if(signo == SIGCHLD){
     sc_running = 0;
-    fprintf(stderr, "Scoreboard_CLient : Client stopped working");
+    fprintf(stderr, "Scoreboard_Client : Client stopped working\n");
   }
 }
