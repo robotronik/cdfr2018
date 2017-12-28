@@ -3,7 +3,7 @@
 Scoreboard_Client sc_client;
 sig_atomic_t sc_running = 0;
 
-uint16_t* SC_Start(const char* server_ip, const char* server_port){
+uint16_t* SC_Start(const char *id, const char* server_ip, const char* server_port){
   if(sc_running == 1){
     fprintf(stderr, "Scoreboard_Client : Client is already running\n");
     return NULL;
@@ -72,7 +72,7 @@ uint16_t* SC_Start(const char* server_ip, const char* server_port){
     return NULL;
   }
   else if(sc_client.pid == 0){
-    if(execl(SC_CLIENT_PATH, SC_CLIENT_PATH, server_ip, server_port, NULL) == -1){
+    if(execl(SC_CLIENT_PATH, SC_CLIENT_PATH, id, server_ip, server_port, NULL) == -1){
       perror("Scoreboard_Client : Could not start client");
       exit(EXIT_FAILURE);
       do{}while(1);
@@ -106,6 +106,7 @@ void SC_Stop(){
 
   //Semaphore
   if(sc_client.sem != SEM_FAILED){
+    sem_close(sc_client.sem);
     sem_unlink(SC_SEM_NAME);
   }
 

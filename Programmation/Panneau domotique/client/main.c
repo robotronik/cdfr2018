@@ -4,14 +4,15 @@ volatile sig_atomic_t stop = 0;
 
 /*
  * Parameters :
+ * ID
  * IP (v4)
  * Port number
  * Note that ports under 1024 need priviledged mode, ie. root priviledge
  */
 int main(int argc, char *argv[]){
   //Reading and verifying the arguments
-  if(argc < 3){
-    fprintf(stderr, "Too few arguments.\nclient <Server-IP> <Server-Port>\n");
+  if(argc < 4){
+    fprintf(stderr, "Too few arguments.\nclient <ID> <Server-IP> <Server-Port>\n");
     exit(EXIT_FAILURE);
   }
 
@@ -27,12 +28,20 @@ int main(int argc, char *argv[]){
 
   //Buffer
   char buffer[BUFFER_SIZE];
+  int id;
   int message_length;
   
   //Network variables
   int tcp_socket;
   struct sockaddr_in server_addr;
 
+  //ID
+  id = atoi(argv[1]);
+  if(id != 1 && id != 2){
+    fprintf(stderr, "Bad ID : must be 1 or 2\n");
+    exit(EXIT_FAILURE);
+  }
+  
   /***************************/
   /*    SEM INITIALIZATION   */
   /***************************/
@@ -70,7 +79,7 @@ int main(int argc, char *argv[]){
   /***************************/
   
   //Preparing sockaddr
-  if(init_sockaddr(argv[1], argv[2], &server_addr) == -1){
+  if(init_sockaddr(argv[2], argv[3], &server_addr) == -1){
     exit(EXIT_FAILURE);
   }
 
@@ -88,7 +97,11 @@ int main(int argc, char *argv[]){
     }
 
     //Writing score in buffer
-    message_length = snprintf(buffer, BUFFER_SIZE, "%u", *score) + 1;
+    message_length = snprintf(buffer, BUFFER_SIZE, "0%d%u", id, *score) + 1;
+    /*
+     * Message :
+     * '0' | 'ID' | "score" | '\0'
+     */
 
     printf("%s\n", buffer);
     
@@ -106,12 +119,9 @@ int main(int argc, char *argv[]){
     //Sending the score
     if(send(tcp_socket, buffer, message_length, MSG_NOSIGNAL) == -1){
       //If it fails, we'll try again
-      perror("WARNING : Failed to write data on TCP socket.");
+      perror("WARNING : Failed to write data on TCP socket");
       sem_post(sem_score);
     }
-
-    //A remplacer
-    sleep(1);
 
     //Closing the TCP connection
     close(tcp_socket);

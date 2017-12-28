@@ -41,7 +41,7 @@ typedef struct Scoreboard_Client_S{
 
 extern sig_atomic_t sc_running;
 extern Scoreboard_Client sc_client;
-uint16_t* SC_Start(const char* server_ip, const char* server_port);
+uint16_t* SC_Start(const char *id, const char* server_ip, const char* server_port);
 /*
  * Start a scoreboard client as a child process and initializes the
  * client's struct.  On success, it returns a pointer on the variable
