@@ -1,4 +1,5 @@
 EESchema Schematic File Version 2
+LIBS:driver-moteurs-rescue
 LIBS:power
 LIBS:device
 LIBS:transistors
@@ -99,7 +100,7 @@ F 3 "" H 5250 2000 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L LED D1
+L LED-RESCUE-driver-moteurs D1
 U 1 1 59F77A31
 P 5700 1600
 F 0 "D1" H 5700 1700 50  0000 C CNN
