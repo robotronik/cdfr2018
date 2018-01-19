@@ -48,6 +48,11 @@ debug:
 	arm-none-eabi-gdb $(PROJECT_DIR)/build/$(PROJECT_NAME).elf --command=openocd/attach_$(BOARD).gdb
 	@echo -e "${vert_gras}+-------------------[ Debug terminé ]-------------------+ ${fin}"
 
+flash_file:
+	@echo -e "${vert_gras}+-------------[ Transfert du fichier local]-------------+ ${fin}"
+	openocd -f openocd/st_nucleo_$(BOARD).cfg -c "program local.bin exit 0x08000000 reset"
+	@echo -e "${vert_gras}+--------[ Transfert du fichier local terminé ]---------+ ${fin}"
+
 doc:
 	qpdfview $(DOC_DIR)/stm32$(BOARD)_doc.pdf &
 
