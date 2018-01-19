@@ -37,8 +37,10 @@ make c
 
 Upload du programme sur STM32
 -----------------------------
-make f pour flasher le programme compilé
-make flash_file pour flasher un .bin contenu dans le même dossier que ce Makefile
+ * make f
+pour flasher le programme compilé
+ * make flash_file
+pour flasher un .bin contenu dans le même dossier que ce Makefile
 
 Connexion de GDB
 ----------------
