@@ -1,0 +1,163 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:Nucleo_64
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 2 2
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L APE8865U5-28-HF-3 U2
+U 1 1 5A6CA894
+P 4000 2400
+F 0 "U2" H 3700 2650 50  0000 C CNN
+F 1 "APE8865U5-28-HF-3" H 4000 2600 50  0000 C CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23-5_HandSoldering" H 4000 2500 50  0001 C CIN
+F 3 "" H 4000 2400 50  0000 C CNN
+	1    4000 2400
+	1    0    0    -1  
+$EndComp
+$Comp
+L +5V #PWR06
+U 1 1 5A6CA927
+P 2650 2050
+F 0 "#PWR06" H 2650 1900 50  0001 C CNN
+F 1 "+5V" H 2650 2190 50  0000 C CNN
+F 2 "" H 2650 2050 50  0000 C CNN
+F 3 "" H 2650 2050 50  0000 C CNN
+	1    2650 2050
+	1    0    0    -1  
+$EndComp
+$Comp
+L PWR_FLAG #FLG07
+U 1 1 5A6CA93D
+P 2550 2150
+F 0 "#FLG07" H 2550 2245 50  0001 C CNN
+F 1 "PWR_FLAG" H 2550 2330 50  0000 C CNN
+F 2 "" H 2550 2150 50  0000 C CNN
+F 3 "" H 2550 2150 50  0000 C CNN
+	1    2550 2150
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	2650 2050 2650 2350
+Wire Wire Line
+	2650 2350 3550 2350
+Wire Wire Line
+	2550 2150 2650 2150
+Connection ~ 2650 2150
+Wire Wire Line
+	3550 2500 3350 2500
+Wire Wire Line
+	3350 2500 3350 2350
+Connection ~ 3350 2350
+$Comp
+L GND #PWR08
+U 1 1 5A6CA964
+P 4000 2850
+F 0 "#PWR08" H 4000 2600 50  0001 C CNN
+F 1 "GND" H 4000 2700 50  0000 C CNN
+F 2 "" H 4000 2850 50  0000 C CNN
+F 3 "" H 4000 2850 50  0000 C CNN
+	1    4000 2850
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4000 2700 4000 2850
+Text GLabel 4750 2350 2    60   Input ~ 0
++2.8V
+Wire Wire Line
+	4450 2350 4750 2350
+NoConn ~ 4450 2500
+$Comp
+L C C1
+U 1 1 5A6CB482
+P 2950 2600
+F 0 "C1" H 2975 2700 50  0000 L CNN
+F 1 "1uC" H 2975 2500 50  0000 L CNN
+F 2 "" H 2988 2450 50  0001 C CNN
+F 3 "" H 2950 2600 50  0000 C CNN
+	1    2950 2600
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C2
+U 1 1 5A6CB4EF
+P 4650 2650
+F 0 "C2" H 4675 2750 50  0000 L CNN
+F 1 "1uC" H 4675 2550 50  0000 L CNN
+F 2 "" H 4688 2500 50  0001 C CNN
+F 3 "" H 4650 2650 50  0000 C CNN
+	1    4650 2650
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR09
+U 1 1 5A6CB546
+P 2950 2950
+F 0 "#PWR09" H 2950 2700 50  0001 C CNN
+F 1 "GND" H 2950 2800 50  0000 C CNN
+F 2 "" H 2950 2950 50  0000 C CNN
+F 3 "" H 2950 2950 50  0000 C CNN
+	1    2950 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR010
+U 1 1 5A6CB560
+P 4650 2950
+F 0 "#PWR010" H 4650 2700 50  0001 C CNN
+F 1 "GND" H 4650 2800 50  0000 C CNN
+F 2 "" H 4650 2950 50  0000 C CNN
+F 3 "" H 4650 2950 50  0000 C CNN
+	1    4650 2950
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4650 2500 4650 2350
+Connection ~ 4650 2350
+Wire Wire Line
+	4650 2800 4650 2950
+Wire Wire Line
+	2950 2450 2950 2350
+Connection ~ 2950 2350
+Wire Wire Line
+	2950 2750 2950 2950
+$EndSCHEMATC
