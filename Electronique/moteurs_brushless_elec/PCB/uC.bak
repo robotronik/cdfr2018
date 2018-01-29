@@ -100,7 +100,7 @@ U 1 1 59615ECD
 P 3450 1500
 F 0 "J2" H 3450 1750 50  0000 C CNN
 F 1 "swdio" V 3550 1500 50  0000 C CNN
-F 2 "Pin_Headers:Pin_Header_Angled_1x04_Pitch2.54mm" H 3450 1500 50  0001 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x04_Pitch2.54mm" H 3450 1500 50  0001 C CNN
 F 3 "" H 3450 1500 50  0001 C CNN
 	1    3450 1500
 	-1   0    0    1   

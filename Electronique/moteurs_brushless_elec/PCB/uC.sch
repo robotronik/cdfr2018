@@ -518,4 +518,6 @@ Wire Wire Line
 Connection ~ 4450 5100
 NoConn ~ 4950 2800
 NoConn ~ 4950 2900
+Text Notes 4150 5800 0    60   ~ 0
+Pas utilisé
 $EndSCHEMATC
