@@ -39,6 +39,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
+#include "Robotronik_corp_pid.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -57,7 +58,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+PID_DATA pid_z;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -84,6 +85,23 @@ void user_pwm_D2(uint16_t value)
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+}
+
+void write_motor(float output)
+{
+  if(output>0)
+  {
+    HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,1);
+    HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,0);
+  }
+  else
+  {
+    HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);
+    HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);
+    output=-output;
+  }
+  if(output>256) output=256;
+  user_pwm_D2((uint16_t)output);
 }
 /* USER CODE END PFP */
 
@@ -124,10 +142,14 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-  int impulsions=0,impulsions_c=1000;
-  float output=0;
-  float eps;
+  int impulsions=0,impulsions_c=1000,adcResult=0;
 
+  pid_z.Kp=10;
+  pid_z.Ki=0;
+  pid_z.Kd=0;
+  pid_z.Te=0.02;
+  pid_init(&pid_z);
+  HAL_ADC_Start(&hadc2);
   HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
   /* USER CODE END 2 */
 
@@ -140,25 +162,13 @@ int main(void)
 
   while (1)
   {
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    impulsions = TIM2->CNT;
-    eps=impulsions_c-impulsions;
-    output=0;
-    if(output>0)
-    {
-      HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,1);
-      HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,0);
-    }
-    else
-    {
-      HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);
-      HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);
-      output=-output;
-    }
-    if(output>256) output=256;
-    user_pwm_D2((uint16_t)output);
 
-    HAL_Delay(10);
+    //HAL_ADC_PollForConversion(&hadc2, 100);
+    adcResult = HAL_ADC_GetValue(&hadc2);
+    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin));//lecture capteur fc
+    impulsions = TIM2->CNT;
+    write_motor(pid(&pid_z,impulsions-impulsions_c));
+    HAL_Delay(20);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
