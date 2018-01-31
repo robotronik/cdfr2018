@@ -100,7 +100,7 @@ void write_motor(float output)
     HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);
     output=-output;
   }
-  if(output>256) output=256;
+  if(output>255) output=255;
   user_pwm_D2((uint16_t)output);
 }
 /* USER CODE END PFP */
