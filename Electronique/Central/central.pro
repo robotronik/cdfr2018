@@ -1,4 +1,4 @@
-update=sam. 27 janv. 2018 16:48:16 CET
+update=ven. 02 févr. 2018 22:16:51 CET
 version=1
 last_client=kicad
 [pcbnew]
@@ -59,3 +59,5 @@ LibName27=atmel
 LibName28=contrib
 LibName29=valves
 LibName30=Nucleo_64
+LibName31=2
+LibName32=dsn2596
