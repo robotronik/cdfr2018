@@ -1,4 +1,4 @@
-update=ven. 02 févr. 2018 22:16:51 CET
+update=dim. 04 févr. 2018 01:51:33 CET
 version=1
 last_client=kicad
 [pcbnew]
@@ -61,3 +61,4 @@ LibName29=valves
 LibName30=Nucleo_64
 LibName31=2
 LibName32=dsn2596
+LibName33=raspberry_pi_3
