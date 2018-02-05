@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name dsn2596)(type KiCad)(uri "$(KIPRJMOD)/dsn2596.pretty")(options "")(descr ""))
+)
