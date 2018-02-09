@@ -50,6 +50,14 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+typedef struct Encoder_S{
+  volatile int last;
+  volatile int current;
+  volatile int dl;
+  volatile int cnt;
+}Encoder;
+
+Encoder encoder = (Encoder) {.last = 0, .current = 0, .dl = 0, .cnt = 0};
 
 /* USER CODE END PV */
 
@@ -66,6 +74,25 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   if(htim->Instance == htim1.Instance)
   {
     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+    
+    encoder.last = encoder.current;
+    encoder.current = htim->Instance->CNT;
+
+    int dl = encoder.current - encoder.last;
+    /*
+     * current = last+1 : +1
+     * current = last : 0
+     * current = last-1 : -1
+     * current = 0, last = ARR : +1
+     * current = ARR, last = 0 : -1
+     */
+    if(dl > 1){
+      dl = -1;
+    }else if(dl < 1){
+      dl = +1;
+    }
+    encoder.dl = dl;
+    encoder.cnt += dl;
   }
 }
 /* USER CODE END PFP */
