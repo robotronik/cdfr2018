@@ -9,11 +9,17 @@ static void MX_GPIO_Init(void)
 #t__HAL_RCC_GPIOA_CLK_ENABLE();
 #t__HAL_RCC_GPIOB_CLK_ENABLE();
 #n#t/*Configure GPIO pin Output Level */
-#tHAL_GPIO_WritePin(GPIOB, DIR_1_Pin|DIR_2_Pin, GPIO_PIN_RESET);
+#tHAL_GPIO_WritePin(GPIOA, BRAKE_1_Pin|LED_Pin, GPIO_PIN_RESET);
 #n#t/*Configure GPIO pin Output Level */
-#tHAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-#n#t/*Configure GPIO pins : DIR_1_Pin DIR_2_Pin */
-#tGPIO_InitStruct.Pin = DIR_1_Pin|DIR_2_Pin;
+#tHAL_GPIO_WritePin(GPIOB, DIR_1_Pin|DIR_2_Pin|BRAKE_2_Pin, GPIO_PIN_RESET);
+#n#t/*Configure GPIO pins : BRAKE_1_Pin LED_Pin */
+#tGPIO_InitStruct.Pin = BRAKE_1_Pin|LED_Pin;
+#tGPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+#tGPIO_InitStruct.Pull = GPIO_NOPULL;
+#tGPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+#tHAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+#n#t/*Configure GPIO pins : DIR_1_Pin DIR_2_Pin BRAKE_2_Pin */
+#tGPIO_InitStruct.Pin = DIR_1_Pin|DIR_2_Pin|BRAKE_2_Pin;
 #tGPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 #tGPIO_InitStruct.Pull = GPIO_NOPULL;
 #tGPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -28,12 +34,6 @@ static void MX_GPIO_Init(void)
 #tGPIO_InitStruct.Mode = GPIO_MODE_INPUT;
 #tGPIO_InitStruct.Pull = GPIO_NOPULL;
 #tHAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-#n#t/*Configure GPIO pin : LED_Pin */
-#tGPIO_InitStruct.Pin = LED_Pin;
-#tGPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-#tGPIO_InitStruct.Pull = GPIO_NOPULL;
-#tGPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-#tHAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
 #n
 }
 #n
