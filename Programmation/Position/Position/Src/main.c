@@ -155,7 +155,7 @@ int main(void)
   HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
 
   user_pwm_EN_1(127);
-  user_pwm_EN_2(127);//marche
+  user_pwm_EN_2(90);//marche
   HAL_GPIO_WritePin (BRAKE_1_GPIO_Port, BRAKE_1_Pin,1);
   HAL_GPIO_WritePin (BRAKE_2_GPIO_Port, BRAKE_2_Pin,1);
 
@@ -163,10 +163,7 @@ int main(void)
 
   while (1)
   {
-    HAL_GPIO_WritePin (LED_GPIO_Port, LED_Pin,1);
-    HAL_Delay(500);
-    HAL_GPIO_WritePin (LED_GPIO_Port, LED_Pin,0);
-    HAL_Delay(500);
+    HAL_Delay(1);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -344,6 +341,7 @@ static void MX_TIM2_Init(void)
 static void MX_TIM3_Init(void)
 {
 
+  TIM_ClockConfigTypeDef sClockSourceConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
   TIM_OC_InitTypeDef sConfigOC;
 
@@ -353,6 +351,17 @@ static void MX_TIM3_Init(void)
   htim3.Init.Period = 256-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
