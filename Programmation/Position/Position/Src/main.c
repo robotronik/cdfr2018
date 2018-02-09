@@ -60,9 +60,10 @@ UART_HandleTypeDef huart2;
 typedef struct Encoder_S{
   volatile int last;
   volatile int current;
+  volatile int dl;
 }Encoder;
 
-Encoder encoder1 = (Encoder) {.last = 0, .current = 0}, encoder2 = (Encoder) {.last = 0, .current = 0};
+Encoder encoder1 = (Encoder) {.last = 0, .current = 0, .dl = 0}, encoder2 = (Encoder) {.last = 0, .current = 0, .dl = 0};
 
 /* USER CODE END PV */
 
@@ -605,6 +606,15 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 
   encoder->last = encoder->current;
   encoder->current = htim->Instance->CNT;
+
+  int dl = encoder->current - encoder->last;
+  if(dl > 1){
+    dl = -1;
+  }
+  else if(dl < -1){
+    dl = 1;
+  }
+  encoder->dl = dl;
 }
 /* USER CODE END 4 */
 
