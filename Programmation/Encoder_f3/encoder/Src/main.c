@@ -88,7 +88,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
      */
     if(dl > 1){
       dl = -1;
-    }else if(dl < 1){
+    }else if(dl < -1){
       dl = +1;
     }
     encoder.dl = dl;
