@@ -41,7 +41,10 @@
 #include "stm32f3xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#define ARM_MATH_CM4
+#include "arm_math.h"
 
+#include "Robotronik_corp_pid.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -59,9 +62,23 @@ typedef struct Encoder_S{
   volatile int last;
   volatile int current;
   volatile int dl;
+  volatile int cnt;
 }Encoder;
 
-Encoder encoder1 = (Encoder) {.last = 0, .current = 0, .dl = 0}, encoder2 = (Encoder) {.last = 0, .current = 0, .dl = 0};
+Encoder encoder1 = (Encoder) {.last = 0, .current = 0, .dl = 0, .cnt = 0}, encoder2 = (Encoder) {.last = 0, .current = 0, .dl = 0, .cnt = 0};
+
+typedef struct Position_S{
+  volatile float x;
+  volatile float y;
+  volatile float theta;
+}Position;
+
+Position position=(Position){.x=0,.y=0,.theta=0};
+#define L 20//distance between encoders
+#define delta2 0.01//distance for 1 encoder step/2
+#define deltaL delta2/L
+
+int sum_goal,diff_goal;
 
 /* USER CODE END PV */
 
@@ -80,8 +97,19 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-void user_pwm_EN_1(uint16_t value)
+void motor_1(float voltage)
 {
+    uint16_t value;
+    if(voltage>0)
+    {
+      HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,1);
+      value=(uint16_t) (voltage*255.0/12.0);
+    }
+    else
+    {
+      HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,0);
+      value=(uint16_t) (-voltage*255.0/12.0);
+    }
     if(value>255) value=255;
     TIM_OC_InitTypeDef sConfigOC;
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
@@ -92,8 +120,19 @@ void user_pwm_EN_1(uint16_t value)
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 }
 
-void user_pwm_EN_2(uint16_t value)
+void motor_2(float voltage)
 {
+    uint16_t value;
+    if(voltage>0)
+    {
+      HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,1);
+      value=(uint16_t) (voltage*255.0/12.0);
+    }
+    else
+    {
+      HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
+      value=(uint16_t) (-voltage*255.0/12.0);
+    }
     if(value>255) value=255;
     TIM_OC_InitTypeDef sConfigOC;
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
@@ -102,6 +141,53 @@ void user_pwm_EN_2(uint16_t value)
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2);
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+}
+
+void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance == htim1.Instance)
+  {
+    encoder1.last = encoder1.current;
+    encoder1.current = htim->Instance->CNT;
+    int dl = encoder1.current - encoder1.last;
+    if(dl > 1){
+      dl = -1;
+    }else if(dl < -1){
+      dl = +1;
+    }
+    encoder1.dl = dl;
+    encoder1.cnt += dl;
+
+    position.x=position.x+cos(position.theta)*delta2*dl;
+    position.y=position.y+sin(position.theta)*delta2*dl;
+    position.theta=position.theta+deltaL*dl;
+  }
+  else if(htim->Instance == htim2.Instance)
+  {
+    encoder2.last = encoder2.current;
+    encoder2.current = htim->Instance->CNT;
+    int dl = encoder2.current - encoder2.last;
+    if(dl > 1){
+      dl = -1;
+    }else if(dl < -1){
+      dl = +1;
+    }
+    encoder2.dl = dl;
+    encoder2.cnt += dl;
+
+    position.x=position.x+cos(position.theta)*delta2*dl;
+    position.y=position.y+sin(position.theta)*delta2*dl;
+    position.theta=position.theta-deltaL*dl;
+  }
+
+  if(position.theta>PI)//angle limitation to -PI +PI
+  {
+    position.theta=2*PI-position.theta;
+  }
+  else if(position.theta<=-PI)
+  {
+    position.theta=2*PI+position.theta;
+  }
 }
 /* USER CODE END PFP */
 
@@ -122,7 +208,16 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  int Te=10;//in ms
+  PID_DATA pid_sum,pid_diff;
+  pid_sum.Te=Te;
+  pid_diff.Te=Te;
+  pid_sum.Kp=0.01;
+  pid_sum.Ki=0;
+  pid_sum.Kd=0;
+  pid_diff.Kp=0.01;
+  pid_diff.Ki=0;
+  pid_diff.Kd=0;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -151,19 +246,27 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,1);
-  HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
-
-  user_pwm_EN_1(127);
-  user_pwm_EN_2(90);//marche
   HAL_GPIO_WritePin (BRAKE_1_GPIO_Port, BRAKE_1_Pin,1);
   HAL_GPIO_WritePin (BRAKE_2_GPIO_Port, BRAKE_2_Pin,1);
 
+  //HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,1);
+  //HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
+  motor_1(6);
+  motor_2(-6);
+  HAL_Delay(1000);//just a test
 
+  pid_init(&pid_sum);
+  pid_init(&pid_diff);
+
+  sum_goal=0;
+  diff_goal=0;
 
   while (1)
   {
-    HAL_Delay(1);
+    motor_1(pid(&pid_sum,sum_goal-(encoder1.cnt+encoder2.cnt)));
+    motor_2(pid(&pid_diff,diff_goal-(encoder1.cnt-encoder2.cnt)));
+    HAL_Delay(Te);
+    //TODO generateur de consigne
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -273,7 +376,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 1440;
+  htim1.Init.Period = 42;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -281,11 +384,11 @@ static void MX_TIM1_Init(void)
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 5;
+  sConfig.IC1Filter = 0;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 5;
+  sConfig.IC2Filter = 0;
   if (HAL_TIM_Encoder_Init(&htim1, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -311,18 +414,18 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 1440;
+  htim2.Init.Period = 42;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 5;
+  sConfig.IC1Filter = 0;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 5;
+  sConfig.IC2Filter = 0;
   if (HAL_TIM_Encoder_Init(&htim2, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -346,9 +449,9 @@ static void MX_TIM3_Init(void)
   TIM_OC_InitTypeDef sConfigOC;
 
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 250;
+  htim3.Init.Prescaler = 1250-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 256-1;
+  htim3.Init.Period = 255-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -463,30 +566,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
-  Encoder *encoder;
-  if(htim == &htim1){
-    encoder = &encoder1;
-  }
-  else if(htim == &htim2){
-    encoder = &encoder2;
-  }
-  else{
-    return;
-  }
 
-  encoder->last = encoder->current;
-  encoder->current = htim->Instance->CNT;
-
-  int dl = encoder->current - encoder->last;
-  if(dl > 1){
-    dl = -1;
-  }
-  else if(dl < -1){
-    dl = 1;
-  }
-  encoder->dl = dl;
-}
 /* USER CODE END 4 */
 
 /**
