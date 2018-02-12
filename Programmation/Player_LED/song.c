@@ -87,7 +87,7 @@ Chunk* Make_Chunk(Song *song, uint32_t period){
   chunk->period = period;
   chunk->len = (period * song->wav_spec.freq)/1000;
   chunk->value = 0;
-  chunk->start = (uint16_t*) song->wav_buffer;
+  chunk->start = (int16_t*) song->wav_buffer;
   chunk->song = song;
   
   return chunk;

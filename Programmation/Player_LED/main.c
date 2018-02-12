@@ -5,25 +5,32 @@
 
 void drawSpectrum(SDL_Renderer *ren, double fft[], uint32_t len){
   int i, j;
+  const int center = 880;
   SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
   for(j = 0; j < 1080; j++){
     int h = 2*fft[1+j/8]*255;
-    for(i = 1080-h; i < 1080; i++){
-      int r = 255*((h-(1080.-i))/h);
+    for(i = center-h; i < center; i++){
+      int r = 255*(((float) h-(center-i))/h);
       SDL_SetRenderDrawColor(ren, r, 0, 0, r);
       SDL_RenderDrawPoint(ren, j, i);
+      SDL_RenderDrawPoint(ren, j, center-(i-center)-1);
     }
   }
  
 }
 
-int main(){
-
+int main(int argc, char *argv[]){
+  if(argc < 2){
+    return EXIT_FAILURE;
+  }
+  
   //Graphics
   SDL_Window *screen;
   SDL_Renderer *renderer;
   SDL_Texture *bgTexture;
   SDL_Surface *bgSurface;
+  SDL_Texture *tracksTexture;
+  SDL_Surface *tracksSurface;
 
   //Song
   Song *song;
@@ -44,12 +51,18 @@ int main(){
   bgSurface = IMG_Load("./background.jpg");
   bgTexture = SDL_CreateTextureFromSurface(renderer, bgSurface);
   SDL_FreeSurface(bgSurface);
+
+  tracksSurface = IMG_Load("./tracks.png");
+  tracksTexture = SDL_CreateTextureFromSurface(renderer, tracksSurface);
+  SDL_SetTextureAlphaMod(tracksTexture, 0);
+  SDL_FreeSurface(tracksSurface);
   
-  song = Load_Song("lean_on.wav", 25);
+  song = Load_Song(argv[1], 25);
   if(song == NULL){
     return EXIT_FAILURE;
   }
 
+  SDL_Delay(1000);
   Play_Song(song);
 
   chunk = Make_Chunk(song, 50);
@@ -69,6 +82,7 @@ int main(){
 
   int last_time = 0, current_time = 0;
   int go = 1;
+  double max = 0.;
   while(Is_Playing_Song(song) && go){
 
     //Event
@@ -82,6 +96,8 @@ int main(){
     //Rendering
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, bgTexture, NULL, NULL);
+    SDL_SetTextureAlphaMod(tracksTexture, (uint8_t) chunk->value);
+    SDL_RenderCopy(renderer, tracksTexture, NULL, NULL);    
     drawSpectrum(renderer, result, N/2+1);
     SDL_RenderPresent(renderer);
     
@@ -91,9 +107,6 @@ int main(){
 #endif
     
     if(Update_Chunk(chunk)){
-    
-      //Display current value
-    
       //Process next chunk value
       uint32_t i;
       for(i = 0; i < chunk->len; i++){
@@ -103,7 +116,17 @@ int main(){
       for(i = 0; (int) i < (N/2+1); i++){
 	result[i] = 2*sqrtf(out[i][0]*out[i][0] + out[i][1]*out[i][1])/N;
       }
-      chunk->value  = 0;//TEMPORAIRE
+
+      double sum = 0.;
+      for(i = 1; i < 11; i++){
+	sum += result[i];
+      }
+      sum /= 10.;
+      if(sum > max){
+	max = sum;
+      }
+
+      chunk->value = (sum/max)*255;
       
     }
     SDL_Delay(10);
@@ -115,6 +138,7 @@ int main(){
   fftw_free(in);
   fftw_free(out);
   SDL_DestroyTexture(bgTexture);
+  SDL_DestroyTexture(tracksTexture);
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(screen);
   SDL_Quit();

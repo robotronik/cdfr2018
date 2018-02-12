@@ -31,8 +31,8 @@ typedef struct Chunk_S{
   uint32_t date;
   uint32_t period;//ms
   uint32_t len;//samples
-  float value;
-  uint16_t *start;
+  double value;
+  int16_t *start;
   Song *song;
 }Chunk;
 
