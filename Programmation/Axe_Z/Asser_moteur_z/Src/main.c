@@ -42,6 +42,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "Robotronik_corp_pid.h"
+#include "ax_12a.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -129,6 +130,26 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     encoder.cnt += dl;
   }
 }
+
+AX_Interface interface;
+
+uint8_t AX_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
+  HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
+  return (status==HAL_OK)?0:1;
+}
+
+uint8_t AX_Send_HAL(uint8_t *data, uint16_t size, uint32_t timeout){
+  HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, data, size, timeout);
+  return (status==HAL_OK)?0:1;
+}
+
+void AX_Set_Direction_HAL(AX_Direction dir){
+  HAL_GPIO_WritePin(EN_Servo_GPIO_Port, EN_Servo_Pin, (dir==AX_SEND)?GPIO_PIN_SET:GPIO_PIN_RESET);
+}
+
+void AX_Delay_HAL(uint32_t t){
+  HAL_Delay(t);
+}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -168,7 +189,12 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-  int imp_goal=0,impulsions_c=1000,adcResult=0;
+  interface.receive = AX_Receive_HAL;
+  interface.send = AX_Send_HAL;
+  interface.set_direction = AX_Set_Direction_HAL;
+  interface.delay = AX_Delay_HAL;
+
+  int imp_goal=1000,adcResult=0;
   int Te=20;
   pid_z.Kp=10;
   pid_z.Ki=0;
@@ -182,6 +208,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  AX servo = {.id = 1, .interface = &interface};
+  AX_Set_Goal_Position(&servo, 500, AX_NOW);
+  HAL_Delay(2000);
+  AX_Set_Goal_Position(&servo, 550, AX_NOW);
+  HAL_Delay(2000);
+
   //https://www.pololu.com/product/1212
   HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin,1);
   HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin,1);
