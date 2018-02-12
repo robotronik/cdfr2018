@@ -211,8 +211,8 @@ int main(void)
   int Te=10;//in ms
   float cor_sum,cor_diff;
   PID_DATA pid_sum,pid_diff;
-  pid_sum.Te=Te;
-  pid_diff.Te=Te;
+  pid_sum.Te=Te/1000;
+  pid_diff.Te=Te/1000;
   pid_sum.Kp=0.01;
   pid_sum.Ki=0;
   pid_sum.Kd=0;
