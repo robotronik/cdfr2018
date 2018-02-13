@@ -39,10 +39,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
-#include "Robotronik_corp_pid.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "Robotronik_corp_pid.h"
+#include "ax_12a.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -59,6 +59,15 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 PID_DATA pid_z;
+
+typedef struct Encoder_S{
+  volatile int last;
+  volatile int current;
+  volatile int dl;
+  volatile int cnt;
+}Encoder;
+
+Encoder encoder = (Encoder) {.last = 0, .current = 0, .dl = 0, .cnt = 0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -104,6 +113,43 @@ void write_motor(float output)
   if(output>255) output=255;
   user_pwm_D2((uint16_t)output);
 }
+
+void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance == htim2.Instance)
+  {
+    encoder.last = encoder.current;
+    encoder.current = htim->Instance->CNT;
+    int dl = encoder.current - encoder.last;
+    if(dl > 1){
+      dl = -1;
+    }else if(dl < -1){
+      dl = +1;
+    }
+    encoder.dl = dl;
+    encoder.cnt += dl;
+  }
+}
+
+AX_Interface interface;
+
+uint8_t AX_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
+  HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
+  return (status==HAL_OK)?0:1;
+}
+
+uint8_t AX_Send_HAL(uint8_t *data, uint16_t size, uint32_t timeout){
+  HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, data, size, timeout);
+  return (status==HAL_OK)?0:1;
+}
+
+void AX_Set_Direction_HAL(AX_Direction dir){
+  HAL_GPIO_WritePin(EN_Servo_GPIO_Port, EN_Servo_Pin, (dir==AX_SEND)?GPIO_PIN_SET:GPIO_PIN_RESET);
+}
+
+void AX_Delay_HAL(uint32_t t){
+  HAL_Delay(t);
+}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -143,20 +189,31 @@ int main(void)
   MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
-  int impulsions=0,impulsions_c=1000,adcResult=0;
+  interface.receive = AX_Receive_HAL;
+  interface.send = AX_Send_HAL;
+  interface.set_direction = AX_Set_Direction_HAL;
+  interface.delay = AX_Delay_HAL;
 
+  int imp_goal=1000,adcResult=0;
+  int Te=20;
   pid_z.Kp=10;
   pid_z.Ki=0;
   pid_z.Kd=0;
-  pid_z.Te=0.02;
+  pid_z.Te=Te/1000;
   pid_init(&pid_z);
   HAL_ADC_Start(&hadc2);
-  HAL_TIM_Encoder_Start(&htim2,TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  AX servo = {.id = 1, .interface = &interface};
+  AX_Set_Goal_Position(&servo, 500, AX_NOW);
+  HAL_Delay(2000);
+  AX_Set_Goal_Position(&servo, 550, AX_NOW);
+  HAL_Delay(2000);
+
   //https://www.pololu.com/product/1212
   HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin,1);
   HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin,1);
@@ -166,11 +223,10 @@ int main(void)
   {
 
     //HAL_ADC_PollForConversion(&hadc2, 100);
-    adcResult = HAL_ADC_GetValue(&hadc2);
+    //adcResult = HAL_ADC_GetValue(&hadc2);
     HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin));//lecture capteur fc
-    impulsions = TIM2->CNT;
-    write_motor(pid(&pid_z,impulsions-impulsions_c));
-    HAL_Delay(20);
+    write_motor(pid(&pid_z,imp_goal-encoder.cnt));
+    HAL_Delay(Te);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -249,7 +305,7 @@ static void MX_ADC2_Init(void)
   hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
   hadc2.Init.Resolution = ADC_RESOLUTION_12B;
   hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.ContinuousConvMode = ENABLE;
   hadc2.Init.DiscontinuousConvMode = DISABLE;
   hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
@@ -323,7 +379,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 0;
+  htim2.Init.Period = 42;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
@@ -353,15 +409,27 @@ static void MX_TIM2_Init(void)
 static void MX_TIM3_Init(void)
 {
 
+  TIM_ClockConfigTypeDef sClockSourceConfig;
   TIM_MasterConfigTypeDef sMasterConfig;
   TIM_OC_InitTypeDef sConfigOC;
 
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 250-1;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 256-1;
+  htim3.Init.Period = 255-1;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);

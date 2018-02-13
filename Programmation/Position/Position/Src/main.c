@@ -209,9 +209,10 @@ int main(void)
 
   /* USER CODE BEGIN Init */
   int Te=10;//in ms
+  float cor_sum,cor_diff;
   PID_DATA pid_sum,pid_diff;
-  pid_sum.Te=Te;
-  pid_diff.Te=Te;
+  pid_sum.Te=Te/1000;
+  pid_diff.Te=Te/1000;
   pid_sum.Kp=0.01;
   pid_sum.Ki=0;
   pid_sum.Kd=0;
@@ -263,8 +264,10 @@ int main(void)
 
   while (1)
   {
-    motor_1(pid(&pid_sum,sum_goal-(encoder1.cnt+encoder2.cnt)));
-    motor_2(pid(&pid_diff,diff_goal-(encoder1.cnt-encoder2.cnt)));
+    cor_sum=pid(&pid_sum,sum_goal-0.5*(encoder1.cnt+encoder2.cnt));
+    cor_diff=pid(&pid_diff,diff_goal-(encoder1.cnt-encoder2.cnt));
+    motor_1(cor_sum+cor_diff);
+    motor_2(cor_sum-cor_diff);
     HAL_Delay(Te);
     //TODO generateur de consigne
   /* USER CODE END WHILE */
