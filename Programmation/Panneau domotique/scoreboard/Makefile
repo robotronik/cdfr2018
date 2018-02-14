@@ -1,52 +1,58 @@
-CC=gcc
-CFLAGS=-W -Wall -ansi -std=c99
-LD=ld
-LDFLAGS=
-EXEC=scoreboard_test
-SRC= $(wildcard *.c)
-HDR = $(wildcard *.h)
-OBJ= $(SRC:.c=.o)
+BOARD=f3
+PROJECT_DIR=SCREEN
+PROJECT_NAME=SCREEN
+DOC_DIR= /home/$(USER)/STM32Cube/
 
-#colors
-NC=\033[0m
-BLACK=\033[0;30m
-DGRAY=\033[1;30m
-LGRAY=\033[0;37m
-WHITE=\033[1;37m
-RED=\033[0;31m
-LRED=\033[1;31m
-GREEN=\033[;32m
-LGREEN=\033[1;32m
-ORANGE=\033[0;33m
-YELLOW=\033[1;33m
-BLUE=\033[0;34m
-LBLUE=\033[1;34m
-PURPLE=\033[0;35m
-LPURPLE=\033[1;35m
-CYAN=\033[0;36m
-LCYAN=\033[1;36m
+rouge = \033[0;31m
+vert = \033[0;32m
+bleu = \033[0;34m
+fin = \033[0m
+vert_gras = \033[0;1;32m
+fin_gras = \033[0;21m
 
-all: $(EXEC)
+ORI=$(CURDIR)
 
-$(EXEC): $(OBJ)
-	@echo -e "\t${YELLOW}Building exec. ${LGREEN}$@${YELLOW}${NC}"
-	@echo -e -n "${YELLOW}[${GREEN}OK${YELLOW}]${NC}\r"
-	@$(CC) -o $@ $^ $(LDFLAGS)
-	@echo -e -n "\n"
+c:
+	make comp
 
-%.o: %.c $(HDR)
-	@echo -e "\t${YELLOW}Building obj. ${LGREEN}$@${YELLOW}${NC}"
-	@echo -e -n "${YELLOW}[${GREEN}OK${YELLOW}]${NC}\r"
-	@$(CC) -o $@ -c $< $(CFLAGS)
-	@echo -e -n "\n"
+f:
+	make flash
 
-run: $(EXEC)
-	@echo -e "\t${YELLOW}Running exec. ${LGREEN}$@${YELLOW}${NC}"
-	@./$(EXEC)
-	@echo -e "${YELLOW}[${GREEN}OK${YELLOW}]${NC}"
+d:
+	make debug
+
+cf:
+	make comp
+	make flash
+
+cfd:
+	make comp
+	make flash
+	make debug
+
+comp:
+	@echo -e "${vert_gras}+--------------------[ Compilation ]--------------------+ ${fin}"
+	cd $(PROJECT_DIR) ;\
+	make all
+	cd "${ORI}" ;\
+
+	@echo -e "${vert_gras}+----------------[ Compilation terminée ]---------------+ ${fin}"
+
+flash:
+	@echo -e "${vert_gras}+---------------------[ Transfert ]---------------------+ ${fin}"
+	openocd -f openocd/st_nucleo_$(BOARD).cfg -c "program $(PROJECT_DIR)/build/$(PROJECT_NAME).bin exit 0x08000000 reset"
+	@echo -e "${vert_gras}+----------------[ Transfert terminé ]------------------+ ${fin}"
+
+debug:
+	@echo -e "${vert_gras}+-----------------------[ Debug ]-----------------------+ ${fin}"
+	arm-none-eabi-gdb $(PROJECT_DIR)/build/$(PROJECT_NAME).elf --command=openocd/attach_$(BOARD).gdb
+	@echo -e "${vert_gras}+-------------------[ Debug terminé ]-------------------+ ${fin}"
+
+doc:
+	qpdfview $(DOC_DIR)/stm32$(BOARD)_doc.pdf &
 
 clean:
-	@echo -e "\t${YELLOW}Removing ${LGREEN}*.o${NC}"
-	@rm -rf *.o $(EXEC)
-	@echo -e "${YELLOW}[${GREEN}OK${YELLOW}]${NC}"
-
+	cd $(PROJECT_DIR) ;\
+	make clean
+	cd "${ORI}";\
+	rm -f openocd/openocd.log
