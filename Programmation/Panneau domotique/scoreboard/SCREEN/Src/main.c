@@ -40,7 +40,7 @@
 #include "stm32f3xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "display.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -65,7 +65,18 @@ static void MX_TIM2_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+volatile int refresh = 0;
+/*
+ * Variable indiquant s'il faut rafraîchir l'écran ou non. Elle est
+ * mise à jour dans le traitant d'interruption du timer.
+ */
 
+volatile static int index[3] = {0, 0, 0};
+/*
+ * Indices respectifs des trois chiffres indiquant le score (du poids
+ * fort au poids faible). Ils sont mis à jour de manière asynchrone
+ * lorsqu'un score est reçu sur la liaison UART.
+ */
 /* USER CODE END 0 */
 
 /**
@@ -100,14 +111,25 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  //Lancement du timer de rafraîchissement
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    //Affichage
+    wait_refresh();
 
+    int frame;
+    for(frame = 0; frame < BRIGHTNESS_LEVELS; frame++){
+      display_char(index[0], frame, 0);
+      display_char(index[1], frame, ROWS_PER_FRAME+1);
+      display_char(index[2], frame, 2*ROWS_PER_FRAME+1);
+    }
+
+      
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -273,7 +295,16 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+//Traitant d'interrupton du timer.
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
+  if(htim == &htim2){
+    refresh = 1;
+    /*
+     * On indique simplement au programme principal qu'il faut
+     * rafraîchir l'écran.
+     */
+  }
+}
 /* USER CODE END 4 */
 
 /**
