@@ -345,11 +345,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   if(huart == &huart1){
     switch(current_state){
     case HEADER_1:
-      if(buffer == 0xFFFF)
+      if(buffer == 0xFF)
 	current_state = HEADER_2;
       break;
     case HEADER_2:
-      if(buffer == 0x0000)
+      if(buffer == 0x00)
 	current_state = RECEIVING_1;
       else
 	current_state = HEADER_1;
@@ -359,7 +359,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
       break;
     case RECEIVING_2:
       score |= buffer;
-      checksum = ~((score >> 8) + (score & 0xFFFF)) & 0xFFFF;
+      checksum = ~((score >> 8) + (score & 0xFF)) & 0xFF;
       HAL_UART_Transmit_IT(&huart1, &checksum, 1);
       index[2] = score % 10;
       score /= 10;
