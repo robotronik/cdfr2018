@@ -91,8 +91,10 @@ void loop() {
     Serial.println(String(score)+"; total : "+String(score_total));
     #else
     unsigned char low_byte = score_total&0xFF, high_byte = score_total>>8;
-    Serial.write(low_byte);
-    Serial.write(high_byte);
+    Serial.write(0xFF);
+    Serial.write(0x00);
+    Serial.write(score_total >> 8);
+    Serial.write(score_total & 0xFF);
     #endif
     new_score = false;
   }
