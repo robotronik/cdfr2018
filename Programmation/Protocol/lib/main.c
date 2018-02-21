@@ -19,16 +19,33 @@ int main(){
   
   RP_Send(&interface, &packet, 1);
 
-  int i;
+  //Erreur
+  //interface.buffer[2] = 2;
   
-  for(i = 0; i < RP_BUFFER_SIZE && !interface.fsm.valid; i++){
+  int i;
+  for(i = 0; i < RP_BUFFER_SIZE && !interface.fsm.valid && !RP_Get_Error(); i++){
     interface.fsm.in = interface.buffer + i;
     interface.fsm.update_state(&interface.fsm);
   }
   packet.len = interface.fsm.size;
-  
-  for(i = 0; i < packet.len; i++){
-    printf("0x%2.2X ", packet.data[i]);
+
+  if(interface.fsm.valid){
+    for(i = 0; i < packet.len; i++){
+      printf("0x%2.2X ", packet.data[i]);
+    }
+  }else{
+
+    switch(RP_Get_Error()){
+    case (RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF):
+      printf("Unexpected EOF\n");
+      break;
+    case (RP_ERR_LINK | RP_ERR_SIZE):
+      printf("Bad size\n");
+      break;
+    case (RP_ERR_LINK | RP_ERR_CRC):
+      printf("Bad CRC\n");
+      break;
+    }
   }
   return 0;
 }
