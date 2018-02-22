@@ -1,7 +1,9 @@
-BOARD= f4
+BOARD=f3
 PROJECT_DIR=
 PROJECT_NAME=
 DOC_DIR= /home/$(USER)/STM32Cube/
+BINPATH= /usr/bin
+CUSTOM_C_SOURCES= #source1.c,source2.c,...
 
 rouge = \033[0;31m
 vert = \033[0;32m
@@ -34,7 +36,7 @@ comp:
 	@echo -e "${vert_gras}+--------------------[ Compilation ]--------------------+ ${fin}"
 	cd $(PROJECT_DIR) ;\
 	make all
-	cd $(ORI);\
+	cd "${ORI}" ;\
 
 	@echo -e "${vert_gras}+----------------[ Compilation terminée ]---------------+ ${fin}"
 
@@ -48,10 +50,8 @@ debug:
 	arm-none-eabi-gdb $(PROJECT_DIR)/build/$(PROJECT_NAME).elf --command=openocd/attach_$(BOARD).gdb
 	@echo -e "${vert_gras}+-------------------[ Debug terminé ]-------------------+ ${fin}"
 
-flash_file:
-	@echo -e "${vert_gras}+-------------[ Transfert du fichier local]-------------+ ${fin}"
-	openocd -f openocd/st_nucleo_$(BOARD).cfg -c "program local.bin exit 0x08000000 reset"
-	@echo -e "${vert_gras}+--------[ Transfert du fichier local terminé ]---------+ ${fin}"
+config:
+	python configure.py $(PROJECT_DIR) $(BINPATH) $(CUSTOM_C_SOURCES)
 
 doc:
 	qpdfview $(DOC_DIR)/stm32$(BOARD)_doc.pdf &
@@ -59,5 +59,5 @@ doc:
 clean:
 	cd $(PROJECT_DIR) ;\
 	make clean
-	cd $(ORI);\
+	cd "${ORI}";\
 	rm -f openocd/openocd.log
