@@ -16,16 +16,30 @@ typedef struct{
 }square_robotrovision;
 
 typedef struct{
-  double arclength_min;
+  double arclength_min;//min and max of the contour
   double arclength_max;
-  double arclength_tolerance;
-  double length_tolerance;
-  double angle_tolerance;
-  double min_angle;
+  double arclength_tolerance;//precision of the approximated contour
+  double length_tolerance;//for the 4 sides compared to avg
+  double angle_tolerance;//for the 4 angles compared to 90
+  double min_angle;//inclinaison angles
   double max_angle;
-  double h_l;
+  double h_l;//length of the reference segement
 }PARAM;
 
-void find_squares(vector< square_robotrovision> &result,Mat gray, PARAM param);//gray a thresholded image
+typedef struct{
+  int s_min;
+  int s_max;
+  int v_min;
+  int v_max;
+  int k_size_gauss;
+  int sigma_gauss;
+  int k_size_canny;
+  int lowThreshold_canny;
+  int ratio_canny;
+}PARAM_HSV;
+
+vector< square_robotrovision> find_squares(Mat gray, PARAM param);//gray a thresholded image
+vector< Mat > separate_colors(Mat rgb_image,vector< vector <int> > &h,PARAM_HSV param);
+void print_global_result(vector< vector <square_robotrovision> > global_result);
 
 #endif

@@ -50,41 +50,102 @@ int check_angle(vector <Point> approx,vector <double> l,vector <double> &a,doubl
   return 0;
 }
 
-void find_squares(vector< square_robotrovision> &result,Mat gray, PARAM param)
+vector< square_robotrovision> find_squares(Mat gray, PARAM param)
 {
   vector< Vec4i > h;
   vector <Point> approx;
   vector< vector <Point> > contours,approx_cont;
   vector < double > l,a;
   square_robotrovision r;
+  vector< square_robotrovision> result;
 
   findContours 	( gray,contours,h,CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE,Point(0,0));
-  cout<<"contours found "<<contours.size()<<endl<<endl;
+  //cout<<"contours found "<<contours.size()<<endl<<endl;
   for( int i = 0; i< contours.size(); i++ )
   {
       if(arcLength(contours[i],1)>param.arclength_min && arcLength(contours[i],1)<param.arclength_max)
       {
-        cout<<"arcLength ok "<<arcLength(contours[i],1)<<endl;
+        //cout<<"arcLength ok "<<arcLength(contours[i],1)<<endl;
         approxPolyDP(contours[i], approx, param.arclength_tolerance*arcLength(contours[i],1), 1);
         if (approx.size()==4)
         {
-          cout<<"4 segments"<<endl;
-          cout<<approx<<endl;
+          //cout<<"4 segments"<<endl;
+          //cout<<approx<<endl;
           if(check_length(approx,l,param.length_tolerance))
           {
-            cout<<"length_tolerance ok avg "<<l[4]<<endl;
+            //cout<<"length_tolerance ok avg "<<l[4]<<endl;
             if(check_angle(approx,l,a,param.angle_tolerance,param.min_angle,param.max_angle,param.h_l))
             {
-              cout<<"angle_tolerance ok avg "<<a[4]<<endl<<"It is a squarre"<<endl;
+              //cout<<"angle_tolerance ok avg "<<a[4]<<endl<<"It is a squarre"<<endl;
               r.center.x=(approx[0].x+approx[1].x+approx[2].x+approx[3].x)/4;
-              r.center.y=(approx[0].x+approx[1].x+approx[2].x+approx[3].x)/4;
+              r.center.y=(approx[0].y+approx[1].y+approx[2].y+approx[3].y)/4;
               r.side_length=l[4];
               r.approx=approx;
               result.push_back(r);
             }
           }
         }
-        cout<<endl;
+      //  cout<<endl;
       }
     }
+    return result;
+}
+
+
+vector<Mat> separate_colors(Mat rgb_image,vector<vector <int> > &h,PARAM_HSV param)
+{
+  vector<Mat> result;
+  Mat frame_gray;
+  Mat1b mask1, mask2;
+  Mat3b hsvframe;
+  Mat1b mask;
+  int n,i,min_H,max_H;
+  char chaine[256];
+
+  n=h.size();
+  cvtColor(rgb_image, hsvframe, COLOR_BGR2HSV);
+
+  for(i=0;i<n;i++)
+  {
+    min_H=h[i][0];
+    max_H=h[i][1];
+    if(min_H<=max_H)
+    {
+      inRange(hsvframe, Scalar(min_H, param.s_min, param.v_min), Scalar(max_H, param.s_max, param.v_max), mask);
+    }
+    else
+    {
+      inRange(hsvframe, Scalar(min_H,param.s_min, param.v_min), Scalar(180, param.s_max, param.v_max), mask1);
+      inRange(hsvframe, Scalar(0, param.s_min, param.v_min), Scalar(max_H, param.s_max, param.v_max), mask2);
+      mask = mask1 | mask2;
+    }
+    frame_gray=mask;
+    sprintf(chaine,"%d_mask.jpg",i);
+    imwrite(chaine,frame_gray);
+    GaussianBlur( frame_gray, frame_gray, Size(param.k_size_gauss, param.k_size_gauss), param.sigma_gauss, param.sigma_gauss );
+    sprintf(chaine,"%d_gauss.jpg",i);
+    imwrite(chaine,frame_gray);
+    Canny( frame_gray, frame_gray, param.lowThreshold_canny, param.lowThreshold_canny*param.ratio_canny, param.k_size_canny );
+    sprintf(chaine,"%d_canny.jpg",i);
+    imwrite(chaine,frame_gray);
+    result.push_back(frame_gray.clone());
+  }
+  return result;
+}
+
+void print_global_result(vector< vector <square_robotrovision> > global_result)
+{
+  int n_colors=global_result.size(),n_squares,i,j;
+
+  cout<<n_colors<<" colors searched"<<endl<<endl;
+  for(i=0;i<n_colors;i++)
+  {
+    n_squares=global_result[i].size();
+    cout<<"squares color "<<i<<" squares: "<<n_squares<<endl;
+    for(j=0;j<n_squares;j++)
+    {
+      cout<<"center "<<j<<" "<<global_result[i][j].center<<endl;
+    }
+    cout<<endl;
+  }
 }
