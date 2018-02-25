@@ -7,4 +7,4 @@ comp:
 	cp Code ..;\
 
 clean:
-	rm -rf build Code
+	rm -rf build *canny.jpg *gauss.jpg *mask.jpg
