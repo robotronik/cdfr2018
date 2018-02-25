@@ -144,8 +144,8 @@ void print_global_result(vector< vector <square_robotrovision> > global_result)
     cout<<"squares color "<<i<<" squares: "<<n_squares<<endl;
     for(j=0;j<n_squares;j++)
     {
-      cout<<"center "<<j<<" "<<global_result[i][j].center<<endl;
+      cout<<"center "<<j<<" "<<global_result[i][j].center<<" side "<<global_result[i][j].side_length<<"\npoints\n"<<global_result[i][j].approx<<endl<<endl;
     }
-    cout<<endl;
+    cout<<endl<<endl;
   }
 }
