@@ -92,7 +92,7 @@ vector< square_robotrovision> find_squares(Mat gray, PARAM param)
 }
 
 
-vector<Mat> separate_colors(Mat rgb_image,vector<vector <int> > &h,PARAM_HSV param)
+vector<Mat> separate_colors(Mat rgb_image,vector<vector <int> > &h,vector< vector <int> > &s,vector< vector <int> > &v,PARAM_HSV param)
 {
   vector<Mat> result;
   Mat frame_gray;
@@ -101,6 +101,7 @@ vector<Mat> separate_colors(Mat rgb_image,vector<vector <int> > &h,PARAM_HSV par
   Mat1b mask;
   int n,i,min_H,max_H;
   char chaine[256];
+  char names[5][256]={"orange","black","green","yellow","blue"};
 
   n=h.size();
   cvtColor(rgb_image, hsvframe, COLOR_BGR2HSV);
@@ -111,22 +112,22 @@ vector<Mat> separate_colors(Mat rgb_image,vector<vector <int> > &h,PARAM_HSV par
     max_H=h[i][1];
     if(min_H<=max_H)
     {
-      inRange(hsvframe, Scalar(min_H, param.s_min, param.v_min), Scalar(max_H, param.s_max, param.v_max), mask);
+      inRange(hsvframe, Scalar(min_H, s[i][0], v[i][0]), Scalar(max_H, s[i][1], v[i][1]), mask);
     }
     else
     {
-      inRange(hsvframe, Scalar(min_H,param.s_min, param.v_min), Scalar(180, param.s_max, param.v_max), mask1);
-      inRange(hsvframe, Scalar(0, param.s_min, param.v_min), Scalar(max_H, param.s_max, param.v_max), mask2);
+      inRange(hsvframe, Scalar(min_H, s[i][0], v[i][0]), Scalar(180,  s[i][1], v[i][1]), mask1);
+      inRange(hsvframe, Scalar(0, s[i][0], v[i][0]), Scalar(max_H, s[i][1], v[i][1]), mask2);
       mask = mask1 | mask2;
     }
     frame_gray=mask;
-    sprintf(chaine,"%d_mask.jpg",i);
+    sprintf(chaine,"%d_%s_mask.jpg",i,names[i]);
     imwrite(chaine,frame_gray);
     GaussianBlur( frame_gray, frame_gray, Size(param.k_size_gauss, param.k_size_gauss), param.sigma_gauss, param.sigma_gauss );
-    sprintf(chaine,"%d_gauss.jpg",i);
+    sprintf(chaine,"%d_%s_gauss.jpg",i,names[i]);
     imwrite(chaine,frame_gray);
     Canny( frame_gray, frame_gray, param.lowThreshold_canny, param.lowThreshold_canny*param.ratio_canny, param.k_size_canny );
-    sprintf(chaine,"%d_canny.jpg",i);
+    sprintf(chaine,"%d_%s_canny.jpg",i,names[i]);
     imwrite(chaine,frame_gray);
     result.push_back(frame_gray.clone());
   }
@@ -136,12 +137,13 @@ vector<Mat> separate_colors(Mat rgb_image,vector<vector <int> > &h,PARAM_HSV par
 void print_global_result(vector< vector <square_robotrovision> > global_result)
 {
   int n_colors=global_result.size(),n_squares,i,j;
+  char names[5][256]={"orange","black","green","yellow","blue"};
 
   cout<<n_colors<<" colors searched"<<endl<<endl;
   for(i=0;i<n_colors;i++)
   {
     n_squares=global_result[i].size();
-    cout<<"squares color "<<i<<" squares: "<<n_squares<<endl;
+    cout<<"squares color "<<i<<" "<<names[i]<<" squares: "<<n_squares<<endl;
     for(j=0;j<n_squares;j++)
     {
       cout<<"center "<<j<<" "<<global_result[i][j].center<<" side "<<global_result[i][j].side_length<<"\npoints\n"<<global_result[i][j].approx<<endl<<endl;
