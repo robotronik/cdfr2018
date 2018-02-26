@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   //for(i=0;i<result[0].approx.size();i++) line(image, result[0].approx[i], result[0].approx[(i+1)%result[0].approx.size()], Scalar(0, 0, 255), 1, 8, 0);
   //imshow("image",image);
   //waitKey(0);
-  find_patern(global_result,patern);
+  cout<<find_patern(global_result,patern)<<endl;
   cout<<patern<<endl;
   return 0;
 }
