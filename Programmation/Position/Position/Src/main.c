@@ -45,6 +45,8 @@
 #include "arm_math.h"
 
 #include "Robotronik_corp_pid.h"
+
+#define PWM_MAX 127 //a value between 0 and 255, 255 if not for debug
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -110,7 +112,7 @@ void motor_1(float voltage)
       HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,0);
       value=(uint16_t) (-voltage*255.0/12.0);
     }
-    if(value>255) value=255;
+    if(value>PWM_MAX) value=PWM_MAX;
     TIM_OC_InitTypeDef sConfigOC;
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
     sConfigOC.Pulse = value;
@@ -125,15 +127,15 @@ void motor_2(float voltage)
     uint16_t value;
     if(voltage>0)
     {
-      HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,1);
+      HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
       value=(uint16_t) (voltage*255.0/12.0);
     }
     else
     {
-      HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
+      HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,1);
       value=(uint16_t) (-voltage*255.0/12.0);
     }
-    if(value>255) value=255;
+    if(value>PWM_MAX) value=PWM_MAX;
     TIM_OC_InitTypeDef sConfigOC;
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
     sConfigOC.Pulse = value;
@@ -172,6 +174,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     }else if(dl < -1){
       dl = +1;
     }
+    dl=-dl;
     encoder2.dl = dl;
     encoder2.cnt += dl;
 
@@ -199,7 +202,10 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  while(1)
+  {
+    
+  }
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -239,7 +245,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Encoder_Start_IT(&htim1,TIM_CHANNEL_ALL);
-  HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
+//  HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//EN_2
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//EN_1
@@ -252,9 +258,9 @@ int main(void)
 
   //HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,1);
   //HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
-  motor_1(6);
-  motor_2(-6);
-  HAL_Delay(1000);//just a test
+  motor_1(0);//encoder2 forward positive positive voltage
+  motor_2(0);//encoder1 forward positive positive voltage
+  while (1) {}
 
   pid_init(&pid_sum);
   pid_init(&pid_diff);
