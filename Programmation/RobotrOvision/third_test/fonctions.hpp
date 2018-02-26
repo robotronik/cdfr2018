@@ -38,5 +38,6 @@ typedef struct{
 vector< square_robotrovision> find_squares(Mat gray, PARAM param);//gray a thresholded image
 vector< Mat > separate_colors(Mat rgb_image,vector< vector <int> > &h,vector< vector <int> > &s,vector< vector <int> > &v,PARAM_HSV param);
 void print_global_result(vector< vector <square_robotrovision> > global_result);
+int find_patern(vector< vector< square_robotrovision> > global_result, char *patern);
 
 #endif

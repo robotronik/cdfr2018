@@ -151,3 +151,100 @@ void print_global_result(vector< vector <square_robotrovision> > global_result)
     cout<<endl<<endl;
   }
 }
+
+int find_patern(vector< vector< square_robotrovision> > global_result, char *patern)
+{
+  int i,j,k;
+  vector <int> valid_colors;
+  int colors[5]={'O','B','G','Y','b'},x0,x1,x2,c0,c1,c2;
+  double score_min=0,score=0;
+
+  patern[3]='\0';
+
+  j=0;
+  for(i=0;i<5;i++)//find the 3 detectected colors
+  {
+    if(global_result[i].size()!=0)
+    {
+      valid_colors.push_back(i);
+      j++;
+    }
+  }
+
+  if(j!=3) return 0;//code for bad color input
+
+  score_min=abs(global_result[valid_colors[0]][0].center.y)+abs(global_result[valid_colors[1]][0].center.y)+abs(global_result[valid_colors[2]][0].center.y);
+  patern[0]=0;
+  patern[1]=0;
+  patern[2]=0;
+  for(i=0;i<global_result[valid_colors[0]].size();i++)
+  {
+    for(j=0;j<global_result[valid_colors[1]].size();j++)
+    {
+      for(k=0;k<global_result[valid_colors[2]].size();k++)
+      {
+        score=abs(global_result[valid_colors[0]][i].center.y)+abs(global_result[valid_colors[1]][j].center.y)+abs(global_result[valid_colors[2]][k].center.y);
+        if(score<score_min)
+        {
+          score_min=score;
+          patern[0]=i;
+          patern[1]=j;
+          patern[2]=k;
+        }
+      }
+    }
+  }
+
+  x0=global_result[valid_colors[0]][patern[0]].center.x;
+  x1=global_result[valid_colors[1]][patern[1]].center.x;
+  x2=global_result[valid_colors[2]][patern[2]].center.x;
+  c0=colors[valid_colors[0]];
+  c1=colors[valid_colors[1]];
+  c2=colors[valid_colors[2]];
+
+  if(x0==min(x0,min(x1,x2)))
+  {
+    patern[0]=c0;
+    if(x1==min(x1,x2))
+    {
+      patern[1]=c1;
+      patern[2]=c2;
+    }
+    else
+    {
+      patern[1]=c2;
+      patern[2]=c1;
+    }
+  }
+  else if(x1==min(x0,min(x1,x2)))
+  {
+    patern[0]=c1;
+    if(x0==min(x0,x2))
+    {
+      patern[1]=c0;
+      patern[2]=c2;
+    }
+    else
+    {
+      patern[1]=c2;
+      patern[2]=c0;
+    }
+  }
+  else
+  {
+    patern[0]=c2;
+    if(x0==min(x0,x1))
+    {
+      patern[1]=c0;
+      patern[2]=c1;
+    }
+    else
+    {
+      patern[1]=c1;
+      patern[2]=c0;
+    }
+  }
+
+
+  return 1;
+}

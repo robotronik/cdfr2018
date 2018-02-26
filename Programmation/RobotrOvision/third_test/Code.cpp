@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
   PARAM param;
   PARAM_HSV param_hsv;
 
-  char names[5][256]={"orange","black","green","yellow","blue"};
+  char names[5][256]={"orange","black","green","yellow","blue"},patern[10];
   string carac;
 
   vector< vector<int> > h(5, vector<int>(2));
@@ -41,17 +41,31 @@ int main(int argc, char *argv[])
     file>>carac>>h[i][0]>>h[i][1]>>s[i][0]>>s[i][1]>>v[i][0]>>v[i][1];
   }
   file.close();
-  
-  image = imread("correct.jpg",-1);
+
+  if(argc!=2)
+  {
+    cout<<"./Code image_file"<<endl;
+    return 0;
+  }
+
+  image = imread(argv[1],-1);
+  if(image.rows==0)
+  {
+    cout<<"Invalid input file"<<endl;
+    return 0;
+  }
 
   color_separation= separate_colors(image,h,s,v,param_hsv);
   for(i=0;i<n;i++)
   {
     global_result.push_back(find_squares(color_separation[i],param));
   }
-  print_global_result(global_result);
+  //print_global_result(global_result);
+
   //for(i=0;i<result[0].approx.size();i++) line(image, result[0].approx[i], result[0].approx[(i+1)%result[0].approx.size()], Scalar(0, 0, 255), 1, 8, 0);
   //imshow("image",image);
-  waitKey(0);
+  //waitKey(0);
+  find_patern(global_result,patern);
+  cout<<patern<<endl;
   return 0;
 }
