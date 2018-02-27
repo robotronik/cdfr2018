@@ -1,5 +1,6 @@
 #include "opencv2/opencv.hpp"
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <math.h>
 
@@ -27,10 +28,6 @@ typedef struct{
 }PARAM;
 
 typedef struct{
-  int s_min;
-  int s_max;
-  int v_min;
-  int v_max;
   int k_size_gauss;
   int sigma_gauss;
   int k_size_canny;
@@ -39,7 +36,8 @@ typedef struct{
 }PARAM_HSV;
 
 vector< square_robotrovision> find_squares(Mat gray, PARAM param);//gray a thresholded image
-vector< Mat > separate_colors(Mat rgb_image,vector< vector <int> > &h,PARAM_HSV param);
+vector< Mat > separate_colors(Mat rgb_image,vector< vector <int> > &h,vector< vector <int> > &s,vector< vector <int> > &v,PARAM_HSV param);
 void print_global_result(vector< vector <square_robotrovision> > global_result);
+int find_patern(vector< vector< square_robotrovision> > global_result, char *patern);
 
 #endif
