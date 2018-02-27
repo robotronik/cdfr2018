@@ -1,11 +1,11 @@
 /**
   ******************************************************************************
-  * File Name          : main.c
-  * Description        : Main program body
+  * @file           : main.c
+  * @brief          : Main program body
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -35,7 +35,6 @@
   *
   ******************************************************************************
   */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
@@ -82,6 +81,11 @@ Position position=(Position){.x=0,.y=0,.theta=0};
 
 int sum_goal,diff_goal;
 
+//TEST ENCODER
+#define TEST_ENCODER 1
+#define ENCODER_MAX 1440
+uint8_t led_level = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,7 +98,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
+                                
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -163,6 +167,10 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     position.x=position.x+cos(position.theta)*delta2*dl;
     position.y=position.y+sin(position.theta)*delta2*dl;
     position.theta=position.theta+deltaL*dl;
+
+#if TEST_ENCODER==1
+    led_level = (int) (((float) encoder1.current / ENCODER_MAX)*255);
+#endif
   }
   else if(htim->Instance == htim2.Instance)
   {
@@ -181,6 +189,10 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
     position.x=position.x+cos(position.theta)*delta2*dl;
     position.y=position.y+sin(position.theta)*delta2*dl;
     position.theta=position.theta-deltaL*dl;
+
+#if TEST_ENCODER==2
+    led_level = (int) (((float) encoder2.current / ENCODER_MAX)*255);
+#endif
   }
 
   if(position.theta>PI)//angle limitation to -PI +PI
@@ -198,14 +210,15 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 
 /* USER CODE END 0 */
 
+/**
+  * @brief  The application entry point.
+  *
+  * @retval None
+  */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
-  while(1)
-  {
-    
-  }
+
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -241,26 +254,39 @@ int main(void)
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_TIM3_Init();
-
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Encoder_Start_IT(&htim1,TIM_CHANNEL_ALL);
-//  HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//EN_2
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//EN_1
+  //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//EN_2
+  //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//EN_1
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_GPIO_WritePin (BRAKE_1_GPIO_Port, BRAKE_1_Pin,1);
-  HAL_GPIO_WritePin (BRAKE_2_GPIO_Port, BRAKE_2_Pin,1);
+  
+  HAL_GPIO_WritePin (BRAKE_1_GPIO_Port, BRAKE_1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin (BRAKE_2_GPIO_Port, BRAKE_2_Pin, GPIO_PIN_RESET);
 
   //HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,1);
   //HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
-  motor_1(0);//encoder2 forward positive positive voltage
-  motor_2(0);//encoder1 forward positive positive voltage
-  while (1) {}
+  //motor_1(0);//encoder2 forward positive positive voltage
+  //motor_2(0);//encoder1 forward positive positive voltage
+
+#if TEST_ENCODER != 0
+  while (1) {
+    int i;
+    for(i = 0; i < 25500; i++){
+      if(i == 0){
+	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
+      }
+      if(i%100 && i/100 == led_level){
+	HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+      }
+    }
+  }
+#endif
 
   pid_init(&pid_sum);
   pid_init(&pid_diff);
@@ -285,8 +311,10 @@ int main(void)
 
 }
 
-/** System Clock Configuration
-*/
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
 
@@ -294,7 +322,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -307,7 +335,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -329,11 +357,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time
+    /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick
+    /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -359,14 +387,14 @@ static void MX_I2C1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Analogue filter
+    /**Configure Analogue filter 
     */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Digital filter
+    /**Configure Digital filter 
     */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
@@ -385,7 +413,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 42;
+  htim1.Init.Period = 1440;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -423,11 +451,11 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 42;
+  htim2.Init.Period = 1440;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
@@ -524,9 +552,9 @@ static void MX_USART2_UART_Init(void)
 
 }
 
-/** Configure pins as
-        * Analog
-        * Input
+/** Configure pins as 
+        * Analog 
+        * Input 
         * Output
         * EVENT_OUT
         * EXTI
@@ -580,10 +608,11 @@ static void MX_GPIO_Init(void)
 
 /**
   * @brief  This function is executed in case of error occurrence.
-  * @param  None
+  * @param  file: The file name as string.
+  * @param  line: The line in file as a number.
   * @retval None
   */
-void _Error_Handler(char * file, int line)
+void _Error_Handler(char *file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
@@ -593,25 +622,22 @@ void _Error_Handler(char * file, int line)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
-
+#ifdef  USE_FULL_ASSERT
 /**
-   * @brief Reports the name of the source file and the source line number
-   * where the assert_param error has occurred.
-   * @param file: pointer to the source file name
-   * @param line: assert_param error line source number
-   * @retval None
-   */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t* file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
-
 }
-
-#endif
+#endif /* USE_FULL_ASSERT */
 
 /**
   * @}
@@ -619,6 +645,6 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 /**
   * @}
-*/
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
