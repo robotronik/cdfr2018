@@ -1,0 +1,14 @@
+https://www.framboise314.fr/le-port-serie-du-raspberry-pi-3-pas-simple/#Vous_avez_4_options
+http://www.i-programmer.info/programming/cc/10027-serial-c-and-the-raspberry-pi.html?start=1
+https://www.raspberrypi.org/documentation/configuration/uart.md
+
+/boot/cmdline.txt
+enlever console=serial0,115200
+
+/boot/config.txt
+ajouter
+dtoverlay=pi3-miniuart-bt
+core_freq=250
+enable_uart = 1
+
+sshfs
