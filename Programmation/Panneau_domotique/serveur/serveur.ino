@@ -3,7 +3,7 @@
 #define AP_NAME "Robotronik-2A"
 #define AP_PASSWD "robotronik"
 
-#define DEBUG 1
+#define DEBUG 0
 
 //Serveur TCP
 WiFiServer server(80);
@@ -11,6 +11,7 @@ WiFiServer server(80);
 int score_1a = 0, score_2a = 0;
 int score_total;
 bool new_score = false;
+unsigned long last_time = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -75,7 +76,9 @@ void loop() {
     }
     client.stop();//Aparemment nécessaire pour l'ESP
   }
-  if(new_score){
+  unsigned long current_time = millis();
+  if(new_score || (last_time - current_time >= 1000)){
+    last_time = current_time;
     score_total = (score_1a+score_2a)&0xFFFF;
     #if DEBUG==1
     switch(id){
@@ -90,11 +93,13 @@ void loop() {
     }
     Serial.println(String(score)+"; total : "+String(score_total));
     #else
-    unsigned char low_byte = score_total&0xFF, high_byte = score_total>>8;
+    //Envoi des données
+    unsigned char low_byte = score_total & 0xFF,
+                  high_byte = score_total >> 8;
     Serial.write(0xFF);
     Serial.write(0x00);
-    Serial.write(score_total >> 8);
-    Serial.write(score_total & 0xFF);
+    Serial.write(high_byte);
+    Serial.write(low_byte);
     #endif
     new_score = false;
   }
