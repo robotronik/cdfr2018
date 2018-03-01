@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-W -Wall -ansi -std=c99 -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/SDL
 LD=ld
-LDFLAGS=-L/usr/local/lib -lSDL2 -lSDL2_image -lfftw3 -lm
+LDFLAGS=-L/usr/local/lib -lwiringPi -lpthread -lSDL2 -lfftw3 -lm
 EXEC=sound
 SRC= $(wildcard *.c)
 HDR = $(wildcard *.h)

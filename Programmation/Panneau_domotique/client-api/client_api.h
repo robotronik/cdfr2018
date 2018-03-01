@@ -29,7 +29,8 @@
 
 typedef struct Scoreboard_Client_S{
   int shm_fd;
-  uint16_t *score;
+  uint16_t *score;//It is mapped to a shared memory, do NOT modify it
+		  //manually, but by calling SC_Update
   sem_t *sem;
   pid_t pid;
 }Scoreboard_Client;
@@ -41,12 +42,10 @@ typedef struct Scoreboard_Client_S{
 
 extern sig_atomic_t sc_running;
 extern Scoreboard_Client sc_client;
-uint16_t* SC_Start(const char *id, const char* server_ip, const char* server_port);
+int SC_Start(const char *id, const char* server_ip, const char* server_port);
 /*
  * Start a scoreboard client as a child process and initializes the
- * client's struct.  On success, it returns a pointer on the variable
- * that will be used to store the score. On error, the function return
- * a NULL pointer.
+ * client's struct. Returns 0 on success, -1 on error.
  */
 
 void SC_Stop();
@@ -57,10 +56,10 @@ void SC_Stop();
  * anymore to avoid indeterminate behavior.
  */
 
-int SC_Update();
+int SC_Update(uint16_t score);
 /*
- * Tells the client that the score has been updated and is ready to be
- * sent.
+ * Updates the internal value of score and tells the client that the
+ * score has been updated and is ready to be sent.
  */
 
 void SC_SIGCHLD_Handler(int signo);

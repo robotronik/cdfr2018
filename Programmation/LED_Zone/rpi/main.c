@@ -1,6 +1,8 @@
 #include "song.h"
 #include <SDL2/SDL.h>
 #include <fftw3.h>
+#include <wiringPi.h>
+#include <softPwm.h>
 
 #define CHUNK_PERIOD 50
 #define FREQUENCY_STEP (1000 / CHUNK_PERIOD)
@@ -12,6 +14,13 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
+  //WiringPi
+  if(wiringPiSetup() == -1){
+    return EXIT_FAILURE;
+  }
+  
+  softPwmCreate(12, 0, 255);
+  
   //Song
   Song *song;
   Chunk *chunk;
@@ -45,7 +54,6 @@ int main(int argc, char *argv[]){
 
   int go = 1;
   double max = 0.;
-  uint8_t update;
   while(Is_Playing_Song(song) && go){    
 #if 0
     uint32_t time = Get_Time_Song(song);
@@ -55,6 +63,8 @@ int main(int argc, char *argv[]){
     if(Update_Chunk(chunk)){
       //Show current chunk value
 
+      softPwmWrite(12, (int) (pow(chunk->value/255, 3)*255.));
+      
       #if DEBUG
       int j;
       printf("\r");

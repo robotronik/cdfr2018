@@ -84,7 +84,6 @@ static unsigned char buffer;
 /*
  * Buffer de réception UART.
  */
-static unsigned char checksum;
 
 typedef enum FSM_STATE_E{
   HEADER_1, HEADER_2, RECEIVING_1, RECEIVING_2
@@ -253,7 +252,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 9600;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -340,6 +339,8 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
   }
 }
 
+#define RESET_FSM(state) {state = HEADER_1;}
+
 //Traitant d'interruption UART
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   if(huart == &huart1){
@@ -352,20 +353,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
       if(buffer == 0x00)
 	current_state = RECEIVING_1;
       else
-	current_state = HEADER_1;
+	RESET_FSM(current_state);
       break;
     case RECEIVING_1:
       score = buffer << 8;
       break;
     case RECEIVING_2:
       score |= buffer;
-      checksum = ~((score >> 8) + (score & 0xFF)) & 0xFF;
-      HAL_UART_Transmit_IT(&huart1, &checksum, 1);
+
       index[2] = score % 10;
       score /= 10;
       index[1] = score % 10;
       score /= 10;
       index[0] = score % 10;
+
+      RESET_FSM(current_state);
       break;
     default:
       break;
