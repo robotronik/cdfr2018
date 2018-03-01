@@ -2,6 +2,8 @@ BOARD=f3
 PROJECT_DIR=SCREEN
 PROJECT_NAME=SCREEN
 DOC_DIR= /home/$(USER)/STM32Cube/
+BINPATH= /usr/bin
+CUSTOM_C_SOURCES= sprites.c,display.c
 
 rouge = \033[0;31m
 vert = \033[0;32m
@@ -47,6 +49,9 @@ debug:
 	@echo -e "${vert_gras}+-----------------------[ Debug ]-----------------------+ ${fin}"
 	arm-none-eabi-gdb $(PROJECT_DIR)/build/$(PROJECT_NAME).elf --command=openocd/attach_$(BOARD).gdb
 	@echo -e "${vert_gras}+-------------------[ Debug terminé ]-------------------+ ${fin}"
+
+config:
+	python configure.py $(PROJECT_DIR) $(BINPATH) $(CUSTOM_C_SOURCES)
 
 doc:
 	qpdfview $(DOC_DIR)/stm32$(BOARD)_doc.pdf &
