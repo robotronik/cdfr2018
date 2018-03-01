@@ -5,7 +5,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -45,7 +45,7 @@
 
 #include "Robotronik_corp_pid.h"
 
-#define PWM_MAX 127 //a value between 0 and 255, 255 if not for debug
+#define PWM_MAX 50 //a value between 0 and 255, 255 if not for debug
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -98,7 +98,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM3_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                                
+
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -259,20 +259,20 @@ int main(void)
   HAL_TIM_Encoder_Start_IT(&htim1,TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
 
-  //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//EN_2
-  //HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//EN_1
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//EN_2
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//EN_1
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  
-  HAL_GPIO_WritePin (BRAKE_1_GPIO_Port, BRAKE_1_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin (BRAKE_2_GPIO_Port, BRAKE_2_Pin, GPIO_PIN_RESET);
 
-  //HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,1);
-  //HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
-  //motor_1(0);//encoder2 forward positive positive voltage
-  //motor_2(0);//encoder1 forward positive positive voltage
+  HAL_GPIO_WritePin (BRAKE_1_GPIO_Port, BRAKE_1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin (BRAKE_2_GPIO_Port, BRAKE_2_Pin, GPIO_PIN_SET);
+
+  HAL_GPIO_WritePin(DIR_1_GPIO_Port,DIR_1_Pin,1);
+  HAL_GPIO_WritePin(DIR_2_GPIO_Port,DIR_2_Pin,0);
+  motor_1(0);//encoder2 forward positive positive voltage
+  motor_2(0);//encoder1 forward positive positive voltage
 
 #if TEST_ENCODER != 0
   while (1) {
@@ -322,7 +322,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -335,7 +335,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -357,11 +357,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -387,14 +387,14 @@ static void MX_I2C1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Analogue filter 
+    /**Configure Analogue filter
     */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Digital filter 
+    /**Configure Digital filter
     */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
@@ -552,9 +552,9 @@ static void MX_USART2_UART_Init(void)
 
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
+/** Configure pins as
+        * Analog
+        * Input
         * Output
         * EVENT_OUT
         * EXTI
@@ -591,7 +591,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : DIAG_1_Pin */
   GPIO_InitStruct.Pin = DIAG_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(DIAG_1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : TACHO_1_Pin TACHO_2_Pin DIAG_2_Pin */
@@ -631,7 +631,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
