@@ -151,50 +151,37 @@ void motor_2(float voltage)
 
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
-  
-  if(htim->Instance == htim1.Instance)
-  {
-    encoder1.last = encoder1.current;
-    encoder1.current = htim->Instance->CNT;
-    int dl = encoder1.current - encoder1.last;
-    if(dl > 1){
-      dl = -1;
-    }else if(dl < -1){
-      dl = +1;
-    }
-    encoder1.dl = dl;
-    encoder1.cnt += dl;
-
-    position.x=position.x+cos(position.theta)*delta2*dl;
-    position.y=position.y+sin(position.theta)*delta2*dl;
-    position.theta=position.theta+deltaL*dl;
-
-#if TEST_ENCODER==1
-    led_level = (int) (((float) encoder1.current / ENCODER_MAX)*255);
-#endif
+  Encoder *encoder;
+  if(htim->Instance == htim1.Instance){
+    encoder = &encoder1;
+  }else if(htim->Instance == htim2.Instance){
+    encoder = &encoder2;
+  }else{
+    return;
   }
-  else if(htim->Instance == htim2.Instance)
-  {
-    encoder2.last = encoder2.current;
-    encoder2.current = htim->Instance->CNT;
-    int dl = encoder2.current - encoder2.last;
-    if(dl > 1){
-      dl = -1;
-    }else if(dl < -1){
-      dl = +1;
-    }
-    dl=-dl;
-    encoder2.dl = dl;
-    encoder2.cnt += dl;
-
-    position.x=position.x+cos(position.theta)*delta2*dl;
-    position.y=position.y+sin(position.theta)*delta2*dl;
-    position.theta=position.theta-deltaL*dl;
+ 
+  encoder->last = encoder->current;
+  encoder->current = htim->Instance->CNT;
+  int dl = encoder->current - encoder->last;
+  if(dl > 1){
+    dl = -1;
+  }else if(dl < -1){
+    dl = +1;
+  }
+  encoder->dl = dl;
+  encoder->cnt += dl;
+  
+  position.x=position.x+cos(position.theta)*delta2*dl;
+  position.y=position.y+sin(position.theta)*delta2*dl;
+  position.theta=position.theta+deltaL*dl;
+  
+#if TEST_ENCODER==1
+  led_level = (int) (((float) encoder1.current / ENCODER_MAX)*255);
+#endif
 
 #if TEST_ENCODER==2
-    led_level = (int) (((float) encoder2.current / ENCODER_MAX)*255);
+  led_level = (int) (((float) encoder2.current / ENCODER_MAX)*255);
 #endif
-  }
 
   if(position.theta>PI)//angle limitation to -PI +PI
   {
