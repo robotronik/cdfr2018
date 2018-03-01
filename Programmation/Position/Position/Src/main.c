@@ -82,7 +82,7 @@ Position position=(Position){.x=0,.y=0,.theta=0};
 int sum_goal,diff_goal;
 
 //TEST ENCODER
-#define TEST_ENCODER 1
+#define TEST_ENCODER 0
 #define ENCODER_MAX 1440
 uint8_t led_level = 0;
 
@@ -151,6 +151,7 @@ void motor_2(float voltage)
 
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
+  
   if(htim->Instance == htim1.Instance)
   {
     encoder1.last = encoder1.current;
@@ -230,8 +231,8 @@ int main(void)
   int Te=10;//in ms
   float cor_sum,cor_diff;
   PID_DATA pid_sum,pid_diff;
-  pid_sum.Te=Te/1000;
-  pid_diff.Te=Te/1000;
+  pid_sum.Te=0.01;
+  pid_diff.Te=0.01;
   pid_sum.Kp=0.01;
   pid_sum.Ki=0;
   pid_sum.Kd=0;
@@ -291,13 +292,13 @@ int main(void)
   pid_init(&pid_sum);
   pid_init(&pid_diff);
 
-  sum_goal=0;
+  sum_goal=1000;
   diff_goal=0;
 
   while (1)
   {
-    cor_sum=pid(&pid_sum,sum_goal-0.5*(encoder1.cnt+encoder2.cnt));
-    cor_diff=pid(&pid_diff,diff_goal-(encoder1.cnt-encoder2.cnt));
+    cor_sum=pid(&pid_sum,sum_goal-0.5*(encoder1.current+encoder2.current));
+    cor_diff=pid(&pid_diff,diff_goal-(encoder1.current-encoder2.current));
     motor_1(cor_sum+cor_diff);
     motor_2(cor_sum-cor_diff);
     HAL_Delay(Te);
@@ -413,12 +414,12 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 1440;
+  htim1.Init.Period = 1440-1;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
@@ -451,11 +452,11 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 1440;
+  htim2.Init.Period = 1440-1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
-  sConfig.IC1Polarity = TIM_ICPOLARITY_FALLING;
+  sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
   sConfig.IC1Filter = 0;
