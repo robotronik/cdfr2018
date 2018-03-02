@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * File Name          : I2C.h
+  * Description        : This file provides code for the configuration
+  *                      of the I2C instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -36,72 +36,46 @@
   *
   ******************************************************************************
   */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#ifndef __i2c_H
+#define __i2c_H
+#ifdef __cplusplus
+ extern "C" {
+#endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f3xx_hal.h"
+#include "main.h"
 
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
 
-/* Private define ------------------------------------------------------------*/
-
-#define TIM2_CH1_Pin GPIO_PIN_0
-#define TIM2_CH1_GPIO_Port GPIOA
-#define TIM2_CH2_Pin GPIO_PIN_1
-#define TIM2_CH2_GPIO_Port GPIOA
-#define EN_R_Pin GPIO_PIN_6
-#define EN_R_GPIO_Port GPIOA
-#define NBRAKE_R_Pin GPIO_PIN_7
-#define NBRAKE_R_GPIO_Port GPIOA
-#define DIR_R_Pin GPIO_PIN_0
-#define DIR_R_GPIO_Port GPIOB
-#define DIAG_R_Pin GPIO_PIN_1
-#define DIAG_R_GPIO_Port GPIOB
-#define TIM1_CH1_Pin GPIO_PIN_8
-#define TIM1_CH1_GPIO_Port GPIOA
-#define TIM1_CH2_Pin GPIO_PIN_9
-#define TIM1_CH2_GPIO_Port GPIOA
-#define TACHO_R_Pin GPIO_PIN_10
-#define TACHO_R_GPIO_Port GPIOA
-#define LED_Pin GPIO_PIN_11
-#define LED_GPIO_Port GPIOA
-#define TACHO_L_Pin GPIO_PIN_12
-#define TACHO_L_GPIO_Port GPIOA
-#define DIAG_L_Pin GPIO_PIN_15
-#define DIAG_L_GPIO_Port GPIOA
-#define DIR_L_Pin GPIO_PIN_3
-#define DIR_L_GPIO_Port GPIOB
-#define NBRAKE_L_Pin GPIO_PIN_4
-#define NBRAKE_L_GPIO_Port GPIOB
-#define EN_L_Pin GPIO_PIN_5
-#define EN_L_GPIO_Port GPIOB
-
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
+extern I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN Private defines */
-#define __FPU_PRESENT 1U
-#define ARM_MATH_CM4
+
 /* USER CODE END Private defines */
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
+extern void _Error_Handler(char *, int);
 
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
+void MX_I2C1_Init(void);
+
+/* USER CODE BEGIN Prototypes */
+
+/* USER CODE END Prototypes */
+
 #ifdef __cplusplus
 }
 #endif
+#endif /*__ i2c_H */
 
-#endif /* __MAIN_H__ */
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

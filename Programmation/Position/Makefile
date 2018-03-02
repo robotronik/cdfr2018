@@ -3,7 +3,7 @@ PROJECT_DIR=Position
 PROJECT_NAME=Position
 DOC_DIR= /home/$(USER)/STM32Cube/
 BINPATH= /usr/bin
-CUSTOM_C_SOURCES= Robotronik_corp_pid.c
+CUSTOM_C_SOURCES= Robotronik_corp_pid.c,encoder.c,odometry.c
 
 rouge = \033[0;31m
 vert = \033[0;32m

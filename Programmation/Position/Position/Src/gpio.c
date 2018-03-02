@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * File Name          : gpio.c
+  * Description        : This file provides code for the configuration
+  *                      of all used GPIO pins.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -37,62 +37,79 @@
   ******************************************************************************
   */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H__
-#define __MAIN_H__
-
 /* Includes ------------------------------------------------------------------*/
+#include "gpio.h"
+/* USER CODE BEGIN 0 */
 
-/* USER CODE BEGIN Includes */
+/* USER CODE END 0 */
 
-/* USER CODE END Includes */
+/*----------------------------------------------------------------------------*/
+/* Configure GPIO                                                             */
+/*----------------------------------------------------------------------------*/
+/* USER CODE BEGIN 1 */
 
-/* Private define ------------------------------------------------------------*/
+/* USER CODE END 1 */
 
-#define EN_1_Pin GPIO_PIN_6
-#define EN_1_GPIO_Port GPIOA
-#define BRAKE_1_Pin GPIO_PIN_7
-#define BRAKE_1_GPIO_Port GPIOA
-#define DIR_1_Pin GPIO_PIN_0
-#define DIR_1_GPIO_Port GPIOB
-#define DIAG_1_Pin GPIO_PIN_1
-#define DIAG_1_GPIO_Port GPIOB
-#define TACHO_1_Pin GPIO_PIN_10
-#define TACHO_1_GPIO_Port GPIOA
-#define LED_Pin GPIO_PIN_11
-#define LED_GPIO_Port GPIOA
-#define TACHO_2_Pin GPIO_PIN_12
-#define TACHO_2_GPIO_Port GPIOA
-#define DIAG_2_Pin GPIO_PIN_15
-#define DIAG_2_GPIO_Port GPIOA
-#define DIR_2_Pin GPIO_PIN_3
-#define DIR_2_GPIO_Port GPIOB
-#define BRAKE_2_Pin GPIO_PIN_4
-#define BRAKE_2_GPIO_Port GPIOB
-#define EN_2_Pin GPIO_PIN_5
-#define EN_2_GPIO_Port GPIOB
+/** Configure pins as 
+        * Analog 
+        * Input 
+        * Output
+        * EVENT_OUT
+        * EXTI
+*/
+void MX_GPIO_Init(void)
+{
 
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
+  GPIO_InitTypeDef GPIO_InitStruct;
 
-/* USER CODE BEGIN Private defines */
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
-/* USER CODE END Private defines */
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, NBRAKE_R_Pin|LED_Pin, GPIO_PIN_RESET);
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, DIR_R_Pin|DIR_L_Pin|NBRAKE_L_Pin, GPIO_PIN_RESET);
 
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
-#ifdef __cplusplus
+  /*Configure GPIO pins : PAPin PAPin */
+  GPIO_InitStruct.Pin = NBRAKE_R_Pin|LED_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PBPin PBPin PBPin */
+  GPIO_InitStruct.Pin = DIR_R_Pin|DIR_L_Pin|NBRAKE_L_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PtPin */
+  GPIO_InitStruct.Pin = DIAG_R_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(DIAG_R_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PAPin PAPin PAPin */
+  GPIO_InitStruct.Pin = TACHO_R_Pin|TACHO_L_Pin|DIAG_L_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 }
-#endif
 
-#endif /* __MAIN_H__ */
+/* USER CODE BEGIN 2 */
+
+/* USER CODE END 2 */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
