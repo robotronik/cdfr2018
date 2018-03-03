@@ -15,16 +15,27 @@
 
 static uint16_t err;
 
-void RP_Init_Interface(RP_Interface *interface, uint8_t (*send)(uint8_t *, uint16_t, uint32_t), uint8_t (*receive)(uint8_t *, uint16_t, uint32_t)){
+void RP_Init_Interface(RP_Interface *interface,
+		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t),
+		       void (*RP_Packet_Received)(RP_Packet*),
+		       void (*RP_Error_Handler)(uint16_t)){
   interface->send = send;
-  interface->receive = receive;
 
   //FSM
+  interface->fsm.RP_Packet_Received = RP_Packet_Received;
+  interface->fsm.RP_Error_Handler = RP_Error_Handler;
+    
   interface->fsm.update_state = RP_FSM_INIT;
-  interface->fsm.out = interface->packet.data;
+
+  interface->fsm.in = interface->buffer_in;
+  interface->fsm.p_in = interface->fsm.in;
+
+  interface->fsm.out = interface->r_packet.data;
   interface->fsm.p_out = interface->fsm.out;
+
+  interface->fsm.packet = &interface->r_packet;
+  
   interface->fsm.crc_accum = 0;
-  interface->fsm.valid = 0;
 }
 
 uint8_t RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]){
@@ -63,13 +74,13 @@ uint8_t RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]){
 }
 
 uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
-  uint8_t len = RP_Build_Frame(packet, interface->buffer);
+  uint8_t len = RP_Build_Frame(packet, interface->buffer_out);
 
   if(len == 0){
     return 1;
   }
   
-  return (interface->send(interface->buffer, len, timeout)==0);
+  return (interface->send(interface->buffer_out, len, timeout)==0);
 }
 
 //========================================
@@ -77,20 +88,35 @@ uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
 //========================================
 #define FSM_UPDATE(fsm,state_function) fsm->update_state = state_function
 
-#define FSM_DECL_BYTE(fsm) uint8_t byte = *(fsm->in)
+#define FSM_GET_BYTE(fsm) uint8_t byte = *(fsm->p_in++);	\
+  printf("0x%2.2X ", byte);					\
+  if(fsm->p_in == fsm->in+RP_BUFFER_SIZE){			\
+    fsm->p_in = fsm->in;					\
+  }
+
 #define FSM_BYTE byte
 
-#define FSM_RESET(fsm,valid_b,err_code) {				\
+#define FSM_RESET(fsm) {						\
     FSM_UPDATE(fsm, RP_FSM_INIT);					\
     fsm->crc_accum = 0;							\
-    fsm->valid = valid_b;						\
     fsm->p_out = fsm->out;						\
-    err = err_code;							\
     return;								\
   }
 
-#define FSM_CHECK_RESET(fsm,byte,valid_b,err_code) {	\
-    if(byte == 0x00) {FSM_RESET(fsm,valid_b,err_code);}	\
+#define FSM_ERR(fsm, err_code) {		\
+  err = err_code;				\
+  fsm->RP_Error_Handler(err);			\
+  FSM_RESET(fsm);				\
+  }
+
+#define FSM_CHECK_ERR(fsm, err_code) {		\
+    if(FSM_BYTE == RP_EOF){			\
+      FSM_ERR(fsm, err_code);			\
+    }						\
+  }
+
+#define FSM_CHECK_EOF(fsm) {			\
+    if(FSM_BYTE == RP_EOF) {FSM_RESET(fsm);}	\
   }
 /**
  * Reinit the FSM when EOF is reached.
@@ -100,7 +126,7 @@ uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
 
 #define FSM_DECODE_BYTE(fsm, byte)			\
   (((--fsm->bs_count) == 0)?				\
-   (fsm->bs_count = byte, (uint8_t) 0x00):		\
+   (fsm->bs_count = byte, (uint8_t) RP_EOF):		\
    (byte))
 /**
  * Update the COBS counter and decode the current byte. This macro can
@@ -110,13 +136,13 @@ uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
 
 
 void RP_FSM_INIT(RP_Receiver_FSM *fsm){
-  FSM_DECL_BYTE(fsm);
+  FSM_GET_BYTE(fsm);
   /* 
    * If current byte is EOF, the fsm is reset but no error is set :
    * it's just a blank frame that can be used for synchronisation
    * purpose.
    */
-  FSM_CHECK_RESET(fsm, FSM_BYTE, false, RP_NO_ERROR);
+  FSM_CHECK_EOF(fsm);
 
   /*
    * The first byte initializes the COBS algorithm.
@@ -127,12 +153,12 @@ void RP_FSM_INIT(RP_Receiver_FSM *fsm){
 }
 
 void RP_FSM_SIZE(RP_Receiver_FSM *fsm){
-  FSM_DECL_BYTE(fsm);
+  FSM_GET_BYTE(fsm);
   /*
    * From this byte, reaching an EOF flag before the END state is
    * unexpected and will trigger an error.
    */
-  FSM_CHECK_RESET(fsm, FSM_BYTE, false, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+  FSM_CHECK_ERR(fsm, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
 
   /*
    * FSM_DECODE_BYTE is not used here because the protocol requires
@@ -149,20 +175,21 @@ void RP_FSM_SIZE(RP_Receiver_FSM *fsm){
    * Get the packet length. It will be used to find the CRC position.
    */
   fsm->size = fsm->remaining = FSM_BYTE - 3;
-
+  fsm->packet->len = fsm->size;
+  
   /*
    * Checks wether or not the read size is consistent.
    */
   if(fsm->size > RP_MAX_PACKET_SIZE){
-    FSM_RESET(fsm, false, RP_ERR_LINK | RP_ERR_SIZE);
+    FSM_ERR(fsm, RP_ERR_LINK | RP_ERR_SIZE);
   }
   
   FSM_UPDATE(fsm, RP_FSM_DATA);
 }
 
 void RP_FSM_DATA(RP_Receiver_FSM *fsm){
-  FSM_DECL_BYTE(fsm);
-  FSM_CHECK_RESET(fsm, FSM_BYTE, false, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+  FSM_GET_BYTE(fsm);
+  FSM_CHECK_ERR(fsm, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
 
   /*
    * Note that the CRC is computed AFTER the byte is decoded. Indeed,
@@ -182,40 +209,45 @@ void RP_FSM_DATA(RP_Receiver_FSM *fsm){
 }
 
 void RP_FSM_CRC_LOW(RP_Receiver_FSM *fsm){
-  FSM_DECL_BYTE(fsm);
-  FSM_CHECK_RESET(fsm, FSM_BYTE, false, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+  FSM_GET_BYTE(fsm);
+  FSM_CHECK_ERR(fsm, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
 
   /*
    * Checks the low byte of CRC, and triggers an error if it doesn't match.
    */
   if((fsm->crc_accum & 0xFF) != FSM_DECODE_BYTE(fsm, FSM_BYTE)){
-    FSM_RESET(fsm, false, RP_ERR_LINK | RP_ERR_CRC);
+    FSM_ERR(fsm, RP_ERR_LINK | RP_ERR_CRC);
   }else{
     FSM_UPDATE(fsm, RP_FSM_CRC_HIGH);
   }
 }
 
 void RP_FSM_CRC_HIGH(RP_Receiver_FSM *fsm){
-  FSM_DECL_BYTE(fsm);
-  FSM_CHECK_RESET(fsm, FSM_BYTE, false, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+  FSM_GET_BYTE(fsm);
+  FSM_CHECK_ERR(fsm, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
 
   /*
    * Checks the high byte of CRC, and triggers an error if it doesn't match.
    */
   if((fsm->crc_accum >> 8) != FSM_DECODE_BYTE(fsm, FSM_BYTE)){
-    FSM_RESET(fsm, false, RP_ERR_LINK | RP_ERR_CRC);
+    FSM_ERR(fsm, RP_ERR_LINK | RP_ERR_CRC);
   }else{
     FSM_UPDATE(fsm, RP_FSM_END);
   }
 }
 
 void RP_FSM_END(RP_Receiver_FSM *fsm){
-  FSM_DECL_BYTE(fsm);
-  bool valid = (FSM_BYTE == 0x00);
+  FSM_GET_BYTE(fsm);
+
   /*
    * The last byte must be EOF. Otherwise, it is an error.
    */
-  FSM_RESET(fsm, valid, (valid?RP_NO_ERROR:(RP_ERR_LINK | RP_ERR_SIZE)));
+  if(FSM_BYTE == 0x00){
+    fsm->RP_Packet_Received(fsm->packet);
+    FSM_RESET(fsm);
+  }else{
+    FSM_ERR(fsm, RP_ERR_LINK | RP_ERR_SIZE);
+  }
 }
 
 uint16_t RP_Get_Error(){

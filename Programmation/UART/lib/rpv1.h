@@ -8,19 +8,9 @@
 
 #define RP_MAX_PACKET_SIZE 251
 #define RP_BUFFER_SIZE RP_MAX_PACKET_SIZE+5
-
-//Finite state machine for reception
-typedef struct RP_Receiver_FSM_S{
-  void (*update_state)(struct RP_Receiver_FSM_S*);
-  uint8_t bs_count;//COBS counter
-  uint8_t size;//packet size
-  uint8_t remaining;
-  uint8_t *in;
-  uint8_t *out;
-  uint8_t *p_out;
-  uint16_t crc_accum;
-  bool valid;
-}RP_Receiver_FSM;
+/*
+ * RP_BUFFER_SIZE must be a power of 2.
+ */
 
 //Data packet
 typedef struct RP_Packet_S{
@@ -28,15 +18,56 @@ typedef struct RP_Packet_S{
   uint8_t data[RP_MAX_PACKET_SIZE];
 }RP_Packet;
 
+//Finite state machine for reception
+typedef struct RP_Receiver_FSM_S{
+  //Callback functions
+  void (*RP_Packet_Received)(RP_Packet*);
+  void (*RP_Error_Handler)(uint16_t);
+  
+  void (*update_state)(struct RP_Receiver_FSM_S*);
+  uint8_t bs_count;//COBS counter
+  uint8_t size;//packet size
+  uint8_t remaining;
+
+  //Base of buffer_in
+  uint8_t *in;
+  uint8_t *p_in;
+
+  //Base of buffer_out
+  uint8_t *out;
+  uint8_t *p_out;
+
+  //Packet
+  RP_Packet *packet;
+  
+  uint16_t crc_accum;
+}RP_Receiver_FSM;
+
 typedef struct RP_Interface_S{
   uint8_t (*send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout_ms
-  uint8_t (*receive)(uint8_t *, uint16_t, uint32_t);//data, size, timeout ms
-  uint8_t buffer[RP_BUFFER_SIZE];
+
+  //Reception buffer
+  uint8_t buffer_in[RP_BUFFER_SIZE];
+
+  //Packet used for reception
+  RP_Packet r_packet;
+  /*
+   * The FSM writes directly in this packet while receiving.  There is
+   * no queue for received packets, so this packet is overwritten when
+   * new data is received. The sender should wait for the receiver to
+   * process the packet before sending a new one.
+   */
+  
+  //Output buffer
+  uint8_t buffer_out[RP_BUFFER_SIZE];
+  
   RP_Receiver_FSM fsm;
-  RP_Packet packet;
 }RP_Interface;
 
-void RP_Init_Interface(RP_Interface *interface, uint8_t (*send)(uint8_t *, uint16_t, uint32_t), uint8_t (*receive)(uint8_t *, uint16_t, uint32_t));
+void RP_Init_Interface(RP_Interface *interface,
+		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t),
+		       void (*RP_Packet_Received)(RP_Packet*),
+		       void (*RP_Error_Handler)(uint16_t));
 
 void RP_FSM_INIT(RP_Receiver_FSM *fsm);
 void RP_FSM_SIZE(RP_Receiver_FSM *fsm);
@@ -72,7 +103,6 @@ uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout);
 //==================================================
 //Types d'erreurs
 typedef enum RP_Error_Type_E{
-  RP_NO_ERROR = 0x0000, //Pas d'erreur
   RP_ERR_INTERNAL = 0x0100, //Erreur interne à la librairie
   RP_ERR_LINK = 0x0200, //Erreur de communication (UART)
 }RP_Error_Type;
