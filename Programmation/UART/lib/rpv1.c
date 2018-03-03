@@ -16,15 +16,10 @@
 static uint16_t err;
 
 void RP_Init_Interface(RP_Interface *interface,
-		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t),
-		       void (*RP_Packet_Received)(RP_Packet*),
-		       void (*RP_Error_Handler)(uint16_t)){
+		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t)){
   interface->send = send;
 
   //FSM
-  interface->fsm.RP_Packet_Received = RP_Packet_Received;
-  interface->fsm.RP_Error_Handler = RP_Error_Handler;
-    
   interface->fsm.update_state = RP_FSM_INIT;
 
   interface->fsm.in = interface->buffer_in;
@@ -105,7 +100,7 @@ uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
 
 #define FSM_ERR(fsm, err_code) {		\
   err = err_code;				\
-  fsm->RP_Error_Handler(err);			\
+  RP_Error_Handler(err);			\
   FSM_RESET(fsm);				\
   }
 
@@ -243,7 +238,7 @@ void RP_FSM_END(RP_Receiver_FSM *fsm){
    * The last byte must be EOF. Otherwise, it is an error.
    */
   if(FSM_BYTE == 0x00){
-    fsm->RP_Packet_Received(fsm->packet);
+    RP_Packet_Received(fsm->packet);
     FSM_RESET(fsm);
   }else{
     FSM_ERR(fsm, RP_ERR_LINK | RP_ERR_SIZE);

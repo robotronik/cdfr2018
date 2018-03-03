@@ -18,12 +18,12 @@ typedef struct RP_Packet_S{
   uint8_t data[RP_MAX_PACKET_SIZE];
 }RP_Packet;
 
+//Callback functions
+void __attribute__((weak)) RP_Packet_Received(RP_Packet*);
+void __attribute__((weak)) RP_Error_Handler(uint16_t);
+
 //Finite state machine for reception
 typedef struct RP_Receiver_FSM_S{
-  //Callback functions
-  void (*RP_Packet_Received)(RP_Packet*);
-  void (*RP_Error_Handler)(uint16_t);
-  
   void (*update_state)(struct RP_Receiver_FSM_S*);
   uint8_t bs_count;//COBS counter
   uint8_t size;//packet size
@@ -65,9 +65,7 @@ typedef struct RP_Interface_S{
 }RP_Interface;
 
 void RP_Init_Interface(RP_Interface *interface,
-		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t),
-		       void (*RP_Packet_Received)(RP_Packet*),
-		       void (*RP_Error_Handler)(uint16_t));
+		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t));
 
 void RP_FSM_INIT(RP_Receiver_FSM *fsm);
 void RP_FSM_SIZE(RP_Receiver_FSM *fsm);

@@ -62,7 +62,7 @@ int main(){
   };
 
   RP_Interface interface;
-  RP_Init_Interface(&interface, send, RP_Packet_Received, RP_Error_Handler);
+  RP_Init_Interface(&interface, send);
   
   receive(packet.data, 5, 1);
   
