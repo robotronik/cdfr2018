@@ -1025,4 +1025,6 @@ Connection ~ 11300 19450
 Wire Wire Line
 	11300 20350 10950 20350
 Connection ~ 11300 19900
+Text Notes 3700 17450 0    60   ~ 0
+PCA9515
 $EndSCHEMATC
