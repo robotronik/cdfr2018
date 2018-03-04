@@ -18,31 +18,6 @@ typedef struct RP_Packet_S{
   uint8_t data[RP_MAX_PACKET_SIZE];
 }RP_Packet;
 
-//Callback functions
-void __attribute__((weak)) RP_Packet_Received(RP_Packet*);
-void __attribute__((weak)) RP_Error_Handler(uint16_t);
-
-//Finite state machine for reception
-typedef struct RP_Receiver_FSM_S{
-  void (*update_state)(struct RP_Receiver_FSM_S*);
-  uint8_t bs_count;//COBS counter
-  uint8_t size;//packet size
-  uint8_t remaining;
-
-  //Base of buffer_in
-  uint8_t *in;
-  uint8_t *p_in;
-
-  //Base of buffer_out
-  uint8_t *out;
-  uint8_t *p_out;
-
-  //Packet
-  RP_Packet *packet;
-  
-  uint16_t crc_accum;
-}RP_Receiver_FSM;
-
 typedef struct RP_Interface_S{
   uint8_t (*send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout_ms
 
@@ -61,18 +36,26 @@ typedef struct RP_Interface_S{
   //Output buffer
   uint8_t buffer_out[RP_BUFFER_SIZE];
   
-  RP_Receiver_FSM fsm;
+  //Finite state machine for reception
+  void (*update_state)(struct RP_Interface_S*);
+  uint8_t bs_count;//COBS counter
+  uint8_t size;//packet size
+  uint8_t remaining;
+  uint8_t *p_in;
+  uint8_t *p_out;
+  uint16_t crc_accum;
 }RP_Interface;
 
-void RP_Init_Interface(RP_Interface *interface,
-		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t));
 
-void RP_FSM_INIT(RP_Receiver_FSM *fsm);
-void RP_FSM_SIZE(RP_Receiver_FSM *fsm);
-void RP_FSM_DATA(RP_Receiver_FSM *fsm);
-void RP_FSM_CRC_LOW(RP_Receiver_FSM *fsm);
-void RP_FSM_CRC_HIGH(RP_Receiver_FSM *fsm);
-void RP_FSM_END(RP_Receiver_FSM *fsm);
+
+void RP_Init_Interface(RP_Interface *interface, uint8_t (*send)(uint8_t *, uint16_t, uint32_t));
+
+void RP_FSM_INIT(RP_Interface *interface);
+void RP_FSM_SIZE(RP_Interface *interface);
+void RP_FSM_DATA(RP_Interface *interface);
+void RP_FSM_CRC_LOW(RP_Interface *interface);
+void RP_FSM_CRC_HIGH(RP_Interface *interface);
+void RP_FSM_END(RP_Interface *interface);
 
 uint16_t RP_Update_CRC(uint16_t accum, uint8_t *data, uint16_t size);
 

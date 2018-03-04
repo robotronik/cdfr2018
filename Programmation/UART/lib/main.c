@@ -3,7 +3,7 @@
 
 void test_crc();
 
-void RP_Packet_Received(RP_Packet *packet){
+void RP_Packet_Received(RP_Interface *iface, RP_Packet *packet){
   printf("\nPacket received.\nSize : %d bytes\nData :\n", packet->len);
 
   int i;
@@ -13,7 +13,7 @@ void RP_Packet_Received(RP_Packet *packet){
   printf("\n\n");
 }
 
-void RP_Error_Handler(uint16_t error){
+void RP_Error_Handler(RP_Interface *iface, uint16_t error){
   switch(RP_ERROR_TYPE(error)){
   case RP_ERR_INTERNAL:
     printf("Internal error: ");
