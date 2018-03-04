@@ -96,6 +96,11 @@ uint8_t RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]);
 
 uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout);
 
+void RP_Process_Data(RP_Interface *interface, uint8_t *data, uint16_t len);
+/*
+ * Run the receiving fsm on bytes from data to data+len-1.
+ */
+
 //==================================================
 //              GESTION DES ERREURS
 //==================================================

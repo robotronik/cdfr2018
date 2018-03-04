@@ -81,11 +81,10 @@ int main(){
       interface.buffer_in[i] = 2;
     }
 #endif
-    
-    interface.fsm.update_state(&interface.fsm);
   }
- 
 
+  RP_Process_Data(&interface, interface.buffer_in, RP_BUFFER_SIZE);
+ 
   return 0;
 }
 
