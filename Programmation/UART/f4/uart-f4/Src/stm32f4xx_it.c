@@ -38,7 +38,7 @@
 /* USER CODE BEGIN 0 */
 #include "rpv1.h"
 static uint16_t pos = 0;
-extern RP_Interface interface;
+extern RP_Interface iface_rpi;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -83,7 +83,7 @@ void USART1_IRQHandler(void)
     uint16_t next_pos = RP_BUFFER_SIZE - LL_DMA_GetDataLength(DMA2, LL_DMA_STREAM_2);
     uint16_t len = next_pos - pos;
     if(len > 0){
-      RP_Process_Data(&interface, interface.buffer_in+pos, len);
+      RP_Process_Data(&iface_rpi, iface_rpi.buffer_in+pos, len);
     }
     pos = next_pos;
   }
@@ -103,13 +103,13 @@ void DMA2_Stream2_IRQHandler(void)
   uint16_t next_pos;
   if(LL_DMA_IsActiveFlag_TC2(DMA2)){
     LL_DMA_ClearFlag_TC2(DMA2);
-    RP_Process_Data(&interface, interface.buffer_in+pos, RP_BUFFER_SIZE-pos);
+    RP_Process_Data(&iface_rpi, iface_rpi.buffer_in+pos, RP_BUFFER_SIZE-pos);
     pos = 0;
   }
   else if(LL_DMA_IsActiveFlag_HT2(DMA2)){
     LL_DMA_ClearFlag_HT2(DMA2);
     next_pos = RP_BUFFER_SIZE - LL_DMA_GetDataLength(DMA2, LL_DMA_STREAM_2);
-    RP_Process_Data(&interface, interface.buffer_in+pos, next_pos - pos);
+    RP_Process_Data(&iface_rpi, iface_rpi.buffer_in+pos, next_pos - pos);
     pos = next_pos;
   }
   /* USER CODE END DMA2_Stream2_IRQn 0 */

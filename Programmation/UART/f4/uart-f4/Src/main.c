@@ -44,15 +44,32 @@
 
 /* USER CODE BEGIN Includes */
 #include "rpv1.h"
+#include "rc_server.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-RP_Interface interface;
-volatile uint8_t level;
+RP_Interface iface_rpi;
+volatile uint8_t level = 0;
 uint8_t buffer;
+
+RC_Server jacky_server;
+
+typedef enum Jacky_Functions_E{
+  SET_PWM,
+  STOP
+}Jacky_Functions;
+
+void set_pwm(uint8_t *data){
+  level = *data;
+}
+
+void stop(uint8_t *data){
+  level = 0;
+}
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,14 +81,10 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void RP_Packet_Received(RP_Packet *packet){
-  if(packet->len == 1){
-    level = packet->data[0];
+void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
+  if(interface == &iface_rpi && packet->len >= 1){
+    RC_Get_Request(&jacky_server, packet->data[0], packet->data + 1, packet->len - 1);
   }
-}
-
-void RP_Error_Handler(uint16_t err){
-  
 }
 
 uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout){
@@ -115,15 +128,13 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  
-  
-  level = 0;
-  RP_Init_Interface(&interface, RP_UART_Transmit);
+  RP_Init_Interface(&iface_rpi, RP_UART_Transmit);
   
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
-  LL_DMA_SetMemoryAddress(DMA2, LL_DMA_STREAM_2, (uint32_t) interface.buffer_in);
-  LL_DMA_SetDataLength(DMA2, LL_DMA_STREAM_2, sizeof(interface.buffer_in));
+  /* INITIALISATION UART/DMA */
+  LL_DMA_SetMemoryAddress(DMA2, LL_DMA_STREAM_2, (uint32_t) iface_rpi.buffer_in);
+  LL_DMA_SetDataLength(DMA2, LL_DMA_STREAM_2, sizeof(iface_rpi.buffer_in));
   LL_DMA_SetPeriphAddress(DMA2, LL_DMA_STREAM_2, (uint32_t) &USART1->DR);
   LL_DMA_EnableIT_HT(DMA2, LL_DMA_STREAM_2);
   LL_DMA_EnableIT_TC(DMA2, LL_DMA_STREAM_2);
@@ -133,6 +144,12 @@ int main(void)
   LL_USART_EnableIT_IDLE(USART1);
   LL_USART_Enable(USART1);
 
+  //Jacky Server
+  RC_Server_Init(&jacky_server);
+  RC_Server_Add_Function(&jacky_server, SET_PWM, set_pwm, 1, RC_IMMEDIATE);
+  RC_Server_Add_Function(&jacky_server, STOP, stop, 0, RC_IMMEDIATE);
+  
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */

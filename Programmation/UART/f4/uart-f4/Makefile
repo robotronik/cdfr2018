@@ -56,6 +56,7 @@ BUILD_DIR = build
 C_SOURCES =  \
 crc_16.c \
 rpv1.c \
+rc_server.c \
 Src/dma.c \
 Src/usart.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_pwr_ex.c \
