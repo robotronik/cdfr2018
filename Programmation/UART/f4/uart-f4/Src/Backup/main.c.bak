@@ -52,6 +52,7 @@
 /* Private variables ---------------------------------------------------------*/
 RP_Interface interface;
 uint8_t level;
+uint8_t buffer;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -117,7 +118,7 @@ int main(void)
   RP_Init_Interface(&interface, RP_UART_Transmit);
   
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  HAL_UART_Receive_DMA(&huart1, interface.buffer_in, 1);
+  HAL_UART_Receive_DMA(&huart1, &buffer, 1);
 
   /* USER CODE END 2 */
 
@@ -129,10 +130,10 @@ int main(void)
     int i;
     for(i = 0; i < 25500; i++){
       if(i == 0){
-	//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
       }
       if(i%100 == 0 && i/100 == level){
-	//HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
       }
     }
 	
@@ -205,9 +206,9 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
+  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
   if(huart == &huart1){
-    interface.fsm.update_state(&interface.fsm);
+    //interface.fsm.update_state(&interface.fsm);
   }
 }
 /* USER CODE END 4 */

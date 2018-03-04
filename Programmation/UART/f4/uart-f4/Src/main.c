@@ -51,7 +51,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 RP_Interface interface;
-uint8_t level;
+volatile uint8_t level;
 uint8_t buffer;
 /* USER CODE END PV */
 
@@ -75,7 +75,8 @@ void RP_Error_Handler(uint16_t err){
 }
 
 uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout){
-  return (HAL_UART_Transmit(&huart1, data, size, timeout)==HAL_OK)?1:0;
+  return 0;
+    //(HAL_UART_Transmit(&huart1, data, size, timeout)==HAL_OK)?1:0;
 }
 
 /* USER CODE END 0 */
@@ -114,11 +115,23 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  
+  
   level = 0;
   RP_Init_Interface(&interface, RP_UART_Transmit);
   
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  HAL_UART_Receive_DMA(&huart1, &buffer, 1);
+
+  LL_DMA_SetMemoryAddress(DMA2, LL_DMA_STREAM_2, (uint32_t) interface.buffer_in);
+  LL_DMA_SetDataLength(DMA2, LL_DMA_STREAM_2, sizeof(interface.buffer_in));
+  LL_DMA_SetPeriphAddress(DMA2, LL_DMA_STREAM_2, (uint32_t) &USART1->DR);
+  LL_DMA_EnableIT_HT(DMA2, LL_DMA_STREAM_2);
+  LL_DMA_EnableIT_TC(DMA2, LL_DMA_STREAM_2);
+  LL_DMA_EnableStream(DMA2, LL_DMA_STREAM_2);
+
+  LL_USART_EnableDMAReq_RX(USART1);
+  LL_USART_EnableIT_IDLE(USART1);
+  LL_USART_Enable(USART1);
 
   /* USER CODE END 2 */
 
@@ -205,12 +218,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-  //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-  if(huart == &huart1){
-    //interface.fsm.update_state(&interface.fsm);
-  }
-}
+
 /* USER CODE END 4 */
 
 /**

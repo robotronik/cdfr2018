@@ -8,6 +8,7 @@
 
 #define RP_MAX_PACKET_SIZE 251
 #define RP_BUFFER_SIZE RP_MAX_PACKET_SIZE+5
+
 /*
  * RP_BUFFER_SIZE must be a power of 2.
  */

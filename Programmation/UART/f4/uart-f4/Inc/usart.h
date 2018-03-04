@@ -44,6 +44,8 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f4xx_ll_usart.h"
+#include "stm32f4xx_ll_rcc.h"
 #include "stm32f4xx_hal.h"
 #include "main.h"
 
@@ -51,7 +53,6 @@
 
 /* USER CODE END Includes */
 
-extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN Private defines */
