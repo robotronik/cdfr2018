@@ -1,8 +1,6 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-#define PWM_MAX 50 //a value between 0 and 255, 255 if not for debug
-
 #define DRIVE_MOTOR(voltage, side_port, side_pin, fwd_state, tim_channel) {	\
   uint16_t value = (uint16_t) (voltage * (255.0 / 12.0));		\
   									\
