@@ -72,15 +72,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-
-
-void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *htim)
-{
-  if(htim->Instance == htim15.Instance){
-    update_odometry(&odometry);
-    //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
-  }
-}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
