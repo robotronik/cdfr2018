@@ -44,7 +44,7 @@ typedef struct RP_Interface_S{
   uint8_t *p_in;
   uint8_t *p_out;
   uint16_t crc_accum;
-  
+
   //Position set externally
   uint16_t sync_pos;
 }RP_Interface;
@@ -79,6 +79,8 @@ uint8_t RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]);
  * (packet->data != NULL)
  * (3 + packet->len <= 254)
  */
+
+uint8_t RP_Sync(RP_Interface *interface, uint32_t timeout);
 
 uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout);
 

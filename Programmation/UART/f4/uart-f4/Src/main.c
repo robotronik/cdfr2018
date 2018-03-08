@@ -152,7 +152,9 @@ int main(void)
   packet.len = 2;
   packet.data[0] = 0;
   packet.data[1] = 10;
+  RP_Sync(&iface_rpi, 1);
   RP_Send(&iface_rpi, &packet, 1);
+  
   while (1)
   {
     int i;

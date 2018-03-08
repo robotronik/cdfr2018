@@ -70,6 +70,11 @@ uint8_t RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]){
   return p_buffer - buffer;
 }
 
+uint8_t RP_Sync(RP_Interface *interface, uint32_t timeout){
+  uint8_t byte = RP_EOF;
+  return (interface->send(&byte, 1, timeout) == 0);
+}
+
 uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
   uint8_t len = RP_Build_Frame(packet, interface->buffer_out);
 
