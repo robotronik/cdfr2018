@@ -9,6 +9,18 @@
 #define REMAINING_DATA(dma_x, dma_stream_x) LL_DMA_GetDataLength(DMAx(dma_x), LL_DMA_STREAM_x(dma_stream_x))
 #define RECEIVED_DATA(dma_x, dma_stream_x) (RP_BUFFER_SIZE - REMAINING_DATA(dma_x, dma_stream_x))
 
+#define RP_INIT_UART_DMA(dma, dma_stream, usart, iface) \
+  LL_DMA_SetMemoryAddress(dma, dma_stream, (uint32_t) iface.buffer_in); \
+  LL_DMA_SetDataLength(dma, dma_stream, sizeof(iface.buffer_in)); \
+  LL_DMA_SetPeriphAddress(dma, dma_stream, (uint32_t) &usart->DR); \
+  LL_DMA_EnableIT_HT(dma, dma_stream);				\
+  LL_DMA_EnableIT_TC(dma, dma_stream);				\
+  LL_DMA_EnableStream(dma, dma_stream);				\
+									\
+  LL_USART_EnableDMAReq_RX(usart);					\
+  LL_USART_EnableIT_IDLE(usart);					\
+  LL_USART_Enable(usart);
+
 #define USARTx_IRQHandler(usart_x, dma_x, dma_stream_x, iface)		\
   /* When USART is IDLE, ie. the last frame period was empty. */	\
   if(LL_USART_IsActiveFlag_IDLE(USARTx(usart_x))){				\
