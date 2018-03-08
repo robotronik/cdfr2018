@@ -55,12 +55,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 Odometry odometry;
-
 int sum_goal,diff_goal;
-
-//TEST ENCODER
-#define TEST_ENCODER 0
-uint8_t led_level = 0;
 
 /* USER CODE END PV */
 
