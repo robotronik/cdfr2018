@@ -44,6 +44,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "rpv1.h"
+#include "rpv1_stm32.h"
 #include "rc_server.h"
 /* USER CODE END Includes */
 
@@ -129,34 +130,21 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   RP_Init_Interface(&iface_rpi, RP_UART_Transmit);
+  RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_2, USART1, iface_rpi);
   
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-
-  /* INITIALISATION UART/DMA */
-  LL_DMA_SetMemoryAddress(DMA2, LL_DMA_STREAM_2, (uint32_t) iface_rpi.buffer_in);
-  LL_DMA_SetDataLength(DMA2, LL_DMA_STREAM_2, sizeof(iface_rpi.buffer_in));
-  LL_DMA_SetPeriphAddress(DMA2, LL_DMA_STREAM_2, (uint32_t) &USART1->DR);
-  LL_DMA_EnableIT_HT(DMA2, LL_DMA_STREAM_2);
-  LL_DMA_EnableIT_TC(DMA2, LL_DMA_STREAM_2);
-  LL_DMA_EnableStream(DMA2, LL_DMA_STREAM_2);
-
-  LL_USART_EnableDMAReq_RX(USART1);
-  LL_USART_EnableIT_IDLE(USART1);
-  LL_USART_Enable(USART1);
-
   //Jacky Server
   RC_Server_Init(&jacky_server);
   RC_Server_Add_Function(&jacky_server, SET_PWM, set_pwm, 1, RC_IMMEDIATE);
   RC_Server_Add_Function(&jacky_server, STOP, stop, 0, RC_IMMEDIATE);
-  
-  
+    
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  
   while (1)
   {
-    
     int i;
     for(i = 0; i < 25500; i++){
       if(i == 0){
