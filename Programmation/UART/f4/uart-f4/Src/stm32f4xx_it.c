@@ -37,7 +37,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "rpv1.h"
-static uint16_t pos = 0;
+#include "rpv1_stm32.h"
 extern RP_Interface iface_rpi;
 /* USER CODE END 0 */
 
@@ -75,43 +75,21 @@ void SysTick_Handler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-  if(LL_USART_IsActiveFlag_IDLE(USART1)){
-    LL_USART_ClearFlag_IDLE(USART1);
-    //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-
-    //Number of received bytes
-    uint16_t next_pos = RP_BUFFER_SIZE - LL_DMA_GetDataLength(DMA2, LL_DMA_STREAM_2);
-    uint16_t len = next_pos - pos;
-    if(len > 0){
-      RP_Process_Data(&iface_rpi, iface_rpi.buffer_in+pos, len);
-    }
-    pos = next_pos;
-  }
+  USARTx_IRQHandler(1, 2, 2, iface_rpi);
   /* USER CODE END USART1_IRQn 0 */
   /* USER CODE BEGIN USART1_IRQn 1 */
 
-  /* USER CODE END USART1_IRQn 1 */
+   /* USER CODE END USART1_IRQn 1 */
 }
 
 /**
 * @brief This function handles DMA2 stream2 global interrupt.
 */
+
 void DMA2_Stream2_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Stream2_IRQn 0 */
-  
-  uint16_t next_pos;
-  if(LL_DMA_IsActiveFlag_TC2(DMA2)){
-    LL_DMA_ClearFlag_TC2(DMA2);
-    RP_Process_Data(&iface_rpi, iface_rpi.buffer_in+pos, RP_BUFFER_SIZE-pos);
-    pos = 0;
-  }
-  else if(LL_DMA_IsActiveFlag_HT2(DMA2)){
-    LL_DMA_ClearFlag_HT2(DMA2);
-    next_pos = RP_BUFFER_SIZE - LL_DMA_GetDataLength(DMA2, LL_DMA_STREAM_2);
-    RP_Process_Data(&iface_rpi, iface_rpi.buffer_in+pos, next_pos - pos);
-    pos = next_pos;
-  }
+  DMAx_Streamx_IRQHandler(2, 2, iface_rpi);
   /* USER CODE END DMA2_Stream2_IRQn 0 */
   
   /* USER CODE BEGIN DMA2_Stream2_IRQn 1 */

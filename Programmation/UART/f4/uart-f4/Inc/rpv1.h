@@ -44,6 +44,9 @@ typedef struct RP_Interface_S{
   uint8_t *p_in;
   uint8_t *p_out;
   uint16_t crc_accum;
+  
+  //Position set externally
+  uint16_t sync_pos;
 }RP_Interface;
 
 
