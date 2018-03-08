@@ -88,9 +88,14 @@ void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
   }
 }
 
+
 uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout){
-  return 0;
-    //(HAL_UART_Transmit(&huart1, data, size, timeout)==HAL_OK)?1:0;
+int i;
+for(i = 0; i < size; i++){
+LL_USART_TransmitData8(USART1, data[i]);
+while(LL_USART_IsActiveFlag_TXE(USART1) == 0);
+}
+    return 0;
 }
 
 /* USER CODE END 0 */
@@ -142,7 +147,12 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  
+
+  RP_Packet packet;
+  packet.len = 2;
+  packet.data[0] = 0;
+  packet.data[1] = 10;
+  RP_Send(&iface_rpi, &packet, 1);
   while (1)
   {
     int i;

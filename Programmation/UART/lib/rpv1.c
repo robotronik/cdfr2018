@@ -93,13 +93,7 @@ void RP_Process_Data(RP_Interface *interface, uint8_t *data, uint16_t len){
 
 #define FSM_UPDATE(fsm,state_function) fsm->update_state = state_function
 
-#define FSM_GET_BYTE(fsm) uint8_t byte = *(fsm->p_in++);	\
-  printf("0x%2.2X ", byte);					\
-  /*
-    if(fsm->p_in == fsm->in+RP_BUFFER_SIZE){			\
-    fsm->p_in = fsm->in;					\
-    }
-  */
+#define FSM_GET_BYTE(fsm) uint8_t byte = *(fsm->p_in++);
 
 #define FSM_BYTE byte
 
