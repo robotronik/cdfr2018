@@ -1,17 +1,29 @@
 #include <ESP8266WiFi.h>
+#include "./rpv1.h"
 
 #define AP_NAME "Robotronik-2A"
 #define AP_PASSWD "robotronik"
 
 #define DEBUG 0
+#if DEBUG==1
+#warning "DEBUG MODE IS ACTIVE"
+#endif
 
 //Serveur TCP
 WiFiServer server(80);
+
+//Robotronik Protocol
+RP_Interface interface;
+RP_Packet packet;
 
 int score_1a = 0, score_2a = 0;
 int score_total;
 bool new_score = false;
 unsigned long last_time = 0;
+
+uint8_t send(uint8_t *data, uint16_t len, uint32_t timeout){
+  return (Serial.write(data, len) == len);
+}
 
 void setup() {
   Serial.begin(115200);
@@ -31,6 +43,9 @@ void setup() {
   Serial.println(WiFi.localIP());
   #endif
 
+  RP_Init_Interface(&interface, send);
+  packet.len = 2;
+  
   //Démarrage du serveur
   server.begin();
 }
@@ -77,7 +92,7 @@ void loop() {
     client.stop();//Aparemment nécessaire pour l'ESP
   }
   unsigned long current_time = millis();
-  if(new_score || (last_time - current_time >= 1000)){
+  if(new_score || (current_time - last_time >= 1000)){
     last_time = current_time;
     score_total = (score_1a+score_2a)&0xFFFF;
     #if DEBUG==1
@@ -94,12 +109,10 @@ void loop() {
     Serial.println(String(score)+"; total : "+String(score_total));
     #else
     //Envoi des données
-    unsigned char low_byte = score_total & 0xFF,
-                  high_byte = score_total >> 8;
-    Serial.write(0xFF);
-    Serial.write(0x00);
-    Serial.write(high_byte);
-    Serial.write(low_byte);
+    packet.data[0] = score_total & 0xFF; //octet de poids faible
+    packet.data[1] = score_total >> 8; //octet de poids fort
+    RP_Sync(&interface, 0); //Resynchronise l'automate de réception du F3, au cas où l'ESP ait envoyé des données de debug sur la liaison série entre temps
+    RP_Send(&interface, &packet, 0);
     #endif
     new_score = false;
   }
