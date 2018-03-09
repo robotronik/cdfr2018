@@ -1,7 +1,7 @@
 #include "client_api.h"
 
-Scoreboard_Client sc_client;
-sig_atomic_t sc_running = 0;
+static Scoreboard_Client sc_client;
+static sig_atomic_t sc_running = 0;
 
 int SC_Start(const char *id, const char* server_ip, const char* server_port){
   if(sc_running == 1){

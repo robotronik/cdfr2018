@@ -40,8 +40,6 @@ typedef struct Scoreboard_Client_S{
  * system, otherwise their behavior would be indeterminate.
  */
 
-extern sig_atomic_t sc_running;
-extern Scoreboard_Client sc_client;
 int SC_Start(const char *id, const char* server_ip, const char* server_port);
 /*
  * Start a scoreboard client as a child process and initializes the
