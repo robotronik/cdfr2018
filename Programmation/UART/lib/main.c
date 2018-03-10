@@ -4,91 +4,49 @@
 
 void test_crc();
 
-void RP_Packet_Received(RP_Interface *iface, RP_Packet *packet){
-  printf("\nPacket received.\nSize : %d bytes\nData :\n", packet->len);
+RP_Interface interface1;
+RP_Interface interface2;
 
-  int i;
-  for(i = 0; i < packet->len; i++){
-    printf("0x%2.2X ", packet->data[i]);
-  }
-  printf("\n\n");
-}
+int RC_Pack_Vars_Test(const char *fmt, uint8_t *out, int out_len,  ...);
 
-void RP_Error_Handler(RP_Interface *iface, uint16_t error){
-  switch(RP_ERROR_TYPE(error)){
-  case RP_ERR_INTERNAL:
-    printf("Internal error: ");
-    switch(RP_INTERNAL_ERROR(error)){
-    case RP_ERR_ILLEGAL_ARGUMENTS:
-      printf("Illegal arguments\n");
-      break;
-    case RP_ERR_BUFFER_OVERFLOW:
-      printf("Buffer overflow\n");
-      break;
-    default:
-      printf("Unknown\n");
-      break;
-    }
-    break;
-  case RP_ERR_LINK:
-    printf("Link error: ");
-    switch(RP_LINK_ERROR(error)){
-    case RP_ERR_TIMEOUT:
-      printf("Timeout\n");
-      break;
-    case RP_ERR_UNEXPECTED_EOF:
-      printf("Unexpected EOF\n");
-      break;
-    case RP_ERR_SIZE:
-      printf("Size error\n");
-      break;
-    case RP_ERR_CRC:
-      printf("CRC Error\n");
-      break;
-    default:
-      printf("Unknown\n");
-      break;
-    }
-    break;
-  default:
-    printf("Unknown error\n");
-    break;
-  }
-}
-
-void go(uint8_t id, uint8_t *data, uint8_t len){
-  
-}
-int RC_Pack_Vars(const char *fmt, uint8_t *out, int out_len,  ...);
-int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  ...);
-
-int main(){
-  RC_Server server;
-
-  RC_Server_Init(&server);
-  int r = RC_Server_Add_Function(&server, 0, go, "ifFs", "Fs", RC_IMMEDIATE);
-  printf("%d\n", r);
-
-  uint8_t buff[RC_MAX_DATA];
-  int a;
-  float b;
-  double c;
-  char string[RC_STR_SIZE];
-  r = RC_Pack_Vars("ifFs", buff, 256, 5, -6.23, 3.14, "pack string motherfucker !");//Str 25
-  printf("%d bytes\n", r);
-  RC_Unpack_Vars("ifFs", buff, r, &a, &b, &c, string);
+RC_Server server;
+void go(int id, uint8_t *data, int len){
+  int a; float b; double c; char string[RC_STR_SIZE];
+  RC_Server_Get_Args(&server, id, data, len, &a, &b, &c, string);
   
   printf("%d\n%f\n%lf\n%s", a, b, c, string);
 
+  RC_Server_Return(&server, id, c+1, "success");
+}
+
+int main(){
+
+  RP_Init_Interface(&interface1, send1);
+  RP_Init_Interface(&interface2, send2);
+
+  RC_Server_Init(&server, &interface1);
+
+  RC_Client client;
+  RC_Client_Init(&client, &interface2);
+  
+  RC_Client_Add_Function(&client, 0, go, "ifFs", "Fs");
+  RC_Server_Add_Function(&server, 0, go, "ifFs", "Fs", RC_IMMEDIATE);
+
+  double r;
+  char str[RC_STR_SIZE];
+  RC_Call(&client, 0, 5, -6.23, 3.141592, "pack string motherfucker !", &r, str);
+
+  printf("\n%lf\n%s\n", r, str);
+  
   return 0;
+  
+  #if 0
+
   
   uint16_t size = 5;
   RP_Packet packet = {
     .len = size,
   };
-
-  RP_Interface interface;
-  RP_Init_Interface(&interface, send);
   
   receive(packet.data, 5, 1);
   
@@ -112,6 +70,7 @@ int main(){
   RP_Process_Data(&interface, interface.buffer_in, RP_BUFFER_SIZE);
  
   return 0;
+  #endif
 }
 
 void test_crc(){

@@ -32,6 +32,7 @@ typedef struct RP_Interface_S{
    * new data is received. The sender should wait for the receiver to
    * process the packet before sending a new one.
    */
+  RP_Packet s_packet;
   
   //Output buffer
   uint8_t buffer_out[RP_BUFFER_SIZE];
@@ -44,6 +45,7 @@ typedef struct RP_Interface_S{
   uint8_t *p_in;
   uint8_t *p_out;
   uint16_t crc_accum;
+  volatile bool received;
 
   //Position set externally
   uint16_t sync_pos;
@@ -88,6 +90,8 @@ void RP_Process_Data(RP_Interface *interface, uint8_t *data, uint16_t len);
 /*
  * Run the receiving fsm on bytes from data to data+len-1.
  */
+
+uint8_t RP_Wait_Packet(RP_Interface *interface, int timeout_ms);
 
 //==================================================
 //              GESTION DES ERREURS

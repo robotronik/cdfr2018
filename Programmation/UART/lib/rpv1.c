@@ -17,7 +17,8 @@ static uint16_t err;
 
 void RP_Init_Interface(RP_Interface *interface, uint8_t (*send)(uint8_t *, uint16_t, uint32_t)){
   interface->send = send;
-
+  interface->received = false;
+  
   //FSM
   interface->update_state = RP_FSM_INIT;
   interface->p_in = interface->buffer_in;
@@ -82,7 +83,7 @@ uint8_t RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
     return 1;
   }
   
-  return (interface->send(interface->buffer_out, len, timeout)==0);
+  return interface->send(interface->buffer_out, len, timeout);
 }
 
 //========================================
@@ -94,6 +95,13 @@ void RP_Process_Data(RP_Interface *interface, uint8_t *data, uint16_t len){
   while(len--){
     interface->update_state(interface);
   }
+}
+
+uint8_t RP_Wait_Packet(RP_Interface *interface, int timeout_ms){
+  while(!interface->received);
+  interface->received = false;
+
+  return 0;
 }
 
 #define FSM_UPDATE(fsm,state_function) fsm->update_state = state_function
@@ -249,6 +257,7 @@ void RP_FSM_END(RP_Interface *interface){
    * The last byte must be EOF. Otherwise, it is an error.
    */
   if(FSM_BYTE == 0x00){
+    interface->received = true;
     RP_Packet_Received(interface, &interface->r_packet);
     FSM_RESET(interface);
   }else{
