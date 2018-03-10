@@ -1,6 +1,6 @@
 /**
  * Library Robotronik Protocol
- * robotronik_protocol.h
+ * robotronik_protocol.c
  *
  * This library is meant to implement a light and reliable protocol
  * for communication between two MCUs. The protocol was designed for
