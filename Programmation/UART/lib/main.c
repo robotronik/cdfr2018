@@ -1,5 +1,6 @@
 #include "test_interface.h"
 #include "rpv1.h"
+#include "rc_server.h"
 
 void test_crc();
 
@@ -55,7 +56,31 @@ void RP_Error_Handler(RP_Interface *iface, uint16_t error){
   }
 }
 
-int main(){  
+void go(uint8_t id, uint8_t *data, uint8_t len){
+  
+}
+int RC_Pack_Vars(RC_Server *server, int id, uint8_t *out, int out_len,  ...);
+
+int main(){
+  RC_Server server;
+
+  RC_Server_Init(&server);
+  int r = RC_Server_Add_Function(&server, 0, go, "ifFs", "Fs", RC_IMMEDIATE);
+  printf("%d\n", r);
+
+  uint8_t buff[256];
+  r = RC_Pack_Vars(&server, 0, buff, 256, 5, -6.23, 3.14, "pack string motherfucker");//Str 25
+  
+  printf("%d\n", r);
+  printf("%d\n", *((int*) (buff)));
+  printf("%f\n", *((float*) (buff+sizeof(int))));
+  printf("%f\n", *((double*) (buff+sizeof(int)+sizeof(float))));
+  printf("%s\n", ((char*) (buff+sizeof(int)+sizeof(float)+sizeof(double))));
+  printf("%d %d %d\n", sizeof(int), sizeof(float), sizeof(double));
+  
+  
+  return 0;
+  
   uint16_t size = 5;
   RP_Packet packet = {
     .len = size,
