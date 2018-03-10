@@ -358,15 +358,18 @@ int RC_Call(RC_Client *client, int id, ...){
 				 RC_MAX_DATA,
 				 args);
   if(RP_Send(client->interface, packet, RC_TRANSFERT_TIMEOUT)){
+    err = RC_LINK_ERROR;
     return -1;
   }
 
-  if(RP_Wait_Packet(client->interface, 10)){
+  if(RP_Wait_Packet(client->interface, RC_CALL_TIMEOUT)){
+    err = RC_ERR_CALL_TIMEOUT;
     return -1;
   }
 
   RP_Packet *const r_packet = &client->interface->r_packet;
   if(r_packet->len < 1 || r_packet->data[0] != id){
+    err = RC_INVALID_RETURN;
     return -1;
   }
   

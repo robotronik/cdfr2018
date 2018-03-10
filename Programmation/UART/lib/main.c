@@ -1,5 +1,5 @@
 #include "test_interface.h"
-#include "rpv1.h"
+#include "robotronik_protocol.h"
 #include "rc_server.h"
 
 void test_crc();
@@ -19,10 +19,14 @@ void go(int id, uint8_t *data, int len){
   RC_Server_Return(&server, id, c+1, "success");
 }
 
+uint32_t get_tick(){
+  return 0;
+}
+
 int main(){
 
-  RP_Init_Interface(&interface1, send1);
-  RP_Init_Interface(&interface2, send2);
+  RP_Init_Interface(&interface1, send1, get_tick);
+  RP_Init_Interface(&interface2, send2, get_tick);
 
   RC_Server_Init(&server, &interface1);
 

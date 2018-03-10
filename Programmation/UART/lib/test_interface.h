@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "rpv1.h"
+#include "robotronik_protocol.h"
 #include "rc_server.h"
 
 extern RP_Interface interface1;
