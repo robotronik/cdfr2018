@@ -59,7 +59,8 @@ void RP_Error_Handler(RP_Interface *iface, uint16_t error){
 void go(uint8_t id, uint8_t *data, uint8_t len){
   
 }
-int RC_Pack_Vars(RC_Server *server, int id, uint8_t *out, int out_len,  ...);
+int RC_Pack_Vars(const char *fmt, uint8_t *out, int out_len,  ...);
+int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  ...);
 
 int main(){
   RC_Server server;
@@ -68,17 +69,17 @@ int main(){
   int r = RC_Server_Add_Function(&server, 0, go, "ifFs", "Fs", RC_IMMEDIATE);
   printf("%d\n", r);
 
-  uint8_t buff[256];
-  r = RC_Pack_Vars(&server, 0, buff, 256, 5, -6.23, 3.14, "pack string motherfucker");//Str 25
+  uint8_t buff[RC_MAX_DATA];
+  int a;
+  float b;
+  double c;
+  char string[RC_STR_SIZE];
+  r = RC_Pack_Vars("ifFs", buff, 256, 5, -6.23, 3.14, "pack string motherfucker !");//Str 25
+  printf("%d bytes\n", r);
+  RC_Unpack_Vars("ifFs", buff, r, &a, &b, &c, string);
   
-  printf("%d\n", r);
-  printf("%d\n", *((int*) (buff)));
-  printf("%f\n", *((float*) (buff+sizeof(int))));
-  printf("%f\n", *((double*) (buff+sizeof(int)+sizeof(float))));
-  printf("%s\n", ((char*) (buff+sizeof(int)+sizeof(float)+sizeof(double))));
-  printf("%d %d %d\n", sizeof(int), sizeof(float), sizeof(double));
-  
-  
+  printf("%d\n%f\n%lf\n%s", a, b, c, string);
+
   return 0;
   
   uint16_t size = 5;

@@ -9,10 +9,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include "rpv1.h"
 
 #define RC_NB_FUNCTIONS 256
 #define RC_MAX_RANGE RC_NB_FUNCTIONS-1
+#define RC_MAX_DATA RP_MAX_PACKET_SIZE
 #define RC_FMT_SIZE 10
+#define RC_STR_SIZE 64
 
 //GCC macro
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
