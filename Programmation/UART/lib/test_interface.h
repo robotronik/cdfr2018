@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "robotronik_protocol.h"
-#include "rc_server.h"
+#include "remote_call.h"
 
 extern RP_Interface interface1;
 extern RP_Interface interface2;

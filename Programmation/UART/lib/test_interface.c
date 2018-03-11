@@ -42,11 +42,12 @@ void RP_Packet_Received(RP_Interface *iface, RP_Packet *packet){
   printf("\n\n");
 
   if(iface == &interface1){
-    RC_Server_Get_Request(&server, packet->data[0], &packet->data[1], packet->len - 1);
+    RC_Server_Get_Request(&server, packet);
   }
 }
 
 void RP_Error_Handler(RP_Interface *iface, uint16_t error){
+  (void)iface;
   switch(RP_ERROR_TYPE(error)){
   case RP_ERR_INTERNAL:
     printf("Internal error: ");

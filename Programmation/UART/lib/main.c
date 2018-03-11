@@ -1,6 +1,6 @@
 #include "test_interface.h"
 #include "robotronik_protocol.h"
-#include "rc_server.h"
+#include "remote_call.h"
 
 void test_crc();
 
@@ -9,32 +9,35 @@ RP_Interface interface2;
 
 int RC_Pack_Vars_Test(const char *fmt, uint8_t *out, int out_len,  ...);
 
-RC_Server server;
-void go(int id, uint8_t *data, int len){
+
+void go(RC_Server *server){
   int a; float b; double c; char string[RC_STR_SIZE];
-  RC_Server_Get_Args(&server, id, data, len, &a, &b, &c, string);
+  RC_Server_Get_Args(server, &a, &b, &c, string);
   
   printf("%d\n%f\n%lf\n%s", a, b, c, string);
 
-  RC_Server_Return(&server, id, c+1, "success");
+  RC_Server_Return(server, c+1, "success");
 }
 
 uint32_t get_tick(){
   return 0;
 }
 
+#define GO 0
+RC_Server server;
 int main(){
 
   RP_Init_Interface(&interface1, send1, get_tick);
   RP_Init_Interface(&interface2, send2, get_tick);
+
 
   RC_Server_Init(&server, &interface1);
 
   RC_Client client;
   RC_Client_Init(&client, &interface2);
   
-  RC_Client_Add_Function(&client, 0, go, "ifFs", "Fs");
-  RC_Server_Add_Function(&server, 0, go, "ifFs", "Fs", RC_IMMEDIATE);
+  RC_Client_Add_Function(&client, GO, "ifFs", "Fs");
+  RC_Server_Add_Function(&server, GO, go, "ifFs", "Fs", RC_IMMEDIATE);
 
   double r;
   char str[RC_STR_SIZE];

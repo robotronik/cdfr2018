@@ -1,6 +1,6 @@
 /**
- * Library Remote Call Server @Robotronik
- * rc_server.h
+ * Library Remote Call Client/Server @Robotronik
+ * remote_call.h
  * This library is meant to run a remote call server between µC. 
  *
  * Copyright 2018 Antonin Hirschy
@@ -26,9 +26,9 @@
 #include <stdarg.h>
 #include "robotronik_protocol.h"
 
-#define RC_NB_FUNCTIONS 256
+#define RC_NB_FUNCTIONS 32
 #define RC_MAX_DATA RP_MAX_PACKET_SIZE-1//-1 because one byte is used for id
-#define RC_FMT_SIZE 10
+#define RC_FMT_SIZE 8
 #define RC_STR_SIZE 64
 #define RC_TRANSFERT_TIMEOUT 1
 #define RC_CALL_TIMEOUT 10
@@ -46,6 +46,9 @@
 #error "RC_NB_FUNCTIONS must be between 0 and 256"
 #endif
 
+//==================================================
+//          Global definitions
+//==================================================
 
 typedef enum RC_Type_E{
   RC_UINT8_T = 'b', //uint8_t
@@ -56,19 +59,30 @@ typedef enum RC_Type_E{
   RC_DOUBLE = 'F', //double
   RC_STRING = 's' //string
 }RC_Type;
+/*
+ * These are the supported types.
+ */
+
+//==================================================
+//            Server definitions
+//==================================================
 
 typedef enum RC_Call_Type_E{
   RC_IMMEDIATE, RC_DELAYED
 }RC_Call_Type;
+/*
+ * This enumeration is used by a server.  It tells wether a function
+ * should be called directly when the request is processed (eg. within
+ * an interrupt execution) (RC_IMMEDIATE) or later by polling the
+ * server (RC_DELAYED) to know if a request is ready to be
+ * executed. See RC_Server_Get_Request() & RC_Server_Poll().
+ */
 
-typedef struct RC_Function_S{
+struct RC_Server_S;
+
+typedef struct RC_Server_Function_S{
   //Address of the function
-  void (*call)(int id, uint8_t *data, int len);
-  /*
-   * Each function need its id and the data that corresponds to its
-   * 'virtual' arguments that are defined according to params_fmt and
-   * return_fmt (see below).
-   */
+  void (*call)(struct RC_Server_S *server);
   
   //"Virtual" prototype
   char params_fmt[RC_FMT_SIZE];
@@ -91,31 +105,23 @@ typedef struct RC_Function_S{
    * This RC lib then has its own format conventions. The format is a
    * suite of authorized characters whose list and meaning are defined
    * in RC_Type enum. Any other character will trigger an error.
+   *
+   * For example, a valid value for params_fmt and return_fmt could
+   * be respectively "ifFs" and "Fs".  This means "The virtual
+   * prototype of the function is (int, float, double, const char*)
+   * and it returns (double, const char*)".  Please note that the
+   * combination of types is limited by RC_MAX_DATA, RC_STR_SIZE, and
+   * RC_FMT_SIZE. See RC_(Server|Client)_Add_Function for more
+   * informations.
    */
   
   RC_Call_Type call_type;
-}RC_Function;
-
-//==================================================
-//              ERRORS
-//==================================================
-typedef enum RC_Error_E{
-  RC_BAD_ID,
-  RC_WRONG_FORMAT,
-  RC_UNDEFINED_FUNCTION,
-  RC_LINK_ERROR,
-  RC_ERR_CALL_TIMEOUT,
-  RC_INVALID_RETURN,
-}RC_Error;
-
-int RC_Get_Error();
-
-//==================================================//
-//                  RC SERVER                       //
-//==================================================//
+  /*
+   * See RC_Call_Type enum.
+   */
+}RC_Server_Function;
 
 typedef struct RC_Request_S{
-  RC_Function *function;
   int id;
   uint8_t *data;
   int len;
@@ -123,10 +129,56 @@ typedef struct RC_Request_S{
 
 typedef struct RC_Server_S{
   RP_Interface *interface;
-  RC_Function functions[RC_NB_FUNCTIONS];
+  RC_Server_Function functions[RC_NB_FUNCTIONS];
   RC_Request request;
   uint8_t pending;
 }RC_Server;
+
+//==================================================
+//            Client definitions
+//==================================================
+
+typedef struct RC_Client_Function_S{
+  bool used;
+  char params_fmt[RC_FMT_SIZE];
+  char return_fmt[RC_FMT_SIZE];
+}RC_Client_Function;
+
+typedef struct RC_Client_S{
+  RP_Interface *interface;
+  RC_Client_Function functions[RC_NB_FUNCTIONS];
+}RC_Client;
+
+//==================================================
+//              Errors
+//==================================================
+
+/*
+ * When a function fails, it returns -1 and set the appropriate error
+ * code that can be checked with RC_Get_Error() function.
+ */
+typedef enum RC_Error_E{
+  RC_BAD_ID, //The given ID of the function is'nt a valid one.
+  RC_WRONG_FORMAT, //The given format isn't valid (see
+		   //RC_(Server|Client)_Add_Function for
+		   //explanations).
+  RC_UNDEFINED_FUNCTION, //The wanted function isn't defined.
+  RC_LINK_ERROR, //There was an error of communication at link layer
+		 //level.
+  RC_ERR_CALL_TIMEOUT, //The allowed time between call and return has
+		       //been exceeded.
+  RC_INVALID_RETURN, //The return of the function was incorrect.
+}RC_Error;
+
+int RC_Get_Error();
+/**
+ * Returns the error code of the last error. The error code and their
+ * meaning are defined in RC_Error enum.
+ */
+
+//==================================================//
+//            RC Server functions                   //
+//==================================================//
 
 //Init functions
 void RC_Server_Init(RC_Server *server, RP_Interface *interface);
@@ -136,7 +188,7 @@ void RC_Server_Init(RC_Server *server, RP_Interface *interface);
 
 int RC_Server_Add_Function(RC_Server *server,
 			   int id,
-			   void (*function)(int, uint8_t*, int),
+			   void (*function)(RC_Server *server),
 			   const char params_fmt[],
 			   const char return_fmt[],
 			   RC_Call_Type call_type);
@@ -147,25 +199,24 @@ int RC_Server_Add_Function(RC_Server *server,
  */
 
 //Request management
-int RC_Server_Get_Request(RC_Server *server, int id, uint8_t *data, int len);
+int RC_Server_Get_Request(RC_Server *server, RP_Packet *packet);
 int RC_Server_Poll(RC_Server *server);
+/**
+ * Poll the server to check if there is a pending request. If true,
+ * the request is executed and the return number is 1. If there is no
+ * request, the function returns 0.
+ */
 
-int RC_Server_Get_Args(RC_Server *server, int id, uint8_t *data, int len, ...);
-int RC_Server_Return(RC_Server *server, int id, ...);
+int RC_Server_Get_Args(RC_Server *server, ...);
+int RC_Server_Return(RC_Server *server, ...);
 
 //==================================================//
-//                  RC CLIENT                       //
+//            RC Client functions                   //
 //==================================================//
-
-typedef struct RC_Client_S{
-  RP_Interface *interface;
-  RC_Function functions[RC_NB_FUNCTIONS];
-}RC_Client;
 
 void RC_Client_Init(RC_Client *client, RP_Interface *interface);
-int RC_Client_Add_Function(RC_Client *server,
+int RC_Client_Add_Function(RC_Client *client,
 			   int id,
-			   void (*function)(int, uint8_t*, int),
 			   const char params_fmt[],
 			   const char return_fmt[]);
 int RC_Call(RC_Client *client, int id, ...);
