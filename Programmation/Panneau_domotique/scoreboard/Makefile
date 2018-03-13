@@ -3,7 +3,7 @@ PROJECT_DIR=SCREEN
 PROJECT_NAME=SCREEN
 DOC_DIR= /home/$(USER)/STM32Cube/
 BINPATH= /usr/bin
-CUSTOM_C_SOURCES= sprites.c,display.c
+CUSTOM_C_SOURCES= sprites.c,display.c,crc_16.c,robotronik_protocol.c
 
 rouge = \033[0;31m
 vert = \033[0;32m
