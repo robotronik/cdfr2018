@@ -72,6 +72,7 @@ void SystemClock_Config(void);
  * Robotronik Protocol -> usart.h, usart.c
  * Interruptions UART -> stm32f3xx_it.c
  */
+//Prescaler 0, autoreload 5000
 
 volatile uint16_t score = 0;
 volatile int refresh = 0;
@@ -129,32 +130,14 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int index[3] = {0, 0, 0};
-  /*
-   * Indices respectifs des trois chiffres indiquant le score (du poids
-   * fort au poids faible). Ils sont mis à jour de manière asynchrone
-   * lorsqu'un score est reçu sur la liaison UART.
-   */
+
+  //blank_screen();
   
   while (1)
   {
-    __disable_irq();
-    uint16_t tmp = score;
-    index[2] = tmp % 10; tmp /= 10;
-    index[1] = tmp % 10; tmp /= 10;
-    index[0] = tmp % 10;
-    __enable_irq();
-    
     //Affichage
     wait_refresh();
-
-    int frame;
-    for(frame = 0; frame < BRIGHTNESS_LEVELS; frame++){
-      display_char(index[0], frame, 0);
-      display_char(index[1], frame, ROWS_PER_FRAME+1);
-      display_char(index[2], frame, 2*ROWS_PER_FRAME+1);
-    }
-
+    display_score(score);
       
   /* USER CODE END WHILE */
 

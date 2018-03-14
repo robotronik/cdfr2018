@@ -23,4 +23,7 @@ void write_byte(unsigned char byte);
  * Ecrit l'octet 'byte' sur SERIAL_IN.
  */
 
+void blank_screen();
+void display_score(uint16_t score);
+
 #endif
