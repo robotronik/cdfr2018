@@ -44,6 +44,6 @@
  * Syntaxe :
  * sprites[indice_caractère][n° de frame][rangée][octet]
  */
-unsigned char sprites[$CHARACTERS_NUMBER][$BRIGHTNESS_LEVELS-1][$ROWS_PER_FRAME][$BYTES_PER_ROW] = {$DATA};
+extern unsigned char sprites[$CHARACTERS_NUMBER][$BRIGHTNESS_LEVELS-1][$ROWS_PER_FRAME][$BYTES_PER_ROW];
 
 #endif

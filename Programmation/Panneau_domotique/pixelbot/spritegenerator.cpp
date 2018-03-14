@@ -5,18 +5,23 @@ SpriteGenerator::SpriteGenerator(Settings *settings, QObject *parent) : QObject(
     m_settings = settings;
 }
 
-void SpriteGenerator::exportSprites(QString fileName){
+void SpriteGenerator::exportSprites(QString fileName, bool header){
     //Ouverture du modèle
-    QFile headerFile(":/header/sprites.h");
-    if(!headerFile.open(QFile::ReadOnly | QFile::Text)){
+    QFile modelFile(QString(":/header/sprites.")+QString(header?"h":"c"));
+    if(!modelFile.open(QFile::ReadOnly | QFile::Text)){
         return;
     }
-    QTextStream in(&headerFile);
-    QString header = in.readAll();
-    headerFile.close();
+    QTextStream in(&modelFile);
+    QString model = in.readAll();
+    modelFile.close();
+
+    //Ecriture des informations
+    writeInfos(&model);
 
     //Génération du header
-    writeSprites(&header);
+    if(!header){
+        writeSprites(&model);
+    }
 
     //Sauvegarde du header
     QFile saveFile(fileName);
@@ -24,7 +29,7 @@ void SpriteGenerator::exportSprites(QString fileName){
         return;
     }
     QTextStream out(&saveFile);
-    out << header.toUtf8();
+    out << model.toUtf8();
     saveFile.close();
 }
 
@@ -72,15 +77,15 @@ QString SpriteGenerator::getSprite(const QChar character){
     QImage img = drawCharacter(character);
 
     //On effectue les transpositions/rotations
-    if(m_settings->transpose){
-        img = img.mirrored(true, false);
-        QTransform transform;
-        transform.rotate(-90);
-        img = img.transformed(transform);
-    }
     QTransform transform;
     transform.rotate(-m_settings->rotation*90);
     img = img.transformed(transform);
+    if(m_settings->transpose){
+        img = img.mirrored(true, false);
+        transform.reset();
+        transform.rotate(-90);
+        img = img.transformed(transform);
+    }
     //img.save(QString(QString(character)+".png"));
 
     //On convertit les couleurs en nombre de cycles allumés
@@ -113,38 +118,6 @@ QString SpriteGenerator::getSprite(const QChar character){
 }
 
 void SpriteGenerator::writeSprites(QString *str){
-    writeInfos(str);
-    int flipNumber = m_settings->transpose + m_settings->rotation;
-    int rowLength = ((flipNumber%2)==0)?m_settings->characterWidth:m_settings->characterHeight;
-    int rowsPerFrame = ((flipNumber%2)==0)?m_settings->characterHeight:m_settings->characterWidth;
-    int bytesPerRow = (rowLength+7)/8;
-    int numbersIndex = 0;
-    int nextIndex = 0;
-    if(m_settings->numbers){
-        nextIndex += 10;
-    }
-    int lowercaseIndex = m_settings->lowercase?nextIndex:0;
-    if(m_settings->lowercase)
-    {
-        nextIndex += 26;
-    }
-    int uppercaseIndex = m_settings->uppercase?nextIndex:0;
-    if(m_settings->uppercase){
-        nextIndex += 26;
-    }
-    int charactersNumber = nextIndex;
-
-    str->replace(tr("$ROW_LENGTH"), QString::number(rowLength));
-    str->replace(tr("$ROWS_PER_FRAME"), QString::number(rowsPerFrame));
-    str->replace(tr("$BYTES_PER_ROW"), QString::number(bytesPerRow));
-    str->replace(tr("$NUMBERS"), QString::number(m_settings->numbers?1:0));
-    str->replace(tr("$LOWERCASE"), QString::number(m_settings->lowercase?1:0));
-    str->replace(tr("$UPPERCASE"), QString::number(m_settings->uppercase?1:0));
-    str->replace(tr("$INDEX_NUMBERS"), QString::number(numbersIndex));
-    str->replace(tr("$INDEX_LOWERCASE"), QString::number(lowercaseIndex));
-    str->replace(tr("$INDEX_UPPERCASE"), QString::number(uppercaseIndex));
-    str->replace(tr("$CHARACTERS_NUMBER"), QString::number(charactersNumber));
-
     QString sprites("");
     for(int i=0; i < m_set.length(); i++){
         sprites.append("\n//Sprite "+QString(m_set[i])+"\n{"+getSprite(m_set[i])+"}");
@@ -207,6 +180,38 @@ void SpriteGenerator::writeInfos(QString *str){
     }
     str->replace(tr("$CHARACTERS_SET"), characters);
     str->replace(tr("$DATE"), QDateTime::currentDateTime().toString());
+
+
+    int flipNumber = m_settings->transpose + m_settings->rotation;
+    int rowLength = ((flipNumber%2)==0)?m_settings->characterWidth:m_settings->characterHeight;
+    int rowsPerFrame = ((flipNumber%2)==0)?m_settings->characterHeight:m_settings->characterWidth;
+    int bytesPerRow = (rowLength+7)/8;
+    int numbersIndex = 0;
+    int nextIndex = 0;
+    if(m_settings->numbers){
+        nextIndex += 10;
+    }
+    int lowercaseIndex = m_settings->lowercase?nextIndex:0;
+    if(m_settings->lowercase)
+    {
+        nextIndex += 26;
+    }
+    int uppercaseIndex = m_settings->uppercase?nextIndex:0;
+    if(m_settings->uppercase){
+        nextIndex += 26;
+    }
+    int charactersNumber = nextIndex;
+
+    str->replace(tr("$ROW_LENGTH"), QString::number(rowLength));
+    str->replace(tr("$ROWS_PER_FRAME"), QString::number(rowsPerFrame));
+    str->replace(tr("$BYTES_PER_ROW"), QString::number(bytesPerRow));
+    str->replace(tr("$NUMBERS"), QString::number(m_settings->numbers?1:0));
+    str->replace(tr("$LOWERCASE"), QString::number(m_settings->lowercase?1:0));
+    str->replace(tr("$UPPERCASE"), QString::number(m_settings->uppercase?1:0));
+    str->replace(tr("$INDEX_NUMBERS"), QString::number(numbersIndex));
+    str->replace(tr("$INDEX_LOWERCASE"), QString::number(lowercaseIndex));
+    str->replace(tr("$INDEX_UPPERCASE"), QString::number(uppercaseIndex));
+    str->replace(tr("$CHARACTERS_NUMBER"), QString::number(charactersNumber));
 }
 
 void SpriteGenerator::updateSettings(){

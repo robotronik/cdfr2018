@@ -44,15 +44,18 @@ PixelBot::~PixelBot()
 void PixelBot::generateSprites(){
     disconnect(m_settingsWidget, SIGNAL(newSettings()), m_spriteGenerator, SLOT(updateSettings()));
     //On récupère le nom du fichier de sauvegarde
-    QString fileName = QFileDialog::getSaveFileName(Q_NULLPTR, tr("Exporter les sprites"), QString(), tr("C/C++ Header (*.h *.hpp)"));
-    if(fileName.isEmpty()){
+    QString fileNameHeader = QFileDialog::getSaveFileName(Q_NULLPTR, tr("Exporter les sprites (header)"), QString("sprites.h"), tr("C/C++ Header (*.h *.hpp)"));
+    QString fileNameSource = QFileDialog::getSaveFileName(Q_NULLPTR, tr("Exporter les sprites (source)"), QString("sprites.c"), tr("C/C++ Source (*.c *.cpp)"));
+    if(fileNameHeader.isEmpty() || fileNameSource.isEmpty()){
         return;
     }
 
     //On exporte les sprites
-    m_spriteGenerator->exportSprites(fileName);
+    m_spriteGenerator->exportSprites(fileNameHeader, true);
+    m_spriteGenerator->exportSprites(fileNameSource, false);
 
     //On ouvre le fichier exporté dans l'éditeur par défaut
-    QDesktopServices::openUrl(QUrl::fromLocalFile(fileName));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(fileNameHeader));
+    QDesktopServices::openUrl(QUrl::fromLocalFile(fileNameSource));
     connect(m_settingsWidget, SIGNAL(newSettings()), m_spriteGenerator, SLOT(updateSettings()));
 }

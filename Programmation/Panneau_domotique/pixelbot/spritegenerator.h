@@ -27,7 +27,7 @@ public:
     explicit SpriteGenerator(Settings *settings, QObject *parent = nullptr);
     QImage drawCharacter(const QChar character);
     QString getCharacterSet();
-    void exportSprites(QString fileName);
+    void exportSprites(QString fileName, bool header);
     void writeSprites(QString *str);
     void writeInfos(QString *str);
     QString getSprite(const QChar character);
