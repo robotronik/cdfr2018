@@ -72,7 +72,6 @@ void SystemClock_Config(void);
  * Robotronik Protocol -> usart.h, usart.c
  * Interruptions UART -> stm32f3xx_it.c
  */
-//Prescaler 0, autoreload 5000
 
 volatile uint16_t score = 0;
 volatile int refresh = 0;
@@ -131,12 +130,11 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  //blank_screen();
+  blank_screen();
   
   while (1)
   {
     //Affichage
-    wait_refresh();
     display_score(score);
       
   /* USER CODE END WHILE */

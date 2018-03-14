@@ -1,0 +1,1589 @@
+ARM GAS  /tmp/ccVH51ND.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"robotronik_protocol.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.RP_FSM_INIT,"ax",%progbits
+  18              		.align	1
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv4-sp-d16
+  24              	RP_FSM_INIT:
+  25              	.LFB8:
+  26              		.file 1 "Src/robotronik_protocol.c"
+   1:Src/robotronik_protocol.c **** /**
+   2:Src/robotronik_protocol.c ****  * Library Robotronik Protocol
+   3:Src/robotronik_protocol.c ****  * robotronik_protocol.c
+   4:Src/robotronik_protocol.c ****  *
+   5:Src/robotronik_protocol.c ****  * This library is meant to implement a light and reliable protocol
+   6:Src/robotronik_protocol.c ****  * for communication between two MCUs. The protocol was designed for
+   7:Src/robotronik_protocol.c ****  * request-response oriented communications. It is why it focuses on
+   8:Src/robotronik_protocol.c ****  * performance for asynchronous reception.
+   9:Src/robotronik_protocol.c ****  * 
+  10:Src/robotronik_protocol.c ****  * It uses the Consistent Overhead Byte Stuffing algorithm to delimit
+  11:Src/robotronik_protocol.c ****  * the frames and for synchronization purposes. CRC-16/BUYPASS is
+  12:Src/robotronik_protocol.c ****  * used to detect corrupted frames.
+  13:Src/robotronik_protocol.c ****  *
+  14:Src/robotronik_protocol.c ****  * Copyright 2018 Antonin Hirschy
+  15:Src/robotronik_protocol.c ****  *
+  16:Src/robotronik_protocol.c ****  * This program is free software: you can redistribute it and/or modify
+  17:Src/robotronik_protocol.c ****  * it under the terms of the GNU General Public License as published by
+  18:Src/robotronik_protocol.c ****  * the Free Software Foundation, either version 3 of the License, or
+  19:Src/robotronik_protocol.c ****  * (at your option) any later version.
+  20:Src/robotronik_protocol.c ****  * 
+  21:Src/robotronik_protocol.c ****  * This program is distributed in the hope that it will be useful,
+  22:Src/robotronik_protocol.c ****  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  23:Src/robotronik_protocol.c ****  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  24:Src/robotronik_protocol.c ****  * GNU General Public License for more details.
+  25:Src/robotronik_protocol.c ****  *
+  26:Src/robotronik_protocol.c ****  * You should have received a copy of the GNU General Public License
+  27:Src/robotronik_protocol.c ****  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  28:Src/robotronik_protocol.c ****  */
+  29:Src/robotronik_protocol.c **** #include "robotronik_protocol.h"
+  30:Src/robotronik_protocol.c **** 
+  31:Src/robotronik_protocol.c **** #define RP_EOF 0x00
+  32:Src/robotronik_protocol.c **** #define WRITE_BUFF(p_buffer,byte) *(p_buffer++) = byte;
+ARM GAS  /tmp/ccVH51ND.s 			page 2
+
+
+  33:Src/robotronik_protocol.c **** #define ENCODE_BYTE(byte,p_buffer,p_code) {\
+  34:Src/robotronik_protocol.c ****     if(byte == RP_EOF){			   \
+  35:Src/robotronik_protocol.c ****       byte = p_buffer - p_code;		   \
+  36:Src/robotronik_protocol.c ****       *p_code = byte;			   \
+  37:Src/robotronik_protocol.c ****       p_code = p_buffer++;		   \
+  38:Src/robotronik_protocol.c ****     }					   \
+  39:Src/robotronik_protocol.c ****     else{				   \
+  40:Src/robotronik_protocol.c ****       *(p_buffer++) = byte;		   \
+  41:Src/robotronik_protocol.c ****     }					   \
+  42:Src/robotronik_protocol.c ****   }
+  43:Src/robotronik_protocol.c **** 
+  44:Src/robotronik_protocol.c **** static uint16_t err;
+  45:Src/robotronik_protocol.c **** 
+  46:Src/robotronik_protocol.c **** static void RP_FSM_INIT(RP_Interface *interface);
+  47:Src/robotronik_protocol.c **** static void RP_FSM_SIZE(RP_Interface *interface);
+  48:Src/robotronik_protocol.c **** static void RP_FSM_DATA(RP_Interface *interface);
+  49:Src/robotronik_protocol.c **** static void RP_FSM_CRC_LOW(RP_Interface *interface);
+  50:Src/robotronik_protocol.c **** static void RP_FSM_CRC_HIGH(RP_Interface *interface);
+  51:Src/robotronik_protocol.c **** static void RP_FSM_END(RP_Interface *interface);
+  52:Src/robotronik_protocol.c **** 
+  53:Src/robotronik_protocol.c **** //==================================================
+  54:Src/robotronik_protocol.c **** //           Initialization functions
+  55:Src/robotronik_protocol.c **** //==================================================
+  56:Src/robotronik_protocol.c **** 
+  57:Src/robotronik_protocol.c **** void RP_Init_Interface(RP_Interface *interface,
+  58:Src/robotronik_protocol.c **** 		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t),
+  59:Src/robotronik_protocol.c **** 		       uint32_t (*get_tick)()){
+  60:Src/robotronik_protocol.c ****   interface->send = send;
+  61:Src/robotronik_protocol.c ****   interface->get_tick = get_tick;
+  62:Src/robotronik_protocol.c ****   interface->received = false;
+  63:Src/robotronik_protocol.c ****   
+  64:Src/robotronik_protocol.c ****   //FSM
+  65:Src/robotronik_protocol.c ****   interface->update_state = RP_FSM_INIT;
+  66:Src/robotronik_protocol.c ****   interface->p_in = interface->buffer_in;
+  67:Src/robotronik_protocol.c ****   interface->p_out = interface->r_packet.data;
+  68:Src/robotronik_protocol.c ****   interface->crc_accum = 0;
+  69:Src/robotronik_protocol.c **** }
+  70:Src/robotronik_protocol.c **** 
+  71:Src/robotronik_protocol.c **** void __attribute__((weak)) RP_Packet_Received(RP_Interface* interface, RP_Packet* packet){
+  72:Src/robotronik_protocol.c ****   //Avoid compiler warnings.
+  73:Src/robotronik_protocol.c ****   (void)interface;
+  74:Src/robotronik_protocol.c ****   (void)packet;
+  75:Src/robotronik_protocol.c **** }
+  76:Src/robotronik_protocol.c **** 
+  77:Src/robotronik_protocol.c **** void __attribute__((weak)) RP_Error_Handler(RP_Interface* interface, uint16_t err){
+  78:Src/robotronik_protocol.c ****   //Avoid compiler warnings.
+  79:Src/robotronik_protocol.c ****   (void)interface;
+  80:Src/robotronik_protocol.c ****   (void)err;
+  81:Src/robotronik_protocol.c ****  }
+  82:Src/robotronik_protocol.c **** 
+  83:Src/robotronik_protocol.c **** //==================================================
+  84:Src/robotronik_protocol.c **** //           Sending functions
+  85:Src/robotronik_protocol.c **** //==================================================
+  86:Src/robotronik_protocol.c **** 
+  87:Src/robotronik_protocol.c **** int RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]){
+  88:Src/robotronik_protocol.c ****   if((packet->len <= 0) || (packet->len + 5 > RP_BUFFER_SIZE) || (packet->len > RP_MAX_PACKET_SIZE)
+  89:Src/robotronik_protocol.c ****     err =  RP_ERR_INTERNAL | RP_ERR_ILLEGAL_ARGUMENTS;
+ARM GAS  /tmp/ccVH51ND.s 			page 3
+
+
+  90:Src/robotronik_protocol.c ****     return -1;
+  91:Src/robotronik_protocol.c ****   }
+  92:Src/robotronik_protocol.c **** 
+  93:Src/robotronik_protocol.c ****   uint8_t *p_buffer = buffer;
+  94:Src/robotronik_protocol.c ****   uint8_t *p_code = p_buffer++;
+  95:Src/robotronik_protocol.c ****   uint16_t crc_accum = CRC_INIT;
+  96:Src/robotronik_protocol.c **** 
+  97:Src/robotronik_protocol.c ****   //Size (remaining bytes)
+  98:Src/robotronik_protocol.c ****   const uint8_t size = 3 + packet->len;
+  99:Src/robotronik_protocol.c ****   *(p_buffer++) = size;
+ 100:Src/robotronik_protocol.c ****   UPDATE_CRC(crc_accum, size);
+ 101:Src/robotronik_protocol.c ****   
+ 102:Src/robotronik_protocol.c ****   int i;
+ 103:Src/robotronik_protocol.c ****   for(i = 0; i < packet->len; i++){
+ 104:Src/robotronik_protocol.c ****     uint8_t byte = packet->data[i];
+ 105:Src/robotronik_protocol.c ****     UPDATE_CRC(crc_accum,byte);
+ 106:Src/robotronik_protocol.c ****     ENCODE_BYTE(byte,p_buffer, p_code);
+ 107:Src/robotronik_protocol.c ****   }
+ 108:Src/robotronik_protocol.c ****   
+ 109:Src/robotronik_protocol.c ****   //CRC-16
+ 110:Src/robotronik_protocol.c ****   uint8_t crc_low = crc_accum & 0xFF;
+ 111:Src/robotronik_protocol.c ****   uint8_t crc_high = crc_accum >> 8;
+ 112:Src/robotronik_protocol.c ****   ENCODE_BYTE(crc_low, p_buffer, p_code);
+ 113:Src/robotronik_protocol.c ****   ENCODE_BYTE(crc_high, p_buffer, p_code);
+ 114:Src/robotronik_protocol.c ****   
+ 115:Src/robotronik_protocol.c ****   //RP_EOF
+ 116:Src/robotronik_protocol.c ****   *p_code = p_buffer - p_code;
+ 117:Src/robotronik_protocol.c ****   *(p_buffer++) = RP_EOF;
+ 118:Src/robotronik_protocol.c **** 
+ 119:Src/robotronik_protocol.c ****   return p_buffer - buffer;
+ 120:Src/robotronik_protocol.c **** }
+ 121:Src/robotronik_protocol.c **** 
+ 122:Src/robotronik_protocol.c **** int RP_Sync(RP_Interface *interface, uint32_t timeout){
+ 123:Src/robotronik_protocol.c ****   uint8_t byte = RP_EOF;
+ 124:Src/robotronik_protocol.c **** 
+ 125:Src/robotronik_protocol.c ****   if(interface->send(&byte, 1, timeout) != 0){
+ 126:Src/robotronik_protocol.c ****     err = RP_ERR_LINK | RP_ERR_TIMEOUT;
+ 127:Src/robotronik_protocol.c ****     return -1;
+ 128:Src/robotronik_protocol.c ****   }
+ 129:Src/robotronik_protocol.c ****   
+ 130:Src/robotronik_protocol.c ****   return 0;
+ 131:Src/robotronik_protocol.c **** }
+ 132:Src/robotronik_protocol.c **** 
+ 133:Src/robotronik_protocol.c **** int RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
+ 134:Src/robotronik_protocol.c ****   int len = RP_Build_Frame(packet, interface->buffer_out);
+ 135:Src/robotronik_protocol.c **** 
+ 136:Src/robotronik_protocol.c ****   if(len == -1){
+ 137:Src/robotronik_protocol.c ****     return -1;
+ 138:Src/robotronik_protocol.c ****   }
+ 139:Src/robotronik_protocol.c **** 
+ 140:Src/robotronik_protocol.c ****   if(interface->send(interface->buffer_out, len, timeout) != 0){
+ 141:Src/robotronik_protocol.c ****     err = RP_ERR_LINK | RP_ERR_TIMEOUT;
+ 142:Src/robotronik_protocol.c ****     return -1;
+ 143:Src/robotronik_protocol.c ****   }
+ 144:Src/robotronik_protocol.c ****   
+ 145:Src/robotronik_protocol.c ****   return 0;
+ 146:Src/robotronik_protocol.c **** }
+ARM GAS  /tmp/ccVH51ND.s 			page 4
+
+
+ 147:Src/robotronik_protocol.c **** 
+ 148:Src/robotronik_protocol.c **** //==================================================
+ 149:Src/robotronik_protocol.c **** //           Receiving functions
+ 150:Src/robotronik_protocol.c **** //==================================================
+ 151:Src/robotronik_protocol.c **** 
+ 152:Src/robotronik_protocol.c **** void RP_Process_Data(RP_Interface *interface, uint8_t *data, uint16_t len){
+ 153:Src/robotronik_protocol.c ****   interface->p_in = data;
+ 154:Src/robotronik_protocol.c **** 
+ 155:Src/robotronik_protocol.c ****   while(len--){
+ 156:Src/robotronik_protocol.c ****     interface->update_state(interface);
+ 157:Src/robotronik_protocol.c ****   }
+ 158:Src/robotronik_protocol.c **** }
+ 159:Src/robotronik_protocol.c **** 
+ 160:Src/robotronik_protocol.c **** int RP_Wait_Packet(RP_Interface *interface, uint32_t timeout_ms){
+ 161:Src/robotronik_protocol.c ****   int start = interface->get_tick();
+ 162:Src/robotronik_protocol.c ****   
+ 163:Src/robotronik_protocol.c ****   //interface->received = false;
+ 164:Src/robotronik_protocol.c ****   while(!interface->received && (interface->get_tick() - start < timeout_ms));
+ 165:Src/robotronik_protocol.c ****   
+ 166:Src/robotronik_protocol.c ****   if(!interface->received){
+ 167:Src/robotronik_protocol.c ****     return -1;
+ 168:Src/robotronik_protocol.c ****   }
+ 169:Src/robotronik_protocol.c ****   
+ 170:Src/robotronik_protocol.c ****   interface->received = false;
+ 171:Src/robotronik_protocol.c ****   
+ 172:Src/robotronik_protocol.c ****   return 0;
+ 173:Src/robotronik_protocol.c **** }
+ 174:Src/robotronik_protocol.c **** 
+ 175:Src/robotronik_protocol.c **** #define FSM_UPDATE(fsm,state_function) fsm->update_state = state_function
+ 176:Src/robotronik_protocol.c **** 
+ 177:Src/robotronik_protocol.c **** #define FSM_GET_BYTE(fsm) uint8_t byte = *(fsm->p_in++);
+ 178:Src/robotronik_protocol.c **** 
+ 179:Src/robotronik_protocol.c **** #define FSM_BYTE byte
+ 180:Src/robotronik_protocol.c **** 
+ 181:Src/robotronik_protocol.c **** #define FSM_RESET(fsm) {						\
+ 182:Src/robotronik_protocol.c ****     FSM_UPDATE(fsm, RP_FSM_INIT);					\
+ 183:Src/robotronik_protocol.c ****     fsm->crc_accum = 0;							\
+ 184:Src/robotronik_protocol.c ****     fsm->p_out = fsm->r_packet.data;					\
+ 185:Src/robotronik_protocol.c ****     return;								\
+ 186:Src/robotronik_protocol.c ****   }
+ 187:Src/robotronik_protocol.c **** 
+ 188:Src/robotronik_protocol.c **** #define FSM_ERR(fsm, err_code) {		\
+ 189:Src/robotronik_protocol.c ****   err = err_code;				\
+ 190:Src/robotronik_protocol.c ****   RP_Error_Handler(fsm, err);			\
+ 191:Src/robotronik_protocol.c ****   FSM_RESET(fsm);				\
+ 192:Src/robotronik_protocol.c ****   }
+ 193:Src/robotronik_protocol.c **** 
+ 194:Src/robotronik_protocol.c **** #define FSM_CHECK_ERR(fsm, err_code) {		\
+ 195:Src/robotronik_protocol.c ****     if(FSM_BYTE == RP_EOF){			\
+ 196:Src/robotronik_protocol.c ****       FSM_ERR(fsm, err_code);			\
+ 197:Src/robotronik_protocol.c ****     }						\
+ 198:Src/robotronik_protocol.c ****   }
+ 199:Src/robotronik_protocol.c **** 
+ 200:Src/robotronik_protocol.c **** #define FSM_CHECK_EOF(fsm) {			\
+ 201:Src/robotronik_protocol.c ****     if(FSM_BYTE == RP_EOF) {FSM_RESET(fsm);}	\
+ 202:Src/robotronik_protocol.c ****   }
+ 203:Src/robotronik_protocol.c **** /**
+ARM GAS  /tmp/ccVH51ND.s 			page 5
+
+
+ 204:Src/robotronik_protocol.c ****  * Reinit the FSM when EOF is reached.
+ 205:Src/robotronik_protocol.c ****  * Set the 'valid' flag of FSM
+ 206:Src/robotronik_protocol.c ****  * and the error code.
+ 207:Src/robotronik_protocol.c ****  */
+ 208:Src/robotronik_protocol.c **** 
+ 209:Src/robotronik_protocol.c **** #define FSM_DECODE_BYTE(fsm, byte)			\
+ 210:Src/robotronik_protocol.c ****   (((--fsm->bs_count) == 0)?				\
+ 211:Src/robotronik_protocol.c ****    (fsm->bs_count = byte, (uint8_t) RP_EOF):		\
+ 212:Src/robotronik_protocol.c ****    (byte))
+ 213:Src/robotronik_protocol.c **** /**
+ 214:Src/robotronik_protocol.c ****  * Update the COBS counter and decode the current byte. This macro can
+ 215:Src/robotronik_protocol.c ****  * be used once and only once in an fsm state. If the macro is not
+ 216:Src/robotronik_protocol.c ****  * used and the FSM is not reset, bs_count MUST be updated manually.
+ 217:Src/robotronik_protocol.c ****  */
+ 218:Src/robotronik_protocol.c **** 
+ 219:Src/robotronik_protocol.c **** static void RP_FSM_INIT(RP_Interface *interface){
+  27              		.loc 1 219 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+ 220:Src/robotronik_protocol.c ****   FSM_GET_BYTE(interface);
+  33              		.loc 1 220 0
+  34 0000 D0F80834 		ldr	r3, [r0, #1032]
+  35 0004 5A1C     		adds	r2, r3, #1
+  36 0006 C0F80824 		str	r2, [r0, #1032]
+  37 000a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  38              	.LVL1:
+ 221:Src/robotronik_protocol.c ****   /* 
+ 222:Src/robotronik_protocol.c ****    * If current byte is EOF, the fsm is reset but no error is set :
+ 223:Src/robotronik_protocol.c ****    * it's just a blank frame that can be used for synchronisation
+ 224:Src/robotronik_protocol.c ****    * purpose.
+ 225:Src/robotronik_protocol.c ****    */
+ 226:Src/robotronik_protocol.c ****   FSM_CHECK_EOF(interface);
+  39              		.loc 1 226 0
+  40 000c 2BB1     		cbz	r3, .L4
+ 227:Src/robotronik_protocol.c **** 
+ 228:Src/robotronik_protocol.c ****   /*
+ 229:Src/robotronik_protocol.c ****    * The first byte initializes the COBS algorithm.
+ 230:Src/robotronik_protocol.c ****    */
+ 231:Src/robotronik_protocol.c ****   interface->bs_count = FSM_BYTE;
+  41              		.loc 1 231 0
+  42 000e 80F80434 		strb	r3, [r0, #1028]
+ 232:Src/robotronik_protocol.c **** 
+ 233:Src/robotronik_protocol.c ****   FSM_UPDATE(interface, RP_FSM_SIZE);
+  43              		.loc 1 233 0
+  44 0012 074B     		ldr	r3, .L5
+  45              	.LVL2:
+  46 0014 C0F80034 		str	r3, [r0, #1024]
+ 234:Src/robotronik_protocol.c **** }
+  47              		.loc 1 234 0
+  48 0018 7047     		bx	lr
+  49              	.LVL3:
+  50              	.L4:
+ 226:Src/robotronik_protocol.c **** 
+  51              		.loc 1 226 0 discriminator 1
+ARM GAS  /tmp/ccVH51ND.s 			page 6
+
+
+  52 001a 064B     		ldr	r3, .L5+4
+  53              	.LVL4:
+  54 001c C0F80034 		str	r3, [r0, #1024]
+  55              	.LVL5:
+  56 0020 0023     		movs	r3, #0
+  57 0022 A0F81034 		strh	r3, [r0, #1040]	@ movhi
+  58 0026 00F20913 		addw	r3, r0, #265
+  59 002a C0F80C34 		str	r3, [r0, #1036]
+  60 002e 7047     		bx	lr
+  61              	.L6:
+  62              		.align	2
+  63              	.L5:
+  64 0030 00000000 		.word	RP_FSM_SIZE
+  65 0034 00000000 		.word	RP_FSM_INIT
+  66              		.cfi_endproc
+  67              	.LFE8:
+  69              		.section	.text.RP_Init_Interface,"ax",%progbits
+  70              		.align	1
+  71              		.global	RP_Init_Interface
+  72              		.syntax unified
+  73              		.thumb
+  74              		.thumb_func
+  75              		.fpu fpv4-sp-d16
+  77              	RP_Init_Interface:
+  78              	.LFB0:
+  59:Src/robotronik_protocol.c ****   interface->send = send;
+  79              		.loc 1 59 0
+  80              		.cfi_startproc
+  81              		@ args = 0, pretend = 0, frame = 0
+  82              		@ frame_needed = 0, uses_anonymous_args = 0
+  83              		@ link register save eliminated.
+  84              	.LVL6:
+  60:Src/robotronik_protocol.c ****   interface->get_tick = get_tick;
+  85              		.loc 1 60 0
+  86 0000 0160     		str	r1, [r0]
+  61:Src/robotronik_protocol.c ****   interface->received = false;
+  87              		.loc 1 61 0
+  88 0002 4260     		str	r2, [r0, #4]
+  62:Src/robotronik_protocol.c ****   
+  89              		.loc 1 62 0
+  90 0004 0023     		movs	r3, #0
+  91 0006 80F81234 		strb	r3, [r0, #1042]
+  65:Src/robotronik_protocol.c ****   interface->p_in = interface->buffer_in;
+  92              		.loc 1 65 0
+  93 000a 074A     		ldr	r2, .L8
+  94              	.LVL7:
+  95 000c C0F80024 		str	r2, [r0, #1024]
+  66:Src/robotronik_protocol.c ****   interface->p_out = interface->r_packet.data;
+  96              		.loc 1 66 0
+  97 0010 00F10802 		add	r2, r0, #8
+  98 0014 C0F80824 		str	r2, [r0, #1032]
+  67:Src/robotronik_protocol.c ****   interface->crc_accum = 0;
+  99              		.loc 1 67 0
+ 100 0018 00F20912 		addw	r2, r0, #265
+ 101 001c C0F80C24 		str	r2, [r0, #1036]
+  68:Src/robotronik_protocol.c **** }
+ 102              		.loc 1 68 0
+ARM GAS  /tmp/ccVH51ND.s 			page 7
+
+
+ 103 0020 A0F81034 		strh	r3, [r0, #1040]	@ movhi
+  69:Src/robotronik_protocol.c **** 
+ 104              		.loc 1 69 0
+ 105 0024 7047     		bx	lr
+ 106              	.L9:
+ 107 0026 00BF     		.align	2
+ 108              	.L8:
+ 109 0028 00000000 		.word	RP_FSM_INIT
+ 110              		.cfi_endproc
+ 111              	.LFE0:
+ 113              		.section	.text.RP_Packet_Received,"ax",%progbits
+ 114              		.align	1
+ 115              		.weak	RP_Packet_Received
+ 116              		.syntax unified
+ 117              		.thumb
+ 118              		.thumb_func
+ 119              		.fpu fpv4-sp-d16
+ 121              	RP_Packet_Received:
+ 122              	.LFB1:
+  71:Src/robotronik_protocol.c ****   //Avoid compiler warnings.
+ 123              		.loc 1 71 0
+ 124              		.cfi_startproc
+ 125              		@ args = 0, pretend = 0, frame = 0
+ 126              		@ frame_needed = 0, uses_anonymous_args = 0
+ 127              		@ link register save eliminated.
+ 128              	.LVL8:
+  75:Src/robotronik_protocol.c **** 
+ 129              		.loc 1 75 0
+ 130 0000 7047     		bx	lr
+ 131              		.cfi_endproc
+ 132              	.LFE1:
+ 134              		.section	.text.RP_Error_Handler,"ax",%progbits
+ 135              		.align	1
+ 136              		.weak	RP_Error_Handler
+ 137              		.syntax unified
+ 138              		.thumb
+ 139              		.thumb_func
+ 140              		.fpu fpv4-sp-d16
+ 142              	RP_Error_Handler:
+ 143              	.LFB2:
+  77:Src/robotronik_protocol.c ****   //Avoid compiler warnings.
+ 144              		.loc 1 77 0
+ 145              		.cfi_startproc
+ 146              		@ args = 0, pretend = 0, frame = 0
+ 147              		@ frame_needed = 0, uses_anonymous_args = 0
+ 148              		@ link register save eliminated.
+ 149              	.LVL9:
+  81:Src/robotronik_protocol.c **** 
+ 150              		.loc 1 81 0
+ 151 0000 7047     		bx	lr
+ 152              		.cfi_endproc
+ 153              	.LFE2:
+ 155              		.section	.text.RP_FSM_SIZE,"ax",%progbits
+ 156              		.align	1
+ 157              		.syntax unified
+ 158              		.thumb
+ 159              		.thumb_func
+ARM GAS  /tmp/ccVH51ND.s 			page 8
+
+
+ 160              		.fpu fpv4-sp-d16
+ 162              	RP_FSM_SIZE:
+ 163              	.LFB9:
+ 235:Src/robotronik_protocol.c **** 
+ 236:Src/robotronik_protocol.c **** static void RP_FSM_SIZE(RP_Interface *interface){
+ 164              		.loc 1 236 0
+ 165              		.cfi_startproc
+ 166              		@ args = 0, pretend = 0, frame = 0
+ 167              		@ frame_needed = 0, uses_anonymous_args = 0
+ 168              	.LVL10:
+ 169 0000 10B5     		push	{r4, lr}
+ 170              	.LCFI0:
+ 171              		.cfi_def_cfa_offset 8
+ 172              		.cfi_offset 4, -8
+ 173              		.cfi_offset 14, -4
+ 174 0002 0446     		mov	r4, r0
+ 237:Src/robotronik_protocol.c ****   FSM_GET_BYTE(interface);
+ 175              		.loc 1 237 0
+ 176 0004 D0F80834 		ldr	r3, [r0, #1032]
+ 177 0008 5A1C     		adds	r2, r3, #1
+ 178 000a C0F80824 		str	r2, [r0, #1032]
+ 179 000e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 180              	.LVL11:
+ 238:Src/robotronik_protocol.c ****   /*
+ 239:Src/robotronik_protocol.c ****    * From this byte, reaching an EOF flag before the END state is
+ 240:Src/robotronik_protocol.c ****    * unexpected and will trigger an error.
+ 241:Src/robotronik_protocol.c ****    */
+ 242:Src/robotronik_protocol.c ****   FSM_CHECK_ERR(interface, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+ 181              		.loc 1 242 0
+ 182 0010 EBB1     		cbz	r3, .L17
+ 243:Src/robotronik_protocol.c **** 
+ 244:Src/robotronik_protocol.c ****   /*
+ 245:Src/robotronik_protocol.c ****    * FSM_DECODE_BYTE is not used here because the protocol requires
+ 246:Src/robotronik_protocol.c ****    * that the size is > 0. So bs_count is decremented manually.
+ 247:Src/robotronik_protocol.c ****    */
+ 248:Src/robotronik_protocol.c ****   --(interface->bs_count);
+ 183              		.loc 1 248 0
+ 184 0012 90F80424 		ldrb	r2, [r0, #1028]	@ zero_extendqisi2
+ 185 0016 013A     		subs	r2, r2, #1
+ 186 0018 80F80424 		strb	r2, [r0, #1028]
+ 249:Src/robotronik_protocol.c **** 
+ 250:Src/robotronik_protocol.c ****   /*
+ 251:Src/robotronik_protocol.c ****    * For the states RP_FSM_SIZE and RP_FSM_DATA, the CRC must be
+ 252:Src/robotronik_protocol.c ****    * updated for each byte.
+ 253:Src/robotronik_protocol.c ****    */
+ 254:Src/robotronik_protocol.c ****   UPDATE_CRC(interface->crc_accum, FSM_BYTE);
+ 187              		.loc 1 254 0
+ 188 001c B0F81014 		ldrh	r1, [r0, #1040]
+ 189 0020 83EA1120 		eor	r0, r3, r1, lsr #8
+ 190              	.LVL12:
+ 191 0024 1B4A     		ldr	r2, .L19
+ 192 0026 32F91020 		ldrsh	r2, [r2, r0, lsl #1]
+ 193 002a 82EA0122 		eor	r2, r2, r1, lsl #8
+ 194 002e A4F81024 		strh	r2, [r4, #1040]	@ movhi
+ 255:Src/robotronik_protocol.c ****   /*
+ 256:Src/robotronik_protocol.c ****    * Get the packet length. It will be used to find the CRC position.
+ 257:Src/robotronik_protocol.c ****    */
+ARM GAS  /tmp/ccVH51ND.s 			page 9
+
+
+ 258:Src/robotronik_protocol.c ****   interface->size = interface->remaining = FSM_BYTE - 3;
+ 195              		.loc 1 258 0
+ 196 0032 033B     		subs	r3, r3, #3
+ 197              	.LVL13:
+ 198 0034 DBB2     		uxtb	r3, r3
+ 199              	.LVL14:
+ 200 0036 84F80634 		strb	r3, [r4, #1030]
+ 201 003a 84F80534 		strb	r3, [r4, #1029]
+ 259:Src/robotronik_protocol.c ****   interface->r_packet.len = interface->size;
+ 202              		.loc 1 259 0
+ 203 003e 84F80831 		strb	r3, [r4, #264]
+ 260:Src/robotronik_protocol.c ****   
+ 261:Src/robotronik_protocol.c ****   /*
+ 262:Src/robotronik_protocol.c ****    * Checks wether or not the read size is consistent.
+ 263:Src/robotronik_protocol.c ****    */
+ 264:Src/robotronik_protocol.c ****   if(interface->size > RP_MAX_PACKET_SIZE){
+ 204              		.loc 1 264 0
+ 205 0042 FB2B     		cmp	r3, #251
+ 206 0044 14D8     		bhi	.L18
+ 265:Src/robotronik_protocol.c ****     FSM_ERR(interface, RP_ERR_LINK | RP_ERR_SIZE);
+ 266:Src/robotronik_protocol.c ****   }
+ 267:Src/robotronik_protocol.c ****   
+ 268:Src/robotronik_protocol.c ****   FSM_UPDATE(interface, RP_FSM_DATA);
+ 207              		.loc 1 268 0
+ 208 0046 144B     		ldr	r3, .L19+4
+ 209 0048 C4F80034 		str	r3, [r4, #1024]
+ 210              	.L12:
+ 269:Src/robotronik_protocol.c **** }
+ 211              		.loc 1 269 0
+ 212 004c 10BD     		pop	{r4, pc}
+ 213              	.LVL15:
+ 214              	.L17:
+ 242:Src/robotronik_protocol.c **** 
+ 215              		.loc 1 242 0 discriminator 1
+ 216 004e 40F20121 		movw	r1, #513
+ 217 0052 124B     		ldr	r3, .L19+8
+ 218              	.LVL16:
+ 219 0054 1980     		strh	r1, [r3]	@ movhi
+ 220 0056 FFF7FEFF 		bl	RP_Error_Handler
+ 221              	.LVL17:
+ 222 005a 114B     		ldr	r3, .L19+12
+ 223 005c C4F80034 		str	r3, [r4, #1024]
+ 224 0060 0023     		movs	r3, #0
+ 225 0062 A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 226 0066 04F20913 		addw	r3, r4, #265
+ 227 006a C4F80C34 		str	r3, [r4, #1036]
+ 228 006e EDE7     		b	.L12
+ 229              	.L18:
+ 265:Src/robotronik_protocol.c ****     FSM_ERR(interface, RP_ERR_LINK | RP_ERR_SIZE);
+ 230              		.loc 1 265 0
+ 231 0070 40F20221 		movw	r1, #514
+ 232 0074 094B     		ldr	r3, .L19+8
+ 233 0076 1980     		strh	r1, [r3]	@ movhi
+ 234 0078 2046     		mov	r0, r4
+ 235 007a FFF7FEFF 		bl	RP_Error_Handler
+ 236              	.LVL18:
+ 237 007e 084B     		ldr	r3, .L19+12
+ARM GAS  /tmp/ccVH51ND.s 			page 10
+
+
+ 238 0080 C4F80034 		str	r3, [r4, #1024]
+ 239 0084 0023     		movs	r3, #0
+ 240 0086 A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 241 008a 04F20913 		addw	r3, r4, #265
+ 242 008e C4F80C34 		str	r3, [r4, #1036]
+ 243 0092 DBE7     		b	.L12
+ 244              	.L20:
+ 245              		.align	2
+ 246              	.L19:
+ 247 0094 00000000 		.word	crc_table
+ 248 0098 00000000 		.word	RP_FSM_DATA
+ 249 009c 00000000 		.word	.LANCHOR0
+ 250 00a0 00000000 		.word	RP_FSM_INIT
+ 251              		.cfi_endproc
+ 252              	.LFE9:
+ 254              		.section	.text.RP_FSM_DATA,"ax",%progbits
+ 255              		.align	1
+ 256              		.syntax unified
+ 257              		.thumb
+ 258              		.thumb_func
+ 259              		.fpu fpv4-sp-d16
+ 261              	RP_FSM_DATA:
+ 262              	.LFB10:
+ 270:Src/robotronik_protocol.c **** 
+ 271:Src/robotronik_protocol.c **** static void RP_FSM_DATA(RP_Interface *interface){
+ 263              		.loc 1 271 0
+ 264              		.cfi_startproc
+ 265              		@ args = 0, pretend = 0, frame = 0
+ 266              		@ frame_needed = 0, uses_anonymous_args = 0
+ 267              	.LVL19:
+ 272:Src/robotronik_protocol.c ****   FSM_GET_BYTE(interface);
+ 268              		.loc 1 272 0
+ 269 0000 D0F80834 		ldr	r3, [r0, #1032]
+ 270 0004 5A1C     		adds	r2, r3, #1
+ 271 0006 C0F80824 		str	r2, [r0, #1032]
+ 272 000a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 273              	.LVL20:
+ 273:Src/robotronik_protocol.c ****   FSM_CHECK_ERR(interface, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+ 274              		.loc 1 273 0
+ 275 000c 2BB3     		cbz	r3, .L29
+ 274:Src/robotronik_protocol.c **** 
+ 275:Src/robotronik_protocol.c ****   /*
+ 276:Src/robotronik_protocol.c ****    * Note that the CRC is computed AFTER the byte is decoded. Indeed,
+ 277:Src/robotronik_protocol.c ****    * the CRC concerns the useful data.
+ 278:Src/robotronik_protocol.c ****    */
+ 279:Src/robotronik_protocol.c ****   FSM_BYTE = FSM_DECODE_BYTE(interface, FSM_BYTE);
+ 276              		.loc 1 279 0
+ 277 000e 90F80424 		ldrb	r2, [r0, #1028]	@ zero_extendqisi2
+ 278 0012 013A     		subs	r2, r2, #1
+ 279 0014 D2B2     		uxtb	r2, r2
+ 280 0016 80F80424 		strb	r2, [r0, #1028]
+ 281 001a 12B9     		cbnz	r2, .L24
+ 282              		.loc 1 279 0 is_stmt 0 discriminator 1
+ 283 001c 80F80434 		strb	r3, [r0, #1028]
+ 284 0020 1346     		mov	r3, r2
+ 285              	.LVL21:
+ 286              	.L24:
+ARM GAS  /tmp/ccVH51ND.s 			page 11
+
+
+ 280:Src/robotronik_protocol.c ****   *(interface->p_out++) = FSM_BYTE;
+ 287              		.loc 1 280 0 is_stmt 1 discriminator 4
+ 288 0022 D0F80C24 		ldr	r2, [r0, #1036]
+ 289 0026 511C     		adds	r1, r2, #1
+ 290 0028 C0F80C14 		str	r1, [r0, #1036]
+ 291 002c 1370     		strb	r3, [r2]
+ 281:Src/robotronik_protocol.c ****   UPDATE_CRC(interface->crc_accum, FSM_BYTE);
+ 292              		.loc 1 281 0 discriminator 4
+ 293 002e B0F81024 		ldrh	r2, [r0, #1040]
+ 294 0032 83EA1223 		eor	r3, r3, r2, lsr #8
+ 295              	.LVL22:
+ 296 0036 1349     		ldr	r1, .L30
+ 297              	.LVL23:
+ 298 0038 31F91330 		ldrsh	r3, [r1, r3, lsl #1]
+ 299 003c 83EA0223 		eor	r3, r3, r2, lsl #8
+ 300 0040 A0F81034 		strh	r3, [r0, #1040]	@ movhi
+ 282:Src/robotronik_protocol.c **** 
+ 283:Src/robotronik_protocol.c ****   if(!(--interface->remaining)){
+ 301              		.loc 1 283 0 discriminator 4
+ 302 0044 90F80634 		ldrb	r3, [r0, #1030]	@ zero_extendqisi2
+ 303 0048 013B     		subs	r3, r3, #1
+ 304 004a DBB2     		uxtb	r3, r3
+ 305 004c 80F80634 		strb	r3, [r0, #1030]
+ 306 0050 B3B9     		cbnz	r3, .L26
+ 284:Src/robotronik_protocol.c ****     /*
+ 285:Src/robotronik_protocol.c ****      * According to the size read, the next bytes should contains CRC
+ 286:Src/robotronik_protocol.c ****      * information.
+ 287:Src/robotronik_protocol.c ****      */
+ 288:Src/robotronik_protocol.c ****     FSM_UPDATE(interface, RP_FSM_CRC_LOW);
+ 307              		.loc 1 288 0
+ 308 0052 0D4B     		ldr	r3, .L30+4
+ 309 0054 C0F80034 		str	r3, [r0, #1024]
+ 310 0058 7047     		bx	lr
+ 311              	.LVL24:
+ 312              	.L29:
+ 271:Src/robotronik_protocol.c ****   FSM_GET_BYTE(interface);
+ 313              		.loc 1 271 0 discriminator 1
+ 314 005a 10B5     		push	{r4, lr}
+ 315              	.LCFI1:
+ 316              		.cfi_def_cfa_offset 8
+ 317              		.cfi_offset 4, -8
+ 318              		.cfi_offset 14, -4
+ 319 005c 0446     		mov	r4, r0
+ 273:Src/robotronik_protocol.c **** 
+ 320              		.loc 1 273 0 discriminator 1
+ 321 005e 40F20121 		movw	r1, #513
+ 322 0062 0A4B     		ldr	r3, .L30+8
+ 323              	.LVL25:
+ 324 0064 1980     		strh	r1, [r3]	@ movhi
+ 325 0066 FFF7FEFF 		bl	RP_Error_Handler
+ 326              	.LVL26:
+ 327 006a 094B     		ldr	r3, .L30+12
+ 328 006c C4F80034 		str	r3, [r4, #1024]
+ 329 0070 0023     		movs	r3, #0
+ 330 0072 A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 331 0076 04F20913 		addw	r3, r4, #265
+ 332 007a C4F80C34 		str	r3, [r4, #1036]
+ARM GAS  /tmp/ccVH51ND.s 			page 12
+
+
+ 289:Src/robotronik_protocol.c ****   }
+ 290:Src/robotronik_protocol.c **** }
+ 333              		.loc 1 290 0 discriminator 1
+ 334 007e 10BD     		pop	{r4, pc}
+ 335              	.LVL27:
+ 336              	.L26:
+ 337              	.LCFI2:
+ 338              		.cfi_def_cfa_offset 0
+ 339              		.cfi_restore 4
+ 340              		.cfi_restore 14
+ 341 0080 7047     		bx	lr
+ 342              	.L31:
+ 343 0082 00BF     		.align	2
+ 344              	.L30:
+ 345 0084 00000000 		.word	crc_table
+ 346 0088 00000000 		.word	RP_FSM_CRC_LOW
+ 347 008c 00000000 		.word	.LANCHOR0
+ 348 0090 00000000 		.word	RP_FSM_INIT
+ 349              		.cfi_endproc
+ 350              	.LFE10:
+ 352              		.section	.text.RP_FSM_CRC_LOW,"ax",%progbits
+ 353              		.align	1
+ 354              		.syntax unified
+ 355              		.thumb
+ 356              		.thumb_func
+ 357              		.fpu fpv4-sp-d16
+ 359              	RP_FSM_CRC_LOW:
+ 360              	.LFB11:
+ 291:Src/robotronik_protocol.c **** 
+ 292:Src/robotronik_protocol.c **** static void RP_FSM_CRC_LOW(RP_Interface *interface){
+ 361              		.loc 1 292 0
+ 362              		.cfi_startproc
+ 363              		@ args = 0, pretend = 0, frame = 0
+ 364              		@ frame_needed = 0, uses_anonymous_args = 0
+ 365              	.LVL28:
+ 366 0000 10B5     		push	{r4, lr}
+ 367              	.LCFI3:
+ 368              		.cfi_def_cfa_offset 8
+ 369              		.cfi_offset 4, -8
+ 370              		.cfi_offset 14, -4
+ 371 0002 0446     		mov	r4, r0
+ 293:Src/robotronik_protocol.c ****   FSM_GET_BYTE(interface);
+ 372              		.loc 1 293 0
+ 373 0004 D0F80834 		ldr	r3, [r0, #1032]
+ 374 0008 5A1C     		adds	r2, r3, #1
+ 375 000a C0F80824 		str	r2, [r0, #1032]
+ 376 000e 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 377              	.LVL29:
+ 294:Src/robotronik_protocol.c ****   FSM_CHECK_ERR(interface, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+ 378              		.loc 1 294 0
+ 379 0010 8AB1     		cbz	r2, .L39
+ 295:Src/robotronik_protocol.c **** 
+ 296:Src/robotronik_protocol.c ****   /*
+ 297:Src/robotronik_protocol.c ****    * Checks the low byte of CRC, and triggers an error if it doesn't match.
+ 298:Src/robotronik_protocol.c ****    */
+ 299:Src/robotronik_protocol.c ****   if((interface->crc_accum & 0xFF) != FSM_DECODE_BYTE(interface, FSM_BYTE)){
+ 380              		.loc 1 299 0
+ARM GAS  /tmp/ccVH51ND.s 			page 13
+
+
+ 381 0012 90F81014 		ldrb	r1, [r0, #1040]	@ zero_extendqisi2
+ 382 0016 90F80434 		ldrb	r3, [r0, #1028]	@ zero_extendqisi2
+ 383 001a 013B     		subs	r3, r3, #1
+ 384 001c DBB2     		uxtb	r3, r3
+ 385 001e 80F80434 		strb	r3, [r0, #1028]
+ 386 0022 13B9     		cbnz	r3, .L36
+ 387              		.loc 1 299 0 is_stmt 0 discriminator 1
+ 388 0024 80F80424 		strb	r2, [r0, #1028]
+ 389 0028 0022     		movs	r2, #0
+ 390              	.LVL30:
+ 391              	.L36:
+ 392              		.loc 1 299 0 discriminator 4
+ 393 002a 9142     		cmp	r1, r2
+ 394 002c 14D1     		bne	.L40
+ 300:Src/robotronik_protocol.c ****     FSM_ERR(interface, RP_ERR_LINK | RP_ERR_CRC);
+ 301:Src/robotronik_protocol.c ****   }else{
+ 302:Src/robotronik_protocol.c ****     FSM_UPDATE(interface, RP_FSM_CRC_HIGH);
+ 395              		.loc 1 302 0 is_stmt 1
+ 396 002e 134B     		ldr	r3, .L41
+ 397 0030 C4F80034 		str	r3, [r4, #1024]
+ 398              	.LVL31:
+ 399              	.L32:
+ 303:Src/robotronik_protocol.c ****   }
+ 304:Src/robotronik_protocol.c **** }
+ 400              		.loc 1 304 0
+ 401 0034 10BD     		pop	{r4, pc}
+ 402              	.LVL32:
+ 403              	.L39:
+ 294:Src/robotronik_protocol.c **** 
+ 404              		.loc 1 294 0 discriminator 1
+ 405 0036 40F20121 		movw	r1, #513
+ 406 003a 114B     		ldr	r3, .L41+4
+ 407 003c 1980     		strh	r1, [r3]	@ movhi
+ 408 003e FFF7FEFF 		bl	RP_Error_Handler
+ 409              	.LVL33:
+ 410 0042 104B     		ldr	r3, .L41+8
+ 411 0044 C4F80034 		str	r3, [r4, #1024]
+ 412 0048 0023     		movs	r3, #0
+ 413 004a A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 414 004e 04F20913 		addw	r3, r4, #265
+ 415 0052 C4F80C34 		str	r3, [r4, #1036]
+ 416 0056 EDE7     		b	.L32
+ 417              	.LVL34:
+ 418              	.L40:
+ 300:Src/robotronik_protocol.c ****     FSM_ERR(interface, RP_ERR_LINK | RP_ERR_CRC);
+ 419              		.loc 1 300 0
+ 420 0058 40F20321 		movw	r1, #515
+ 421 005c 084B     		ldr	r3, .L41+4
+ 422 005e 1980     		strh	r1, [r3]	@ movhi
+ 423 0060 2046     		mov	r0, r4
+ 424              	.LVL35:
+ 425 0062 FFF7FEFF 		bl	RP_Error_Handler
+ 426              	.LVL36:
+ 427 0066 074B     		ldr	r3, .L41+8
+ 428 0068 C4F80034 		str	r3, [r4, #1024]
+ 429 006c 0023     		movs	r3, #0
+ 430 006e A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ARM GAS  /tmp/ccVH51ND.s 			page 14
+
+
+ 431 0072 04F20913 		addw	r3, r4, #265
+ 432 0076 C4F80C34 		str	r3, [r4, #1036]
+ 433 007a DBE7     		b	.L32
+ 434              	.L42:
+ 435              		.align	2
+ 436              	.L41:
+ 437 007c 00000000 		.word	RP_FSM_CRC_HIGH
+ 438 0080 00000000 		.word	.LANCHOR0
+ 439 0084 00000000 		.word	RP_FSM_INIT
+ 440              		.cfi_endproc
+ 441              	.LFE11:
+ 443              		.section	.text.RP_FSM_CRC_HIGH,"ax",%progbits
+ 444              		.align	1
+ 445              		.syntax unified
+ 446              		.thumb
+ 447              		.thumb_func
+ 448              		.fpu fpv4-sp-d16
+ 450              	RP_FSM_CRC_HIGH:
+ 451              	.LFB12:
+ 305:Src/robotronik_protocol.c **** 
+ 306:Src/robotronik_protocol.c **** static void RP_FSM_CRC_HIGH(RP_Interface *interface){
+ 452              		.loc 1 306 0
+ 453              		.cfi_startproc
+ 454              		@ args = 0, pretend = 0, frame = 0
+ 455              		@ frame_needed = 0, uses_anonymous_args = 0
+ 456              	.LVL37:
+ 457 0000 10B5     		push	{r4, lr}
+ 458              	.LCFI4:
+ 459              		.cfi_def_cfa_offset 8
+ 460              		.cfi_offset 4, -8
+ 461              		.cfi_offset 14, -4
+ 462 0002 0446     		mov	r4, r0
+ 307:Src/robotronik_protocol.c ****   FSM_GET_BYTE(interface);
+ 463              		.loc 1 307 0
+ 464 0004 D0F80834 		ldr	r3, [r0, #1032]
+ 465 0008 5A1C     		adds	r2, r3, #1
+ 466 000a C0F80824 		str	r2, [r0, #1032]
+ 467 000e 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 468              	.LVL38:
+ 308:Src/robotronik_protocol.c ****   FSM_CHECK_ERR(interface, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+ 469              		.loc 1 308 0
+ 470 0010 92B1     		cbz	r2, .L50
+ 309:Src/robotronik_protocol.c **** 
+ 310:Src/robotronik_protocol.c ****   /*
+ 311:Src/robotronik_protocol.c ****    * Checks the high byte of CRC, and triggers an error if it doesn't match.
+ 312:Src/robotronik_protocol.c ****    */
+ 313:Src/robotronik_protocol.c ****   if((interface->crc_accum >> 8) != FSM_DECODE_BYTE(interface, FSM_BYTE)){
+ 471              		.loc 1 313 0
+ 472 0012 B0F81014 		ldrh	r1, [r0, #1040]
+ 473 0016 090A     		lsrs	r1, r1, #8
+ 474 0018 90F80434 		ldrb	r3, [r0, #1028]	@ zero_extendqisi2
+ 475 001c 013B     		subs	r3, r3, #1
+ 476 001e DBB2     		uxtb	r3, r3
+ 477 0020 80F80434 		strb	r3, [r0, #1028]
+ 478 0024 13B9     		cbnz	r3, .L47
+ 479              		.loc 1 313 0 is_stmt 0 discriminator 1
+ 480 0026 80F80424 		strb	r2, [r0, #1028]
+ARM GAS  /tmp/ccVH51ND.s 			page 15
+
+
+ 481 002a 0022     		movs	r2, #0
+ 482              	.LVL39:
+ 483              	.L47:
+ 484              		.loc 1 313 0 discriminator 4
+ 485 002c 9142     		cmp	r1, r2
+ 486 002e 14D1     		bne	.L51
+ 314:Src/robotronik_protocol.c ****     FSM_ERR(interface, RP_ERR_LINK | RP_ERR_CRC);
+ 315:Src/robotronik_protocol.c ****   }else{
+ 316:Src/robotronik_protocol.c ****     FSM_UPDATE(interface, RP_FSM_END);
+ 487              		.loc 1 316 0 is_stmt 1
+ 488 0030 134B     		ldr	r3, .L52
+ 489 0032 C4F80034 		str	r3, [r4, #1024]
+ 490              	.LVL40:
+ 491              	.L43:
+ 317:Src/robotronik_protocol.c ****   }
+ 318:Src/robotronik_protocol.c **** }
+ 492              		.loc 1 318 0
+ 493 0036 10BD     		pop	{r4, pc}
+ 494              	.LVL41:
+ 495              	.L50:
+ 308:Src/robotronik_protocol.c **** 
+ 496              		.loc 1 308 0 discriminator 1
+ 497 0038 40F20121 		movw	r1, #513
+ 498 003c 114B     		ldr	r3, .L52+4
+ 499 003e 1980     		strh	r1, [r3]	@ movhi
+ 500 0040 FFF7FEFF 		bl	RP_Error_Handler
+ 501              	.LVL42:
+ 502 0044 104B     		ldr	r3, .L52+8
+ 503 0046 C4F80034 		str	r3, [r4, #1024]
+ 504 004a 0023     		movs	r3, #0
+ 505 004c A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 506 0050 04F20913 		addw	r3, r4, #265
+ 507 0054 C4F80C34 		str	r3, [r4, #1036]
+ 508 0058 EDE7     		b	.L43
+ 509              	.LVL43:
+ 510              	.L51:
+ 314:Src/robotronik_protocol.c ****     FSM_ERR(interface, RP_ERR_LINK | RP_ERR_CRC);
+ 511              		.loc 1 314 0
+ 512 005a 40F20321 		movw	r1, #515
+ 513 005e 094B     		ldr	r3, .L52+4
+ 514 0060 1980     		strh	r1, [r3]	@ movhi
+ 515 0062 2046     		mov	r0, r4
+ 516              	.LVL44:
+ 517 0064 FFF7FEFF 		bl	RP_Error_Handler
+ 518              	.LVL45:
+ 519 0068 074B     		ldr	r3, .L52+8
+ 520 006a C4F80034 		str	r3, [r4, #1024]
+ 521 006e 0023     		movs	r3, #0
+ 522 0070 A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 523 0074 04F20913 		addw	r3, r4, #265
+ 524 0078 C4F80C34 		str	r3, [r4, #1036]
+ 525 007c DBE7     		b	.L43
+ 526              	.L53:
+ 527 007e 00BF     		.align	2
+ 528              	.L52:
+ 529 0080 00000000 		.word	RP_FSM_END
+ 530 0084 00000000 		.word	.LANCHOR0
+ARM GAS  /tmp/ccVH51ND.s 			page 16
+
+
+ 531 0088 00000000 		.word	RP_FSM_INIT
+ 532              		.cfi_endproc
+ 533              	.LFE12:
+ 535              		.section	.text.RP_FSM_END,"ax",%progbits
+ 536              		.align	1
+ 537              		.syntax unified
+ 538              		.thumb
+ 539              		.thumb_func
+ 540              		.fpu fpv4-sp-d16
+ 542              	RP_FSM_END:
+ 543              	.LFB13:
+ 319:Src/robotronik_protocol.c **** 
+ 320:Src/robotronik_protocol.c **** static void RP_FSM_END(RP_Interface *interface){
+ 544              		.loc 1 320 0
+ 545              		.cfi_startproc
+ 546              		@ args = 0, pretend = 0, frame = 0
+ 547              		@ frame_needed = 0, uses_anonymous_args = 0
+ 548              	.LVL46:
+ 549 0000 10B5     		push	{r4, lr}
+ 550              	.LCFI5:
+ 551              		.cfi_def_cfa_offset 8
+ 552              		.cfi_offset 4, -8
+ 553              		.cfi_offset 14, -4
+ 554 0002 0446     		mov	r4, r0
+ 321:Src/robotronik_protocol.c ****   FSM_GET_BYTE(interface);
+ 555              		.loc 1 321 0
+ 556 0004 D0F80834 		ldr	r3, [r0, #1032]
+ 557 0008 5A1C     		adds	r2, r3, #1
+ 558 000a C0F80824 		str	r2, [r0, #1032]
+ 559 000e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 560              	.LVL47:
+ 322:Src/robotronik_protocol.c **** 
+ 323:Src/robotronik_protocol.c ****   /*
+ 324:Src/robotronik_protocol.c ****    * The last byte must be EOF. Otherwise, it is an error.
+ 325:Src/robotronik_protocol.c ****    */
+ 326:Src/robotronik_protocol.c ****   if(FSM_BYTE == 0x00){
+ 561              		.loc 1 326 0
+ 562 0010 83B1     		cbz	r3, .L58
+ 327:Src/robotronik_protocol.c ****     interface->received = true;
+ 328:Src/robotronik_protocol.c ****     RP_Packet_Received(interface, &interface->r_packet);
+ 329:Src/robotronik_protocol.c ****     FSM_RESET(interface);
+ 330:Src/robotronik_protocol.c ****   }else{
+ 331:Src/robotronik_protocol.c ****     FSM_ERR(interface, RP_ERR_LINK | RP_ERR_SIZE);
+ 563              		.loc 1 331 0
+ 564 0012 40F20221 		movw	r1, #514
+ 565 0016 104B     		ldr	r3, .L59
+ 566              	.LVL48:
+ 567 0018 1980     		strh	r1, [r3]	@ movhi
+ 568 001a FFF7FEFF 		bl	RP_Error_Handler
+ 569              	.LVL49:
+ 570 001e 0F4B     		ldr	r3, .L59+4
+ 571 0020 C4F80034 		str	r3, [r4, #1024]
+ 572 0024 0023     		movs	r3, #0
+ 573 0026 A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 574 002a 04F20913 		addw	r3, r4, #265
+ 575 002e C4F80C34 		str	r3, [r4, #1036]
+ 576              	.L54:
+ARM GAS  /tmp/ccVH51ND.s 			page 17
+
+
+ 332:Src/robotronik_protocol.c ****   }
+ 333:Src/robotronik_protocol.c **** }
+ 577              		.loc 1 333 0
+ 578 0032 10BD     		pop	{r4, pc}
+ 579              	.LVL50:
+ 580              	.L58:
+ 327:Src/robotronik_protocol.c ****     interface->received = true;
+ 581              		.loc 1 327 0
+ 582 0034 0123     		movs	r3, #1
+ 583              	.LVL51:
+ 584 0036 80F81234 		strb	r3, [r0, #1042]
+ 585              	.LVL52:
+ 328:Src/robotronik_protocol.c ****     FSM_RESET(interface);
+ 586              		.loc 1 328 0
+ 587 003a 00F58471 		add	r1, r0, #264
+ 588 003e FFF7FEFF 		bl	RP_Packet_Received
+ 589              	.LVL53:
+ 329:Src/robotronik_protocol.c ****   }else{
+ 590              		.loc 1 329 0
+ 591 0042 064B     		ldr	r3, .L59+4
+ 592 0044 C4F80034 		str	r3, [r4, #1024]
+ 593 0048 0023     		movs	r3, #0
+ 594 004a A4F81034 		strh	r3, [r4, #1040]	@ movhi
+ 595 004e 04F20913 		addw	r3, r4, #265
+ 596 0052 C4F80C34 		str	r3, [r4, #1036]
+ 597 0056 ECE7     		b	.L54
+ 598              	.L60:
+ 599              		.align	2
+ 600              	.L59:
+ 601 0058 00000000 		.word	.LANCHOR0
+ 602 005c 00000000 		.word	RP_FSM_INIT
+ 603              		.cfi_endproc
+ 604              	.LFE13:
+ 606              		.section	.text.RP_Build_Frame,"ax",%progbits
+ 607              		.align	1
+ 608              		.global	RP_Build_Frame
+ 609              		.syntax unified
+ 610              		.thumb
+ 611              		.thumb_func
+ 612              		.fpu fpv4-sp-d16
+ 614              	RP_Build_Frame:
+ 615              	.LFB3:
+  87:Src/robotronik_protocol.c ****   if((packet->len <= 0) || (packet->len + 5 > RP_BUFFER_SIZE) || (packet->len > RP_MAX_PACKET_SIZE)
+ 616              		.loc 1 87 0
+ 617              		.cfi_startproc
+ 618              		@ args = 0, pretend = 0, frame = 0
+ 619              		@ frame_needed = 0, uses_anonymous_args = 0
+ 620              		@ link register save eliminated.
+ 621              	.LVL54:
+  88:Src/robotronik_protocol.c ****     err =  RP_ERR_INTERNAL | RP_ERR_ILLEGAL_ARGUMENTS;
+ 622              		.loc 1 88 0
+ 623 0000 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 624 0002 83B1     		cbz	r3, .L62
+  88:Src/robotronik_protocol.c ****     err =  RP_ERR_INTERNAL | RP_ERR_ILLEGAL_ARGUMENTS;
+ 625              		.loc 1 88 0 is_stmt 0 discriminator 1
+ 626 0004 5A1D     		adds	r2, r3, #5
+ 627 0006 B2F5807F 		cmp	r2, #256
+ARM GAS  /tmp/ccVH51ND.s 			page 18
+
+
+ 628 000a 0CDC     		bgt	.L62
+  88:Src/robotronik_protocol.c ****     err =  RP_ERR_INTERNAL | RP_ERR_ILLEGAL_ARGUMENTS;
+ 629              		.loc 1 88 0 discriminator 2
+ 630 000c FB2B     		cmp	r3, #251
+ 631 000e 0AD8     		bhi	.L62
+  87:Src/robotronik_protocol.c ****   if((packet->len <= 0) || (packet->len + 5 > RP_BUFFER_SIZE) || (packet->len > RP_MAX_PACKET_SIZE)
+ 632              		.loc 1 87 0 is_stmt 1
+ 633 0010 F0B4     		push	{r4, r5, r6, r7}
+ 634              	.LCFI6:
+ 635              		.cfi_def_cfa_offset 16
+ 636              		.cfi_offset 4, -16
+ 637              		.cfi_offset 5, -12
+ 638              		.cfi_offset 6, -8
+ 639              		.cfi_offset 7, -4
+ 640              	.LVL55:
+  98:Src/robotronik_protocol.c ****   *(p_buffer++) = size;
+ 641              		.loc 1 98 0
+ 642 0012 0333     		adds	r3, r3, #3
+ 643 0014 DBB2     		uxtb	r3, r3
+ 644              	.LVL56:
+  99:Src/robotronik_protocol.c ****   UPDATE_CRC(crc_accum, size);
+ 645              		.loc 1 99 0
+ 646 0016 8A1C     		adds	r2, r1, #2
+ 647              	.LVL57:
+ 648 0018 4B70     		strb	r3, [r1, #1]
+ 100:Src/robotronik_protocol.c ****   
+ 649              		.loc 1 100 0
+ 650 001a 214C     		ldr	r4, .L77
+ 651 001c 34F81330 		ldrh	r3, [r4, r3, lsl #1]
+ 652              	.LVL58:
+  94:Src/robotronik_protocol.c ****   uint16_t crc_accum = CRC_INIT;
+ 653              		.loc 1 94 0
+ 654 0020 8C46     		mov	ip, r1
+ 103:Src/robotronik_protocol.c ****     uint8_t byte = packet->data[i];
+ 655              		.loc 1 103 0
+ 656 0022 0024     		movs	r4, #0
+ 657 0024 09E0     		b	.L65
+ 658              	.LVL59:
+ 659              	.L62:
+ 660              	.LCFI7:
+ 661              		.cfi_def_cfa_offset 0
+ 662              		.cfi_restore 4
+ 663              		.cfi_restore 5
+ 664              		.cfi_restore 6
+ 665              		.cfi_restore 7
+  89:Src/robotronik_protocol.c ****     return -1;
+ 666              		.loc 1 89 0
+ 667 0026 1F4B     		ldr	r3, .L77+4
+ 668 0028 4FF48072 		mov	r2, #256
+ 669 002c 1A80     		strh	r2, [r3]	@ movhi
+  90:Src/robotronik_protocol.c ****   }
+ 670              		.loc 1 90 0
+ 671 002e 4FF0FF30 		mov	r0, #-1
+ 672              	.LVL60:
+ 120:Src/robotronik_protocol.c **** 
+ 673              		.loc 1 120 0
+ 674 0032 7047     		bx	lr
+ARM GAS  /tmp/ccVH51ND.s 			page 19
+
+
+ 675              	.LVL61:
+ 676              	.L66:
+ 677              	.LCFI8:
+ 678              		.cfi_def_cfa_offset 16
+ 679              		.cfi_offset 4, -16
+ 680              		.cfi_offset 5, -12
+ 681              		.cfi_offset 6, -8
+ 682              		.cfi_offset 7, -4
+ 683              	.LBB2:
+ 106:Src/robotronik_protocol.c ****   }
+ 684              		.loc 1 106 0 discriminator 2
+ 685 0034 1570     		strb	r5, [r2]
+ 686 0036 0132     		adds	r2, r2, #1
+ 687              	.LVL62:
+ 688              	.L67:
+ 689              	.LBE2:
+ 103:Src/robotronik_protocol.c ****     uint8_t byte = packet->data[i];
+ 690              		.loc 1 103 0 discriminator 2
+ 691 0038 0134     		adds	r4, r4, #1
+ 692              	.LVL63:
+ 693              	.L65:
+ 103:Src/robotronik_protocol.c ****     uint8_t byte = packet->data[i];
+ 694              		.loc 1 103 0 is_stmt 0 discriminator 1
+ 695 003a 0578     		ldrb	r5, [r0]	@ zero_extendqisi2
+ 696 003c A542     		cmp	r5, r4
+ 697 003e 12DD     		ble	.L76
+ 698              	.LBB3:
+ 104:Src/robotronik_protocol.c ****     UPDATE_CRC(crc_accum,byte);
+ 699              		.loc 1 104 0 is_stmt 1
+ 700 0040 0519     		adds	r5, r0, r4
+ 701 0042 6D78     		ldrb	r5, [r5, #1]	@ zero_extendqisi2
+ 702              	.LVL64:
+ 105:Src/robotronik_protocol.c ****     ENCODE_BYTE(byte,p_buffer, p_code);
+ 703              		.loc 1 105 0
+ 704 0044 85EA1327 		eor	r7, r5, r3, lsr #8
+ 705 0048 154E     		ldr	r6, .L77
+ 706 004a 36F91760 		ldrsh	r6, [r6, r7, lsl #1]
+ 707 004e 86EA0323 		eor	r3, r6, r3, lsl #8
+ 708              	.LVL65:
+ 709 0052 9BB2     		uxth	r3, r3
+ 710              	.LVL66:
+ 106:Src/robotronik_protocol.c ****   }
+ 711              		.loc 1 106 0
+ 712 0054 002D     		cmp	r5, #0
+ 713 0056 EDD1     		bne	.L66
+ 106:Src/robotronik_protocol.c ****   }
+ 714              		.loc 1 106 0 is_stmt 0 discriminator 1
+ 715 0058 A2EB0C05 		sub	r5, r2, ip
+ 716              	.LVL67:
+ 717 005c 8CF80050 		strb	r5, [ip]
+ 718              	.LVL68:
+ 719 0060 9446     		mov	ip, r2
+ 720 0062 0132     		adds	r2, r2, #1
+ 721              	.LVL69:
+ 722 0064 E8E7     		b	.L67
+ 723              	.LVL70:
+ 724              	.L76:
+ARM GAS  /tmp/ccVH51ND.s 			page 20
+
+
+ 725              	.LBE3:
+ 111:Src/robotronik_protocol.c ****   ENCODE_BYTE(crc_low, p_buffer, p_code);
+ 726              		.loc 1 111 0 is_stmt 1
+ 727 0066 1C0A     		lsrs	r4, r3, #8
+ 728              	.LVL71:
+ 112:Src/robotronik_protocol.c ****   ENCODE_BYTE(crc_high, p_buffer, p_code);
+ 729              		.loc 1 112 0
+ 730 0068 13F0FF03 		ands	r3, r3, #255
+ 731              	.LVL72:
+ 732 006c 10D1     		bne	.L69
+ 112:Src/robotronik_protocol.c ****   ENCODE_BYTE(crc_high, p_buffer, p_code);
+ 733              		.loc 1 112 0 is_stmt 0 discriminator 1
+ 734 006e A2EB0C03 		sub	r3, r2, ip
+ 735              	.LVL73:
+ 736 0072 8CF80030 		strb	r3, [ip]
+ 737 0076 501C     		adds	r0, r2, #1
+ 738              	.LVL74:
+ 739              	.L70:
+ 113:Src/robotronik_protocol.c ****   
+ 740              		.loc 1 113 0 is_stmt 1
+ 741 0078 74B9     		cbnz	r4, .L71
+ 113:Src/robotronik_protocol.c ****   
+ 742              		.loc 1 113 0 is_stmt 0 discriminator 1
+ 743 007a 831A     		subs	r3, r0, r2
+ 744              	.LVL75:
+ 745 007c 1370     		strb	r3, [r2]
+ 746 007e 431C     		adds	r3, r0, #1
+ 747              	.LVL76:
+ 748              	.L72:
+ 116:Src/robotronik_protocol.c ****   *(p_buffer++) = RP_EOF;
+ 749              		.loc 1 116 0 is_stmt 1
+ 750 0080 1A1A     		subs	r2, r3, r0
+ 751 0082 0270     		strb	r2, [r0]
+ 117:Src/robotronik_protocol.c **** 
+ 752              		.loc 1 117 0
+ 753 0084 581C     		adds	r0, r3, #1
+ 754              	.LVL77:
+ 755 0086 0022     		movs	r2, #0
+ 756 0088 1A70     		strb	r2, [r3]
+ 119:Src/robotronik_protocol.c **** }
+ 757              		.loc 1 119 0
+ 758 008a 401A     		subs	r0, r0, r1
+ 759              	.LVL78:
+ 120:Src/robotronik_protocol.c **** 
+ 760              		.loc 1 120 0
+ 761 008c F0BC     		pop	{r4, r5, r6, r7}
+ 762              	.LCFI9:
+ 763              		.cfi_remember_state
+ 764              		.cfi_restore 7
+ 765              		.cfi_restore 6
+ 766              		.cfi_restore 5
+ 767              		.cfi_restore 4
+ 768              		.cfi_def_cfa_offset 0
+ 769 008e 7047     		bx	lr
+ 770              	.LVL79:
+ 771              	.L69:
+ 772              	.LCFI10:
+ARM GAS  /tmp/ccVH51ND.s 			page 21
+
+
+ 773              		.cfi_restore_state
+ 112:Src/robotronik_protocol.c ****   ENCODE_BYTE(crc_high, p_buffer, p_code);
+ 774              		.loc 1 112 0 discriminator 2
+ 775 0090 501C     		adds	r0, r2, #1
+ 776              	.LVL80:
+ 777 0092 1370     		strb	r3, [r2]
+ 778 0094 6246     		mov	r2, ip
+ 779 0096 EFE7     		b	.L70
+ 780              	.LVL81:
+ 781              	.L71:
+ 113:Src/robotronik_protocol.c ****   
+ 782              		.loc 1 113 0 discriminator 2
+ 783 0098 431C     		adds	r3, r0, #1
+ 784              	.LVL82:
+ 785 009a 0470     		strb	r4, [r0]
+ 786 009c 1046     		mov	r0, r2
+ 787 009e EFE7     		b	.L72
+ 788              	.L78:
+ 789              		.align	2
+ 790              	.L77:
+ 791 00a0 00000000 		.word	crc_table
+ 792 00a4 00000000 		.word	.LANCHOR0
+ 793              		.cfi_endproc
+ 794              	.LFE3:
+ 796              		.section	.text.RP_Sync,"ax",%progbits
+ 797              		.align	1
+ 798              		.global	RP_Sync
+ 799              		.syntax unified
+ 800              		.thumb
+ 801              		.thumb_func
+ 802              		.fpu fpv4-sp-d16
+ 804              	RP_Sync:
+ 805              	.LFB4:
+ 122:Src/robotronik_protocol.c ****   uint8_t byte = RP_EOF;
+ 806              		.loc 1 122 0
+ 807              		.cfi_startproc
+ 808              		@ args = 0, pretend = 0, frame = 8
+ 809              		@ frame_needed = 0, uses_anonymous_args = 0
+ 810              	.LVL83:
+ 811 0000 10B5     		push	{r4, lr}
+ 812              	.LCFI11:
+ 813              		.cfi_def_cfa_offset 8
+ 814              		.cfi_offset 4, -8
+ 815              		.cfi_offset 14, -4
+ 816 0002 82B0     		sub	sp, sp, #8
+ 817              	.LCFI12:
+ 818              		.cfi_def_cfa_offset 16
+ 123:Src/robotronik_protocol.c **** 
+ 819              		.loc 1 123 0
+ 820 0004 02AB     		add	r3, sp, #8
+ 821 0006 0022     		movs	r2, #0
+ 822 0008 03F8012D 		strb	r2, [r3, #-1]!
+ 125:Src/robotronik_protocol.c ****     err = RP_ERR_LINK | RP_ERR_TIMEOUT;
+ 823              		.loc 1 125 0
+ 824 000c 0468     		ldr	r4, [r0]
+ 825 000e 0A46     		mov	r2, r1
+ 826 0010 0121     		movs	r1, #1
+ARM GAS  /tmp/ccVH51ND.s 			page 22
+
+
+ 827              	.LVL84:
+ 828 0012 1846     		mov	r0, r3
+ 829              	.LVL85:
+ 830 0014 A047     		blx	r4
+ 831              	.LVL86:
+ 832 0016 10B9     		cbnz	r0, .L83
+ 130:Src/robotronik_protocol.c **** }
+ 833              		.loc 1 130 0
+ 834 0018 0020     		movs	r0, #0
+ 835              	.L79:
+ 131:Src/robotronik_protocol.c **** 
+ 836              		.loc 1 131 0
+ 837 001a 02B0     		add	sp, sp, #8
+ 838              	.LCFI13:
+ 839              		.cfi_remember_state
+ 840              		.cfi_def_cfa_offset 8
+ 841              		@ sp needed
+ 842 001c 10BD     		pop	{r4, pc}
+ 843              	.L83:
+ 844              	.LCFI14:
+ 845              		.cfi_restore_state
+ 126:Src/robotronik_protocol.c ****     return -1;
+ 846              		.loc 1 126 0
+ 847 001e 034B     		ldr	r3, .L84
+ 848 0020 4FF40072 		mov	r2, #512
+ 849 0024 1A80     		strh	r2, [r3]	@ movhi
+ 127:Src/robotronik_protocol.c ****   }
+ 850              		.loc 1 127 0
+ 851 0026 4FF0FF30 		mov	r0, #-1
+ 852 002a F6E7     		b	.L79
+ 853              	.L85:
+ 854              		.align	2
+ 855              	.L84:
+ 856 002c 00000000 		.word	.LANCHOR0
+ 857              		.cfi_endproc
+ 858              	.LFE4:
+ 860              		.section	.text.RP_Send,"ax",%progbits
+ 861              		.align	1
+ 862              		.global	RP_Send
+ 863              		.syntax unified
+ 864              		.thumb
+ 865              		.thumb_func
+ 866              		.fpu fpv4-sp-d16
+ 868              	RP_Send:
+ 869              	.LFB5:
+ 133:Src/robotronik_protocol.c ****   int len = RP_Build_Frame(packet, interface->buffer_out);
+ 870              		.loc 1 133 0
+ 871              		.cfi_startproc
+ 872              		@ args = 0, pretend = 0, frame = 0
+ 873              		@ frame_needed = 0, uses_anonymous_args = 0
+ 874              	.LVL87:
+ 875 0000 70B5     		push	{r4, r5, r6, lr}
+ 876              	.LCFI15:
+ 877              		.cfi_def_cfa_offset 16
+ 878              		.cfi_offset 4, -16
+ 879              		.cfi_offset 5, -12
+ 880              		.cfi_offset 6, -8
+ARM GAS  /tmp/ccVH51ND.s 			page 23
+
+
+ 881              		.cfi_offset 14, -4
+ 882 0002 0546     		mov	r5, r0
+ 883 0004 0846     		mov	r0, r1
+ 884              	.LVL88:
+ 885 0006 1646     		mov	r6, r2
+ 134:Src/robotronik_protocol.c **** 
+ 886              		.loc 1 134 0
+ 887 0008 05F54074 		add	r4, r5, #768
+ 888 000c 2146     		mov	r1, r4
+ 889              	.LVL89:
+ 890 000e FFF7FEFF 		bl	RP_Build_Frame
+ 891              	.LVL90:
+ 136:Src/robotronik_protocol.c ****     return -1;
+ 892              		.loc 1 136 0
+ 893 0012 B0F1FF3F 		cmp	r0, #-1
+ 894 0016 06D0     		beq	.L86
+ 140:Src/robotronik_protocol.c ****     err = RP_ERR_LINK | RP_ERR_TIMEOUT;
+ 895              		.loc 1 140 0
+ 896 0018 2B68     		ldr	r3, [r5]
+ 897 001a 3246     		mov	r2, r6
+ 898 001c 81B2     		uxth	r1, r0
+ 899 001e 2046     		mov	r0, r4
+ 900              	.LVL91:
+ 901 0020 9847     		blx	r3
+ 902              	.LVL92:
+ 903 0022 08B9     		cbnz	r0, .L90
+ 145:Src/robotronik_protocol.c **** }
+ 904              		.loc 1 145 0
+ 905 0024 0020     		movs	r0, #0
+ 906              	.L86:
+ 146:Src/robotronik_protocol.c **** 
+ 907              		.loc 1 146 0
+ 908 0026 70BD     		pop	{r4, r5, r6, pc}
+ 909              	.LVL93:
+ 910              	.L90:
+ 141:Src/robotronik_protocol.c ****     return -1;
+ 911              		.loc 1 141 0
+ 912 0028 034B     		ldr	r3, .L91
+ 913 002a 4FF40072 		mov	r2, #512
+ 914 002e 1A80     		strh	r2, [r3]	@ movhi
+ 142:Src/robotronik_protocol.c ****   }
+ 915              		.loc 1 142 0
+ 916 0030 4FF0FF30 		mov	r0, #-1
+ 917 0034 F7E7     		b	.L86
+ 918              	.L92:
+ 919 0036 00BF     		.align	2
+ 920              	.L91:
+ 921 0038 00000000 		.word	.LANCHOR0
+ 922              		.cfi_endproc
+ 923              	.LFE5:
+ 925              		.section	.text.RP_Process_Data,"ax",%progbits
+ 926              		.align	1
+ 927              		.global	RP_Process_Data
+ 928              		.syntax unified
+ 929              		.thumb
+ 930              		.thumb_func
+ 931              		.fpu fpv4-sp-d16
+ARM GAS  /tmp/ccVH51ND.s 			page 24
+
+
+ 933              	RP_Process_Data:
+ 934              	.LFB6:
+ 152:Src/robotronik_protocol.c ****   interface->p_in = data;
+ 935              		.loc 1 152 0
+ 936              		.cfi_startproc
+ 937              		@ args = 0, pretend = 0, frame = 0
+ 938              		@ frame_needed = 0, uses_anonymous_args = 0
+ 939              	.LVL94:
+ 940 0000 38B5     		push	{r3, r4, r5, lr}
+ 941              	.LCFI16:
+ 942              		.cfi_def_cfa_offset 16
+ 943              		.cfi_offset 3, -16
+ 944              		.cfi_offset 4, -12
+ 945              		.cfi_offset 5, -8
+ 946              		.cfi_offset 14, -4
+ 947 0002 0546     		mov	r5, r0
+ 153:Src/robotronik_protocol.c **** 
+ 948              		.loc 1 153 0
+ 949 0004 C0F80814 		str	r1, [r0, #1032]
+ 155:Src/robotronik_protocol.c ****     interface->update_state(interface);
+ 950              		.loc 1 155 0
+ 951 0008 04E0     		b	.L94
+ 952              	.LVL95:
+ 953              	.L95:
+ 156:Src/robotronik_protocol.c ****   }
+ 954              		.loc 1 156 0
+ 955 000a D5F80034 		ldr	r3, [r5, #1024]
+ 956 000e 2846     		mov	r0, r5
+ 957 0010 9847     		blx	r3
+ 958              	.LVL96:
+ 155:Src/robotronik_protocol.c ****     interface->update_state(interface);
+ 959              		.loc 1 155 0
+ 960 0012 2246     		mov	r2, r4
+ 961              	.LVL97:
+ 962              	.L94:
+ 963 0014 531E     		subs	r3, r2, #1
+ 964 0016 9CB2     		uxth	r4, r3
+ 965              	.LVL98:
+ 966 0018 002A     		cmp	r2, #0
+ 967 001a F6D1     		bne	.L95
+ 158:Src/robotronik_protocol.c **** 
+ 968              		.loc 1 158 0
+ 969 001c 38BD     		pop	{r3, r4, r5, pc}
+ 970              		.cfi_endproc
+ 971              	.LFE6:
+ 973              		.section	.text.RP_Wait_Packet,"ax",%progbits
+ 974              		.align	1
+ 975              		.global	RP_Wait_Packet
+ 976              		.syntax unified
+ 977              		.thumb
+ 978              		.thumb_func
+ 979              		.fpu fpv4-sp-d16
+ 981              	RP_Wait_Packet:
+ 982              	.LFB7:
+ 160:Src/robotronik_protocol.c ****   int start = interface->get_tick();
+ 983              		.loc 1 160 0
+ 984              		.cfi_startproc
+ARM GAS  /tmp/ccVH51ND.s 			page 25
+
+
+ 985              		@ args = 0, pretend = 0, frame = 0
+ 986              		@ frame_needed = 0, uses_anonymous_args = 0
+ 987              	.LVL99:
+ 988 0000 70B5     		push	{r4, r5, r6, lr}
+ 989              	.LCFI17:
+ 990              		.cfi_def_cfa_offset 16
+ 991              		.cfi_offset 4, -16
+ 992              		.cfi_offset 5, -12
+ 993              		.cfi_offset 6, -8
+ 994              		.cfi_offset 14, -4
+ 995 0002 0446     		mov	r4, r0
+ 996 0004 0E46     		mov	r6, r1
+ 161:Src/robotronik_protocol.c ****   
+ 997              		.loc 1 161 0
+ 998 0006 4368     		ldr	r3, [r0, #4]
+ 999 0008 9847     		blx	r3
+ 1000              	.LVL100:
+ 1001 000a 0546     		mov	r5, r0
+ 1002              	.LVL101:
+ 1003              	.L99:
+ 164:Src/robotronik_protocol.c ****   
+ 1004              		.loc 1 164 0 discriminator 2
+ 1005 000c 94F81234 		ldrb	r3, [r4, #1042]	@ zero_extendqisi2
+ 1006 0010 23B9     		cbnz	r3, .L98
+ 164:Src/robotronik_protocol.c ****   
+ 1007              		.loc 1 164 0 is_stmt 0 discriminator 1
+ 1008 0012 6368     		ldr	r3, [r4, #4]
+ 1009 0014 9847     		blx	r3
+ 1010              	.LVL102:
+ 1011 0016 401B     		subs	r0, r0, r5
+ 1012 0018 B042     		cmp	r0, r6
+ 1013 001a F7D3     		bcc	.L99
+ 1014              	.L98:
+ 166:Src/robotronik_protocol.c ****     return -1;
+ 1015              		.loc 1 166 0 is_stmt 1
+ 1016 001c 94F81234 		ldrb	r3, [r4, #1042]	@ zero_extendqisi2
+ 1017 0020 1BB1     		cbz	r3, .L101
+ 170:Src/robotronik_protocol.c ****   
+ 1018              		.loc 1 170 0
+ 1019 0022 0020     		movs	r0, #0
+ 1020 0024 84F81204 		strb	r0, [r4, #1042]
+ 1021              	.L97:
+ 173:Src/robotronik_protocol.c **** 
+ 1022              		.loc 1 173 0
+ 1023 0028 70BD     		pop	{r4, r5, r6, pc}
+ 1024              	.LVL103:
+ 1025              	.L101:
+ 167:Src/robotronik_protocol.c ****   }
+ 1026              		.loc 1 167 0
+ 1027 002a 4FF0FF30 		mov	r0, #-1
+ 1028 002e FBE7     		b	.L97
+ 1029              		.cfi_endproc
+ 1030              	.LFE7:
+ 1032              		.section	.text.RP_Get_Error,"ax",%progbits
+ 1033              		.align	1
+ 1034              		.global	RP_Get_Error
+ 1035              		.syntax unified
+ARM GAS  /tmp/ccVH51ND.s 			page 26
+
+
+ 1036              		.thumb
+ 1037              		.thumb_func
+ 1038              		.fpu fpv4-sp-d16
+ 1040              	RP_Get_Error:
+ 1041              	.LFB14:
+ 334:Src/robotronik_protocol.c **** 
+ 335:Src/robotronik_protocol.c **** uint16_t RP_Get_Error(){
+ 1042              		.loc 1 335 0
+ 1043              		.cfi_startproc
+ 1044              		@ args = 0, pretend = 0, frame = 0
+ 1045              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1046              		@ link register save eliminated.
+ 336:Src/robotronik_protocol.c ****   return err;
+ 337:Src/robotronik_protocol.c **** }
+ 1047              		.loc 1 337 0
+ 1048 0000 014B     		ldr	r3, .L104
+ 1049 0002 1888     		ldrh	r0, [r3]
+ 1050 0004 7047     		bx	lr
+ 1051              	.L105:
+ 1052 0006 00BF     		.align	2
+ 1053              	.L104:
+ 1054 0008 00000000 		.word	.LANCHOR0
+ 1055              		.cfi_endproc
+ 1056              	.LFE14:
+ 1058              		.section	.bss.err,"aw",%nobits
+ 1059              		.align	1
+ 1060              		.set	.LANCHOR0,. + 0
+ 1063              	err:
+ 1064 0000 0000     		.space	2
+ 1065              		.text
+ 1066              	.Letext0:
+ 1067              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1068              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1069              		.file 4 "Inc/robotronik_protocol.h"
+ 1070              		.file 5 "Inc/crc_16.h"
+ARM GAS  /tmp/ccVH51ND.s 			page 27
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 robotronik_protocol.c
+     /tmp/ccVH51ND.s:18     .text.RP_FSM_INIT:0000000000000000 $t
+     /tmp/ccVH51ND.s:24     .text.RP_FSM_INIT:0000000000000000 RP_FSM_INIT
+     /tmp/ccVH51ND.s:64     .text.RP_FSM_INIT:0000000000000030 $d
+     /tmp/ccVH51ND.s:162    .text.RP_FSM_SIZE:0000000000000000 RP_FSM_SIZE
+     /tmp/ccVH51ND.s:70     .text.RP_Init_Interface:0000000000000000 $t
+     /tmp/ccVH51ND.s:77     .text.RP_Init_Interface:0000000000000000 RP_Init_Interface
+     /tmp/ccVH51ND.s:109    .text.RP_Init_Interface:0000000000000028 $d
+     /tmp/ccVH51ND.s:114    .text.RP_Packet_Received:0000000000000000 $t
+     /tmp/ccVH51ND.s:121    .text.RP_Packet_Received:0000000000000000 RP_Packet_Received
+     /tmp/ccVH51ND.s:135    .text.RP_Error_Handler:0000000000000000 $t
+     /tmp/ccVH51ND.s:142    .text.RP_Error_Handler:0000000000000000 RP_Error_Handler
+     /tmp/ccVH51ND.s:156    .text.RP_FSM_SIZE:0000000000000000 $t
+     /tmp/ccVH51ND.s:247    .text.RP_FSM_SIZE:0000000000000094 $d
+     /tmp/ccVH51ND.s:261    .text.RP_FSM_DATA:0000000000000000 RP_FSM_DATA
+     /tmp/ccVH51ND.s:255    .text.RP_FSM_DATA:0000000000000000 $t
+     /tmp/ccVH51ND.s:345    .text.RP_FSM_DATA:0000000000000084 $d
+     /tmp/ccVH51ND.s:359    .text.RP_FSM_CRC_LOW:0000000000000000 RP_FSM_CRC_LOW
+     /tmp/ccVH51ND.s:353    .text.RP_FSM_CRC_LOW:0000000000000000 $t
+     /tmp/ccVH51ND.s:437    .text.RP_FSM_CRC_LOW:000000000000007c $d
+     /tmp/ccVH51ND.s:450    .text.RP_FSM_CRC_HIGH:0000000000000000 RP_FSM_CRC_HIGH
+     /tmp/ccVH51ND.s:444    .text.RP_FSM_CRC_HIGH:0000000000000000 $t
+     /tmp/ccVH51ND.s:529    .text.RP_FSM_CRC_HIGH:0000000000000080 $d
+     /tmp/ccVH51ND.s:542    .text.RP_FSM_END:0000000000000000 RP_FSM_END
+     /tmp/ccVH51ND.s:536    .text.RP_FSM_END:0000000000000000 $t
+     /tmp/ccVH51ND.s:601    .text.RP_FSM_END:0000000000000058 $d
+     /tmp/ccVH51ND.s:607    .text.RP_Build_Frame:0000000000000000 $t
+     /tmp/ccVH51ND.s:614    .text.RP_Build_Frame:0000000000000000 RP_Build_Frame
+     /tmp/ccVH51ND.s:791    .text.RP_Build_Frame:00000000000000a0 $d
+     /tmp/ccVH51ND.s:797    .text.RP_Sync:0000000000000000 $t
+     /tmp/ccVH51ND.s:804    .text.RP_Sync:0000000000000000 RP_Sync
+     /tmp/ccVH51ND.s:856    .text.RP_Sync:000000000000002c $d
+     /tmp/ccVH51ND.s:861    .text.RP_Send:0000000000000000 $t
+     /tmp/ccVH51ND.s:868    .text.RP_Send:0000000000000000 RP_Send
+     /tmp/ccVH51ND.s:921    .text.RP_Send:0000000000000038 $d
+     /tmp/ccVH51ND.s:926    .text.RP_Process_Data:0000000000000000 $t
+     /tmp/ccVH51ND.s:933    .text.RP_Process_Data:0000000000000000 RP_Process_Data
+     /tmp/ccVH51ND.s:974    .text.RP_Wait_Packet:0000000000000000 $t
+     /tmp/ccVH51ND.s:981    .text.RP_Wait_Packet:0000000000000000 RP_Wait_Packet
+     /tmp/ccVH51ND.s:1033   .text.RP_Get_Error:0000000000000000 $t
+     /tmp/ccVH51ND.s:1040   .text.RP_Get_Error:0000000000000000 RP_Get_Error
+     /tmp/ccVH51ND.s:1054   .text.RP_Get_Error:0000000000000008 $d
+     /tmp/ccVH51ND.s:1059   .bss.err:0000000000000000 $d
+     /tmp/ccVH51ND.s:1063   .bss.err:0000000000000000 err
+
+UNDEFINED SYMBOLS
+crc_table

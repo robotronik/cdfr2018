@@ -12,18 +12,8 @@ void wait_refresh(void);
  * nécessaire, c'est à dire jusqu'à ce que refresh soit égal à 1.
  */
 
-void display_char(int index, int frame, int position);
-/**
- * Affiche la frame 'frame' du caractère d'indice 'index' à la
- * position 'position'.
- */
-
-void write_byte(unsigned char byte);
-/**
- * Ecrit l'octet 'byte' sur SERIAL_IN.
- */
-
 void blank_screen();
+
 void display_score(uint16_t score);
 
 #endif

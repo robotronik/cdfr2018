@@ -1,0 +1,756 @@
+ARM GAS  /tmp/ccW1zTbC.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"display.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.wait_refresh,"ax",%progbits
+  18              		.align	1
+  19              		.global	wait_refresh
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	wait_refresh:
+  26              	.LFB695:
+  27              		.file 1 "Src/display.c"
+   1:Src/display.c **** #include "display.h"
+   2:Src/display.c **** #include "main.h"
+   3:Src/display.c **** 
+   4:Src/display.c **** #define BIT_K(n,k) ((n >> k) & 1)
+   5:Src/display.c **** 
+   6:Src/display.c **** #define CAPAS_MGMT(gpio_state)						\
+   7:Src/display.c ****   {									\
+   8:Src/display.c ****     HAL_GPIO_WritePin(DATA_GPIO_Port, DATA_Pin, gpio_state);		\
+   9:Src/display.c ****     HAL_GPIO_WritePin(BLANK_GPIO_Port, BLANK_Pin, gpio_state);		\
+  10:Src/display.c ****     HAL_GPIO_WritePin(PURGE_GPIO_Port, PURGE_Pin, gpio_state);		\
+  11:Src/display.c ****   }									
+  12:Src/display.c **** 
+  13:Src/display.c **** #define PURGE_CAPAS CAPAS_MGMT(GPIO_PIN_SET)
+  14:Src/display.c **** #define REACTIVATE CAPAS_MGMT(GPIO_PIN_RESET)
+  15:Src/display.c **** #define SELECT_COL(num)							\
+  16:Src/display.c ****   {									\
+  17:Src/display.c ****     HAL_GPIO_WritePin(LINE_0_GPIO_Port, LINE_0_Pin, BIT_K((num),0));	\
+  18:Src/display.c ****     HAL_GPIO_WritePin(LINE_1_GPIO_Port, LINE_1_Pin, BIT_K((num),1));	\
+  19:Src/display.c ****     HAL_GPIO_WritePin(LINE_2_GPIO_Port, LINE_2_Pin, BIT_K((num),2));	\
+  20:Src/display.c ****     HAL_GPIO_WritePin(LINE_3_GPIO_Port, LINE_3_Pin, BIT_K((num),3));	\
+  21:Src/display.c ****     HAL_GPIO_WritePin(LINE_4_GPIO_Port, LINE_4_Pin, BIT_K((num),4));	\
+  22:Src/display.c ****   }
+  23:Src/display.c **** 
+  24:Src/display.c **** #define WRITE_BIT(bit)							\
+  25:Src/display.c ****   {									\
+  26:Src/display.c ****     HAL_GPIO_WritePin(CLK_COL_GPIO_Port, CLK_COL_Pin, GPIO_PIN_RESET);	\
+  27:Src/display.c ****     HAL_GPIO_WritePin(SERIAL_IN_GPIO_Port, SERIAL_IN_Pin, bit);		\
+  28:Src/display.c ****     HAL_GPIO_WritePin(CLK_COL_GPIO_Port, CLK_COL_Pin, GPIO_PIN_SET);	\
+  29:Src/display.c ****   }
+  30:Src/display.c **** 
+  31:Src/display.c **** void wait_refresh(void){
+ARM GAS  /tmp/ccW1zTbC.s 			page 2
+
+
+  28              		.loc 1 31 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33              	.L2:
+  32:Src/display.c ****   while(!refresh);
+  34              		.loc 1 32 0 discriminator 1
+  35 0000 034B     		ldr	r3, .L3
+  36 0002 1B68     		ldr	r3, [r3]
+  37 0004 002B     		cmp	r3, #0
+  38 0006 FBD0     		beq	.L2
+  33:Src/display.c ****   refresh = 0;
+  39              		.loc 1 33 0
+  40 0008 014B     		ldr	r3, .L3
+  41 000a 0022     		movs	r2, #0
+  42 000c 1A60     		str	r2, [r3]
+  34:Src/display.c **** }
+  43              		.loc 1 34 0
+  44 000e 7047     		bx	lr
+  45              	.L4:
+  46              		.align	2
+  47              	.L3:
+  48 0010 00000000 		.word	refresh
+  49              		.cfi_endproc
+  50              	.LFE695:
+  52              		.section	.text.blank_screen,"ax",%progbits
+  53              		.align	1
+  54              		.global	blank_screen
+  55              		.syntax unified
+  56              		.thumb
+  57              		.thumb_func
+  58              		.fpu fpv4-sp-d16
+  60              	blank_screen:
+  61              	.LFB696:
+  35:Src/display.c **** 
+  36:Src/display.c **** void blank_screen(){
+  62              		.loc 1 36 0
+  63              		.cfi_startproc
+  64              		@ args = 0, pretend = 0, frame = 0
+  65              		@ frame_needed = 0, uses_anonymous_args = 0
+  66 0000 38B5     		push	{r3, r4, r5, lr}
+  67              	.LCFI0:
+  68              		.cfi_def_cfa_offset 16
+  69              		.cfi_offset 3, -16
+  70              		.cfi_offset 4, -12
+  71              		.cfi_offset 5, -8
+  72              		.cfi_offset 14, -4
+  73              	.LVL0:
+  37:Src/display.c ****   int i;
+  38:Src/display.c ****   for(i = 0; i < MATRIX_SIZE; i++){
+  74              		.loc 1 38 0
+  75 0002 0025     		movs	r5, #0
+  76 0004 31E0     		b	.L6
+  77              	.LVL1:
+  78              	.L8:
+  79              	.LBB8:
+ARM GAS  /tmp/ccW1zTbC.s 			page 3
+
+
+  39:Src/display.c ****     PURGE_CAPAS;
+  40:Src/display.c ****     
+  41:Src/display.c ****     SELECT_COL(i);
+  42:Src/display.c ****     
+  43:Src/display.c ****     //Sélection des leds
+  44:Src/display.c ****     HAL_GPIO_WritePin(LATCH_COL_GPIO_Port, LATCH_COL_Pin, GPIO_PIN_RESET);
+  45:Src/display.c ****     int k;
+  46:Src/display.c ****     for(k = MATRIX_SIZE; k > 0; k--){
+  47:Src/display.c ****       WRITE_BIT(0);
+  80              		.loc 1 47 0 discriminator 3
+  81 0006 0022     		movs	r2, #0
+  82 0008 4FF40061 		mov	r1, #2048
+  83 000c 4FF09040 		mov	r0, #1207959552
+  84 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+  85              	.LVL2:
+  86 0014 0022     		movs	r2, #0
+  87 0016 4FF48071 		mov	r1, #256
+  88 001a 4FF09040 		mov	r0, #1207959552
+  89 001e FFF7FEFF 		bl	HAL_GPIO_WritePin
+  90              	.LVL3:
+  91 0022 0122     		movs	r2, #1
+  92 0024 4FF40061 		mov	r1, #2048
+  93 0028 4FF09040 		mov	r0, #1207959552
+  94 002c FFF7FEFF 		bl	HAL_GPIO_WritePin
+  95              	.LVL4:
+  46:Src/display.c ****       WRITE_BIT(0);
+  96              		.loc 1 46 0 discriminator 3
+  97 0030 013C     		subs	r4, r4, #1
+  98              	.LVL5:
+  99              	.L7:
+  46:Src/display.c ****       WRITE_BIT(0);
+ 100              		.loc 1 46 0 is_stmt 0 discriminator 1
+ 101 0032 002C     		cmp	r4, #0
+ 102 0034 E7DC     		bgt	.L8
+  48:Src/display.c ****     }
+  49:Src/display.c ****     HAL_GPIO_WritePin(LATCH_COL_GPIO_Port, LATCH_COL_Pin, GPIO_PIN_SET);
+ 103              		.loc 1 49 0 is_stmt 1 discriminator 2
+ 104 0036 0122     		movs	r2, #1
+ 105 0038 4FF48051 		mov	r1, #4096
+ 106 003c 4FF09040 		mov	r0, #1207959552
+ 107 0040 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 108              	.LVL6:
+  50:Src/display.c ****     
+  51:Src/display.c ****     REACTIVATE;
+ 109              		.loc 1 51 0 discriminator 2
+ 110 0044 0022     		movs	r2, #0
+ 111 0046 1021     		movs	r1, #16
+ 112 0048 4FF09040 		mov	r0, #1207959552
+ 113 004c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 114              	.LVL7:
+ 115 0050 0022     		movs	r2, #0
+ 116 0052 0221     		movs	r1, #2
+ 117 0054 4FF09040 		mov	r0, #1207959552
+ 118 0058 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 119              	.LVL8:
+ 120 005c 0022     		movs	r2, #0
+ 121 005e 0121     		movs	r1, #1
+ARM GAS  /tmp/ccW1zTbC.s 			page 4
+
+
+ 122 0060 4FF09040 		mov	r0, #1207959552
+ 123 0064 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 124              	.LVL9:
+ 125              	.LBE8:
+  38:Src/display.c ****     PURGE_CAPAS;
+ 126              		.loc 1 38 0 discriminator 2
+ 127 0068 0135     		adds	r5, r5, #1
+ 128              	.LVL10:
+ 129              	.L6:
+  38:Src/display.c ****     PURGE_CAPAS;
+ 130              		.loc 1 38 0 is_stmt 0 discriminator 1
+ 131 006a 1F2D     		cmp	r5, #31
+ 132 006c 3CDC     		bgt	.L11
+ 133              	.LBB9:
+  39:Src/display.c ****     
+ 134              		.loc 1 39 0 is_stmt 1
+ 135 006e 0122     		movs	r2, #1
+ 136 0070 1021     		movs	r1, #16
+ 137 0072 4FF09040 		mov	r0, #1207959552
+ 138 0076 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 139              	.LVL11:
+ 140 007a 0122     		movs	r2, #1
+ 141 007c 0221     		movs	r1, #2
+ 142 007e 4FF09040 		mov	r0, #1207959552
+ 143 0082 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 144              	.LVL12:
+ 145 0086 0122     		movs	r2, #1
+ 146 0088 1146     		mov	r1, r2
+ 147 008a 4FF09040 		mov	r0, #1207959552
+ 148 008e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 149              	.LVL13:
+  41:Src/display.c ****     
+ 150              		.loc 1 41 0
+ 151 0092 164C     		ldr	r4, .L12
+ 152 0094 05F00102 		and	r2, r5, #1
+ 153 0098 0221     		movs	r1, #2
+ 154 009a 2046     		mov	r0, r4
+ 155 009c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 156              	.LVL14:
+ 157 00a0 C5F34002 		ubfx	r2, r5, #1, #1
+ 158 00a4 0121     		movs	r1, #1
+ 159 00a6 2046     		mov	r0, r4
+ 160 00a8 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 161              	.LVL15:
+ 162 00ac C5F38002 		ubfx	r2, r5, #2, #1
+ 163 00b0 8021     		movs	r1, #128
+ 164 00b2 4FF09040 		mov	r0, #1207959552
+ 165 00b6 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 166              	.LVL16:
+ 167 00ba C5F3C002 		ubfx	r2, r5, #3, #1
+ 168 00be 4021     		movs	r1, #64
+ 169 00c0 4FF09040 		mov	r0, #1207959552
+ 170 00c4 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 171              	.LVL17:
+ 172 00c8 C5F30012 		ubfx	r2, r5, #4, #1
+ 173 00cc 2021     		movs	r1, #32
+ 174 00ce 4FF09040 		mov	r0, #1207959552
+ARM GAS  /tmp/ccW1zTbC.s 			page 5
+
+
+ 175 00d2 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 176              	.LVL18:
+  44:Src/display.c ****     int k;
+ 177              		.loc 1 44 0
+ 178 00d6 0022     		movs	r2, #0
+ 179 00d8 4FF48051 		mov	r1, #4096
+ 180 00dc 4FF09040 		mov	r0, #1207959552
+ 181 00e0 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 182              	.LVL19:
+  46:Src/display.c ****       WRITE_BIT(0);
+ 183              		.loc 1 46 0
+ 184 00e4 2024     		movs	r4, #32
+ 185 00e6 A4E7     		b	.L7
+ 186              	.LVL20:
+ 187              	.L11:
+ 188              	.LBE9:
+  52:Src/display.c ****   }
+  53:Src/display.c **** }
+ 189              		.loc 1 53 0
+ 190 00e8 38BD     		pop	{r3, r4, r5, pc}
+ 191              	.LVL21:
+ 192              	.L13:
+ 193 00ea 00BF     		.align	2
+ 194              	.L12:
+ 195 00ec 00040048 		.word	1207960576
+ 196              		.cfi_endproc
+ 197              	.LFE696:
+ 199              		.section	.text.display_score,"ax",%progbits
+ 200              		.align	1
+ 201              		.global	display_score
+ 202              		.syntax unified
+ 203              		.thumb
+ 204              		.thumb_func
+ 205              		.fpu fpv4-sp-d16
+ 207              	display_score:
+ 208              	.LFB697:
+  54:Src/display.c **** 
+  55:Src/display.c **** #define GET_ROW(index, frame) 
+  56:Src/display.c **** 
+  57:Src/display.c **** void display_score(uint16_t score){
+ 209              		.loc 1 57 0
+ 210              		.cfi_startproc
+ 211              		@ args = 0, pretend = 0, frame = 16
+ 212              		@ frame_needed = 0, uses_anonymous_args = 0
+ 213              	.LVL22:
+ 214 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 215              	.LCFI1:
+ 216              		.cfi_def_cfa_offset 36
+ 217              		.cfi_offset 4, -36
+ 218              		.cfi_offset 5, -32
+ 219              		.cfi_offset 6, -28
+ 220              		.cfi_offset 7, -24
+ 221              		.cfi_offset 8, -20
+ 222              		.cfi_offset 9, -16
+ 223              		.cfi_offset 10, -12
+ 224              		.cfi_offset 11, -8
+ 225              		.cfi_offset 14, -4
+ARM GAS  /tmp/ccW1zTbC.s 			page 6
+
+
+ 226 0004 85B0     		sub	sp, sp, #20
+ 227              	.LCFI2:
+ 228              		.cfi_def_cfa_offset 56
+ 229              	.LBB10:
+ 230              	.LBB11:
+ 231              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V4.30
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****    All rights reserved.
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****      specific prior written permission.
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****    *
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:Drivers/CMSIS/Include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:Drivers/CMSIS/Include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:Drivers/CMSIS/Include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:Drivers/CMSIS/Include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:Drivers/CMSIS/Include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  47:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+  51:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ARM GAS  /tmp/ccW1zTbC.s 			page 7
+
+
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  53:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  54:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  60:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+  62:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:Drivers/CMSIS/Include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+ 232              		.loc 2 71 0
+ 233              		.syntax unified
+ 234              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 235 0006 72B6     		cpsid i
+ 236              	@ 0 "" 2
+ 237              		.thumb
+ 238              		.syntax unified
+ 239              	.LBE11:
+ 240              	.LBE10:
+  58:Src/display.c **** 
+  59:Src/display.c ****   //Indexs du score
+  60:Src/display.c ****   __disable_irq();
+  61:Src/display.c ****   uint8_t *const sprite_k[3] = {(uint8_t*) sprites[score%10],
+ 241              		.loc 1 61 0
+ 242 0008 654A     		ldr	r2, .L24
+ 243 000a A2FB0013 		umull	r1, r3, r2, r0
+ 244 000e DB08     		lsrs	r3, r3, #3
+ 245 0010 03EB8304 		add	r4, r3, r3, lsl #2
+ 246 0014 6100     		lsls	r1, r4, #1
+ 247 0016 411A     		subs	r1, r0, r1
+ 248 0018 89B2     		uxth	r1, r1
+ 249 001a C1EBC101 		rsb	r1, r1, r1, lsl #3
+ 250 001e 4C01     		lsls	r4, r1, #5
+ 251 0020 6049     		ldr	r1, .L24+4
+ 252 0022 0C44     		add	r4, r4, r1
+ 253 0024 0194     		str	r4, [sp, #4]
+  62:Src/display.c **** 				(uint8_t*) sprites[(score /= 10)%10],
+ 254              		.loc 1 62 0
+ 255 0026 9BB2     		uxth	r3, r3
+ 256              	.LVL23:
+ 257 0028 A2FB0354 		umull	r5, r4, r2, r3
+ 258 002c E408     		lsrs	r4, r4, #3
+ 259 002e 04EB8404 		add	r4, r4, r4, lsl #2
+ 260 0032 6500     		lsls	r5, r4, #1
+ 261 0034 5B1B     		subs	r3, r3, r5
+ 262              	.LVL24:
+ 263 0036 9BB2     		uxth	r3, r3
+ARM GAS  /tmp/ccW1zTbC.s 			page 8
+
+
+ 264 0038 C3EBC303 		rsb	r3, r3, r3, lsl #3
+ 265 003c 5C01     		lsls	r4, r3, #5
+ 266 003e 0C44     		add	r4, r4, r1
+  61:Src/display.c **** 				(uint8_t*) sprites[(score /= 10)%10],
+ 267              		.loc 1 61 0
+ 268 0040 0294     		str	r4, [sp, #8]
+  63:Src/display.c **** 				(uint8_t*) sprites[(score /= 10)%10]};
+ 269              		.loc 1 63 0
+ 270 0042 594B     		ldr	r3, .L24+8
+ 271 0044 A3FB0003 		umull	r0, r3, r3, r0
+ 272              	.LVL25:
+ 273 0048 5B09     		lsrs	r3, r3, #5
+ 274              	.LVL26:
+ 275 004a A2FB0302 		umull	r0, r2, r2, r3
+ 276 004e D208     		lsrs	r2, r2, #3
+ 277 0050 02EB8202 		add	r2, r2, r2, lsl #2
+ 278 0054 5000     		lsls	r0, r2, #1
+ 279 0056 1B1A     		subs	r3, r3, r0
+ 280              	.LVL27:
+ 281 0058 9BB2     		uxth	r3, r3
+ 282 005a C3EBC303 		rsb	r3, r3, r3, lsl #3
+ 283 005e 5A01     		lsls	r2, r3, #5
+ 284 0060 0A44     		add	r2, r2, r1
+  61:Src/display.c **** 				(uint8_t*) sprites[(score /= 10)%10],
+ 285              		.loc 1 61 0
+ 286 0062 0392     		str	r2, [sp, #12]
+ 287              	.LBB12:
+ 288              	.LBB13:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 289              		.loc 2 60 0
+ 290              		.syntax unified
+ 291              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 292 0064 62B6     		cpsie i
+ 293              	@ 0 "" 2
+ 294              	.LVL28:
+ 295              		.thumb
+ 296              		.syntax unified
+ 297              	.LBE13:
+ 298              	.LBE12:
+  64:Src/display.c **** 			
+  65:Src/display.c ****   __enable_irq();
+  66:Src/display.c **** 
+  67:Src/display.c ****   int frame, row;
+  68:Src/display.c ****   for(frame = 0; frame < BRIGHTNESS_LEVELS-1; frame++){
+ 299              		.loc 1 68 0
+ 300 0066 4FF0000A 		mov	r10, #0
+ 301 006a 8CE0     		b	.L15
+ 302              	.LVL29:
+ 303              	.L18:
+ 304              	.LBB14:
+ 305              	.LBB15:
+  69:Src/display.c ****     uint8_t *const frame_k[3] = {(uint8_t*) sprite_k[0],
+  70:Src/display.c **** 				 (uint8_t*) sprite_k[1],
+  71:Src/display.c **** 				 (uint8_t*) sprite_k[2]};
+  72:Src/display.c ****     
+  73:Src/display.c ****     for(row = 0; row < ROWS_PER_FRAME; row++){
+  74:Src/display.c ****       uint8_t *const row_k[3] = {(uint8_t*) frame_k[0],
+ARM GAS  /tmp/ccW1zTbC.s 			page 9
+
+
+  75:Src/display.c **** 				 (uint8_t*) frame_k[1],
+  76:Src/display.c **** 				 (uint8_t*) frame_k[2]};
+  77:Src/display.c ****       
+  78:Src/display.c ****       uint32_t data =
+  79:Src/display.c **** 	(((row_k[2][0] << 8) | row_k[2][1]) << 21) |
+  80:Src/display.c **** 	(((row_k[1][0] << 8) | row_k[1][1]) << 10) |
+  81:Src/display.c **** 	((row_k[0][0] << 8) | row_k[0][1]);
+  82:Src/display.c ****       
+  83:Src/display.c ****       //Attente du timer
+  84:Src/display.c ****       wait_refresh();
+  85:Src/display.c **** 
+  86:Src/display.c ****       //Purge capas
+  87:Src/display.c ****       PURGE_CAPAS;
+  88:Src/display.c ****       
+  89:Src/display.c ****       //Sélection de la colonne
+  90:Src/display.c ****       SELECT_COL(8 + row);
+  91:Src/display.c **** 
+  92:Src/display.c ****       //Sélection des leds
+  93:Src/display.c ****       HAL_GPIO_WritePin(LATCH_COL_GPIO_Port, LATCH_COL_Pin, GPIO_PIN_RESET);      
+  94:Src/display.c **** 
+  95:Src/display.c ****       int i;
+  96:Src/display.c ****       const uint32_t mask = 1 << 31;
+  97:Src/display.c ****       for(i = 32; i > 0; i--){
+  98:Src/display.c **** 	WRITE_BIT(((data&mask) >> 31));
+ 306              		.loc 1 98 0 discriminator 3
+ 307 006c 0022     		movs	r2, #0
+ 308 006e 4FF40061 		mov	r1, #2048
+ 309 0072 4FF09040 		mov	r0, #1207959552
+ 310 0076 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 311              	.LVL30:
+ 312 007a E20F     		lsrs	r2, r4, #31
+ 313 007c 4FF48071 		mov	r1, #256
+ 314 0080 4FF09040 		mov	r0, #1207959552
+ 315 0084 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 316              	.LVL31:
+ 317 0088 0122     		movs	r2, #1
+ 318 008a 4FF40061 		mov	r1, #2048
+ 319 008e 4FF09040 		mov	r0, #1207959552
+ 320 0092 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 321              	.LVL32:
+  99:Src/display.c **** 	data <<= 1;
+ 322              		.loc 1 99 0 discriminator 3
+ 323 0096 6400     		lsls	r4, r4, #1
+ 324              	.LVL33:
+  97:Src/display.c **** 	WRITE_BIT(((data&mask) >> 31));
+ 325              		.loc 1 97 0 discriminator 3
+ 326 0098 013D     		subs	r5, r5, #1
+ 327              	.LVL34:
+ 328              	.L17:
+  97:Src/display.c **** 	WRITE_BIT(((data&mask) >> 31));
+ 329              		.loc 1 97 0 is_stmt 0 discriminator 1
+ 330 009a 002D     		cmp	r5, #0
+ 331 009c E6DC     		bgt	.L18
+ 100:Src/display.c ****       }
+ 101:Src/display.c ****       
+ 102:Src/display.c ****       HAL_GPIO_WritePin(LATCH_COL_GPIO_Port, LATCH_COL_Pin, GPIO_PIN_SET);
+ 332              		.loc 1 102 0 is_stmt 1 discriminator 2
+ARM GAS  /tmp/ccW1zTbC.s 			page 10
+
+
+ 333 009e 0122     		movs	r2, #1
+ 334 00a0 4FF48051 		mov	r1, #4096
+ 335 00a4 4FF09040 		mov	r0, #1207959552
+ 336 00a8 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 337              	.LVL35:
+ 103:Src/display.c **** 
+ 104:Src/display.c ****       //Réactivation
+ 105:Src/display.c ****       REACTIVATE;
+ 338              		.loc 1 105 0 discriminator 2
+ 339 00ac 0022     		movs	r2, #0
+ 340 00ae 1021     		movs	r1, #16
+ 341 00b0 4FF09040 		mov	r0, #1207959552
+ 342 00b4 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 343              	.LVL36:
+ 344 00b8 0022     		movs	r2, #0
+ 345 00ba 0221     		movs	r1, #2
+ 346 00bc 4FF09040 		mov	r0, #1207959552
+ 347 00c0 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 348              	.LVL37:
+ 349 00c4 0022     		movs	r2, #0
+ 350 00c6 0121     		movs	r1, #1
+ 351 00c8 4FF09040 		mov	r0, #1207959552
+ 352 00cc FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 353              	.LVL38:
+ 354              	.LBE15:
+  73:Src/display.c ****       uint8_t *const row_k[3] = {(uint8_t*) frame_k[0],
+ 355              		.loc 1 73 0 discriminator 2
+ 356 00d0 0136     		adds	r6, r6, #1
+ 357              	.LVL39:
+ 358              	.L16:
+  73:Src/display.c ****       uint8_t *const row_k[3] = {(uint8_t*) frame_k[0],
+ 359              		.loc 1 73 0 is_stmt 0 discriminator 1
+ 360 00d2 0F2E     		cmp	r6, #15
+ 361 00d4 55DC     		bgt	.L22
+ 362              	.LBB16:
+  79:Src/display.c **** 	(((row_k[1][0] << 8) | row_k[1][1]) << 10) |
+ 363              		.loc 1 79 0 is_stmt 1
+ 364 00d6 3B78     		ldrb	r3, [r7]	@ zero_extendqisi2
+ 365 00d8 7C78     		ldrb	r4, [r7, #1]	@ zero_extendqisi2
+ 366 00da 44EA0323 		orr	r3, r4, r3, lsl #8
+  80:Src/display.c **** 	((row_k[0][0] << 8) | row_k[0][1]);
+ 367              		.loc 1 80 0
+ 368 00de 98F80020 		ldrb	r2, [r8]	@ zero_extendqisi2
+ 369 00e2 98F80140 		ldrb	r4, [r8, #1]	@ zero_extendqisi2
+ 370 00e6 44EA0224 		orr	r4, r4, r2, lsl #8
+ 371 00ea A402     		lsls	r4, r4, #10
+  79:Src/display.c **** 	(((row_k[1][0] << 8) | row_k[1][1]) << 10) |
+ 372              		.loc 1 79 0
+ 373 00ec 44EA4354 		orr	r4, r4, r3, lsl #21
+  81:Src/display.c ****       
+ 374              		.loc 1 81 0
+ 375 00f0 99F80020 		ldrb	r2, [r9]	@ zero_extendqisi2
+ 376 00f4 99F80130 		ldrb	r3, [r9, #1]	@ zero_extendqisi2
+ 377 00f8 43EA0223 		orr	r3, r3, r2, lsl #8
+  80:Src/display.c **** 	((row_k[0][0] << 8) | row_k[0][1]);
+ 378              		.loc 1 80 0
+ 379 00fc 1C43     		orrs	r4, r4, r3
+ARM GAS  /tmp/ccW1zTbC.s 			page 11
+
+
+ 380              	.LVL40:
+  84:Src/display.c **** 
+ 381              		.loc 1 84 0
+ 382 00fe FFF7FEFF 		bl	wait_refresh
+ 383              	.LVL41:
+  87:Src/display.c ****       
+ 384              		.loc 1 87 0
+ 385 0102 0122     		movs	r2, #1
+ 386 0104 1021     		movs	r1, #16
+ 387 0106 4FF09040 		mov	r0, #1207959552
+ 388 010a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 389              	.LVL42:
+ 390 010e 0122     		movs	r2, #1
+ 391 0110 0221     		movs	r1, #2
+ 392 0112 4FF09040 		mov	r0, #1207959552
+ 393 0116 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 394              	.LVL43:
+ 395 011a 0122     		movs	r2, #1
+ 396 011c 1146     		mov	r1, r2
+ 397 011e 4FF09040 		mov	r0, #1207959552
+ 398 0122 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 399              	.LVL44:
+  90:Src/display.c **** 
+ 400              		.loc 1 90 0
+ 401 0126 DFF884B0 		ldr	fp, .L24+12
+ 402 012a 06F00102 		and	r2, r6, #1
+ 403 012e 0221     		movs	r1, #2
+ 404 0130 5846     		mov	r0, fp
+ 405 0132 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 406              	.LVL45:
+ 407 0136 06F10805 		add	r5, r6, #8
+ 408 013a C5F34002 		ubfx	r2, r5, #1, #1
+ 409 013e 0121     		movs	r1, #1
+ 410 0140 5846     		mov	r0, fp
+ 411 0142 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 412              	.LVL46:
+ 413 0146 C5F38002 		ubfx	r2, r5, #2, #1
+ 414 014a 8021     		movs	r1, #128
+ 415 014c 4FF09040 		mov	r0, #1207959552
+ 416 0150 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 417              	.LVL47:
+ 418 0154 C5F3C002 		ubfx	r2, r5, #3, #1
+ 419 0158 4021     		movs	r1, #64
+ 420 015a 4FF09040 		mov	r0, #1207959552
+ 421 015e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 422              	.LVL48:
+ 423 0162 C5F30012 		ubfx	r2, r5, #4, #1
+ 424 0166 2021     		movs	r1, #32
+ 425 0168 4FF09040 		mov	r0, #1207959552
+ 426 016c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 427              	.LVL49:
+  93:Src/display.c **** 
+ 428              		.loc 1 93 0
+ 429 0170 0022     		movs	r2, #0
+ 430 0172 4FF48051 		mov	r1, #4096
+ 431 0176 4FF09040 		mov	r0, #1207959552
+ 432 017a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ARM GAS  /tmp/ccW1zTbC.s 			page 12
+
+
+ 433              	.LVL50:
+  97:Src/display.c **** 	WRITE_BIT(((data&mask) >> 31));
+ 434              		.loc 1 97 0
+ 435 017e 2025     		movs	r5, #32
+ 436 0180 8BE7     		b	.L17
+ 437              	.LVL51:
+ 438              	.L22:
+ 439              	.LBE16:
+ 440              	.LBE14:
+  68:Src/display.c ****     uint8_t *const frame_k[3] = {(uint8_t*) sprite_k[0],
+ 441              		.loc 1 68 0 discriminator 2
+ 442 0182 0AF1010A 		add	r10, r10, #1
+ 443              	.LVL52:
+ 444              	.L15:
+  68:Src/display.c ****     uint8_t *const frame_k[3] = {(uint8_t*) sprite_k[0],
+ 445              		.loc 1 68 0 is_stmt 0 discriminator 1
+ 446 0186 BAF1060F 		cmp	r10, #6
+ 447 018a 06DC     		bgt	.L23
+ 448              	.LBB17:
+  69:Src/display.c **** 				 (uint8_t*) sprite_k[1],
+ 449              		.loc 1 69 0 is_stmt 1
+ 450 018c DDF80490 		ldr	r9, [sp, #4]
+  70:Src/display.c **** 				 (uint8_t*) sprite_k[2]};
+ 451              		.loc 1 70 0
+ 452 0190 DDF80880 		ldr	r8, [sp, #8]
+  71:Src/display.c ****     
+ 453              		.loc 1 71 0
+ 454 0194 039F     		ldr	r7, [sp, #12]
+ 455              	.LVL53:
+  73:Src/display.c ****       uint8_t *const row_k[3] = {(uint8_t*) frame_k[0],
+ 456              		.loc 1 73 0
+ 457 0196 0026     		movs	r6, #0
+ 458 0198 9BE7     		b	.L16
+ 459              	.LVL54:
+ 460              	.L23:
+ 461              	.LBE17:
+ 106:Src/display.c ****     }
+ 107:Src/display.c ****   }
+ 108:Src/display.c ****   
+ 109:Src/display.c **** }
+ 462              		.loc 1 109 0
+ 463 019a 05B0     		add	sp, sp, #20
+ 464              	.LCFI3:
+ 465              		.cfi_def_cfa_offset 36
+ 466              		@ sp needed
+ 467 019c BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 468              	.LVL55:
+ 469              	.L25:
+ 470              		.align	2
+ 471              	.L24:
+ 472 01a0 CDCCCCCC 		.word	-858993459
+ 473 01a4 00000000 		.word	sprites
+ 474 01a8 1F85EB51 		.word	1374389535
+ 475 01ac 00040048 		.word	1207960576
+ 476              		.cfi_endproc
+ 477              	.LFE697:
+ 479              		.text
+ARM GAS  /tmp/ccW1zTbC.s 			page 13
+
+
+ 480              	.Letext0:
+ 481              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 482              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 483              		.file 5 "Drivers/CMSIS/Include/core_cm4.h"
+ 484              		.file 6 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 485              		.file 7 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 486              		.file 8 "Inc/main.h"
+ 487              		.file 9 "/usr/arm-none-eabi/include/sys/lock.h"
+ 488              		.file 10 "/usr/arm-none-eabi/include/sys/_types.h"
+ 489              		.file 11 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 490              		.file 12 "/usr/arm-none-eabi/include/sys/reent.h"
+ 491              		.file 13 "Inc/sprites.h"
+ 492              		.file 14 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ 493              		.file 15 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_gpio.h"
+ARM GAS  /tmp/ccW1zTbC.s 			page 14
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 display.c
+     /tmp/ccW1zTbC.s:18     .text.wait_refresh:0000000000000000 $t
+     /tmp/ccW1zTbC.s:25     .text.wait_refresh:0000000000000000 wait_refresh
+     /tmp/ccW1zTbC.s:48     .text.wait_refresh:0000000000000010 $d
+     /tmp/ccW1zTbC.s:53     .text.blank_screen:0000000000000000 $t
+     /tmp/ccW1zTbC.s:60     .text.blank_screen:0000000000000000 blank_screen
+     /tmp/ccW1zTbC.s:195    .text.blank_screen:00000000000000ec $d
+     /tmp/ccW1zTbC.s:200    .text.display_score:0000000000000000 $t
+     /tmp/ccW1zTbC.s:207    .text.display_score:0000000000000000 display_score
+     /tmp/ccW1zTbC.s:472    .text.display_score:00000000000001a0 $d
+
+UNDEFINED SYMBOLS
+refresh
+HAL_GPIO_WritePin
+sprites
