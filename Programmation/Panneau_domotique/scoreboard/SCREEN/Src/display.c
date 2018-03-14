@@ -56,22 +56,22 @@ void display_score(uint16_t score){
 
   //Indexs du score
   __disable_irq();
-  uint8_t *const sprite_k[3] = {(uint8_t*) sprites[score%10],
-				(uint8_t*) sprites[(score /= 10)%10],
-				(uint8_t*) sprites[(score /= 10)%10]};
+  uint8_t ***const sprite_k[3] = {(uint8_t***) sprites[score%10],
+				(uint8_t***) sprites[(score /= 10)%10],
+				(uint8_t***) sprites[(score /= 10)%10]};
 			
   __enable_irq();
 
   int frame, row;
   for(frame = 0; frame < BRIGHTNESS_LEVELS-1; frame++){
-    uint8_t *const frame_k[3] = {(uint8_t*) sprite_k[0],
-				 (uint8_t*) sprite_k[1],
-				 (uint8_t*) sprite_k[2]};
+    uint8_t **const frame_k[3] = {(uint8_t**) sprite_k[0][frame],
+				 (uint8_t**) sprite_k[1][frame],
+				 (uint8_t**) sprite_k[2][frame]};
     
     for(row = 0; row < ROWS_PER_FRAME; row++){
-      uint8_t *const row_k[3] = {(uint8_t*) frame_k[0],
-				 (uint8_t*) frame_k[1],
-				 (uint8_t*) frame_k[2]};
+      uint8_t *const row_k[3] = {(uint8_t*) frame_k[0][row],
+				 (uint8_t*) frame_k[1][row],
+				 (uint8_t*) frame_k[2][row]};
       
       uint32_t data =
 	(((row_k[2][0] << 8) | row_k[2][1]) << 21) |
