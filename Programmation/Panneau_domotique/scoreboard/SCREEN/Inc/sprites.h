@@ -5,12 +5,12 @@
  * Images par secondes : 60 FPS
  * Niveaux de luminosité : 8
  * Fréquence de rafraîchissement : 13440 Hz
- * Sens de lecture : par ligne
- * Rotation : aucune
+ * Sens de lecture : par colonne
+ * Rotation : pi/2
  * Taille d'un caractère : 10*16 px
  * Police de caractère : Sans
  * Ensemble de caractères : chiffres 
- * Date de création : mar. mars 13 17:16:52 2018
+ * Date de création : mer. mars 14 22:17:22 2018
  */
 
 #ifndef SPRITES_HEADER
