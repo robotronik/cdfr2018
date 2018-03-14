@@ -52,8 +52,6 @@ void blank_screen(){
   }
 }
 
-#define GET_ROW(index, frame) 
-
 void display_score(uint16_t score){
 
   //Indexs du score
