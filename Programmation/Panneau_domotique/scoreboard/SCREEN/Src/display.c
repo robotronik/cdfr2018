@@ -35,19 +35,15 @@ void wait_refresh(void){
 
 void blank_screen(){
   int i;
-  for(i = 0; i < MATRIX_SIZE; i++){
+  for(i = MATRIX_SIZE; i > 0; i--){
     PURGE_CAPAS;
-    
     SELECT_COL(i);
-    
-    //Sélection des leds
     HAL_GPIO_WritePin(LATCH_COL_GPIO_Port, LATCH_COL_Pin, GPIO_PIN_RESET);
-    int k;
-    for(k = MATRIX_SIZE; k > 0; k--){
+    int j;
+    for(j = MATRIX_SIZE; j > 0; j--){
       WRITE_BIT(0);
     }
     HAL_GPIO_WritePin(LATCH_COL_GPIO_Port, LATCH_COL_Pin, GPIO_PIN_SET);
-    
     REACTIVATE;
   }
 }
@@ -74,9 +70,9 @@ void display_score(uint16_t score){
 				 (uint8_t*) frame_k[2][row]};
       
       uint32_t data =
-	(((row_k[2][0] << 8) | row_k[2][1]) << 21) |
-	(((row_k[1][0] << 8) | row_k[1][1]) << 10) |
-	((row_k[0][0] << 8) | row_k[0][1]);
+	((uint32_t) ((((uint16_t) row_k[2][0]) << 8) | row_k[2][1]) << 16) |
+        ((uint32_t) ((((uint16_t) row_k[1][0]) << 8) | row_k[1][1]) << 5) |
+        ((uint32_t) ((((uint16_t) row_k[0][0]) << 8) | row_k[0][1]) >> 6);
       
       //Attente du timer
       wait_refresh();
