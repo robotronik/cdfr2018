@@ -153,6 +153,7 @@ int main(int argc, char *argv[]){
     VINFO("Connecting to %s:%d...", argv[2], atoi(argv[3]));
     while((connect(tcp_socket, (struct sockaddr*) &server_addr, sizeof(server_addr)) == -1) && !stop){
       perror("WARNING : Connection failed. Trying again...");
+      usleep(500000);
     }
 
     //Sending the score

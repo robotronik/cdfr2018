@@ -44,7 +44,7 @@ int main(){
   for(i=0; i < 100; i++){
     score = i;
     SC_Update(score);
-    sleep(1);
+    usleep(2100000);
   }
   sleep(120);
   SC_Stop();
