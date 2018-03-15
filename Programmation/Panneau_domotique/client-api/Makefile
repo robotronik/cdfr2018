@@ -48,6 +48,6 @@ client_api_test:test.o client_api.o
 
 clean:
 	@echo -e "\t${YELLOW}Removing ${LGREEN}*.o${NC}"
-	@rm -rf *.o client client-api
+	@rm -rf *.o client client_api_test
 	@echo -e "${YELLOW}[${GREEN}OK${YELLOW}]${NC}"
 
