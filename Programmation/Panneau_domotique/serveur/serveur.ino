@@ -25,8 +25,26 @@ uint8_t send(uint8_t *data, uint16_t len, uint32_t timeout){
   return (Serial.write(data, len) == len);
 }
 
+#if DEBUG == 1
+void print_mac(){
+  byte mac[6];
+  WiFi.macAddress(mac);
+  Serial.print("MAC: ");
+  Serial.print(mac[5],HEX); Serial.print(":");
+  Serial.print(mac[4],HEX); Serial.print(":");
+  Serial.print(mac[3],HEX); Serial.print(":");
+  Serial.print(mac[2],HEX); Serial.print(":");
+  Serial.print(mac[1],HEX); Serial.print(":");
+  Serial.println(mac[0],HEX);
+}
+#endif
+
 void setup() {
+  //Initialisation UART
   Serial.begin(115200);
+  
+  RP_Init_Interface(&interface, send);
+  packet.len = 2;
 
   //Connexion au point d'accès
   WiFi.begin(AP_NAME, AP_PASSWD);
@@ -38,14 +56,12 @@ void setup() {
   while(WiFi.status() != WL_CONNECTED){
     delay(1000);
   }
+  
   #if DEBUG==1
   Serial.print("Connected, IP address: ");
   Serial.println(WiFi.localIP());
   #endif
-
-  RP_Init_Interface(&interface, send);
-  packet.len = 2;
-  
+ 
   //Démarrage du serveur
   server.begin();
 }
@@ -62,11 +78,11 @@ void loop() {
      * mais que des données n'ont pas été lues,
      * client.connected() vaut true
      */
-    //On récupère les données
-    String data = client.readStringUntil('\0');
-    #if DEBUG==1
-    Serial.println(data);
-    #endif
+    //On récupère le dernier paquet reçu
+    String data;
+    while(client.available()){
+      data = client.readStringUntil('\0');
+    }
 
     //On décompose la chaîne de caractères
     if((data.length() >= 3) && (data[0] == '0')){
@@ -91,6 +107,8 @@ void loop() {
     }
     client.stop();//Aparemment nécessaire pour l'ESP
   }
+
+  //Envoi du score
   unsigned long current_time = millis();
   if(new_score || (current_time - last_time >= 1000)){
     last_time = current_time;
@@ -116,6 +134,6 @@ void loop() {
     #endif
     new_score = false;
   }
-  
-  delay(100);  
+
+  delay(100);
 }
