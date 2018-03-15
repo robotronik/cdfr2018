@@ -23,8 +23,8 @@
 
 #define SC_SHM_NAME "/score_cdfr_shm"
 #define SC_SEM_NAME "/score_cdfr_sem"
-#define SC_CLIENT_PATH "../client/client"
-#define SC_SERVER_IP "192.168.0.3"
+#define SC_CLIENT_PATH "./client"
+#define SC_SERVER_IP "192.168.0.4"
 #define SC_SERVER_PORT 80
 
 typedef struct Scoreboard_Client_S{
