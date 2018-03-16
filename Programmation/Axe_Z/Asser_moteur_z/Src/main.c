@@ -1,7 +1,8 @@
+
 /**
   ******************************************************************************
-  * File Name          : main.c
-  * Description        : Main program body
+  * @file           : main.c
+  * @brief          : Main program body
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -35,7 +36,6 @@
   *
   ******************************************************************************
   */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
@@ -43,6 +43,8 @@
 /* USER CODE BEGIN Includes */
 #include "Robotronik_corp_pid.h"
 #include "ax_12a.h"
+
+#define MAX_PWM 50
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -85,7 +87,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void user_pwm_D2(uint16_t value)
+void pwm_D2(uint16_t value)
 {
     if(value>255) value=255;
     TIM_OC_InitTypeDef sConfigOC;
@@ -94,25 +96,9 @@ void user_pwm_D2(uint16_t value)
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 }
 
-void write_motor(float output)
-{
-  if(output>0)
-  {
-    HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,1);
-    HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,0);
-  }
-  else
-  {
-    HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);
-    HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);
-    output=-output;
-  }
-  if(output>255) output=255;
-  user_pwm_D2((uint16_t)output);
-}
 
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
 {
@@ -131,7 +117,7 @@ void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
   }
 }
 
-AX_Interface interface;
+/*AX_Interface interface;
 
 uint8_t AX_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
   HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
@@ -149,16 +135,20 @@ void AX_Set_Direction_HAL(AX_Direction dir){
 
 void AX_Delay_HAL(uint32_t t){
   HAL_Delay(t);
-}
+}*/
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
+/**
+  * @brief  The application entry point.
+  *
+  * @retval None
+  */
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -187,12 +177,11 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-
   /* USER CODE BEGIN 2 */
-  interface.receive = AX_Receive_HAL;
+  /*interface.receive = AX_Receive_HAL;
   interface.send = AX_Send_HAL;
   interface.set_direction = AX_Set_Direction_HAL;
-  interface.delay = AX_Delay_HAL;
+  interface.delay = AX_Delay_HAL;*/
 
   int imp_goal=1000,adcResult=0;
   int Te=20;
@@ -203,30 +192,35 @@ int main(void)
   pid_init(&pid_z);
   HAL_ADC_Start(&hadc2);
   HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  AX servo = {.id = 1, .interface = &interface};
-  AX_Set_Goal_Position(&servo, 500, AX_NOW);
+//  AX servo = {.id = 1, .interface = &interface};
+/*  AX_Set_Goal_Position(&servo, 500, AX_NOW);
   HAL_Delay(2000);
   AX_Set_Goal_Position(&servo, 550, AX_NOW);
   HAL_Delay(2000);
-
+*/
   //https://www.pololu.com/product/1212
   HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin,1);
-  HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin,1);
   HAL_GPIO_WritePin(INV_GPIO_Port, INV_Pin,0);
 
+  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);
+  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);
+  HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin,0);
+  pwm_D2(50);
+  HAL_Delay(200);
+  pwm_D2(0);
   while (1)
   {
 
     //HAL_ADC_PollForConversion(&hadc2, 100);
     //adcResult = HAL_ADC_GetValue(&hadc2);
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin));//lecture capteur fc
-    write_motor(pid(&pid_z,imp_goal-encoder.cnt));
-    HAL_Delay(Te);
+    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);//lecture capteur fc
+
+    HAL_Delay(200);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -235,8 +229,10 @@ int main(void)
 
 }
 
-/** System Clock Configuration
-*/
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
 
@@ -323,7 +319,7 @@ static void MX_ADC2_Init(void)
     /**Configure Regular Channel
     */
   sConfig.Channel = ADC_CHANNEL_3;
-  sConfig.Rank = 1;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
   sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
@@ -556,10 +552,11 @@ static void MX_GPIO_Init(void)
 
 /**
   * @brief  This function is executed in case of error occurrence.
-  * @param  None
+  * @param  file: The file name as string.
+  * @param  line: The line in file as a number.
   * @retval None
   */
-void _Error_Handler(char * file, int line)
+void _Error_Handler(char *file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
@@ -569,25 +566,22 @@ void _Error_Handler(char * file, int line)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
-
+#ifdef  USE_FULL_ASSERT
 /**
-   * @brief Reports the name of the source file and the source line number
-   * where the assert_param error has occurred.
-   * @param file: pointer to the source file name
-   * @param line: assert_param error line source number
-   * @retval None
-   */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t* file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
-
 }
-
-#endif
+#endif /* USE_FULL_ASSERT */
 
 /**
   * @}
@@ -595,6 +589,6 @@ void assert_failed(uint8_t* file, uint32_t line)
 
 /**
   * @}
-*/
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
