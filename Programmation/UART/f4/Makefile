@@ -3,7 +3,7 @@ PROJECT_DIR=uart-f4
 PROJECT_NAME=uart-f4
 DOC_DIR= /home/$(USER)/STM32Cube/
 BINPATH= /usr/bin
-CUSTOM_C_SOURCES= crc_16.c,rpv1.c
+CUSTOM_C_SOURCES= crc_16.c,rpv1.c,rc_server.c
 
 rouge = \033[0;31m
 vert = \033[0;32m

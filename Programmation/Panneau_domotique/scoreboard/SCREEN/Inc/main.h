@@ -42,6 +42,17 @@
 #define __MAIN_H__
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f3xx_ll_dma.h"
+#include "stm32f3xx_ll_usart.h"
+#include "stm32f3xx_ll_rcc.h"
+#include "stm32f3xx_ll_bus.h"
+#include "stm32f3xx_ll_cortex.h"
+#include "stm32f3xx_ll_system.h"
+#include "stm32f3xx_ll_utils.h"
+#include "stm32f3xx_ll_pwr.h"
+#include "stm32f3xx_ll_gpio.h"
+
+#include "stm32f3xx_ll_exti.h"
 
 /* USER CODE BEGIN Includes */
 
@@ -84,7 +95,8 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-
+extern volatile uint16_t score;
+extern volatile int refresh;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -1,7 +1,7 @@
 #include "client_api.h"
 
-Scoreboard_Client sc_client;
-sig_atomic_t sc_running = 0;
+static Scoreboard_Client sc_client;
+static sig_atomic_t sc_running = 0;
 
 int SC_Start(const char *id, const char* server_ip, const char* server_port){
   if(sc_running == 1){
@@ -89,9 +89,13 @@ void SC_Stop(){
     memset(&act, 0, sizeof(act));
     act.sa_handler = SIG_DFL;
     sigaction(SIGCHLD, &act, NULL);
+    kill(sc_client.pid, SIGTERM); usleep(100);
+    kill(sc_client.pid, SIGTERM); usleep(100);
+    kill(sc_client.pid, SIGTERM); usleep(100);
+    kill(sc_client.pid, SIGTERM); usleep(100);
     if(kill(sc_client.pid, SIGTERM) == -1){
       kill(sc_client.pid, SIGKILL);
-    }
+    }fflush(stdout);
     while(waitpid(sc_client.pid, NULL, 0) == EINTR);
   }
   

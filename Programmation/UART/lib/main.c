@@ -1,68 +1,59 @@
 #include "test_interface.h"
-#include "rpv1.h"
+#include "robotronik_protocol.h"
+#include "remote_call.h"
 
 void test_crc();
 
-void RP_Packet_Received(RP_Packet *packet){
-  printf("\nPacket received.\nSize : %d bytes\nData :\n", packet->len);
+RP_Interface interface1;
+RP_Interface interface2;
 
-  int i;
-  for(i = 0; i < packet->len; i++){
-    printf("0x%2.2X ", packet->data[i]);
-  }
-  printf("\n\n");
+int RC_Pack_Vars_Test(const char *fmt, uint8_t *out, int out_len,  ...);
+
+
+void go(RC_Server *server){
+  int a; float b; double c; char string[RC_STR_SIZE];
+  RC_Server_Get_Args(server, &a, &b, &c, string);
+  
+  printf("%d\n%f\n%lf\n%s", a, b, c, string);
+
+  RC_Server_Return(server, c+1, "success");
 }
 
-void RP_Error_Handler(uint16_t error){
-  switch(RP_ERROR_TYPE(error)){
-  case RP_ERR_INTERNAL:
-    printf("Internal error: ");
-    switch(RP_INTERNAL_ERROR(error)){
-    case RP_ERR_ILLEGAL_ARGUMENTS:
-      printf("Illegal arguments\n");
-      break;
-    case RP_ERR_BUFFER_OVERFLOW:
-      printf("Buffer overflow\n");
-      break;
-    default:
-      printf("Unknown\n");
-      break;
-    }
-    break;
-  case RP_ERR_LINK:
-    printf("Link error: ");
-    switch(RP_LINK_ERROR(error)){
-    case RP_ERR_TIMEOUT:
-      printf("Timeout\n");
-      break;
-    case RP_ERR_UNEXPECTED_EOF:
-      printf("Unexpected EOF\n");
-      break;
-    case RP_ERR_SIZE:
-      printf("Size error\n");
-      break;
-    case RP_ERR_CRC:
-      printf("CRC Error\n");
-      break;
-    default:
-      printf("Unknown\n");
-      break;
-    }
-    break;
-  default:
-    printf("Unknown error\n");
-    break;
-  }
+uint32_t get_tick(){
+  return 0;
 }
 
-int main(){  
+#define GO 0
+RC_Server server;
+int main(){
+
+  RP_Init_Interface(&interface1, send1, get_tick);
+  RP_Init_Interface(&interface2, send2, get_tick);
+
+
+  RC_Server_Init(&server, &interface1);
+
+  RC_Client client;
+  RC_Client_Init(&client, &interface2);
+  
+  RC_Client_Add_Function(&client, GO, "ifFs", "Fs");
+  RC_Server_Add_Function(&server, GO, go, "ifFs", "Fs", RC_IMMEDIATE);
+
+  double r;
+  char str[RC_STR_SIZE];
+  RC_Call(&client, 0, 5, -6.23, 3.141592, "pack string motherfucker !", &r, str);
+
+  printf("\n%lf\n%s\n", r, str);
+  
+  return 0;
+  
+  #if 0
+
+  
   uint16_t size = 5;
   RP_Packet packet = {
     .len = size,
   };
-
-  RP_Interface interface;
-  RP_Init_Interface(&interface, send, RP_Packet_Received, RP_Error_Handler);
   
   receive(packet.data, 5, 1);
   
@@ -81,12 +72,12 @@ int main(){
       interface.buffer_in[i] = 2;
     }
 #endif
-    
-    interface.fsm.update_state(&interface.fsm);
   }
- 
 
+  RP_Process_Data(&interface, interface.buffer_in, RP_BUFFER_SIZE);
+ 
   return 0;
+  #endif
 }
 
 void test_crc(){

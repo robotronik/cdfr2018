@@ -36,7 +36,7 @@
 #include "stm32f3xx_it.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "odometry.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -209,6 +209,13 @@ void TIM1_BRK_TIM15_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
+extern Odometry odometry;
 
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *htim)
+{
+  if(htim->Instance == htim15.Instance){
+    update_odometry(&odometry);
+  }
+}
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

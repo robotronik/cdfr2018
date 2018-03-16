@@ -44,10 +44,9 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
+#include "motor.h"
 #include "odometry.h"
 #include "Robotronik_corp_pid.h"
-
-#define PWM_MAX 50 //a value between 0 and 255, 255 if not for debug
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -56,12 +55,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 Odometry odometry;
-
 int sum_goal,diff_goal;
-
-//TEST ENCODER
-#define TEST_ENCODER 0
-uint8_t led_level = 0;
 
 /* USER CODE END PV */
 
@@ -71,59 +65,6 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-void motor_1(float voltage)
-{
-    uint16_t value;
-    if(voltage>0)
-    {
-      HAL_GPIO_WritePin(DIR_R_GPIO_Port,DIR_R_Pin,1);
-      value=(uint16_t) (voltage*255.0/12.0);
-    }
-    else
-    {
-      HAL_GPIO_WritePin(DIR_R_GPIO_Port,DIR_R_Pin,0);
-      value=(uint16_t) (-voltage*255.0/12.0);
-    }
-    if(value>PWM_MAX) value=PWM_MAX;
-    TIM_OC_InitTypeDef sConfigOC;
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = value;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-}
-
-void motor_2(float voltage)
-{
-    uint16_t value;
-    if(voltage>0)
-    {
-      HAL_GPIO_WritePin(DIR_L_GPIO_Port,DIR_L_Pin,0);
-      value=(uint16_t) (voltage*255.0/12.0);
-    }
-    else
-    {
-      HAL_GPIO_WritePin(DIR_L_GPIO_Port,DIR_L_Pin,1);
-      value=(uint16_t) (-voltage*255.0/12.0);
-    }
-    if(value>PWM_MAX) value=PWM_MAX;
-    TIM_OC_InitTypeDef sConfigOC;
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = value;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-}
-
-void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *htim)
-{
-  if(htim->Instance == htim15.Instance){
-    update_odometry(&odometry);
-    //HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, 1);
-  }
-}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -147,17 +88,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  int Te=10;//in ms
-  float cor_sum,cor_diff;
-  PID_DATA pid_sum,pid_diff;
-  pid_sum.Te=0.01;
-  pid_diff.Te=0.01;
-  pid_sum.Kp=0.01;
-  pid_sum.Ki=0.01;
-  pid_sum.Kd=0.0001;
-  pid_diff.Kp=0.01;
-  pid_diff.Ki=0.01;
-  pid_diff.Kd=0.0001;
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -175,26 +106,66 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM3_Init();
   MX_TIM15_Init();
-  /* USER CODE BEGIN 2 */
+  /* USER CODE BEGIN 2 */  
 
+  int Te = 10;//in ms
   
+  /**************************************************/
+  /*            PID INIT                            */
+  /**************************************************/
+  //PID Sum
+  PID_DATA pid_sum = (PID_DATA) {.Te = 0.01,
+				 .Kp = 0.01,
+				 .Ki = 0.01,
+				 .Kd = 0.0001};
+  pid_init(&pid_sum);
+  
+  //PID Diff
+  PID_DATA pid_diff = (PID_DATA) {.Te = 0.01,
+				  .Kp = 0.01,
+				  .Ki = 0.01,
+				  .Kd = 0.0001};
+  pid_init(&pid_diff);
+
+  /**************************************************/
+  /*            Odometry Start                      */
+  /**************************************************/
+  //Init odometry struct and start sampling
   init_odometry(&odometry, &htim2, &htim1, &htim15);
   
+  /**************************************************/
+  /*            Motors Init                         */
+  /**************************************************/
+  //Init variable used to reconfigure PWM
+  TIM_OC_InitTypeDef sConfigOC;
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  
+  //PWM Start
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//EN_2
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//EN_1
+
+  //Direction init : forward
+  HAL_GPIO_WritePin(DIR_R_GPIO_Port, DIR_R_Pin, 1);
+  HAL_GPIO_WritePin(DIR_L_GPIO_Port, DIR_L_Pin, 0);
+
+  //Enable : stop
+  DRIVE_MOTOR_R(0);//encoder2 forward positive positive voltage
+  DRIVE_MOTOR_L(0);//encoder1 forward positive positive voltage
+
+  //Release the brakes
+  HAL_GPIO_WritePin (NBRAKE_R_GPIO_Port, NBRAKE_R_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin (NBRAKE_L_GPIO_Port, NBRAKE_L_Pin, GPIO_PIN_SET);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  HAL_GPIO_WritePin (NBRAKE_R_GPIO_Port, NBRAKE_R_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin (NBRAKE_L_GPIO_Port, NBRAKE_L_Pin, GPIO_PIN_SET);
-
-  HAL_GPIO_WritePin(DIR_R_GPIO_Port,DIR_R_Pin,1);
-  HAL_GPIO_WritePin(DIR_L_GPIO_Port,DIR_L_Pin,0);
-  motor_1(0);//encoder2 forward positive positive voltage
-  motor_2(0);//encoder1 forward positive positive voltage
-
+  sum_goal=1000;
+  diff_goal=0;
+  
 #if TEST_ENCODER != 0
   while (1) {
     int i;
@@ -209,18 +180,20 @@ int main(void)
   }
 #endif
 
-  pid_init(&pid_sum);
-  pid_init(&pid_diff);
-
-  sum_goal=1000;
-  diff_goal=0;
-
+  float cor_sum, cor_diff;
   while (1)
   {
-    cor_sum=pid(&pid_sum,sum_goal-0.5*(odometry.encoder_l.steps+odometry.encoder_r.steps));
-    cor_diff=pid(&pid_diff,diff_goal-(odometry.encoder_r.steps-odometry.encoder_l.steps));
-    motor_1(cor_sum+cor_diff);
-    motor_2(cor_sum-cor_diff);
+    //Process PID
+    cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));
+    cor_diff = pid(&pid_diff, diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps));
+    
+    float val_r = cor_sum + cor_diff;
+    float val_l = cor_sum - cor_diff;
+
+    //Motors control
+    DRIVE_MOTOR_R(val_r);
+    DRIVE_MOTOR_L(val_l);
+    
     HAL_Delay(Te);
     //TODO generateur de consigne
   /* USER CODE END WHILE */

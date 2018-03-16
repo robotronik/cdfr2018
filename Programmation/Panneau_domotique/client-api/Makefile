@@ -26,9 +26,15 @@ LPURPLE=\033[1;35m
 CYAN=\033[0;36m
 LCYAN=\033[1;36m
 
-all: $(EXEC)
+all: client client_api_test
 
-$(EXEC): $(OBJ)
+client:client.o
+	@echo -e "\t${YELLOW}Building exec. ${LGREEN}$@${YELLOW}${NC}"
+	@echo -e -n "${YELLOW}[${GREEN}OK${YELLOW}]${NC}\r"
+	@$(CC) -o $@ $^ $(LDFLAGS)
+	@echo -e -n "\n"
+
+client_api_test:test.o client_api.o
 	@echo -e "\t${YELLOW}Building exec. ${LGREEN}$@${YELLOW}${NC}"
 	@echo -e -n "${YELLOW}[${GREEN}OK${YELLOW}]${NC}\r"
 	@$(CC) -o $@ $^ $(LDFLAGS)
@@ -40,13 +46,8 @@ $(EXEC): $(OBJ)
 	@$(CC) -o $@ -c $< $(CFLAGS)
 	@echo -e -n "\n"
 
-run: $(EXEC)
-	@echo -e "\t${YELLOW}Running exec. ${LGREEN}$@${YELLOW}${NC}"
-	@./$(EXEC)
-	@echo -e "${YELLOW}[${GREEN}OK${YELLOW}]${NC}"
-
 clean:
 	@echo -e "\t${YELLOW}Removing ${LGREEN}*.o${NC}"
-	@rm -rf *.o $(EXEC)
+	@rm -rf *.o client client_api_test
 	@echo -e "${YELLOW}[${GREEN}OK${YELLOW}]${NC}"
 

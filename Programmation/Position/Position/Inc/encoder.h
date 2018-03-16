@@ -5,6 +5,16 @@
 
 #define ENCODER_MAX 1440
 
+//TEST ENCODER
+#define TEST_ENCODER 0
+#if TEST_ENCODER != 0
+extern uint8_t led_level;
+#if TEST_ENCODER != 1 && TEST_ENCODER != 2
+#error "TEST_ENCODER MUST EQUALS 1 OR 2"
+#endif
+#warning "PROGRAM IS IN TEST_ENCODER MODE"
+#endif
+
 typedef enum Encoder_Dir_E{
   FORWARD, BACKWARD
 }Encoder_Dir;

@@ -2,26 +2,26 @@
  * Fichier généré par pixelbot@Robotronik
  * Paramètres :
  * Taille de la matrice : 32 px
- * Images par secondes : 5 FPS
+ * Images par secondes : 60 FPS
  * Niveaux de luminosité : 8
- * Fréquence de rafraîchissement : 1120 Hz
+ * Fréquence de rafraîchissement : 13440 Hz
  * Sens de lecture : par colonne
- * Rotation : aucune
+ * Rotation : pi/2
  * Taille d'un caractère : 10*16 px
- * Police de caractère : Liberation Sans
+ * Police de caractère : Sans
  * Ensemble de caractères : chiffres 
- * Date de création : mer. févr. 14 22:24:22 2018
+ * Date de création : mer. mars 14 22:17:22 2018
  */
 
 #ifndef SPRITES_HEADER
 #define SPRITES_HEADER
 
 #define MATRIX_SIZE 32
-#define CLOCK_FREQUENCY 1120
+#define CLOCK_FREQUENCY 13440
 #define BRIGHTNESS_LEVELS 8
 
-#define ROW_LENGTH 16
-#define ROWS_PER_FRAME 10
+#define ROW_LENGTH 10
+#define ROWS_PER_FRAME 16
 #define BYTES_PER_ROW 2
 
 #define NUMBERS 1
@@ -44,6 +44,6 @@
  * Syntaxe :
  * sprites[indice_caractère][n° de frame][rangée][octet]
  */
-extern unsigned char sprites[10][8-1][10][2];
+extern unsigned char sprites[10][8-1][16][2];
 
 #endif

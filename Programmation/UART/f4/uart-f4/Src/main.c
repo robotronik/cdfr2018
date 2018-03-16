@@ -44,15 +44,33 @@
 
 /* USER CODE BEGIN Includes */
 #include "rpv1.h"
+#include "rpv1_stm32.h"
+#include "rc_server.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-RP_Interface interface;
+RP_Interface iface_rpi;
+volatile uint8_t level = 0;
 uint8_t buffer;
-uint8_t level;
+
+RC_Server jacky_server;
+
+typedef enum Jacky_Functions_E{
+  SET_PWM,
+  STOP
+}Jacky_Functions;
+
+void set_pwm(uint8_t *data){
+  level = *data;
+}
+
+void stop(uint8_t *data){
+  level = 0;
+}
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,6 +82,21 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
+  if(interface == &iface_rpi && packet->len >= 1){
+    RC_Get_Request(&jacky_server, packet->data[0], packet->data + 1, packet->len - 1);
+  }
+}
+
+
+uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout){
+int i;
+for(i = 0; i < size; i++){
+LL_USART_TransmitData8(USART1, data[i]);
+while(LL_USART_IsActiveFlag_TXE(USART1) == 0);
+}
+    return 0;
+}
 
 /* USER CODE END 0 */
 
@@ -101,20 +134,29 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  level = 0;
-  RP_Init_Interface(&interface, NULL, NULL);
-  interface.fsm.in = &buffer;
+  RP_Init_Interface(&iface_rpi, RP_UART_Transmit);
+  RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_2, USART1, iface_rpi);
   
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-  HAL_UART_Receive_DMA(&huart1, &buffer, 1);
-
+  //Jacky Server
+  RC_Server_Init(&jacky_server);
+  RC_Server_Add_Function(&jacky_server, SET_PWM, set_pwm, 1, RC_IMMEDIATE);
+  RC_Server_Add_Function(&jacky_server, STOP, stop, 0, RC_IMMEDIATE);
+    
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
+  RP_Packet packet;
+  packet.len = 2;
+  packet.data[0] = 0;
+  packet.data[1] = 10;
+  RP_Sync(&iface_rpi, 1);
+  RP_Send(&iface_rpi, &packet, 1);
+  
   while (1)
   {
-    
     int i;
     for(i = 0; i < 25500; i++){
       if(i == 0){
@@ -126,7 +168,7 @@ int main(void)
     }
 	
   /* USER CODE END WHILE */
-    
+
   /* USER CODE BEGIN 3 */
 
   }
@@ -193,21 +235,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-  if(huart == &huart1){
-    interface.fsm.update_state(&interface.fsm);
-    //packet.len = interface.fsm.size;
-    
-    if(interface.fsm.valid){
-      interface.fsm.valid = false;
-      level = interface.packet.data[0];
-    }
-    if(RP_Get_Error() != 0){
-      level = 0;
-      HAL_UART_DMAStop(&huart1);
-    }
-  }
-}
+
 /* USER CODE END 4 */
 
 /**

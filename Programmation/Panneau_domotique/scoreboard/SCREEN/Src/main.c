@@ -38,16 +38,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f3xx_hal.h"
+#include "dma.h"
+#include "tim.h"
+#include "usart.h"
+#include "gpio.h"
 
 /* USER CODE BEGIN Includes */
+#include <stdbool.h>
+#include "robotronik_protocol.h"
+#include "robotronik_protocol_stm32.h"
 #include "display.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim2;
-
-UART_HandleTypeDef huart1;
-DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
@@ -56,10 +59,6 @@ DMA_HandleTypeDef hdma_usart1_rx;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_DMA_Init(void);
-static void MX_USART1_UART_Init(void);
-static void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -67,29 +66,19 @@ static void MX_TIM2_Init(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+
+/**
+ * Interruption timer -> tim.c
+ * Robotronik Protocol -> usart.h, usart.c
+ * Interruptions UART -> stm32f3xx_it.c
+ */
+
+volatile uint16_t score = 0;
 volatile int refresh = 0;
 /*
  * Variable indiquant s'il faut rafraîchir l'écran ou non. Elle est
  * mise à jour dans le traitant d'interruption du timer.
  */
-
-volatile static int index[3] = {0, 0, 0};
-/*
- * Indices respectifs des trois chiffres indiquant le score (du poids
- * fort au poids faible). Ils sont mis à jour de manière asynchrone
- * lorsqu'un score est reçu sur la liaison UART.
- */
-
-static unsigned char buffer;
-/*
- * Buffer de réception UART.
- */
-
-typedef enum FSM_STATE_E{
-  HEADER_1, HEADER_2, RECEIVING_1, RECEIVING_2
-}FSM_STATE;
-FSM_STATE current_state = HEADER_1;
-volatile static uint16_t score = 0;
 
 /* USER CODE END 0 */
 
@@ -125,28 +114,28 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  //Démarre la réception UART
-  HAL_UART_Receive_DMA(&huart1, &buffer, 1);
+
+  //Initialisation UART
+  RP_Init_Interface(&esp_interface, RP_UART_Transmit, RP_Get_Tick);
+
+  RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_5, USART1, esp_interface);
   
   //Lancement du timer de rafraîchissement
   HAL_TIM_Base_Start_IT(&htim2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  blank_screen();
+  
   while (1)
   {
     //Affichage
-    wait_refresh();
-
-    int frame;
-    for(frame = 0; frame < BRIGHTNESS_LEVELS; frame++){
-      display_char(index[0], frame, 0);
-      display_char(index[1], frame, ROWS_PER_FRAME+1);
-      display_char(index[2], frame, 2*ROWS_PER_FRAME+1);
-    }
-
+    display_score(score);
       
   /* USER CODE END WHILE */
 
@@ -214,166 +203,8 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
-/* TIM2 init function */
-static void MX_TIM2_Init(void)
-{
-
-  TIM_ClockConfigTypeDef sClockSourceConfig;
-  TIM_MasterConfigTypeDef sMasterConfig;
-
-  htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 0;
-  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 57143;
-  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/* USART1 init function */
-static void MX_USART1_UART_Init(void)
-{
-
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    _Error_Handler(__FILE__, __LINE__);
-  }
-
-}
-
-/** 
-  * Enable DMA controller clock
-  */
-static void MX_DMA_Init(void) 
-{
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA1_CLK_ENABLE();
-
-  /* DMA interrupt init */
-  /* DMA1_Channel5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel5_IRQn);
-
-}
-
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
-*/
-static void MX_GPIO_Init(void)
-{
-
-  GPIO_InitTypeDef GPIO_InitStruct;
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, PURGE_Pin|BLANK_Pin|DATA_Pin|LINE_4_Pin 
-                          |LINE_3_Pin|LINE_2_Pin|SERIAL_IN_Pin|CLK_COL_Pin 
-                          |LATCH_COL_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, LINE_1_Pin|LINE_0_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : PURGE_Pin BLANK_Pin DATA_Pin LINE_4_Pin 
-                           LINE_3_Pin LINE_2_Pin SERIAL_IN_Pin CLK_COL_Pin 
-                           LATCH_COL_Pin */
-  GPIO_InitStruct.Pin = PURGE_Pin|BLANK_Pin|DATA_Pin|LINE_4_Pin 
-                          |LINE_3_Pin|LINE_2_Pin|SERIAL_IN_Pin|CLK_COL_Pin 
-                          |LATCH_COL_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : LINE_1_Pin LINE_0_Pin */
-  GPIO_InitStruct.Pin = LINE_1_Pin|LINE_0_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-}
-
 /* USER CODE BEGIN 4 */
-//Traitant d'interrupton du timer.
-void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim){
-  if(htim == &htim2){
-    refresh = 1;
-    /*
-     * On indique simplement au programme principal qu'il faut
-     * rafraîchir l'écran.
-     */
-  }
-}
 
-#define RESET_FSM(state) {state = HEADER_1;}
-
-//Traitant d'interruption UART
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-  if(huart == &huart1){
-    switch(current_state){
-    case HEADER_1:
-      if(buffer == 0xFF)
-	current_state = HEADER_2;
-      break;
-    case HEADER_2:
-      if(buffer == 0x00)
-	current_state = RECEIVING_1;
-      else
-	RESET_FSM(current_state);
-      break;
-    case RECEIVING_1:
-      score = buffer << 8;
-      break;
-    case RECEIVING_2:
-      score |= buffer;
-
-      index[2] = score % 10;
-      score /= 10;
-      index[1] = score % 10;
-      score /= 10;
-      index[0] = score % 10;
-
-      RESET_FSM(current_state);
-      break;
-    default:
-      break;
-    }
-  }
-}
 /* USER CODE END 4 */
 
 /**

@@ -3,6 +3,15 @@
 void update_odometry(Odometry *odometry){
   int dl_l = update_encoder(&odometry->encoder_l);
   int dl_r = update_encoder(&odometry->encoder_r);
+
+#if TEST_ENCODER==1
+  led_level = (int) (((float) odometry->encoder_l.htim->Instance->CNT / ENCODER_MAX)*255);
+#endif
+
+#if TEST_ENCODER==2
+  led_level = (int) (((float) odometry->encoder_r.htim->Instance->CNT / ENCODER_MAX)*255);
+#endif
+
   
   odometry->x = odometry->x
     + cos(odometry->theta)*ENCODER_STEP_DIST*(dl_l + dl_r);
@@ -35,12 +44,4 @@ void init_odometry(Odometry *odometry, TIM_HandleTypeDef *htim_l, TIM_HandleType
   HAL_TIM_Base_Start_IT(htim_poll);
 }
 
-#if 0
-#if TEST_ENCODER==1
-  led_level = (int) (((float) encoder1.current / ENCODER_MAX)*255);
-#endif
 
-#if TEST_ENCODER==2
-  led_level = (int) (((float) encoder2.current / ENCODER_MAX)*255);
-#endif
-#endif

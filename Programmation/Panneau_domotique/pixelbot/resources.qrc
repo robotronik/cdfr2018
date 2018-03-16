@@ -4,5 +4,6 @@
     </qresource>
     <qresource prefix="/header">
         <file>sprites.h</file>
+        <file>sprites.c</file>
     </qresource>
 </RCC>

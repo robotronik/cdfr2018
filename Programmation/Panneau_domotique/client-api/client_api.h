@@ -23,8 +23,8 @@
 
 #define SC_SHM_NAME "/score_cdfr_shm"
 #define SC_SEM_NAME "/score_cdfr_sem"
-#define SC_CLIENT_PATH "../client/client"
-#define SC_SERVER_IP "192.168.0.3"
+#define SC_CLIENT_PATH "./client"
+#define SC_SERVER_IP "192.168.0.4"
 #define SC_SERVER_PORT 80
 
 typedef struct Scoreboard_Client_S{
@@ -40,8 +40,6 @@ typedef struct Scoreboard_Client_S{
  * system, otherwise their behavior would be indeterminate.
  */
 
-extern sig_atomic_t sc_running;
-extern Scoreboard_Client sc_client;
 int SC_Start(const char *id, const char* server_ip, const char* server_port);
 /*
  * Start a scoreboard client as a child process and initializes the
