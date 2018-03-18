@@ -44,6 +44,7 @@
 #include "Robotronik_corp_pid.h"
 #include "ax_12a.h"
 #include "Z_axis.h"
+#include "encoder.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -53,6 +54,7 @@ I2C_HandleTypeDef hi2c1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim15;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -60,15 +62,7 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 PID_DATA pid_z;
-
-typedef struct Encoder_S{
-  volatile int last;
-  volatile int current;
-  volatile int dl;
-  volatile int cnt;
-}Encoder;
-
-Encoder encoder = (Encoder) {.last = 0, .current = 0, .dl = 0, .cnt = 0};
+volatile Encoder encoder;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,30 +74,13 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM15_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
-
-void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
-{
-  if(htim->Instance == htim2.Instance)
-  {
-    encoder.last = encoder.current;
-    encoder.current = htim->Instance->CNT;
-    int dl = encoder.current - encoder.last;
-    if(dl > 1){
-      dl = -1;
-    }else if(dl < -1){
-      dl = +1;
-    }
-    encoder.dl = dl;
-    encoder.cnt += dl;
-  }
-}
 
 /*AX_Interface interface;
 
@@ -165,6 +142,7 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
   /*interface.receive = AX_Receive_HAL;
   interface.send = AX_Send_HAL;
@@ -179,7 +157,7 @@ int main(void)
   pid_z.Te=Te/1000;
   pid_init(&pid_z);
   HAL_ADC_Start(&hadc2);
-  HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -190,11 +168,11 @@ int main(void)
   AX_Set_Goal_Position(&servo, 550, AX_NOW);
   HAL_Delay(2000);
 */
+  init_encoder(&encoder,&htim2);
+  start_encoder(&encoder);
   //https://www.pololu.com/product/1212
   MOTOR_INIT;
-  MOTOR_VOLTAGE(50);
-  HAL_Delay(200);
-  MOTOR_VOLTAGE(0);
+  MOTOR_FC;
   while (1)
   {
 
@@ -430,6 +408,40 @@ static void MX_TIM3_Init(void)
   }
 
   HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/* TIM15 init function */
+static void MX_TIM15_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim15.Instance = TIM15;
+  htim15.Init.Prescaler = 25-1;
+  htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim15.Init.Period = 250-1;
+  htim15.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim15.Init.RepetitionCounter = 0;
+  htim15.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim15) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim15, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim15, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 
 }
 
