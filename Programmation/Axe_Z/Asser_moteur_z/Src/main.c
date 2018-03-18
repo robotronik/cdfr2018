@@ -43,8 +43,7 @@
 /* USER CODE BEGIN Includes */
 #include "Robotronik_corp_pid.h"
 #include "ax_12a.h"
-
-#define MAX_PWM 50
+#include "Z_axis.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -87,17 +86,6 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void pwm_D2(uint16_t value)
-{
-    if(value>255) value=255;
-    TIM_OC_InitTypeDef sConfigOC;
-    sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = value;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4);
-    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
-}
 
 
 void HAL_TIM_IC_CaptureCallback (TIM_HandleTypeDef *htim)
@@ -192,7 +180,6 @@ int main(void)
   pid_init(&pid_z);
   HAL_ADC_Start(&hadc2);
   HAL_TIM_Encoder_Start_IT(&htim2,TIM_CHANNEL_ALL);
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -204,15 +191,10 @@ int main(void)
   HAL_Delay(2000);
 */
   //https://www.pololu.com/product/1212
-  HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin,1);
-  HAL_GPIO_WritePin(INV_GPIO_Port, INV_Pin,0);
-
-  HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);
-  HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);
-  HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin,0);
-  pwm_D2(50);
+  MOTOR_INIT;
+  MOTOR_VOLTAGE(50);
   HAL_Delay(200);
-  pwm_D2(0);
+  MOTOR_VOLTAGE(0);
   while (1)
   {
 
