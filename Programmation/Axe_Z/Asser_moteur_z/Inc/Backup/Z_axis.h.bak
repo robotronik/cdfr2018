@@ -6,6 +6,7 @@
 #define __Robotronik_corp_Z_axis_H
 
 #define PWM_MAX 50//max 255
+#define PWM_FC 50
 
 #define MOTOR_INIT \
   TIM_OC_InitTypeDef sConfigOC;\
@@ -34,6 +35,15 @@
     sConfigOC.Pulse = value;\
     HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4);\
     HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);\
+}
+
+#define MOTOR_FC {\
+  MOTOR_VOLTAGE(PWM_FC);\
+  while(HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin)==0)\
+  {\
+    HAL_Delay(1);\
+  }\
+  MOTOR_VOLTAGE(0);\
 }
 
 #endif

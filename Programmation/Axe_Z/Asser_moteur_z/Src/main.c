@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -77,7 +77,7 @@ static void MX_USART2_UART_Init(void);
 static void MX_TIM15_Init(void);
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
+                                
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -168,7 +168,7 @@ int main(void)
   AX_Set_Goal_Position(&servo, 550, AX_NOW);
   HAL_Delay(2000);
 */
-  init_encoder(&encoder,&htim2);
+  init_encoder(&encoder,&htim2,&htim15);
   start_encoder(&encoder);
   //https://www.pololu.com/product/1212
   MOTOR_INIT;
@@ -200,7 +200,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -213,7 +213,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -237,11 +237,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time
+    /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick
+    /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -255,7 +255,7 @@ static void MX_ADC2_Init(void)
 
   ADC_ChannelConfTypeDef sConfig;
 
-    /**Common config
+    /**Common config 
     */
   hadc2.Instance = ADC2;
   hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
@@ -276,7 +276,7 @@ static void MX_ADC2_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Regular Channel
+    /**Configure Regular Channel 
     */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = ADC_REGULAR_RANK_1;
@@ -309,14 +309,14 @@ static void MX_I2C1_Init(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Analogue filter
+    /**Configure Analogue filter 
     */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure Digital filter
+    /**Configure Digital filter 
     */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
@@ -487,9 +487,9 @@ static void MX_USART2_UART_Init(void)
 
 }
 
-/** Configure pins as
-        * Analog
-        * Input
+/** Configure pins as 
+        * Analog 
+        * Input 
         * Output
         * EVENT_OUT
         * EXTI
@@ -504,15 +504,15 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, INV_Pin|EN_Pin|EN_Servo_Pin|IN1_Pin
+  HAL_GPIO_WritePin(GPIOA, INV_Pin|EN_Pin|EN_Servo_Pin|IN1_Pin 
                           |IN2_Pin|LED_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : INV_Pin EN_Pin EN_Servo_Pin IN1_Pin
+  /*Configure GPIO pins : INV_Pin EN_Pin EN_Servo_Pin IN1_Pin 
                            IN2_Pin LED_Pin */
-  GPIO_InitStruct.Pin = INV_Pin|EN_Pin|EN_Servo_Pin|IN1_Pin
+  GPIO_InitStruct.Pin = INV_Pin|EN_Pin|EN_Servo_Pin|IN1_Pin 
                           |IN2_Pin|LED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -569,7 +569,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

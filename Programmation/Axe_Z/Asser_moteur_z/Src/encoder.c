@@ -4,12 +4,13 @@
 uint8_t led_level;
 #endif
 
-void init_encoder(Encoder *encoder, TIM_HandleTypeDef *htim){
+void init_encoder(volatile Encoder *encoder, TIM_HandleTypeDef *htim, TIM_HandleTypeDef *htim2){
   encoder->last_pos = encoder->steps = 0;
   encoder->htim = htim;
+  encoder->htim2 = htim2;
 }
 
-int update_encoder(Encoder *encoder){
+int update_encoder(volatile Encoder *encoder){
   const int cnt = encoder->htim->Instance->CNT;
 
   int dl = cnt - encoder->last_pos;
@@ -19,12 +20,13 @@ int update_encoder(Encoder *encoder){
   }else if(dl < -1){
     dl = +1;
   }
-  
+
   encoder->steps += dl;
 
   return dl;
 }
 
-void start_encoder(Encoder *encoder){
+void start_encoder(volatile Encoder *encoder){
   HAL_TIM_Encoder_Start(encoder->htim, TIM_CHANNEL_ALL);
+  HAL_TIM_Base_Start_IT(encoder->htim2);
 }

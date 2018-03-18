@@ -28,15 +28,16 @@ typedef struct Encoder_S{
 
   //Timers
   TIM_HandleTypeDef *htim;
+  TIM_HandleTypeDef *htim2;
 }Encoder;
 
-void init_encoder(Encoder *encoder, TIM_HandleTypeDef *htim);
+void init_encoder(volatile Encoder *encoder, TIM_HandleTypeDef *htim, TIM_HandleTypeDef *htim2);
 /**
  * Initialise encoder.
  */
 
-int update_encoder(Encoder *encoder);
+int update_encoder(volatile Encoder *encoder);
 
-void start_encoder(Encoder *encoder);
+void start_encoder(volatile Encoder *encoder);
 
 #endif

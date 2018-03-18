@@ -28,9 +28,10 @@ typedef struct Encoder_S{
 
   //Timers
   TIM_HandleTypeDef *htim;
+  TIM_HandleTypeDef *htim2;
 }Encoder;
 
-void init_encoder(Encoder *encoder, TIM_HandleTypeDef *htim);
+void init_encoder(Encoder *encoder, TIM_HandleTypeDef *htim, TIM_HandleTypeDef *htim2);
 /**
  * Initialise encoder.
  */
