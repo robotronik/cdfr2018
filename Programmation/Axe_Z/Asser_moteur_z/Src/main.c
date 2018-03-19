@@ -171,19 +171,19 @@ int main(void)
   {
     HAL_Delay(10);
   }
-  servo.id=3;*/
-  AX_Configure_Angle_Limit(&servo_ar, 500, 550);
-  AX_Configure_Angle_Limit(&servo_g, 400, 510);
-  AX_Configure_Angle_Limit(&servo_d, 510, 540);
+  */
+  AX_Configure_Angle_Limit(&servo_ar, 0, 450);
+  AX_Configure_Angle_Limit(&servo_g, 411, 511);
+  AX_Configure_Angle_Limit(&servo_d, 511, 611);
   while(1)
   {
-    AX_Set_Goal_Position(&servo_ar, 510, AX_NOW);
-    AX_Set_Goal_Position(&servo_g, 450, AX_NOW);
-    AX_Set_Goal_Position(&servo_d, 530, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, 0, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 411, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 611, AX_NOW);
     HAL_Delay(2000);
-    AX_Set_Goal_Position(&servo_ar, 540, AX_NOW);
-    AX_Set_Goal_Position(&servo_g, 500, AX_NOW);
-    AX_Set_Goal_Position(&servo_d, 520, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, 400, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 511, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 511, AX_NOW);
     HAL_Delay(2000);
   }
 
