@@ -5,8 +5,8 @@
 #ifndef __Robotronik_corp_Z_axis_H
 #define __Robotronik_corp_Z_axis_H
 
-#define PWM_MAX 50//max 255
-#define PWM_FC 50
+#define PWM_MAX 100//max 255
+#define VOLTAGE_FC 2
 
 #define MOTOR_INIT \
   TIM_OC_InitTypeDef sConfigOC;\
@@ -20,15 +20,16 @@
 
 //if positive, goes up
 #define MOTOR_VOLTAGE(voltage){\
-    uint16_t value = (uint16_t) (voltage * (255.0 / 12.0));\
+    uint16_t value;\
     if(voltage > 0){\
       HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);\
       HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);\
+      value = (uint16_t) (voltage * (255.0 / 12.0));\
     }\
     else{\
       HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,1);\
       HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,0);\
-      value = -value;\
+      value = (uint16_t) (-voltage * (255.0 / 12.0));\
     }\
     \
     if(value>PWM_MAX) value=PWM_MAX;\
@@ -38,11 +39,9 @@
 }
 
 #define MOTOR_FC {\
-  MOTOR_VOLTAGE(PWM_FC);\
-  while(HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin)==0)\
-  {\
-    HAL_Delay(1);\
-  }\
+  int i=0;\
+  MOTOR_VOLTAGE(VOLTAGE_FC);\
+  while(HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin)==0) i++;\
   MOTOR_VOLTAGE(0);\
 }
 

@@ -22,7 +22,6 @@ int update_encoder(volatile Encoder *encoder){
   }
 
   encoder->steps += dl;
-
   return dl;
 }
 
