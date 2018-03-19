@@ -120,6 +120,7 @@ ProjectManager.HeapSize=0x200
 ProjectManager.KeepUserCode=true
 ProjectManager.LastFirmware=true
 ProjectManager.LibraryCopy=1
+ProjectManager.MainLocation=Src
 ProjectManager.PreviousToolchain=
 ProjectManager.ProjectBuild=false
 ProjectManager.ProjectFileName=AX-F4.ioc

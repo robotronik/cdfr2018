@@ -5,7 +5,7 @@
 #ifndef __Robotronik_corp_Z_axis_H
 #define __Robotronik_corp_Z_axis_H
 
-#define PWM_MAX 50//max 255
+#define PWM_MAX 100//max 255
 #define VOLTAGE_FC 2
 
 #define MOTOR_INIT \

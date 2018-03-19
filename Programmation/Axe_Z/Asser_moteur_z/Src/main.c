@@ -82,7 +82,7 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-/*AX_Interface interface;
+AX_Interface interface;
 
 uint8_t AX_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
   HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
@@ -100,7 +100,7 @@ void AX_Set_Direction_HAL(AX_Direction dir){
 
 void AX_Delay_HAL(uint32_t t){
   HAL_Delay(t);
-}*/
+}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -144,10 +144,10 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
-  /*interface.receive = AX_Receive_HAL;
+  interface.receive = AX_Receive_HAL;
   interface.send = AX_Send_HAL;
   interface.set_direction = AX_Set_Direction_HAL;
-  interface.delay = AX_Delay_HAL;*/
+  interface.delay = AX_Delay_HAL;
 
   float voltage=0;
   int imp_goal;
@@ -162,12 +162,31 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-//  AX servo = {.id = 1, .interface = &interface};
-/*  AX_Set_Goal_Position(&servo, 500, AX_NOW);
-  HAL_Delay(2000);
-  AX_Set_Goal_Position(&servo, 550, AX_NOW);
-  HAL_Delay(2000);
-*/
+  AX servo_ar = {.id = 1, .interface = &interface};
+  AX servo_g = {.id = 2, .interface = &interface};
+  AX servo_d = {.id = 3, .interface = &interface};
+  //AX_Say_Hello(&servo);
+  /*AX_Configure_ID(&servo, 2);
+  while(1)
+  {
+    HAL_Delay(10);
+  }
+  servo.id=3;*/
+  AX_Configure_Angle_Limit(&servo_ar, 500, 550);
+  AX_Configure_Angle_Limit(&servo_g, 400, 510);
+  AX_Configure_Angle_Limit(&servo_d, 510, 540);
+  while(1)
+  {
+    AX_Set_Goal_Position(&servo_ar, 510, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 450, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 530, AX_NOW);
+    HAL_Delay(2000);
+    AX_Set_Goal_Position(&servo_ar, 540, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 500, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 520, AX_NOW);
+    HAL_Delay(2000);
+  }
+
   //https://www.pololu.com/product/1212
   MOTOR_INIT;
   MOTOR_FC;
@@ -453,7 +472,7 @@ static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 38400;
+  huart1.Init.BaudRate = 1000000;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -474,7 +493,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 38400;
+  huart2.Init.BaudRate = 1000000;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
