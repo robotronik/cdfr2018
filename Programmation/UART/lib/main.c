@@ -34,7 +34,7 @@ int main(){
   RC_Server_Init(&server, &interface1);
 
   RC_Client client;
-  RC_Client_Init(&client, &interface2);
+  RC_Client_Init(&client, &interface2, 1);
   
   RC_Client_Add_Function(&client, GO, "ifFs", "Fs");
   RC_Server_Add_Function(&server, GO, go, "ifFs", "Fs", RC_IMMEDIATE);

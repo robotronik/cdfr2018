@@ -33,7 +33,7 @@ void RP_Packet_Received(RP_Interface *iface, RP_Packet *packet){
     printf("Client: \n");
   }
   
-  printf("Packet received.\nSize : %d bytes\nData :\n", packet->len);
+  printf("Packet received.\nID : %d\nSize : %d bytes\nData :\n", packet->id, packet->len);
 
   int i;
   for(i = 0; i < packet->len; i++){

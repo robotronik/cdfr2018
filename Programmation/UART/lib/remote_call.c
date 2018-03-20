@@ -255,17 +255,19 @@ int RC_Server_Add_Function(RC_Server *server,
 }
 
 int RC_Server_Get_Request(RC_Server *server, RP_Packet *packet){
-  //Extracting packet informations
-  const int id = packet->data[0];
-  const int len = packet->len - 1;
-  uint8_t *const data = &packet->data[1];
-
-  //Checking basic informations
   if(packet->len < 1){
     err = RC_LINK_ERROR;
     return -1;
   }
   
+  //Extracting packet informations
+  const int id_client = packet->id;
+  const int id = packet->data[0];
+  const int len = packet->len - 1;
+  uint8_t *const data = &packet->data[1];
+
+
+  //Checking basic informations
   if(!CHECK_ID(id)){
     err = RC_BAD_ID;
     return -1;
@@ -278,6 +280,7 @@ int RC_Server_Get_Request(RC_Server *server, RP_Packet *packet){
   }
   
   //Filling request informations
+  server->request.id_client = id_client;
   server->request.id = id;
   server->request.data = data;
   server->request.len = len;
@@ -329,6 +332,7 @@ int RC_Server_Return(RC_Server *server, ...){
   RP_Packet *packet = &server->interface->s_packet;
 
   packet->data[0] = server->request.id;
+  packet->id = server->request.id_client;
   packet->len = 1 + RC_Pack_Vars(server->functions[server->request.id].return_fmt,
 			       &packet->data[1],
 			       RC_MAX_DATA,
@@ -346,10 +350,11 @@ int RC_Server_Return(RC_Server *server, ...){
 //==================================================//
 //                  RC CLIENT                       //
 //==================================================//
-void RC_Client_Init(RC_Client *client, RP_Interface *interface){
+void RC_Client_Init(RC_Client *client, RP_Interface *interface, int id_server){
   int i;
 
   client->interface = interface;
+  client->id_server = id_server;
   for(i = 0; i < RC_NB_FUNCTIONS; i++){
     client->functions[i].used = false;
   }  
@@ -404,6 +409,7 @@ int RC_Call(RC_Client *client, int id, ...){
   //Build the packet
   RP_Packet *packet = &client->interface->s_packet;
   packet->data[0] = id;
+  packet->id = client->id_server;
   packet->len = 1 + RC_Pack_Vars(client->functions[id].params_fmt,
 				 &packet->data[1],
 				 RC_MAX_DATA,
@@ -427,7 +433,7 @@ int RC_Call(RC_Client *client, int id, ...){
 
   //Check return packet
   RP_Packet *const r_packet = &client->interface->r_packet;
-  if(r_packet->len < 1 || r_packet->data[0] != id){
+  if(r_packet->len < 1 || r_packet->data[0] != id || r_packet->id != client->id_server){
     err = RC_INVALID_RETURN;
     return -1;
   }

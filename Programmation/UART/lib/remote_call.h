@@ -122,6 +122,7 @@ typedef struct RC_Server_Function_S{
 }RC_Server_Function;
 
 typedef struct RC_Request_S{
+  int id_client; //id of the client that made the request
   int id;
   uint8_t *data;
   int len;
@@ -147,6 +148,7 @@ typedef struct RC_Client_Function_S{
 typedef struct RC_Client_S{
   RP_Interface *interface;
   RC_Client_Function functions[RC_NB_FUNCTIONS];
+  int id_server; //id of the associated server
 }RC_Client;
 
 //==================================================
@@ -214,7 +216,7 @@ int RC_Server_Return(RC_Server *server, ...);
 //            RC Client functions                   //
 //==================================================//
 
-void RC_Client_Init(RC_Client *client, RP_Interface *interface);
+void RC_Client_Init(RC_Client *client, RP_Interface *interface, int id_server);
 int RC_Client_Add_Function(RC_Client *client,
 			   int id,
 			   const char params_fmt[],
