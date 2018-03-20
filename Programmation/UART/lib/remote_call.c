@@ -74,7 +74,7 @@ static int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  va_list *ar
 #define RC_PACK_STRING(args, out, out_len, success)			\
   {									\
     char *str = va_arg(args, char*);					\
-    char c;								\
+    char c = '*';							\
     int count = RC_STR_SIZE;						\
     /* Copy a character from str to out until the end of str or out is reached */ \
     while(out_len != 0 && (c = *(out++) = *(str++)) != '\0' && (--count)){ \
@@ -100,7 +100,7 @@ static int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  va_list *ar
 #define RC_UNPACK_STRING(args, in, in_len, success)			\
   {									\
     char *w_ptr = va_arg(args, char*);					\
-    char c;								\
+    char c = '*';							\
     int count = RC_STR_SIZE;						\
     while(in_len != 0 && (c = *(w_ptr++) = *(in++)) != '\0' && (--count)){ \
       in_len--;								\
