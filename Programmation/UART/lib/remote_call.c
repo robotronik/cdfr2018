@@ -25,8 +25,8 @@ static int err = 0;
 
 //Private functions
 static int RC_Copy_Format(char *dst, const char fmt[]);
-static int RC_Pack_Vars(const char *fmt, uint8_t *out, int out_len,  va_list args);
-static int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  va_list args);
+static int RC_Pack_Vars(const char *fmt, uint8_t *out, int out_len,  va_list *args);
+static int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  va_list *args);
 
 //Macros
 #define CHECK_ID(id) ((id >= 0) && (id < RC_NB_FUNCTIONS))
@@ -123,32 +123,32 @@ static int RC_Copy_Format(char *dst, const char fmt[]){
   return 0;
 }
 
-static int RC_Pack_Vars(const char *fmt, uint8_t *out, int out_len,  va_list args){
+static int RC_Pack_Vars(const char *fmt, uint8_t *out, int out_len,  va_list *args){
   int out_len_tmp = out_len;
 
   char c;
   int success = 1;
   while((c = *(fmt++)) != '\0' && success){
     if(c == RC_UINT8_T){
-      RC_PACK_VAR(args, uint8_t, int, out, out_len, success);
+      RC_PACK_VAR(*args, uint8_t, int, out, out_len, success);
     }
     else if(c == RC_UINT16_T){
-      RC_PACK_VAR(args, uint16_t, int, out, out_len, success);
+      RC_PACK_VAR(*args, uint16_t, int, out, out_len, success);
     }
     else if(c == RC_UINT32_T){
-      RC_PACK_VAR(args, uint32_t, int, out, out_len, success);      
+      RC_PACK_VAR(*args, uint32_t, int, out, out_len, success);      
     }
     else if(c == RC_INT){
-      RC_PACK_VAR(args, int, int, out, out_len, success);
+      RC_PACK_VAR(*args, int, int, out, out_len, success);
     }
     else if(c == RC_FLOAT){
-      RC_PACK_VAR(args, float, double, out, out_len, success);
+      RC_PACK_VAR(*args, float, double, out, out_len, success);
     }
     else if(c == RC_DOUBLE){
-      RC_PACK_VAR(args, double, double, out, out_len, success);      
+      RC_PACK_VAR(*args, double, double, out, out_len, success);      
     }
     else if(c == RC_STRING){
-      RC_PACK_STRING(args, out, out_len, success);
+      RC_PACK_STRING(*args, out, out_len, success);
     }else{
       //Should not happen because format is checked when the function
       //is initialized.
@@ -156,37 +156,35 @@ static int RC_Pack_Vars(const char *fmt, uint8_t *out, int out_len,  va_list arg
       return -1;
     }
   }
-
-  va_end(args);
   
   return (success)?(out_len_tmp - out_len):-1;
 }								
 
-static int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  va_list args){
+static int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  va_list *args){
   char c;
   int success = 1;
   
   while((c = *(fmt++)) != '\0' && success){
     if(c == RC_UINT8_T){
-      RC_UNPACK_VAR(args, uint8_t, uint8_t*, in, in_len, success);
+      RC_UNPACK_VAR(*args, uint8_t, uint8_t*, in, in_len, success);
     }
     else if(c == RC_UINT16_T){
-      RC_UNPACK_VAR(args, uint16_t, uint16_t*, in, in_len, success);
+      RC_UNPACK_VAR(*args, uint16_t, uint16_t*, in, in_len, success);
     }
     else if(c == RC_UINT32_T){
-      RC_UNPACK_VAR(args, uint32_t, uint32_t*, in, in_len, success);
+      RC_UNPACK_VAR(*args, uint32_t, uint32_t*, in, in_len, success);
     }
     else if(c == RC_INT){
-      RC_UNPACK_VAR(args, int, int*, in, in_len, success);
+      RC_UNPACK_VAR(*args, int, int*, in, in_len, success);
     }
     else if(c == RC_FLOAT){
-      RC_UNPACK_VAR(args, float, float*, in, in_len, success);
+      RC_UNPACK_VAR(*args, float, float*, in, in_len, success);
     }
     else if(c == RC_DOUBLE){
-      RC_UNPACK_VAR(args, double, double*, in, in_len, success);
+      RC_UNPACK_VAR(*args, double, double*, in, in_len, success);
     }
     else if(c == RC_STRING){
-      RC_UNPACK_STRING(args, in, in_len, success);
+      RC_UNPACK_STRING(*args, in, in_len, success);
     }else{
       //Should not happen because format is checked when the function
       //is initialized.
@@ -194,8 +192,6 @@ static int RC_Unpack_Vars(const char *fmt, uint8_t *in, int in_len,  va_list arg
       return -1;
     }
   }
-
-  va_end(args);
   
   return (success && in_len == 0)?0:-1;
 }
@@ -317,7 +313,7 @@ int RC_Server_Get_Args(RC_Server *server, ...){
 
   RC_Server_Function *const fun = &server->functions[server->request.id];
   
-  int r = RC_Unpack_Vars(fun->params_fmt, server->request.data, server->request.len, args);
+  int r = RC_Unpack_Vars(fun->params_fmt, server->request.data, server->request.len, &args);
 
   va_end(args);
 
@@ -336,7 +332,7 @@ int RC_Server_Return(RC_Server *server, ...){
   packet->len = 1 + RC_Pack_Vars(server->functions[server->request.id].return_fmt,
 			       &packet->data[1],
 			       RC_MAX_DATA,
-			       args);
+			       &args);
 
   if(packet->len == 0){
     err = RC_INVALID_RETURN;
@@ -413,7 +409,7 @@ int RC_Call(RC_Client *client, int id, ...){
   packet->len = 1 + RC_Pack_Vars(client->functions[id].params_fmt,
 				 &packet->data[1],
 				 RC_MAX_DATA,
-				 args);
+				 &args);
   if(packet->len == 0){
     err = RC_WRONG_FORMAT;
     return -1;
@@ -442,7 +438,7 @@ int RC_Call(RC_Client *client, int id, ...){
   int r = RC_Unpack_Vars(client->functions[id].return_fmt,
 			 &r_packet->data[1],
 			 r_packet->len - 1,
-			 args);
+			 &args);
   va_end(args);
 
   return r;
