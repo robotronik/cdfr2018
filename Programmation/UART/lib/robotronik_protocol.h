@@ -37,21 +37,27 @@
 //              Global definitions
 //==================================================
 
-//RP_MAX_PACKET_SIZE must be <= 251 (see RP_Packet below).
-#define RP_MAX_PACKET_SIZE 251
-#define RP_BUFFER_SIZE RP_MAX_PACKET_SIZE+5
+//RP_MAX_PACKET_SIZE must be <= 250 (see RP_Packet below).
+#define RP_MAX_PACKET_SIZE 250
+#define RP_BUFFER_SIZE 256
 
 //Data packet
 typedef struct RP_Packet_S{
+  uint8_t id;//Optional byte to identify packets or recipent
   uint8_t len;//Number of data bytes
   uint8_t data[RP_MAX_PACKET_SIZE];
 }RP_Packet;
 /*
  * Here is the frame format, by byte :
- * [COBS init] [size] [data]* [CRC-16_LOW] [CRC-16_HIGH] [EOF]
- * There is at most 251 data bytes.
- * Size is (3 + packet->len)
- * The CRC is calculated before byte stuffing, from [size] to the last
+ * [COBS init] [id] [size] [data]* [CRC-16_LOW] [CRC-16_HIGH] [EOF]
+ * 
+ * The max value of [COBS init] is 255, so we allow 254 bytes between
+ * [COBS init] and [EOF] excluded. Because 4 bytes are reserved by the
+ * protocol (id, size, crc-16_low, crc-16_high), there are 250 bytes
+ * left for data.
+ *
+ * Size is (4 + packet->len)
+ * The CRC is calculated before byte stuffing, from [id] to the last
  * [data] byte
  */
 
@@ -123,7 +129,7 @@ int RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]);
  * (packet != NULL)
  * (packet->len > 0)
  * (packet->data != NULL)
- * (3 + packet->len <= 254)
+ * (6 + packet->len <= 256)
  *
  * Return the size of the built frame in bytes on success, -1 on error.
  */

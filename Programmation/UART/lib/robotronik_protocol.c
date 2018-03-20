@@ -32,8 +32,7 @@
 #define WRITE_BUFF(p_buffer,byte) *(p_buffer++) = byte;
 #define ENCODE_BYTE(byte,p_buffer,p_code) {\
     if(byte == RP_EOF){			   \
-      byte = p_buffer - p_code;		   \
-      *p_code = byte;			   \
+      *p_code = p_buffer - p_code;	   \
       p_code = p_buffer++;		   \
     }					   \
     else{				   \
@@ -44,6 +43,7 @@
 static uint16_t err;
 
 static void RP_FSM_INIT(RP_Interface *interface);
+static void RP_FSM_ID(RP_Interface *interface);
 static void RP_FSM_SIZE(RP_Interface *interface);
 static void RP_FSM_DATA(RP_Interface *interface);
 static void RP_FSM_CRC_LOW(RP_Interface *interface);
@@ -85,7 +85,7 @@ void __attribute__((weak)) RP_Error_Handler(RP_Interface* interface, uint16_t er
 //==================================================
 
 int RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]){
-  if((packet->len <= 0) || (packet->len + 5 > RP_BUFFER_SIZE) || (packet->len > RP_MAX_PACKET_SIZE)){
+  if((packet->len <= 0) || (packet->len + 6 > RP_BUFFER_SIZE) || (packet->len > RP_MAX_PACKET_SIZE)){
     err =  RP_ERR_INTERNAL | RP_ERR_ILLEGAL_ARGUMENTS;
     return -1;
   }
@@ -94,16 +94,21 @@ int RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]){
   uint8_t *p_code = p_buffer++;
   uint16_t crc_accum = CRC_INIT;
 
+  //ID
+  const uint8_t id = packet->id;
+  UPDATE_CRC(crc_accum, id);
+  ENCODE_BYTE(id, p_buffer, p_code);
+    
   //Size (remaining bytes)
-  const uint8_t size = 3 + packet->len;
-  *(p_buffer++) = size;
+  const uint8_t size = 4 + packet->len;
   UPDATE_CRC(crc_accum, size);
+  *(p_buffer++) = size;
   
   int i;
   for(i = 0; i < packet->len; i++){
-    uint8_t byte = packet->data[i];
-    UPDATE_CRC(crc_accum,byte);
-    ENCODE_BYTE(byte,p_buffer, p_code);
+    const uint8_t byte = packet->data[i];
+    UPDATE_CRC(crc_accum, byte);
+    ENCODE_BYTE(byte, p_buffer, p_code);
   }
   
   //CRC-16
@@ -230,15 +235,32 @@ static void RP_FSM_INIT(RP_Interface *interface){
    */
   interface->bs_count = FSM_BYTE;
 
+  FSM_UPDATE(interface, RP_FSM_ID);
+}
+
+static void RP_FSM_ID(RP_Interface *interface){
+  FSM_GET_BYTE(interface);
+
+  /*
+   * From this byte, reaching an EOF flag before the END state is
+   * unexpected and will trigger an error.
+   */
+  FSM_CHECK_ERR(interface, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
+
+  /*
+   * Note that the CRC is computed AFTER the byte is decoded. Indeed,
+   * the CRC concerns the useful data.
+   */
+  FSM_BYTE = FSM_DECODE_BYTE(interface, FSM_BYTE);
+  interface->r_packet.id = FSM_BYTE;
+  UPDATE_CRC(interface->crc_accum, FSM_BYTE);
+
   FSM_UPDATE(interface, RP_FSM_SIZE);
 }
 
 static void RP_FSM_SIZE(RP_Interface *interface){
   FSM_GET_BYTE(interface);
-  /*
-   * From this byte, reaching an EOF flag before the END state is
-   * unexpected and will trigger an error.
-   */
+
   FSM_CHECK_ERR(interface, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
 
   /*
@@ -255,7 +277,7 @@ static void RP_FSM_SIZE(RP_Interface *interface){
   /*
    * Get the packet length. It will be used to find the CRC position.
    */
-  interface->size = interface->remaining = FSM_BYTE - 3;
+  interface->size = interface->remaining = FSM_BYTE - 4;
   interface->r_packet.len = interface->size;
   
   /*
@@ -272,10 +294,6 @@ static void RP_FSM_DATA(RP_Interface *interface){
   FSM_GET_BYTE(interface);
   FSM_CHECK_ERR(interface, RP_ERR_LINK | RP_ERR_UNEXPECTED_EOF);
 
-  /*
-   * Note that the CRC is computed AFTER the byte is decoded. Indeed,
-   * the CRC concerns the useful data.
-   */
   FSM_BYTE = FSM_DECODE_BYTE(interface, FSM_BYTE);
   *(interface->p_out++) = FSM_BYTE;
   UPDATE_CRC(interface->crc_accum, FSM_BYTE);
