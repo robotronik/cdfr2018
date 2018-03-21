@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Project>
-<ProjectName>/home/maxime/Bureau/Robotronik/git/cdfr2018/Programmation/Axe_Z/Asser_moteur_z/\Asser_moteur_z</ProjectName>
+<ProjectName>/home/maxime/Bureau/Robotique/git/cdfr2018/Programmation/Axe_Z/Asser_moteur_z/\Asser_moteur_z</ProjectName>
 <ProjectNature>C</ProjectNature> 
 <CMSIS>Drivers/CMSIS</CMSIS>
 <HAL_Driver>/home/maxime/STM32Cube/Repository//STM32Cube_FW_F3_V1.9.0/Drivers/CMSIS</HAL_Driver>
@@ -31,7 +31,7 @@
 			
     <usedDebug>true</usedDebug>
     	<debugprobe></debugprobe>
-    <optimization>2</optimization>
+    <optimization></optimization>
     <icfloc>0</icfloc>
     <Adefines>
         <define></define>
@@ -44,13 +44,13 @@
 	    	<include></include>
     </Aincludes>
     <Cdefines>
+        <define>USE_FULL_LL_DRIVER</define>
     </Cdefines>
     <definestoremove>
         <Adefines>
             <define></define>
         </Adefines>
         <Cdefines>
-            <define>USE_FULL_LL_DRIVER</define>
             <define>MBEDTLS_CONFIG_FILE=&quot;mbedtls_config.h&quot;</define>
         </Cdefines>         
     </definestoremove>
@@ -72,6 +72,12 @@
 	    <name>Drivers</name> 
 		   <group>
 		 		<name>STM32F3xx_HAL_Driver</name>
+						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_utils.c</name>
+						</file>
+						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_exti.c</name>
+						</file>
 						<file>
 							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc.c</name>
 						</file>
@@ -95,6 +101,21 @@
 						</file>
 						<file>
 							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_uart_ex.c</name>
+						</file>
+						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_usart.c</name>
+						</file>
+						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_rcc.c</name>
+						</file>
+						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_gpio.c</name>
+						</file>
+						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_exti.c</name>
+						</file>
+						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_dma.c</name>
 						</file>
 						<file>
 							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c</name>
@@ -143,6 +164,30 @@
                                 </file>
 
                                 <file>
+                                 <name>Src/gpio.c</name>
+                                </file>
+
+                                <file>
+                                 <name>Src/adc.c</name>
+                                </file>
+
+                                <file>
+                                 <name>Src/dma.c</name>
+                                </file>
+
+                                <file>
+                                 <name>Src/i2c.c</name>
+                                </file>
+
+                                <file>
+                                 <name>Src/tim.c</name>
+                                </file>
+
+                                <file>
+                                 <name>Src/usart.c</name>
+                                </file>
+
+                                <file>
                                  <name>Src/stm32f3xx_it.c</name>
                                 </file>
 
@@ -155,9 +200,54 @@
     <group>
         <name>Src</name>
                     <group>
+                    <name>adc.c</name>
+                                    <file>
+                                            <name>Src/adc.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
                     <name>main.c</name>
                                     <file>
                                             <name>Src/main.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
+                    <name>dma.c</name>
+                                    <file>
+                                            <name>Src/dma.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
+                    <name>tim.c</name>
+                                    <file>
+                                            <name>Src/tim.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
+                    <name>usart.c</name>
+                                    <file>
+                                            <name>Src/usart.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
+                    <name>i2c.c</name>
+                                    <file>
+                                            <name>Src/i2c.c</name>
                                     </file>
                     </group>
     </group>
@@ -176,6 +266,15 @@
                     <name>stm32f3xx_it.c</name>
                                     <file>
                                             <name>Src/stm32f3xx_it.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
+                    <name>gpio.c</name>
+                                    <file>
+                                            <name>Src/gpio.c</name>
                                     </file>
                     </group>
     </group>
