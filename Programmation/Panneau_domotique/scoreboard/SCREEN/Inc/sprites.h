@@ -7,10 +7,10 @@
  * Fréquence de rafraîchissement : 13440 Hz
  * Sens de lecture : par colonne
  * Rotation : pi/2
- * Taille d'un caractère : 10*16 px
+ * Taille d'un caractère : 10*14 px
  * Police de caractère : Sans
  * Ensemble de caractères : chiffres 
- * Date de création : mer. mars 14 22:17:22 2018
+ * Date de création : mer. mars 21 19:05:07 2018
  */
 
 #ifndef SPRITES_HEADER
@@ -21,7 +21,7 @@
 #define BRIGHTNESS_LEVELS 8
 
 #define ROW_LENGTH 10
-#define ROWS_PER_FRAME 16
+#define ROWS_PER_FRAME 14
 #define BYTES_PER_ROW 2
 
 #define NUMBERS 1
@@ -44,6 +44,6 @@
  * Syntaxe :
  * sprites[indice_caractère][n° de frame][rangée][octet]
  */
-extern unsigned char sprites[10][8-1][16][2];
+extern unsigned char sprites[10][8-1][14][2];
 
 #endif
