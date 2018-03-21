@@ -73,7 +73,7 @@ void SystemClock_Config(void);
  * Interruptions UART -> stm32f3xx_it.c
  */
 
-volatile uint16_t score = 123;
+volatile uint16_t score = 0;
 volatile int refresh = 0;
 /*
  * Variable indiquant s'il faut rafraîchir l'écran ou non. Elle est
