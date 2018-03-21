@@ -9,6 +9,6 @@ typedef enum Z_Functions_E{
   PUNCH_BEE
 }Z_Functions;
 
-void punch_bee();
+void punch_bee(RC_Server* pserver);
 
 #endif
