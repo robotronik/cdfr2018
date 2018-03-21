@@ -72,7 +72,7 @@ void display_score(uint16_t score){
       PURGE_CAPAS;
       
       //Sélection de la colonne
-      SELECT_COL(8 + row);
+      SELECT_COL(9 + row);
 
       //Sélection des leds
       HAL_GPIO_WritePin(LATCH_COL_GPIO_Port, LATCH_COL_Pin, GPIO_PIN_RESET);      
