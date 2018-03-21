@@ -131,7 +131,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   blank_screen();
-  
+
   while (1)
   {
     //Affichage

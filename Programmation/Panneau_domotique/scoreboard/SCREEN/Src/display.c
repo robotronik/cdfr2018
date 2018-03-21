@@ -51,28 +51,19 @@ void blank_screen(){
 void display_score(uint16_t score){
 
   //Indexs du score
-  __disable_irq();
-  uint8_t ***const sprite_k[3] = {(uint8_t***) sprites[score%10],
-				(uint8_t***) sprites[(score /= 10)%10],
-				(uint8_t***) sprites[(score /= 10)%10]};
-			
-  __enable_irq();
-
+  uint8_t index[3] = {score%10, (score/=10)%10, (score/=10)%10};
+  
   int frame, row;
   for(frame = 0; frame < BRIGHTNESS_LEVELS-1; frame++){
-    uint8_t **const frame_k[3] = {(uint8_t**) sprite_k[0][frame],
-				 (uint8_t**) sprite_k[1][frame],
-				 (uint8_t**) sprite_k[2][frame]};
-    
     for(row = 0; row < ROWS_PER_FRAME; row++){
-      uint8_t *const row_k[3] = {(uint8_t*) frame_k[0][row],
-				 (uint8_t*) frame_k[1][row],
-				 (uint8_t*) frame_k[2][row]};
+      uint8_t *row_2 = sprites[index[2]][frame][row];
+      uint8_t *row_1 = sprites[index[1]][frame][row];
+      uint8_t *row_0 = sprites[index[0]][frame][row];
       
       uint32_t data =
-	((uint32_t) ((((uint16_t) row_k[2][0]) << 8) | row_k[2][1]) << 16) |
-        ((uint32_t) ((((uint16_t) row_k[1][0]) << 8) | row_k[1][1]) << 5) |
-        ((uint32_t) ((((uint16_t) row_k[0][0]) << 8) | row_k[0][1]) >> 6);
+	((uint32_t) ((((uint16_t) row_0[0]) << 8) | row_0[1]) << 16) |
+        ((uint32_t) ((((uint16_t) row_1[0]) << 8) | row_1[1]) << 5) |
+        ((uint32_t) ((((uint16_t) row_2[0]) << 8) | row_2[1]) >> 6);
       
       //Attente du timer
       wait_refresh();

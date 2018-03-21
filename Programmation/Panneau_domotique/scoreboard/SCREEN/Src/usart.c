@@ -62,6 +62,9 @@ uint32_t RP_Get_Tick(){
 void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
   if(interface == &esp_interface && packet->len == 2){
     score = (packet->data[1] << 8) | packet->data[0];
+    if(score > 999){
+      score = 999;
+    }
   }
 }
 
