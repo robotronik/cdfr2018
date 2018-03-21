@@ -39,12 +39,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
-
 #include "gpio.h"
 #include "dma.h"
 
 /* USER CODE BEGIN 0 */
 RP_Interface Z_interface;
+RP_Interface nucleo_interface;
 
 uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout){
   int i;
@@ -61,10 +61,7 @@ uint32_t RP_Get_Tick(){
 
 void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
   if(interface == &Z_interface && packet->len == 2){
-    score = (packet->data[1] << 8) | packet->data[0];
-    if(score > 999){
-      score = 999;
-    }
+
   }
 }
 /* USER CODE END 0 */

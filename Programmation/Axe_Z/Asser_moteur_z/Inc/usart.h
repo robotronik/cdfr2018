@@ -50,13 +50,15 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "robotronik_protocol.h"
+#include "robotronik_protocol_stm32f3.h"
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
-
+   extern RP_Interface Z_interface;
+   extern RP_Interface nucleo_interface;
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);
@@ -65,7 +67,7 @@ void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+   uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

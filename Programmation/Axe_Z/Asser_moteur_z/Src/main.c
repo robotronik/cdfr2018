@@ -133,7 +133,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM15_Init();
   /* USER CODE BEGIN 2 */
-  RP_Init_Interface(&nucleo_interface, RP_UART_Transmit, RP_Get_Tick);
+  RP_Init_Interface(&nucleo_interface, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, nucleo_interface);
 
 
