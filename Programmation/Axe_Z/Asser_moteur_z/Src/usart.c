@@ -43,8 +43,12 @@
 #include "dma.h"
 
 /* USER CODE BEGIN 0 */
+#include "robotronik_protocol.h"
+#include "robotronik_protocol_stm32f3.h"
+#include "remote_call.h"
+
 RP_Interface Z_interface;
-RP_Interface nucleo_interface;
+RC_Server Z_server;
 
 uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout){
   int i;
@@ -60,8 +64,8 @@ uint32_t RP_Get_Tick(){
 }
 
 void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
-  if(interface == &Z_interface && packet->len == 2){
-
+  if(interface == &Z_interface && packet->len >= 1){
+    RC_Server_Get_Request(&Z_server, packet);
   }
 }
 /* USER CODE END 0 */
