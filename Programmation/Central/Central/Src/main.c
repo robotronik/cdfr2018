@@ -64,7 +64,8 @@ void SystemClock_Config(void);
 
 /* USER CODE BEGIN 0 */
 VL53L0X_RangingMeasurementData_t tof_data;
-VL53L0X_Dev_t tof_dev = {.I2cHandle = &hi2c3, .I2cDevAddr = 0x52};
+VL53L0X_Dev_t tof_dev = {.I2cHandle = &hi2c3, .I2cDevAddr = 0x52, .Present = 0};
+
 /* USER CODE END 0 */
 
 /**
@@ -109,6 +110,37 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_GPIO_TogglePin(Led_Red_GPIO_Port,Led_Red_Pin);
+
+  uint16_t id;
+  int status;
+  int new_addr = 0x52;
+  do{
+    //Set I2C speed to 400KHz
+    status = VL53L0X_WrByte(&tof_dev, 0x88, 0x00);
+
+    //Read ID to know if the address is correct
+    status = VL53L0X_RdWord(&tof_dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID, &id);
+    //I2C error or bad ID
+    if(status || id != 0xEEAA) break;
+
+    //Set device address
+    status = VL53L0X_SetDeviceAddress(&tof_dev, new_addr);
+    if(status) break;
+    tof_dev.I2cDevAddr = new_addr;
+
+    //Check the device work with the new address
+    status = VL53L0X_RdWord(&tof_dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID, &id);
+
+    //Init the device
+    status = VL53L0X_DataInit(&tof_dev);
+    if(status == 0)
+      tof_dev.Present = 1;
+    else
+      break;
+
+  }while(0);
+  
+  
   while (1)
   {
 
