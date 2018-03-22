@@ -1,10 +1,11 @@
 /**
   ******************************************************************************
-  * @file    stm32f4xx_it.h
-  * @brief   This file contains the headers of the interrupt handlers.
+  * @file    stm32xxx_hal.h
+  * @date    10/03/2015 18:07:07
+  * @brief   This file allows to select the right stm32 hal file
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2015 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -32,34 +33,41 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F4xx_IT_H
-#define __STM32F4xx_IT_H
+#ifndef __STM32xxx_HAL_H
+#define __STM32xxx_HAL_H
+
 
 #ifdef __cplusplus
  extern "C" {
 #endif 
 
 /* Includes ------------------------------------------------------------------*/
+#include "mxconstants.h"
+
+#ifdef STM32F401xE
 #include "stm32f4xx_hal.h"
-#include "main.h"
+#define MCU_NAME "STM32F401xE"
+#endif
+#ifdef STM32L476xx
+#include "stm32l4xx_hal.h"
+#define MCU_NAME "STM32L476"
+#endif
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
-
-void SysTick_Handler(void);
-void DMA1_Stream5_IRQHandler(void);
-void USART1_IRQHandler(void);
-void USART2_IRQHandler(void);
-void DMA2_Stream1_IRQHandler(void);
-void DMA2_Stream2_IRQHandler(void);
-void USART6_IRQHandler(void);
-void I2C3_EV_IRQHandler(void);
+#if TRACE_UART
+#	define trace_printf uart_printf
+extern int uart_printf(const char *msg, ...);
+#else
+#	define trace_printf(...) (void)0
+#	define uart_printf(...) (void)0
+#endif
+ /* Exported functions ------------------------------------------------------- */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __STM32F4xx_IT_H */
+#endif /* __STM32xxx_HAL_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
