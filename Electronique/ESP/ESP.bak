@@ -1,0 +1,321 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:2
+LIBS:dsn2596
+LIBS:ESP-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L CONN_02X04 P1
+U 1 1 5AB41B7A
+P 5000 3350
+F 0 "P1" H 5000 3600 50  0000 C CNN
+F 1 "CONN_02X04" H 5000 3100 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_2x04_Pitch2.54mm" H 5000 2150 50  0001 C CNN
+F 3 "" H 5000 2150 50  0000 C CNN
+	1    5000 3350
+	0    1    1    0   
+$EndComp
+$Comp
+L CONN_01X05 P2
+U 1 1 5AB41BF9
+P 8600 3550
+F 0 "P2" H 8600 3850 50  0000 C CNN
+F 1 "CONN_01X05" V 8700 3550 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Angled_1x05_Pitch2.54mm" H 8600 3550 50  0001 C CNN
+F 3 "" H 8600 3550 50  0000 C CNN
+	1    8600 3550
+	1    0    0    -1  
+$EndComp
+Text GLabel 7700 3350 0    60   Input ~ 0
+GND
+Text GLabel 8050 3450 0    60   Input ~ 0
++3V3
+Text GLabel 7700 3550 0    60   Input ~ 0
+RX
+Text GLabel 8050 3650 0    60   Input ~ 0
+TX
+Text GLabel 7700 3750 0    60   Input ~ 0
+NRST
+Wire Wire Line
+	7700 3350 8400 3350
+Wire Wire Line
+	8050 3450 8400 3450
+Wire Wire Line
+	7700 3550 8400 3550
+Wire Wire Line
+	8050 3650 8400 3650
+Wire Wire Line
+	7700 3750 8400 3750
+$Comp
+L GND #PWR01
+U 1 1 5AB41DC1
+P 4850 2950
+F 0 "#PWR01" H 4850 2700 50  0001 C CNN
+F 1 "GND" H 4850 2800 50  0000 C CNN
+F 2 "" H 4850 2950 50  0000 C CNN
+F 3 "" H 4850 2950 50  0000 C CNN
+	1    4850 2950
+	-1   0    0    1   
+$EndComp
+NoConn ~ 4950 3100
+Wire Wire Line
+	4850 2950 4850 3100
+$Comp
+L R R1
+U 1 1 5AB41DE8
+P 5900 2800
+F 0 "R1" V 5980 2800 50  0000 C CNN
+F 1 "1kR" V 5900 2800 50  0000 C CNN
+F 2 "Resistors_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P15.24mm_Horizontal" V 5830 2800 50  0001 C CNN
+F 3 "" H 5900 2800 50  0000 C CNN
+	1    5900 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR02
+U 1 1 5AB41E7A
+P 5900 3050
+F 0 "#PWR02" H 5900 2800 50  0001 C CNN
+F 1 "GND" H 5900 2900 50  0000 C CNN
+F 2 "" H 5900 3050 50  0000 C CNN
+F 3 "" H 5900 3050 50  0000 C CNN
+	1    5900 3050
+	1    0    0    -1  
+$EndComp
+Text GLabel 5250 3000 2    60   Input ~ 0
+RX
+Wire Wire Line
+	5150 3100 5150 3000
+Wire Wire Line
+	5150 3000 5250 3000
+Text GLabel 4700 3750 0    60   Input ~ 0
+TX
+Wire Wire Line
+	4700 3750 4850 3750
+Wire Wire Line
+	4850 3750 4850 3600
+Text GLabel 5050 4100 3    60   Input ~ 0
+NRST
+Text GLabel 5200 3750 2    60   Input ~ 0
++3V3
+Text GLabel 4050 4050 0    60   Input ~ 0
++3V3
+Wire Wire Line
+	5050 3600 5050 4100
+Wire Wire Line
+	5150 3600 5150 3750
+Wire Wire Line
+	5150 3750 5200 3750
+$Comp
+L JUMPER JP1
+U 1 1 5AB42059
+P 5450 2600
+F 0 "JP1" H 5450 2750 50  0000 C CNN
+F 1 "JUMPER" H 5450 2520 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_1x02_Pitch2.54mm" H 5450 2600 50  0001 C CNN
+F 3 "" H 5450 2600 50  0000 C CNN
+	1    5450 2600
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5050 3100 5050 2600
+Wire Wire Line
+	5050 2600 5150 2600
+Wire Wire Line
+	5750 2600 5900 2600
+Wire Wire Line
+	5900 2600 5900 2650
+Wire Wire Line
+	5900 2950 5900 3050
+$Comp
+L R R2
+U 1 1 5AB42254
+P 4500 4050
+F 0 "R2" V 4580 4050 50  0000 C CNN
+F 1 "1kR" V 4500 4050 50  0000 C CNN
+F 2 "Resistors_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P15.24mm_Horizontal" V 4430 4050 50  0001 C CNN
+F 3 "" H 4500 4050 50  0000 C CNN
+	1    4500 4050
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	4050 4050 4350 4050
+Wire Wire Line
+	4650 4050 4950 4050
+Wire Wire Line
+	4950 4050 4950 3600
+$Comp
+L CONN_01X01 P4
+U 1 1 5AB4248A
+P 3450 2400
+F 0 "P4" H 3450 2500 50  0000 C CNN
+F 1 "CONN_01X01" V 3550 2400 50  0000 C CNN
+F 2 "Mounting_Holes:MountingHole_3.2mm_M3_DIN965_Pad" H 3450 2400 50  0001 C CNN
+F 3 "" H 3450 2400 50  0000 C CNN
+	1    3450 2400
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X01 P3
+U 1 1 5AB4250B
+P 3400 2900
+F 0 "P3" H 3400 3000 50  0000 C CNN
+F 1 "CONN_01X01" V 3500 2900 50  0000 C CNN
+F 2 "Mounting_Holes:MountingHole_3.2mm_M3_DIN965_Pad" H 3400 2900 50  0001 C CNN
+F 3 "" H 3400 2900 50  0000 C CNN
+	1    3400 2900
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR03
+U 1 1 5AB42574
+P 3000 2500
+F 0 "#PWR03" H 3000 2250 50  0001 C CNN
+F 1 "GND" H 3000 2350 50  0000 C CNN
+F 2 "" H 3000 2500 50  0000 C CNN
+F 3 "" H 3000 2500 50  0000 C CNN
+	1    3000 2500
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR04
+U 1 1 5AB42596
+P 3000 3150
+F 0 "#PWR04" H 3000 2900 50  0001 C CNN
+F 1 "GND" H 3000 3000 50  0000 C CNN
+F 2 "" H 3000 3150 50  0000 C CNN
+F 3 "" H 3000 3150 50  0000 C CNN
+	1    3000 3150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3000 2500 3000 2400
+Wire Wire Line
+	3000 2400 3250 2400
+Wire Wire Line
+	3000 3150 3000 2900
+Wire Wire Line
+	3000 2900 3200 2900
+$Comp
+L B_Plug_5mm U1
+U 1 1 5AB4269B
+P 3050 1450
+F 0 "U1" H 3050 1850 60  0000 C CNN
+F 1 "B_Plug_5mm" H 3050 1950 60  0000 C CNN
+F 2 "dsn2596:B plug 5mm" H 3050 1450 60  0001 C CNN
+F 3 "" H 3050 1450 60  0000 C CNN
+	1    3050 1450
+	1    0    0    -1  
+$EndComp
+$Comp
+L B_Plug_5mm U3
+U 1 1 5AB42774
+P 6400 1450
+F 0 "U3" H 6400 1850 60  0000 C CNN
+F 1 "B_Plug_5mm" H 6400 1950 60  0000 C CNN
+F 2 "dsn2596:B plug 5mm" H 6400 1450 60  0001 C CNN
+F 3 "" H 6400 1450 60  0000 C CNN
+	1    6400 1450
+	-1   0    0    -1  
+$EndComp
+$Comp
+L DSN2596 U2
+U 1 1 5AB427D1
+P 5050 1500
+F 0 "U2" H 4750 1750 60  0000 C CNN
+F 1 "DSN2596" H 4900 1850 60  0000 C CNN
+F 2 "dsn2596:DSN2596" H 5050 1500 60  0001 C CNN
+F 3 "" H 5050 1500 60  0000 C CNN
+	1    5050 1500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4000 1400 4500 1400
+Wire Wire Line
+	4200 1500 4500 1500
+Wire Wire Line
+	4500 1500 4500 1600
+Wire Wire Line
+	5600 1400 6300 1400
+Wire Wire Line
+	5600 1600 6300 1600
+Wire Wire Line
+	6300 1600 6300 1500
+$Comp
+L FUSE F1
+U 1 1 5AB42B94
+P 3750 1400
+F 0 "F1" H 3850 1450 50  0000 C CNN
+F 1 "FUSE" H 3650 1350 50  0000 C CNN
+F 2 "Fuse_Holders_and_Fuses:Fuseholder5x20_horiz_SemiClosed_Casing10x25mm" H 3750 1400 50  0001 C CNN
+F 3 "" H 3750 1400 50  0000 C CNN
+	1    3750 1400
+	1    0    0    -1  
+$EndComp
+$Comp
+L D D1
+U 1 1 5AB42BF7
+P 4050 1600
+F 0 "D1" H 4050 1700 50  0000 C CNN
+F 1 "D" H 4050 1500 50  0000 C CNN
+F 2 "Diodes_THT:D_5W_P12.70mm_Horizontal" H 4050 1600 50  0001 C CNN
+F 3 "" H 4050 1600 50  0000 C CNN
+	1    4050 1600
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	3150 1500 3350 1500
+Wire Wire Line
+	3350 1500 3350 1750
+Wire Wire Line
+	3350 1750 4200 1750
+Wire Wire Line
+	4200 1750 4200 1500
+Connection ~ 4050 1750
+Wire Wire Line
+	4050 1450 4050 1400
+Connection ~ 4050 1400
+Wire Wire Line
+	3500 1400 3150 1400
+$EndSCHEMATC
