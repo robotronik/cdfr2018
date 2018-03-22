@@ -66,6 +66,23 @@ void SystemClock_Config(void);
 VL53L0X_RangingMeasurementData_t tof_data;
 VL53L0X_Dev_t tof_dev = {.I2cHandle = &hi2c3, .I2cDevAddr = 0x52, .Present = 0};
 
+int LeakyFactorFix8 = (int)( 0.6 *256);
+
+/* Store new ranging data into the device structure, apply leaky integrator if needed */
+void Sensor_SetNewRange(VL53L0X_Dev_t *pDev, VL53L0X_RangingMeasurementData_t *pRange){
+    if( pRange->RangeStatus == 0 ){
+        if( pDev->LeakyFirst ){
+            pDev->LeakyFirst = 0;
+            pDev->LeakyRange = pRange->RangeMilliMeter;
+        }
+        else{
+            pDev->LeakyRange = (pDev->LeakyRange*LeakyFactorFix8 + (256-LeakyFactorFix8)*pRange->RangeMilliMeter)>>8;
+        }
+    }
+    else{
+        pDev->LeakyFirst = 1;
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -178,7 +195,17 @@ int main(void)
   
   while (1)
   {
-
+    if(tof_dev.Present){
+      VL53L0X_PerformSingleRangingMeasurement(&tof_dev, &tof_data);
+      Sensor_SetNewRange(&tof_dev, &tof_data);
+      if(tof_data.RangeStatus == 0){
+	//tof_dev.LeakyRange (mm)
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+      }else{
+	//Out of range
+	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      }
+    }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
