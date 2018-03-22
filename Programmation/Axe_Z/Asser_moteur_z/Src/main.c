@@ -138,11 +138,11 @@ int main(void)
   extern RP_Interface Z_interface;
   extern RC_Server Z_server;
 
-  RP_Init_Interface(&Z_interface, RP_UART_Transmit, HAL_GetTick);
-  RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
+  //RP_Init_Interface(&Z_interface, RP_UART_Transmit, HAL_GetTick);
+  //RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
 
-  RC_Server_Init(&Z_server,&Z_interface);
-  RC_Server_Add_Function(&Z_server, PUNCH_BEE,punch_bee, "b","", RC_IMMEDIATE);
+  //RC_Server_Init(&Z_server,&Z_interface);
+  //RC_Server_Add_Function(&Z_server, PUNCH_BEE,punch_bee, "b","", RC_IMMEDIATE);
 
 
   interface.receive = AX_Receive_HAL;
@@ -173,18 +173,21 @@ int main(void)
     HAL_Delay(10);
   }
   */
-  AX_Configure_Angle_Limit(&servo_ar, 0, 450);
-  AX_Configure_Angle_Limit(&servo_g, 411, 511);
-  AX_Configure_Angle_Limit(&servo_d, 511, 611);
+  HAL_Delay(500);
+
+  //AX_Configure_Angle_Limit(&servo_ar, 255, 750);
+  //AX_Configure_Angle_Limit(&servo_g, 430, 540);
+  //AX_Configure_Angle_Limit(&servo_d, 480, 590);
+
   while(1)
   {
-    AX_Set_Goal_Position(&servo_ar, 0, AX_NOW);
-    AX_Set_Goal_Position(&servo_g, 411, AX_NOW);
-    AX_Set_Goal_Position(&servo_d, 611, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, 255, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 430, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 590, AX_NOW);
     HAL_Delay(2000);
-    AX_Set_Goal_Position(&servo_ar, 400, AX_NOW);
-    AX_Set_Goal_Position(&servo_g, 511, AX_NOW);
-    AX_Set_Goal_Position(&servo_d, 511, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, 750, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 540, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 480, AX_NOW);
     HAL_Delay(2000);
   }
 
