@@ -1,0 +1,21 @@
+https://www.raspberrypi.org/forums/viewtopic.php?t=28860
+
+$ /sbin/fdisk -lu 2012-12-16-wheezy-raspbian.img 
+Disk 2012-12-16-wheezy-raspbian.img: 0 MB, 0 bytes
+255 heads, 63 sectors/track, 0 cylinders, total 0 sectors
+Units = sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disk identifier: 0x00017b69
+
+                         Device Boot      Start         End      Blocks   Id  System
+2012-12-16-wheezy-raspbian.img1            8192      122879       57344    c  W95 FAT32 (LBA)
+2012-12-16-wheezy-raspbian.img2          122880     3788799     1832960   83  Linux
+
+
+$ sudo kpartx -av your-image.img 
+add map loop0p1 (252:5): 0 117187 linear /dev/loop0 1
+add map loop0p2 (252:6): 0 3493888 linear /dev/loop0 118784
+$ sudo mount /dev/mapper/loop0p2 /mnt
+
+"sudo umount /mnt" and "sudo kpartx -d your-image.img" when done.
