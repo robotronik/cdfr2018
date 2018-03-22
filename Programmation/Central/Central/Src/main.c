@@ -138,6 +138,41 @@ int main(void)
     else
       break;
 
+    //Static init
+    VL53L0X_StaticInit(&tof_dev);
+
+    //Ref calibration
+    uint8_t VhvSettings, PhaseCal;
+    VL53L0X_PerformRefCalibration(&tof_dev, &VhvSettings, &PhaseCal);
+
+    //Ref Spad Management
+    uint32_t refSpadCount; uint8_t isApertureSpads;
+    VL53L0X_PerformRefSpadManagement(&tof_dev, &refSpadCount, &isApertureSpads);
+
+    //Set single ranging mode
+    VL53L0X_SetDeviceMode(&tof_dev, VL53L0X_DEVICEMODE_SINGLE_RANGING);
+
+    //Enable Sigma Limit
+    VL53L0X_SetLimitCheckEnable(&tof_dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+
+    //Enable Signal Limit
+    VL53L0X_SetLimitCheckEnable(&tof_dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+
+    //Long range config
+    FixPoint1616_t signalLimit = (FixPoint1616_t)(0.25*65536);
+    FixPoint1616_t sigmaLimit = (FixPoint1616_t)(18*65536);
+    uint32_t timingBudget = 33000;
+    uint8_t preRangeVcselPeriod = 14;
+    uint8_t finalRangeVcselPeriod = 10;
+
+    VL53L0X_SetLimitCheckValue(&tof_dev,  VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, signalLimit);
+    VL53L0X_SetLimitCheckValue(&tof_dev,  VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, sigmaLimit);
+    VL53L0X_SetMeasurementTimingBudgetMicroSeconds(&tof_dev,  timingBudget);
+    VL53L0X_SetVcselPulsePeriod(&tof_dev,  VL53L0X_VCSEL_PERIOD_PRE_RANGE, preRangeVcselPeriod);
+    VL53L0X_SetVcselPulsePeriod(&tof_dev,  VL53L0X_VCSEL_PERIOD_FINAL_RANGE, finalRangeVcselPeriod);
+    VL53L0X_PerformRefCalibration(&tof_dev, &VhvSettings, &PhaseCal);
+
+    tof_dev.LeakyFirst = 1;
   }while(0);
   
   
