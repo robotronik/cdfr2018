@@ -1,10 +1,11 @@
 /**
   ******************************************************************************
-  * @file    stm32f4xx_it.h
-  * @brief   This file contains the headers of the interrupt handlers.
+  * File Name          : stm32f4xx_hal_msp.c
+  * Description        : This file provides code for the MSP Initialization 
+  *                      and de-Initialization codes.
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * COPYRIGHT(c) 2015 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -30,36 +31,72 @@
   *
   ******************************************************************************
   */
-
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F4xx_IT_H
-#define __STM32F4xx_IT_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif 
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-#include "main.h"
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
 
-void SysTick_Handler(void);
-void DMA1_Stream5_IRQHandler(void);
-void USART1_IRQHandler(void);
-void USART2_IRQHandler(void);
-void DMA2_Stream1_IRQHandler(void);
-void DMA2_Stream2_IRQHandler(void);
-void USART6_IRQHandler(void);
-void I2C3_EV_IRQHandler(void);
+extern DMA_HandleTypeDef hdma_usart2_tx;
 
-#ifdef __cplusplus
+extern DMA_HandleTypeDef hdma_usart2_rx;
+
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+  * Initializes the Global MSP.
+  */
+void HAL_MspInit(void)
+{
+  /* USER CODE BEGIN MspInit 0 */
+
+  /* USER CODE END MspInit 0 */
+
+  HAL_NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_0);
+
+  /* System interrupt init*/
+  /* SysTick_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+
+  /* USER CODE BEGIN MspInit 1 */
+
+  /* USER CODE END MspInit 1 */
 }
-#endif
 
-#endif /* __STM32F4xx_IT_H */
+void HAL_TIM_OC_MspInit(TIM_HandleTypeDef* htim_oc)
+{
+
+  if(htim_oc->Instance==TIM2)
+  {
+  /* USER CODE BEGIN TIM2_MspInit 0 */
+
+  /* USER CODE END TIM2_MspInit 0 */
+    /* Peripheral clock enable */
+    __TIM2_CLK_ENABLE();
+  /* USER CODE BEGIN TIM2_MspInit 1 */
+
+  /* USER CODE END TIM2_MspInit 1 */
+  }
+  else if(htim_oc->Instance==TIM5)
+  {
+  /* USER CODE BEGIN TIM5_MspInit 0 */
+
+  /* USER CODE END TIM5_MspInit 0 */
+    /* Peripheral clock enable */
+    __TIM5_CLK_ENABLE();
+  /* USER CODE BEGIN TIM5_MspInit 1 */
+
+  /* USER CODE END TIM5_MspInit 1 */
+  }
+
+}
+
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

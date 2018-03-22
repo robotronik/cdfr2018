@@ -5,7 +5,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -38,12 +38,13 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+#include "dma.h"
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "vl53l0x_api.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,7 +63,8 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
+VL53L0X_RangingMeasurementData_t tof_data;
+VL53L0X_Dev_t tof_dev = {.I2cHandle = &hi2c3, .I2cDevAddr = 0x52};
 /* USER CODE END 0 */
 
 /**
@@ -94,6 +96,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_I2C1_Init();
   MX_I2C3_Init();
   MX_USART1_UART_Init();
@@ -110,9 +113,7 @@ int main(void)
   {
 
   /* USER CODE END WHILE */
-  HAL_GPIO_TogglePin(Led_Red_GPIO_Port,Led_Red_Pin);
-  HAL_GPIO_TogglePin(Led_Green_GPIO_Port,Led_Green_Pin);
-  HAL_Delay(1000);
+
   /* USER CODE BEGIN 3 */
 
   }
@@ -130,13 +131,13 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-    /**Configure the main internal regulator output voltage
+    /**Configure the main internal regulator output voltage 
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -152,7 +153,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -166,11 +167,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time
+    /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick
+    /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -207,7 +208,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
