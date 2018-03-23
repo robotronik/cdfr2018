@@ -1,27 +1,18 @@
 #include "test_interface.h"
 
-uint8_t send1(uint8_t *data, uint16_t size, uint32_t timeout){
-  send(data, size, &interface2);
-  return 0*timeout;
-}
 
-uint8_t send2(uint8_t *data, uint16_t size, uint32_t timeout){
-  send(data, size, &interface1);
-  return 0*timeout;
-}
-
-uint8_t send(uint8_t *data, uint16_t size, RP_Interface *target){
+uint8_t send(void* link_handler, uint8_t *data, uint16_t size, uint32_t timeout){
   /*int i;
   for(i = 0; i < size; i++){
     printf("0x%2.2X ", data[i]);
   }
   
   printf("\n");*/
-
-  RP_Process_Data(target, data, size);  
-
+  (void) timeout;
+  RP_Process_Data((RP_Interface*) link_handler, data, size);
   return 0;
 }
+
 
 
 void RP_Packet_Received(RP_Interface *iface, RP_Packet *packet){

@@ -10,8 +10,6 @@ extern RP_Interface interface1;
 extern RP_Interface interface2;
 extern RC_Server server;
 
-uint8_t send1(uint8_t *data, uint16_t size, uint32_t timeout);
-uint8_t send2(uint8_t *data, uint16_t size, uint32_t timeout);
-uint8_t send(uint8_t *data, uint16_t size, RP_Interface *target);
+uint8_t send(void* link_handler, uint8_t *data, uint16_t size, uint32_t timeout);
 
 #endif

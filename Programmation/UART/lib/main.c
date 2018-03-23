@@ -27,8 +27,8 @@ uint32_t get_tick(){
 RC_Server server;
 int main(){
 
-  RP_Init_Interface(&interface1, send1, get_tick);
-  RP_Init_Interface(&interface2, send2, get_tick);
+  RP_Init_Interface(&interface1, &interface2, send, get_tick);
+  RP_Init_Interface(&interface2, &interface1, send, get_tick);
 
 
   RC_Server_Init(&server, &interface1);
@@ -48,8 +48,6 @@ int main(){
   return 0;
   
   #if 0
-
-  
   uint16_t size = 5;
   RP_Packet packet = {
     .len = size,
