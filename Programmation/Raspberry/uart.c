@@ -30,8 +30,8 @@ int open_uart(const char* path, speed_t speed){
     options.c_cflag &= ~PARENB;//No parity
     options.c_cflag &= ~CSTOPB;//1 Stop bit
     options.c_cflag |= CLOCAL | CREAD;
-    //options.c_cc[VTIME] = 0;
-    //options.c_cc[VMIN] = 0;
+    options.c_cc[VTIME] = 10;//Read timeout after 1 ms
+    options.c_cc[VMIN] = 0;//Read blocks until one byte is received
 
     //Set options
     if(tcsetattr(fd, TCSANOW, &options)){
@@ -50,3 +50,28 @@ int open_uart(const char* path, speed_t speed){
   close(fd);
   return -1;
 }
+
+uint8_t send_uart(void* link_handler, uint8_t *data, uint16_t len, uint32_t timeout){
+  (void)timeout;
+
+#ifdef DEBUG_UART
+  int i;
+  for(i = 0; i < len; i++){
+    printf("0x%2.2X ", data[i]);
+  }
+  printf("\n");
+  fflush(stdout);
+#endif
+  
+  write(*((int*) link_handler), data, len);
+  tcdrain(*((int*) link_handler));
+
+  return 0;
+}
+
+uint32_t get_tick(){
+  struct timeval t;
+  gettimeofday(&t, NULL);
+  return (t.tv_sec * 1000) + (t.tv_usec / 1000);
+}
+
