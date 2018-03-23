@@ -75,3 +75,18 @@ uint32_t get_tick(){
   return (t.tv_sec * 1000) + (t.tv_usec / 1000);
 }
 
+void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
+  if(interface == &f4_iface){
+#ifdef DEBUG_UART
+    printf("Packet of %d bytes received.\n", packet->len);
+    int i;
+    for(i = 0; i < packet->len; i++){
+      printf("0x%2.2X ", packet->data[i]);
+    }
+    printf("\n\n");
+    fflush(stdout);
+#endif
+    
+    RC_Server_Get_Request(&server, packet);
+  }
+}

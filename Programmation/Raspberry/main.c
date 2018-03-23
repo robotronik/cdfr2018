@@ -1,44 +1,36 @@
 #include "main.h"
 
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include "uart/robotronik_protocol.h"
-#include "uart/remote_call.h"
-#include "logger.h"
-
-
+void sigterm_handler(int signo);
+void sigint_handler(int signo);
 
 RP_Interface f4_iface;
 RC_Server server;
-volatile bool run;
-
-void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
-  if(interface == &f4_iface){
-#ifdef DEBUG_UART
-    printf("Packet of %d bytes received.\n", packet->len);
-    int i;
-    for(i = 0; i < packet->len; i++){
-      printf("0x%2.2X ", packet->data[i]);
-    }
-    printf("\n\n");
-    fflush(stdout);
-#endif
-    
-    RC_Server_Get_Request(&server, packet);
-  }
-}
-
+volatile sig_atomic_t run;
 
 int main(){
   log_info("Initializing...");
 
+  //Signals initializations
+  struct sigaction act_sigterm, act_sigint;
+  sigemptyset(&act_sigterm.sa_mask);
+  sigemptyset(&act_sigint.sa_mask);
+  memset(&act_sigterm, 0, sizeof(act_sigterm));
+  memset(&act_sigint, 0, sizeof(act_sigint));
+  act_sigterm.sa_handler = sigterm_handler;
+  act_sigint.sa_handler = sigint_handler;
+  if(sigaction(SIGTERM, &act_sigterm, NULL) == -1){
+    log_error("Could not affect SIGTERM handler");
+  }
+  if(sigaction(SIGINT, &act_sigint, NULL) == -1){
+    log_error("Could not affect SIGINT handler");
+  }
+  
   //UART Initialization
   int uart_fd = open_uart(UART_PATH, UART_SPEED);
 
   if(uart_fd == -1){
     log_error("Could not open UART");
-    exit(EXIT_FAILURE);
+    //exit(EXIT_FAILURE);
   }
 
   //Interface Robotronik Protocol
@@ -46,7 +38,31 @@ int main(){
 
   //Init server
   RC_Server_Init(&server, &f4_iface);
+
+  if(RC_Server_Add_Function(&server, GAS, gas, "", "", RC_IMMEDIATE) == -1){
+    log_error("Error while adding function");
+  }
   
+  if(RC_Server_Add_Function(&server, RAGEQUIT, ragequit, "", "", RC_IMMEDIATE) == -1){
+    log_error("Error while adding function");
+  }
+  
+  if(RC_Server_Add_Function(&server, WASTED, wasted, "", "", RC_IMMEDIATE) == -1){
+    log_error("Error while adding function");
+  }
+  
+  if(RC_Server_Add_Function(&server, SO_POINTS_MUCH_SCORE, so_points_much_score, "B", "", RC_IMMEDIATE) == -1){
+    log_error("Error while adding function");
+  }
+  
+  if(RC_Server_Add_Function(&server, READ_THIS_DAMN_PLAN_MORRIS, read_this_damn_plan_morris, "", "s", RC_IMMEDIATE) == -1){
+    log_error("Error while adding function");
+  }
+  
+  if(RC_Server_Add_Function(&server, RANDOM_STUFF, random_stuff, "s", "", RC_IMMEDIATE) == -1){
+    log_error("Error while adding function");
+  }
+
   //Receive data
   run = 1;
   do{
@@ -59,4 +75,20 @@ int main(){
   close(uart_fd);
 
   return EXIT_SUCCESS;
+}
+
+void sigterm_handler(int signo){
+  if(signo == SIGTERM){
+    log_warning("SIGTERM received.");
+    SC_Stop();
+    run = 0;
+  }
+}
+
+void sigint_handler(int signo){
+  if(signo == SIGINT){
+    log_warning("SIGINT received.");
+    SC_Stop();
+    run = 0;
+  }
 }
