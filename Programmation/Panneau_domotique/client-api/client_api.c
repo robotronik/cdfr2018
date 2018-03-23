@@ -1,6 +1,6 @@
 #include "client_api.h"
 
-static Scoreboard_Client sc_client;
+static Scoreboard_Client sc_client = {.shm_fd = -1, .score = MAP_FAILED, .sem = SEM_FAILED, .pid = -1};
 static sig_atomic_t sc_running = 0;
 
 int SC_Start(const char *id, const char* server_ip, const char* server_port){
@@ -83,6 +83,10 @@ int SC_Start(const char *id, const char* server_ip, const char* server_port){
 }
 
 void SC_Stop(){
+  if(!sc_running){
+    return;
+  }
+  
   //Child process
   if(sc_client.pid != -1){
     struct sigaction act;
