@@ -9,6 +9,10 @@ void gas(RC_Server *server){
   }else{
     log_info("Scoreboard Client started");
   }
+
+  //Start match song
+  Stop_Player();
+  Start_Player(MATCH_SONG);
   
   RC_Server_Return(server);
 }
@@ -18,12 +22,19 @@ void ragequit(RC_Server *server){
   
   run = 0;
   SC_Stop();
+
+  //Restart boombox
+  Stop_Player();
+  Start_Player(SONGS_PATH);
   
   RC_Server_Return(server);
 }
 
 void wasted(RC_Server *server){
- 
+  //Start error song
+  Stop_Player();
+  Start_Player(ERROR_SONG);
+  
   run = 0;
   SC_Stop();
   RC_Server_Return(server);

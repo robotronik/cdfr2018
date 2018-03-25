@@ -2,7 +2,7 @@
 #define __SERVER_H__
 
 #include "uart/remote_call.h"
-#include "sc_client/client_api.h"
+#include "client-api/client_api.h"
 #include "main.h"
 
 typedef enum Server_Functions_E{

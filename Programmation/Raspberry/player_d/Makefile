@@ -1,9 +1,9 @@
 CC=gcc
-CFLAGS=-W -Wall -ansi -std=c99 -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/SDL -D_DEFAULT_SOURCE -lrt -pthread
+CFLAGS=-W -Wall -ansi -std=c99 -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/SDL -D_GNU_SOURCE
 LD=ld
-LDFLAGS=-L/usr/local/lib -lrt -lpthread
-EXEC=rasptronik
-SRC= $(wildcard *.c ./uart/*.c ./client-api/client_api.c)
+LDFLAGS=-L/usr/local/lib -lwiringPi -lpthread -lSDL2 -lfftw3 -lm
+EXEC=sound
+SRC= $(wildcard *.c)
 HDR = $(wildcard *.h)
 OBJ= $(SRC:.c=.o)
 
@@ -26,19 +26,7 @@ LPURPLE=\033[1;35m
 CYAN=\033[0;36m
 LCYAN=\033[1;36m
 
-all: $(EXEC) client player
-
-player:player_d/main.o player_d/song.o
-	@echo -e "\t${YELLOW}Building exec. ${LGREEN}$@${YELLOW}${NC}"
-	@echo -e -n "${YELLOW}[${GREEN}OK${YELLOW}]${NC}\r"
-	@$(CC) -o $@ $^ -L/usr/local/lib -lwiringPi -lpthread -lSDL2 -lfftw3 -lm
-	@echo -e -n "\n"
-
-client:client-api/client.o
-	@echo -e "\t${YELLOW}Building exec. ${LGREEN}$@${YELLOW}${NC}"
-	@echo -e -n "${YELLOW}[${GREEN}OK${YELLOW}]${NC}\r"
-	@$(CC) -o $@ $^ $(LDFLAGS)
-	@echo -e -n "\n"
+all: $(EXEC)
 
 $(EXEC): $(OBJ)
 	@echo -e "\t${YELLOW}Building exec. ${LGREEN}$@${YELLOW}${NC}"
@@ -59,7 +47,6 @@ run: $(EXEC)
 
 clean:
 	@echo -e "\t${YELLOW}Removing ${LGREEN}*.o${NC}"
-	@rm -rf *.o ./uart/*.o ./client-api/*.o ./player_d/*.o
-	@rm $(EXEC) client player
+	@rm -rf *.o $(EXEC)
 	@echo -e "${YELLOW}[${GREEN}OK${YELLOW}]${NC}"
 

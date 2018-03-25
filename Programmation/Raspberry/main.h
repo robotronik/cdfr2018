@@ -10,6 +10,8 @@
 #include "uart.h"
 #include "logger.h"
 #include "server.h"
+#include "player.h"
+#include "camera.h"
 
 #define UART_PATH "/dev/serial0"
 #define UART_SPEED B1000000
@@ -18,8 +20,18 @@
 #define IP_ESP "192.168.0.4"
 #define PORT_ESP "80"
 
+#define PLAYER_PATH "player"
+#define SONGS_PATH "../music/"
+#define MATCH_SONG "../match_songs/gas.wav"
+#define ERROR_SONG "../match_songs/technical_difficulties.wav"
+
+#define CAMERA_PATH "camera.py"
+#define VIDEO_PATH "../video/"
+#define CAMERA_SOCKET "./camera_socket"
+
 extern RP_Interface f4_iface;
 extern RC_Server server;
 extern volatile sig_atomic_t run;
+extern volatile sig_atomic_t stop;
 
 #endif

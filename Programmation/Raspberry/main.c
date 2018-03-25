@@ -5,9 +5,11 @@ void sigint_handler(int signo);
 
 RP_Interface f4_iface;
 RC_Server server;
-volatile sig_atomic_t run;
+volatile sig_atomic_t run;//uart loop
+volatile sig_atomic_t stop = 0;//Ctrl+C
 
 int main(){
+  LOG_Set_Level(LOG_INFO_LEVEL);
   log_info("Initializing...");
 
   //Signals initializations
@@ -30,7 +32,7 @@ int main(){
 
   if(uart_fd == -1){
     log_error("Could not open UART");
-    //exit(EXIT_FAILURE);
+    exit(EXIT_FAILURE);
   }
 
   //Interface Robotronik Protocol
@@ -63,6 +65,10 @@ int main(){
     log_error("Error while adding function");
   }
 
+  //Mode boombox
+  Start_Player(SONGS_PATH);
+  Start_Camera();
+  
   //Receive data
   run = 1;
   do{
@@ -70,25 +76,36 @@ int main(){
     if(count && count != -1){
       RP_Process_Data(&f4_iface, f4_iface.buffer_in, count);
     }
-  }while(run);
+  }while(run && !stop);
   
   close(uart_fd);
 
+  log_info("Main loop stopped. Idle state.");
+  while(!stop);
+
+  log_info("Quit");
+  
   return EXIT_SUCCESS;
 }
 
 void sigterm_handler(int signo){
   if(signo == SIGTERM){
+    printf("\n");
     log_warning("SIGTERM received.");
     SC_Stop();
-    run = 0;
+    Stop_Camera();
+    Stop_Player();
+    stop = 1;
   }
 }
 
 void sigint_handler(int signo){
   if(signo == SIGINT){
+    printf("\n");
     log_warning("SIGINT received.");
     SC_Stop();
-    run = 0;
+    Stop_Camera();
+    Stop_Player();
+    stop = 1;
   }
 }
