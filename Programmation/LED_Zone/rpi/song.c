@@ -107,10 +107,8 @@ void Play(Player *player, int pwmPin){
 	  printf("-");
 	}
       }
-#endif
-
-      //printf("POM %lf\n", chunk->value);
       fflush(stdout);
+#endif
       
       //Process next chunk value
       uint32_t i;
@@ -135,7 +133,7 @@ void Play(Player *player, int pwmPin){
     }
     SDL_Delay(10);
   }
-  
+
   Free_Chunk(&chunk);
   fftw_destroy_plan(p);
   fftw_free(in);
@@ -183,11 +181,16 @@ Chunk* Make_Chunk(Player *player, uint32_t period){
 uint32_t Update_Chunk(Chunk *chunk){
   uint32_t time = Player_Get_Time(chunk->player);
 
-  if(time >= chunk->date){
+  if(time >= chunk->date ){
     chunk->date += chunk->period;
     chunk->start += chunk->len;
   }
   else{
+    return 0;
+  }
+
+  //Check that we don't overflow
+  if((((uint8_t*) chunk->start + 2*chunk->len) - chunk->player->wav_buffer) >= (int) chunk->player->wav_len){
     return 0;
   }
 

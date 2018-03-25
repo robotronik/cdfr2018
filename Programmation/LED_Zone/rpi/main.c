@@ -8,33 +8,37 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
+#include <limits.h>
+#include <unistd.h>
 
 int is_file(const char *path){
   struct stat path_stat;
-  stat(path, &path_stat);
+  if(stat(path, &path_stat) == -1){
+    perror("stat");
+  }
   return S_ISREG(path_stat.st_mode);
 }
 
 int filter(const struct dirent* dir){
-
-  if(!is_file(dir->d_name)){
+  const char *path = dir->d_name;
+  
+  if(!is_file(path)){
     return 0;
   }
   
   char magic1[5], magic2[5];
 
-  FILE *file = fopen(dir->d_name, "r");
+  FILE *file = fopen(path, "r");
   fread(magic1, 1, 4, file);
   fseek(file, 4, SEEK_CUR);
   fread(magic2, 1, 4, file);
   fclose(file);
   
   magic1[4] = magic2[4] = '\0';
-
   if(strcmp(magic1, "RIFF") || strcmp(magic2, "WAVE")){
     return 0;
   }
-    
+  
   return 1;
 }
 
@@ -67,23 +71,24 @@ int main(int argc, char *argv[]){
 
   Player *player;
   
-  const char* path = argv[1];
-  int len_path = strlen(path) + 1;
+  char* path = argv[1];
   char **list_songs;
   int nbFiles;
   int i;
   if(!is_file(path)){
+    if(chdir(path) != 0){
+      perror("chdir");
+    }
     srand(time(NULL));
-    struct dirent **nameList;
-    nbFiles = scandir(path, &nameList, filter, compar);
     
+    struct dirent **nameList;
+    nbFiles = scandir("./", &nameList, filter, compar);
+
     list_songs = calloc(nbFiles, sizeof(*list_songs));
     
     for(i = 0; i < nbFiles; i++){
       char *file_name = nameList[i]->d_name;
-      list_songs[i] = calloc(len_path + strlen(file_name) + 1, sizeof(**list_songs));
-      strcpy(list_songs[i], path);
-      strcat(list_songs[i], file_name);
+      list_songs[i] = file_name;
     }
   }else{
     nbFiles = 1;
