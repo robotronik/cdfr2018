@@ -138,8 +138,8 @@ int main(void)
   extern RP_Interface Z_interface;
   extern RC_Server Z_server;
 
-  //RP_Init_Interface(&Z_interface, RP_UART_Transmit, HAL_GetTick);
-  //RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
+  RP_Init_Interface(&Z_interface, RP_UART_Transmit, HAL_GetTick);
+  RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
 
   RC_Server_Init(&Z_server,&Z_interface);
   RC_Server_Add_Function(&Z_server, PUNCH_BEE,punch_bee, "b","", RC_IMMEDIATE);
