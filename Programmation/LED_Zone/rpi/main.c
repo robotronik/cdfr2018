@@ -1,114 +1,109 @@
+#include "main.h"
 #include "song.h"
 #include <SDL2/SDL.h>
 #include <fftw3.h>
 #include <wiringPi.h>
 #include <softPwm.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <time.h>
 
-#define CHUNK_PERIOD 50
-#define FREQUENCY_STEP (1000 / CHUNK_PERIOD)
-#define BUFFER_SIZE_MS 25
-#define DEBUG 1
+int is_file(const char *path){
+  struct stat path_stat;
+  stat(path, &path_stat);
+  return S_ISREG(path_stat.st_mode);
+}
+
+int filter(const struct dirent* dir){
+
+  if(!is_file(dir->d_name)){
+    return 0;
+  }
+  
+  char magic1[5], magic2[5];
+
+  FILE *file = fopen(dir->d_name, "r");
+  fread(magic1, 1, 4, file);
+  fseek(file, 4, SEEK_CUR);
+  fread(magic2, 1, 4, file);
+  fclose(file);
+  
+  magic1[4] = magic2[4] = '\0';
+
+  if(strcmp(magic1, "RIFF") || strcmp(magic2, "WAVE")){
+    return 0;
+  }
+    
+  return 1;
+}
+
+int compar(const struct dirent** dirent1, const struct dirent** dirent2){
+  (void)dirent1;
+  (void)dirent2;
+  return rand() > (RAND_MAX / 2);
+}
 
 int main(int argc, char *argv[]){
+  //Checking arguments
   if(argc < 2){
-    return EXIT_FAILURE;
-  }
-
-  //WiringPi
-  if(wiringPiSetup() == -1){
-    return EXIT_FAILURE;
+    printf("Usage : ./sound (file.wav | directory)\n");
+    exit(EXIT_FAILURE);
   }
   
-  softPwmCreate(12, 0, 255);
-  
-  //Song
-  Song *song;
-  Chunk *chunk;
-  
+  //SDL Init
   if(SDL_Init(SDL_INIT_AUDIO) != 0){
     fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
     return EXIT_FAILURE;
   }
   
-  song = Load_Song(argv[1], BUFFER_SIZE_MS);
-  if(song == NULL){
+  //WiringPi
+#if PWM_PIN != -1
+  if(wiringPiSetup() == -1){
     return EXIT_FAILURE;
   }
-  
-  Play_Song(song);
-
-  chunk = Make_Chunk(song, CHUNK_PERIOD);
-  if(chunk == NULL){
-    return EXIT_FAILURE;
-  }
-
-  //FFT
-  double *in, *result;
-  fftw_complex *out;
-  fftw_plan p;
-  int N = (CHUNK_PERIOD * song->wav_spec.freq)/1000;
-  in = (double*) fftw_malloc(sizeof(fftw_complex) * N);
-  out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N/2 + 1));
-  p = fftw_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE);
-  result = malloc(sizeof(*result)*(N/2+1));
-
-  int go = 1;
-  double max = 0.;
-  while(Is_Playing_Song(song) && go){    
-#if 0
-    uint32_t time = Get_Time_Song(song);
-    printf("Time : %d\n", time);
+  softPwmCreate(PWM_PIN, 0, 255);//SPIO_MOSI = GPIO10 = pin 19
 #endif
 
-    if(Update_Chunk(chunk)){
-      //Show current chunk value
-
-      softPwmWrite(12, (int) (pow(chunk->value/255, 3)*255.));
-      
-      #if DEBUG
-      int j;
-      printf("\r");
-      for(j = 0; j < 25; j++){
-	if(j*10. < chunk->value){
-	  printf("#");
-	}else{
-	  printf("-");
-	}
-      }
-      #endif
-
-      //printf("POM %lf\n", chunk->value);
-      fflush(stdout);
-      
-      //Process next chunk value
-      uint32_t i;
-      for(i = 0; i < chunk->len; i++){
-	in[i] = chunk->start[i] / 32768.;
-      }
-      fftw_execute(p);
-      for(i = 0; (int) i < (N/2+1); i++){
-	result[i] = 2*sqrtf(out[i][0]*out[i][0] + out[i][1]*out[i][1])/N;
-      }
-
-      double sum = 0.;
-      for(i = 1; i < 11; i++){
-	sum += result[i];
-      }
-      sum /= 10.;
-      if(sum > max){
-	max = sum;
-      }
-
-      chunk->value = (sum/max)*255;      
-    }
-    SDL_Delay(10);
-  }
+  Player *player;
   
-  Free_Song(&song);
-  Free_Chunk(&chunk);
-  fftw_destroy_plan(p);
-  fftw_free(in);
-  fftw_free(out);
+  const char* path = argv[1];
+  int len_path = strlen(path) + 1;
+  char **list_songs;
+  int nbFiles;
+  int i;
+  if(!is_file(path)){
+    srand(time(NULL));
+    struct dirent **nameList;
+    nbFiles = scandir(path, &nameList, filter, compar);
+    
+    list_songs = calloc(nbFiles, sizeof(*list_songs));
+    
+    for(i = 0; i < nbFiles; i++){
+      char *file_name = nameList[i]->d_name;
+      list_songs[i] = calloc(len_path + strlen(file_name) + 1, sizeof(**list_songs));
+      strcpy(list_songs[i], path);
+      strcat(list_songs[i], file_name);
+    }
+  }else{
+    nbFiles = 1;
+    list_songs = calloc(nbFiles, sizeof(*list_songs));
+    *list_songs = path;
+  }
+
+  do{
+    for(i = 0; i < nbFiles; i++){
+      player = Init_Player(list_songs[i], BUFFER_SIZE_MS);
+      if(player == NULL){
+	return EXIT_FAILURE;
+      }
+
+      printf("Now playing %s\n", list_songs[i]);
+      Play(player, PWM_PIN);
+      Destroy_Player(&player);
+    }
+  }while(1);
+
   SDL_Quit();
   return EXIT_SUCCESS;
 }

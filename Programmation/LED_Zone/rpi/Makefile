@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-W -Wall -ansi -std=c99 -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/SDL
+CFLAGS=-W -Wall -ansi -std=c99 -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/SDL -D_GNU_SOURCE
 LD=ld
 LDFLAGS=-L/usr/local/lib -lwiringPi -lpthread -lSDL2 -lfftw3 -lm
 EXEC=sound
