@@ -10,6 +10,7 @@
 
 int Start_Camera();
 void Stop_Camera();
+int Read_Plan(char colors[4]);
 int get_time_ms();
 
 #endif

@@ -13,6 +13,9 @@ void gas(RC_Server *server){
   //Start match song
   Stop_Player();
   Start_Player(MATCH_SONG);
+
+  //Start recording
+  Start_Camera();
   
   RC_Server_Return(server);
 }
@@ -60,8 +63,11 @@ void so_points_much_score(RC_Server *server){
 }
 
 void read_this_damn_plan_morris(RC_Server *server){
+  char colors[4];
 
+  int r = Read_Plan(colors);
   
+  RC_Server_Return(server, (r==0)?colors:"---");
 }
 
 void random_stuff(RC_Server *server){

@@ -7,20 +7,20 @@ int Start_Camera(){
   if(camera_pid != -1){
     Stop_Camera();
   }
-
-  //Socket
-  camera_socket = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
-  if(camera_socket == -1){
-    log_verror("Camera : failed to create socket : %s", STR_ERRNO);
-    return -1;
-  }
-
+  
   //unlink camera_socket
   int unlink_pid = fork();
   if(!unlink_pid){
     execlp("unlink", "unlink", CAMERA_SOCKET, NULL);
   }else if(unlink_pid != -1){
     waitpid(unlink_pid, NULL, 0);
+  }
+
+  //Socket
+  camera_socket = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+  if(camera_socket == -1){
+    log_verror("Camera : failed to create socket : %s", STR_ERRNO);
+    return -1;
   }
   
   struct sockaddr_un sockaddr = {.sun_family = AF_UNIX,
@@ -72,6 +72,37 @@ int Start_Camera(){
   return 0;
 }
 
+int Read_Plan(char colors[4]){
+  if(camera_pid == -1){
+    log_warning("Read_Plan called before Start_Camera. Calling Start_Camera().");
+    Start_Camera();
+  }
+  
+  if(fcntl(camera_socket, F_SETFL, O_NONBLOCK) == -1){
+    log_verror("fcntl failed : %s", STR_ERRNO);
+  }
+  
+  write(camera_socket, "read", 5);
+  int start = get_time_ms();
+  int count;
+  do{
+    count = read(camera_socket, colors, 4);
+  }while(get_time_ms() - start < 10000 && count == -1 && errno == EAGAIN);
+  if(count == -1){
+    if(errno == EAGAIN){
+      log_error("Read plan timed out");
+    }
+    else{
+      log_verror("Read plan failed : %s", STR_ERRNO);
+    }
+    return -1;
+  }
+
+  colors[4] = '\0';
+  log_vinfo("Received plan : %s", colors);
+  return 0;
+}
+
 void Stop_Camera(){
   if(camera_pid != -1){
     if(kill(camera_pid, SIGTERM) == -1){
@@ -79,14 +110,14 @@ void Stop_Camera(){
       kill(camera_pid, SIGKILL);
     }
     while(waitpid(camera_pid, NULL, 0) == EINTR);
+    camera_pid = -1;
     log_info("Camera stopped");
   }
 
   if(camera_socket != -1){
     close(camera_socket);
+    camera_socket = -1;
   }
-  
-  camera_pid = -1;
 }
 
 int get_time_ms(){
