@@ -140,7 +140,7 @@ int SC_Update(uint16_t score){
 
 void SC_SIGCHLD_Handler(int signo){
   if(signo == SIGCHLD){
-    sc_running = 0;
+    //sc_running = 0;
     fprintf(stderr, "Scoreboard_Client : Client stopped working\n");
   }
 }

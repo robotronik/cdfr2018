@@ -1,11 +1,13 @@
 #include "server.h"
 
 void gas(RC_Server *server){
+  RC_Server_Return(server);
+  
   log_info("Received start request");
   
   //Start scoreboard server
   if(SC_Start(ID_ROBOT, IP_ESP, PORT_ESP) == -1){
-    log_verror("Could not start Scoreboard Client as %2 at %s:%s", ID_ROBOT, IP_ESP, PORT_ESP);
+    log_verror("Could not start Scoreboard Client as %d at %s:%s", ID_ROBOT, IP_ESP, PORT_ESP);
   }else{
     log_info("Scoreboard Client started");
   }
@@ -16,11 +18,10 @@ void gas(RC_Server *server){
 
   //Start recording
   Start_Camera();
-  
-  RC_Server_Return(server);
 }
 
 void ragequit(RC_Server *server){
+  RC_Server_Return(server);
   log_info("Received stop request");
   
   run = 0;
@@ -30,23 +31,25 @@ void ragequit(RC_Server *server){
   Stop_Player();
   Start_Player(SONGS_PATH);
   
-  RC_Server_Return(server);
 }
 
 void wasted(RC_Server *server){
+  RC_Server_Return(server);
+  log_info("Received error");
+  
   //Start error song
   Stop_Player();
   Start_Player(ERROR_SONG);
   
   run = 0;
   SC_Stop();
-  RC_Server_Return(server);
 }
 
 void so_points_much_score(RC_Server *server){    
   uint16_t score;
   RC_Server_Get_Args(server, &score);
-
+  RC_Server_Return(server);
+  
   log_vinfo("Received new score : %d", score);
   
   if(SC_Update(score) == -1){
@@ -58,8 +61,6 @@ void so_points_much_score(RC_Server *server){
       log_error("Attempt to recover Scoreboard Client failed.");
     }
   }
-  
-  RC_Server_Return(server);
 }
 
 void read_this_damn_plan_morris(RC_Server *server){
@@ -71,11 +72,10 @@ void read_this_damn_plan_morris(RC_Server *server){
 }
 
 void random_stuff(RC_Server *server){
-  log_info("Logs received");
   char str[RC_STR_SIZE];
   RC_Server_Get_Args(server, str);
-
-  printf("%s", str);
-  
   RC_Server_Return(server);
+
+  log_vinfo("Logs received : %s", str);
+  printf("%s\n", str);
 }

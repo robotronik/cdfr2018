@@ -1,5 +1,7 @@
 #include "uart.h"
 
+#define DEBUG_UART
+
 int open_uart(const char* path, speed_t speed){
   //Open the UART file
   int fd = open(path,

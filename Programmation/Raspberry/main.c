@@ -67,11 +67,7 @@ int main(){
 
   //Mode boombox
   Start_Player(SONGS_PATH);
-  Start_Camera();
-  char colors[4];
-  Read_Plan(colors);
-  sleep(2);
-  Read_Plan(colors);
+
   //Receive data
   run = 1;
   do{
