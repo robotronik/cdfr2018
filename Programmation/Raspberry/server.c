@@ -67,7 +67,7 @@ void read_this_damn_plan_morris(RC_Server *server){
 
   int r = Read_Plan(colors);
   
-  RC_Server_Return(server, (r==0)?colors:"---");
+  RC_Server_Return(server, r, colors);
 }
 
 void random_stuff(RC_Server *server){

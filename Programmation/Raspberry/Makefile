@@ -26,7 +26,10 @@ LPURPLE=\033[1;35m
 CYAN=\033[0;36m
 LCYAN=\033[1;36m
 
-all: $(EXEC) client player
+all: $(EXEC) client player RobotrOvision
+
+RobotrOvision:
+	cd robotrovision_d; make; mv RobotrOvision ../; cd ..
 
 player:player_d/main.o player_d/song.o
 	@echo -e "\t${YELLOW}Building exec. ${LGREEN}$@${YELLOW}${NC}"
@@ -60,6 +63,6 @@ run: $(EXEC)
 clean:
 	@echo -e "\t${YELLOW}Removing ${LGREEN}*.o${NC}"
 	@rm -rf *.o ./uart/*.o ./client-api/*.o ./player_d/*.o
-	@rm $(EXEC) client player
+	@rm $(EXEC) client player RobotrOvision
 	@echo -e "${YELLOW}[${GREEN}OK${YELLOW}]${NC}"
 

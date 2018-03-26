@@ -8,9 +8,18 @@
 
 #include "main.h"
 
+#define CV_TIMEOUT 3000
+
+typedef enum CV_State_E{
+  CV_RUNNING,
+  CV_ERR_TIMEOUT,
+  CV_ERR,
+  CV_OK
+}CV_State;
+
 int Start_Camera();
 void Stop_Camera();
-int Read_Plan(char colors[4]);
+CV_State Read_Plan(char colors[4]);
 int get_time_ms();
 
 #endif

@@ -2,6 +2,8 @@
 
 static int camera_pid = -1;
 static int camera_socket = -1;
+static bool read_started = false;
+static int start_date = 0;
 
 int Start_Camera(){
   if(camera_pid != -1){
@@ -72,35 +74,49 @@ int Start_Camera(){
   return 0;
 }
 
-int Read_Plan(char colors[4]){
+CV_State Read_Plan(char colors[4]){
   if(camera_pid == -1){
     log_warning("Read_Plan called before Start_Camera. Calling Start_Camera().");
     Start_Camera();
   }
-  
-  if(fcntl(camera_socket, F_SETFL, O_NONBLOCK) == -1){
-    log_verror("fcntl failed : %s", STR_ERRNO);
-  }
-  
-  write(camera_socket, "read", 5);
-  int start = get_time_ms();
+
   int count;
-  do{
+  if(read_started){
+    if(fcntl(camera_socket, F_SETFL, O_NONBLOCK) == -1){
+      log_verror("fcntl failed : %s", STR_ERRNO);
+    }
+    
     count = read(camera_socket, colors, 4);
-  }while(get_time_ms() - start < 10000 && count == -1 && errno == EAGAIN);
-  if(count == -1){
-    if(errno == EAGAIN){
-      log_error("Read plan timed out");
+    colors[3] = '\0';
+    
+    if(count == -1 && errno == EWOULDBLOCK){
+      if(get_time_ms() - start_date > CV_TIMEOUT){
+	read_started = 0;
+	log_error("Read plan timed out");
+	return CV_ERR_TIMEOUT;
+      }
+    }else{
+      read_started = 0;
+      if(colors[0] == '-'){
+	log_info("Plan was invalid");
+	return CV_ERR;
+      }else{
+	log_vinfo("Received plan : %s", colors);
+	return CV_OK;
+      }
     }
-    else{
-      log_verror("Read plan failed : %s", STR_ERRNO);
+  }else{
+    if(write(camera_socket, "read", 5) == -1 && errno != EWOULDBLOCK){
+      log_verror("Write on camera socket failed : %s", STR_ERRNO);
+      return CV_ERR;
     }
-    return -1;
+    colors[0] = colors[1] = colors[2] = '-';
+    colors[3] = '\0';
+    read_started = 1;
+    start_date = get_time_ms();
   }
 
-  colors[4] = '\0';
-  log_vinfo("Received plan : %s", colors);
-  return 0;
+  return CV_RUNNING;
 }
 
 void Stop_Camera(){

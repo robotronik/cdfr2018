@@ -57,7 +57,7 @@ int main(){
     log_error("Error while adding function");
   }
   
-  if(RC_Server_Add_Function(&server, READ_THIS_DAMN_PLAN_MORRIS, read_this_damn_plan_morris, "", "s", RC_IMMEDIATE) == -1){
+  if(RC_Server_Add_Function(&server, READ_THIS_DAMN_PLAN_MORRIS, read_this_damn_plan_morris, "", "bs", RC_IMMEDIATE) == -1){
     log_error("Error while adding function");
   }
   
@@ -70,7 +70,8 @@ int main(){
   Start_Camera();
   char colors[4];
   Read_Plan(colors);
-  
+  sleep(2);
+  Read_Plan(colors);
   //Receive data
   run = 1;
   do{

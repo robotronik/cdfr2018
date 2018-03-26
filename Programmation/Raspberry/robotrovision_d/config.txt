@@ -1,0 +1,21 @@
+arclength_min= 800
+arclength_max= 1200
+arclength_tolerance= 0.02
+length_tolerance= 0.1
+angle_tolerance= 0.1
+min_angle= -10
+max_angle= 10
+h_l= 300
+
+k_size_gauss= 9
+sigma_gauss= 2
+k_size_canny= 3
+lowThreshold_canny= 50
+ratio_canny= 3
+
+Hmin Hmax Smin Smax Vmin Vmax
+orange 5 22 127 255 50 255
+black 0 180 0 50 0 50
+green 37 70 100 255 50 255
+yellow 22 37 127 255 50 255
+blue 85 130 50 255 50 255
