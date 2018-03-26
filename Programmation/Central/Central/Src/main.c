@@ -44,7 +44,9 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "vl53l0x_api.h"
+#include "robotronik_protocol_stm32f4.h"
+#include "tof.h"
+#include "pi_client.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -63,26 +65,8 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-VL53L0X_RangingMeasurementData_t tof_data;
-VL53L0X_Dev_t tof_dev = {.I2cHandle = &hi2c3, .I2cDevAddr = 0x52, .Present = 0};
 
-int LeakyFactorFix8 = (int)( 0.6 *256);
 
-/* Store new ranging data into the device structure, apply leaky integrator if needed */
-void Sensor_SetNewRange(VL53L0X_Dev_t *pDev, VL53L0X_RangingMeasurementData_t *pRange){
-    if( pRange->RangeStatus == 0 ){
-        if( pDev->LeakyFirst ){
-            pDev->LeakyFirst = 0;
-            pDev->LeakyRange = pRange->RangeMilliMeter;
-        }
-        else{
-            pDev->LeakyRange = (pDev->LeakyRange*LeakyFactorFix8 + (256-LeakyFactorFix8)*pRange->RangeMilliMeter)>>8;
-        }
-    }
-    else{
-        pDev->LeakyFirst = 1;
-    }
-}
 /* USER CODE END 0 */
 
 /**
@@ -122,89 +106,106 @@ int main(void)
   MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  RP_Init_Interface(&pi_interface, USART1, RP_UART_Transmit, HAL_GetTick);
+  RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_2, USART1, pi_interface);
+
+  RC_Client pi_client;
+  RC_Client_Init(&pi_client, &pi_interface, 0);
+  RC_Client_Add_Function(&pi_client, PI_START, "", "");
+  RC_Client_Add_Function(&pi_client, PI_STOP, "", "");
+  RC_Client_Add_Function(&pi_client, PI_ERROR, "", "");
+  RC_Client_Add_Function(&pi_client, PI_SCORE, "B", "");
+  RC_Client_Add_Function(&pi_client, PI_PLAN, "", "bs");
+  RC_Client_Add_Function(&pi_client, PI_LOG, "s", "");
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_GPIO_TogglePin(Led_Red_GPIO_Port,Led_Red_Pin);
 
-  uint16_t id;
-  int status;
-  int new_addr = 0x52;
+  HAL_Delay(2000);
+ 
+  if(RC_Call(&pi_client, PI_START) == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : START SENT");
+  }
+
+  HAL_Delay(2000);
+  if(RC_Call(&pi_client, PI_SCORE, 10) == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : SCORE SENT");
+  }
+
+  HAL_Delay(2000);
+  if(RC_Call(&pi_client, PI_SCORE, 10) == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : SCORE SENT");
+  }
+
+  int r;
+  char colors[RC_STR_SIZE];
+  HAL_Delay(500);
+  if(RC_Call(&pi_client, PI_PLAN, &r, colors) == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : READ REQUEST");
+  }
+
+  HAL_Delay(500);
+  if(RC_Call(&pi_client, PI_PLAN, &r, colors) == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : READ REQUEST");
+  }
+
+  if(r == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : WAITING FOR READ");
+  }
+
+  HAL_Delay(1000);
+  if(RC_Call(&pi_client, PI_PLAN, &r, colors) == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : READ REQUEST");
+  }
+
+  HAL_Delay(500);
+  RC_Call(&pi_client, PI_LOG, colors);
+  
+  HAL_Delay(2000);
+  if(RC_Call(&pi_client, PI_ERROR) == 0){
+    RC_Call(&pi_client, PI_LOG, "NUCLEO : ERROR SENT");
+  }
+
+  
+  ToF_Dev tof_dev;
+  ToF_Params params;
+  ToF_Data tof_data;
+
+  ToF_Init_Struct(&tof_dev, &hi2c3, 0x52);
+  
   do{
-    //Set I2C speed to 400KHz
-    status = VL53L0X_WrByte(&tof_dev, 0x88, 0x00);
-
-    //Read ID to know if the address is correct
-    status = VL53L0X_RdWord(&tof_dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID, &id);
-    //I2C error or bad ID
-    if(status || id != 0xEEAA) break;
-
-    //Set device address
-    status = VL53L0X_SetDeviceAddress(&tof_dev, new_addr);
-    if(status) break;
-    tof_dev.I2cDevAddr = new_addr;
-
-    //Check the device work with the new address
-    status = VL53L0X_RdWord(&tof_dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID, &id);
-
-    //Init the device
-    status = VL53L0X_DataInit(&tof_dev);
-    if(status == 0)
-      tof_dev.Present = 1;
-    else
+    //Check the initial address
+    if(ToF_Poke(&tof_dev) == -1)
       break;
 
-    //Static init
-    VL53L0X_StaticInit(&tof_dev);
+    //Set a new address
+    if(ToF_Set_Address(&tof_dev, 0x52) == -1)
+      break;
 
-    //Ref calibration
-    uint8_t VhvSettings, PhaseCal;
-    VL53L0X_PerformRefCalibration(&tof_dev, &VhvSettings, &PhaseCal);
-
-    //Ref Spad Management
-    uint32_t refSpadCount; uint8_t isApertureSpads;
-    VL53L0X_PerformRefSpadManagement(&tof_dev, &refSpadCount, &isApertureSpads);
-
-    //Set single ranging mode
-    VL53L0X_SetDeviceMode(&tof_dev, VL53L0X_DEVICEMODE_SINGLE_RANGING);
-
-    //Enable Sigma Limit
-    VL53L0X_SetLimitCheckEnable(&tof_dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
-
-    //Enable Signal Limit
-    VL53L0X_SetLimitCheckEnable(&tof_dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+    //Init the device
+    if(ToF_Init_Device(&tof_dev) == -1)
+      break;
 
     //Long range config
-    FixPoint1616_t signalLimit = (FixPoint1616_t)(0.25*65536);
-    FixPoint1616_t sigmaLimit = (FixPoint1616_t)(18*65536);
-    uint32_t timingBudget = 33000;
-    uint8_t preRangeVcselPeriod = 14;
-    uint8_t finalRangeVcselPeriod = 10;
+    TOF_LONG_RANGE_CONFIG(params);
 
-    VL53L0X_SetLimitCheckValue(&tof_dev,  VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, signalLimit);
-    VL53L0X_SetLimitCheckValue(&tof_dev,  VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, sigmaLimit);
-    VL53L0X_SetMeasurementTimingBudgetMicroSeconds(&tof_dev,  timingBudget);
-    VL53L0X_SetVcselPulsePeriod(&tof_dev,  VL53L0X_VCSEL_PERIOD_PRE_RANGE, preRangeVcselPeriod);
-    VL53L0X_SetVcselPulsePeriod(&tof_dev,  VL53L0X_VCSEL_PERIOD_FINAL_RANGE, finalRangeVcselPeriod);
-    VL53L0X_PerformRefCalibration(&tof_dev, &VhvSettings, &PhaseCal);
-
-    tof_dev.LeakyFirst = 1;
+    //Configure the device
+    ToF_Configure_Device(&tof_dev, &params);
   }while(0);
   
   
   while (1)
   {
-    if(tof_dev.Present){
-      VL53L0X_PerformSingleRangingMeasurement(&tof_dev, &tof_data);
-      Sensor_SetNewRange(&tof_dev, &tof_data);
-      if(tof_data.RangeStatus == 0){
-	//tof_dev.LeakyRange (mm)
-	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-      }else{
-	//Out of range
-	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-      }
+    ToF_Perform_Measurement(&tof_dev, &tof_data);
+    if(tof_data.RangeStatus == 0){
+      //tof_dev.LeakyRange (mm)
+      HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+    }else{
+      //Out of range
+      HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
     }
   /* USER CODE END WHILE */
 
