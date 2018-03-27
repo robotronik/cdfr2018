@@ -30,7 +30,7 @@ int open_uart(const char* path, speed_t speed){
     options.c_cflag &= ~PARENB;//No parity
     options.c_cflag &= ~CSTOPB;//1 Stop bit
     options.c_cflag |= CLOCAL | CREAD;
-    options.c_cc[VTIME] = 1;//No timeout
+    options.c_cc[VTIME] = 1;//100ms timeout
     options.c_cc[VMIN] = 1;//Read blocks until one byte is received
 
     //Set options

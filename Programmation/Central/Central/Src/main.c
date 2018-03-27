@@ -124,6 +124,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   HAL_GPIO_TogglePin(Led_Red_GPIO_Port,Led_Red_Pin);
 
+  /*
+   * RP_Sync is mandatory here : the Raspberry's fsm receiver is in an
+   * indeterminate state at program startup.
+   */
   RP_Sync(&pi_interface, 10);
   HAL_Delay(2000);
   if(RC_Call(&pi_client, PI_START) == 0){
