@@ -90,3 +90,46 @@ void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
     RC_Server_Get_Request(&server, packet);
   }
 }
+
+void RP_Error_Handler(RP_Interface *iface, uint16_t error){
+  (void)iface;
+  switch(RP_ERROR_TYPE(error)){
+  case RP_ERR_INTERNAL:
+    //printf("Internal error: ");
+    switch(RP_INTERNAL_ERROR(error)){
+    case RP_ERR_ILLEGAL_ARGUMENTS:
+      log_warning("Illegal arguments");
+      break;
+    case RP_ERR_BUFFER_OVERFLOW:
+      log_warning("Buffer overflow");
+      break;
+    default:
+      log_warning("Unknown");
+      break;
+    }
+    break;
+  case RP_ERR_LINK:
+    //printf("Link error: ");
+    switch(RP_LINK_ERROR(error)){
+    case RP_ERR_TIMEOUT:
+      log_warning("Timeout");
+      break;
+    case RP_ERR_UNEXPECTED_EOF:
+      log_warning("Unexpected EOF. Synchronized.");
+      break;
+    case RP_ERR_SIZE:
+      log_warning("Size error");
+      break;
+    case RP_ERR_CRC:
+      log_warning("CRC Error");
+      break;
+    default:
+      log_warning("Unknown");
+      break;
+    }
+    break;
+  default:
+    //printf("Unknown error\n");
+    break;
+  }
+}

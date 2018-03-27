@@ -1,5 +1,14 @@
 #include "logger.h"
 
+#define RED   "\x1B[31;1m"
+#define GRN   "\x1B[32;1m"
+#define YEL   "\x1B[33;1m"
+#define BLU   "\x1B[34m"
+#define MAG   "\x1B[35;1m"
+#define CYN   "\x1B[36m"
+#define WHT   "\x1B[37;1m"
+#define RESET "\x1B[0m"
+
 
 static Logger logger = {.error_fd = STDERR_FILENO,
 			.warning_fd = STDERR_FILENO,
@@ -33,23 +42,23 @@ void LOG_Write(Log_Type type, const char *file, const char *function, int line, 
   switch(type){
   case LOG_ERROR:
     fd = logger.error_fd;
-    dprintf(fd, "[ERROR] ");// __FILE__:__func__:__LINE__]
+    dprintf(fd, RED "[ERROR] ");
     break;
   case LOG_WARNING:
     fd = logger.warning_fd;
-    dprintf(fd, "[WARNING] ");
+    dprintf(fd, YEL "[WARNING] ");
     break;
   case LOG_INFO:
     fd = logger.info_fd;
-    dprintf(fd, "[INFO] ");
+    dprintf(fd, GRN "[INFO] ");
     break;
   }
 
   dprintf(fd, "%s", file); dprintf(fd, ":");
   dprintf(fd, "%s", function); dprintf(fd, ":");
-  dprintf(fd, "%d", line); dprintf(fd, "\n\t");
+  dprintf(fd, "%d", line); dprintf(fd, "\n\t" RESET WHT);
   vdprintf(fd, fmt, args);
-  dprintf(fd, "\n");
+  dprintf(fd, "\n" RESET);
 
   va_end(args);
 }
