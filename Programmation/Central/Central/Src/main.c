@@ -53,7 +53,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+static RC_Client pi_client;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -109,7 +109,6 @@ int main(void)
   RP_Init_Interface(&pi_interface, USART1, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_2, USART1, pi_interface);
 
-  RC_Client pi_client;
   RC_Client_Init(&pi_client, &pi_interface, 0);
   RC_Client_Add_Function(&pi_client, PI_START, "", "");
   RC_Client_Add_Function(&pi_client, PI_STOP, "", "");
@@ -170,9 +169,7 @@ int main(void)
   RC_Call(&pi_client, PI_LOG, colors);
 
   HAL_Delay(2000);
-  if(RC_Call(&pi_client, PI_ERROR) == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : ERROR SENT");
-  }
+  volatile int jean_michel_segfault = *((int*) 9999999999);
 
   
   ToF_Dev tof_dev;
@@ -280,7 +277,10 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HardFault_Handler(void){
+  RC_Call(&pi_client, PI_ERROR);
+  while(1);
+}
 /* USER CODE END 4 */
 
 /**
