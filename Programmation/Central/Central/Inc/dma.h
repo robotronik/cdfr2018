@@ -45,7 +45,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
+#include "stm32f4xx_ll_dma.h"
 #include "main.h"
 
 /* DMA memory to memory transfer handles -------------------------------------*/
