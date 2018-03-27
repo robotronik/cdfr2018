@@ -40,6 +40,7 @@
 #include "stm32f4xx_hal.h"
 #include "dma.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -104,6 +105,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
   RP_Init_Interface(&pi_interface, USART1, RP_UART_Transmit, HAL_GetTick);
