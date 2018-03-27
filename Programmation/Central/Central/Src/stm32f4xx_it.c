@@ -36,13 +36,13 @@
 #include "stm32f4xx_it.h"
 
 /* USER CODE BEGIN 0 */
-#include "robotronik_protocol_stm32f4.h"
 #include "usart.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
 extern I2C_HandleTypeDef hi2c3;
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim2;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -76,7 +76,7 @@ void SysTick_Handler(void)
 void DMA1_Stream5_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Stream5_IRQn 0 */
-
+  DMAx_Streamx_IRQHandler(1, 5, pos_iface);
   /* USER CODE END DMA1_Stream5_IRQn 0 */
   
   /* USER CODE BEGIN DMA1_Stream5_IRQn 1 */
@@ -99,12 +99,26 @@ void TIM1_CC_IRQHandler(void)
 }
 
 /**
+* @brief This function handles TIM2 global interrupt.
+*/
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+
+  /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
 * @brief This function handles USART1 global interrupt.
 */
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-  USARTx_IRQHandler(1, 2, 2, pi_interface);
+  USARTx_IRQHandler(1, 2, 2, pi_iface);
   /* USER CODE END USART1_IRQn 0 */
   /* USER CODE BEGIN USART1_IRQn 1 */
 
@@ -117,7 +131,7 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-
+  USARTx_IRQHandler(2, 1, 5, pos_iface);
   /* USER CODE END USART2_IRQn 0 */
   /* USER CODE BEGIN USART2_IRQn 1 */
 
@@ -130,7 +144,7 @@ void USART2_IRQHandler(void)
 void DMA2_Stream1_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Stream1_IRQn 0 */
-
+  DMAx_Streamx_IRQHandler(2, 1, z_iface);
   /* USER CODE END DMA2_Stream1_IRQn 0 */
   
   /* USER CODE BEGIN DMA2_Stream1_IRQn 1 */
@@ -144,7 +158,7 @@ void DMA2_Stream1_IRQHandler(void)
 void DMA2_Stream2_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2_Stream2_IRQn 0 */
-  DMAx_Streamx_IRQHandler(2, 2, pi_interface);
+  DMAx_Streamx_IRQHandler(2, 2, pi_iface);
   /* USER CODE END DMA2_Stream2_IRQn 0 */
   
   /* USER CODE BEGIN DMA2_Stream2_IRQn 1 */
@@ -158,7 +172,7 @@ void DMA2_Stream2_IRQHandler(void)
 void USART6_IRQHandler(void)
 {
   /* USER CODE BEGIN USART6_IRQn 0 */
-
+  USARTx_IRQHandler(6, 2, 1, z_iface);
   /* USER CODE END USART6_IRQn 0 */
   /* USER CODE BEGIN USART6_IRQn 1 */
 

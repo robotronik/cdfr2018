@@ -50,10 +50,13 @@
 
 /* USER CODE BEGIN Includes */
    #include "robotronik_protocol.h"
+   #include "robotronik_protocol_stm32f4.h"
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
-   extern RP_Interface pi_interface;
+   extern RP_Interface pi_iface;
+   extern RP_Interface pos_iface;
+   extern RP_Interface z_iface;
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);

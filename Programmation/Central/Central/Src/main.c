@@ -45,7 +45,7 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "robotronik_protocol_stm32f4.h"
+#include "system.h"
 #include "tof.h"
 #include "pi_client.h"
 /* USER CODE END Includes */
@@ -54,7 +54,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-static RC_Client pi_client;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -106,32 +106,46 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
   MX_TIM1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  RP_Init_Interface(&pi_interface, USART1, RP_UART_Transmit, HAL_GetTick);
-  RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_2, USART1, pi_interface);
+  //==================================================//
+  //           UART PROTOCOL INIT                     //
+  //==================================================//
 
-  RC_Client_Init(&pi_client, &pi_interface, 0);
-  RC_Client_Add_Function(&pi_client, PI_START, "", "");
-  RC_Client_Add_Function(&pi_client, PI_STOP, "", "");
-  RC_Client_Add_Function(&pi_client, PI_ERROR, "", "");
-  RC_Client_Add_Function(&pi_client, PI_SCORE, "B", "");
-  RC_Client_Add_Function(&pi_client, PI_PLAN, "", "bs");
-  RC_Client_Add_Function(&pi_client, PI_LOG, "s", "");
+  //Raspberry
+  RP_Init_Interface(&pi_iface, USART1, RP_UART_Transmit, HAL_GetTick);
+  RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_2, USART1, pi_iface);
+
+  //Position
+  RP_Init_Interface(&pos_iface, USART2, RP_UART_Transmit, HAL_GetTick);
+  RP_INIT_UART_DMA(DMA1, LL_DMA_STREAM_5, USART2, pos_iface);
+
+  //Z-Axis
+  RP_Init_Interface(&z_iface, USART6, RP_UART_Transmit, HAL_GetTick);
+  RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_1, USART6, z_iface);
+
+  //==================================================//
+  //           REMOTE CALL CLIENT INIT                //
+  //==================================================//
+
+  //Raspberry
+  PI_Init();
+
+  //==================================================//
+  //                 WAIT START                       //
+  //==================================================//
+
+  Team t = wait_start();
+  PI_Start();
   
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_GPIO_TogglePin(Led_Red_GPIO_Port,Led_Red_Pin);
-
-  /*
-   * RP_Sync is mandatory here : the Raspberry's fsm receiver is in an
-   * indeterminate state at program startup.
-   */
-  RP_Sync(&pi_interface, 10);
+#if 0
   HAL_Delay(2000);
-  if(RC_Call(&pi_client, PI_START) == 0){
+  if( == 0){
     RC_Call(&pi_client, PI_LOG, "NUCLEO : START SENT");
   }
 
@@ -172,7 +186,7 @@ int main(void)
 
   HAL_Delay(2000);
   volatile int jean_michel_segfault = *((int*) 9999999999);
-
+#endif
   
   ToF_Dev tof_dev;
   ToF_Params params;
@@ -280,8 +294,7 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void HardFault_Handler(void){
-  RC_Call(&pi_client, PI_ERROR);
-  while(1);
+  stop();
 }
 /* USER CODE END 4 */
 

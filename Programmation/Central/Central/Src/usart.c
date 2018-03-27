@@ -44,7 +44,9 @@
 #include "dma.h"
 
 /* USER CODE BEGIN 0 */
-RP_Interface pi_interface;
+RP_Interface pi_iface;
+RP_Interface pos_iface;
+RP_Interface z_iface;
 
 uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint32_t timeout){
   USART_TypeDef *usart_handler = (USART_TypeDef*) link_handler;
@@ -58,10 +60,6 @@ uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint3
   return 0;
 }
 
-void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
-  (void)interface;
-  (void)packet;
-}
 /* USER CODE END 0 */
 
 /* USART1 init function */
