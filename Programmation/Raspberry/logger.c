@@ -9,62 +9,48 @@
 #define WHT   "\x1B[37;1m"
 #define RESET "\x1B[0m"
 
-
-static Logger logger = {.error_fd = STDERR_FILENO,
-			.warning_fd = STDERR_FILENO,
-			.info_fd = STDOUT_FILENO,
+static Logger logger = {.log_fd = {[LOG_RAW] = STDOUT_FILENO,
+				   [LOG_ERROR] = STDERR_FILENO,
+				   [LOG_WARNING] = STDERR_FILENO,
+				   [LOG_INFO] = STDOUT_FILENO},
 			.level_mask = LOG_WARNING_LEVEL};
 
 void LOG_Set_Level(int level_mask){
   logger.level_mask = level_mask;
 }
 
-void LOG_Set_Error_Output(int error_fd){
-  logger.error_fd = error_fd;
-}
-
-void LOG_Set_Warning_Output(int warning_fd){
-  logger.warning_fd = warning_fd;
-}
-
-void LOG_Set_Info_Output(int info_fd){
-  logger.info_fd = info_fd;
+void LOG_Set_Output(Log_Type type, int fd){
+  logger.log_fd[type] = fd;
 }
 
 void LOG_Write(Log_Type type, const char *file, const char *function, int line, const char *fmt, ...){
-  if(!(logger.level_mask & type))
+  static char str_type[4][16] = {[LOG_RAW] = MAG "[RAW]",
+				 [LOG_ERROR] = RED "[ERROR]",
+				 [LOG_WARNING] = YEL "[WARNING]",
+				 [LOG_INFO] = GRN "[INFO]"};
+  
+  if(!(logger.level_mask & LOG_MASK(type)))
     return;
-
+  
   va_list args;
   va_start(args, fmt);
-  
-  int fd;
-  switch(type){
-  case LOG_ERROR:
-    fd = logger.error_fd;
-    dprintf(fd, RED "[ERROR] ");
-    break;
-  case LOG_WARNING:
-    fd = logger.warning_fd;
-    dprintf(fd, YEL "[WARNING] ");
-    break;
-  case LOG_INFO:
-    fd = logger.info_fd;
-    dprintf(fd, GRN "[INFO] ");
-    break;
-  }
 
-  dprintf(fd, "%s", file); dprintf(fd, ":");
-  dprintf(fd, "%s", function); dprintf(fd, ":");
-  dprintf(fd, "%d", line); dprintf(fd, "\n\t" RESET WHT);
+  int fd = logger.log_fd[type];
+  
+  dprintf(fd, "%s %s:%s:%d\n\t" RESET WHT, str_type[type], file, function, line);
   vdprintf(fd, fmt, args);
   dprintf(fd, "\n" RESET);
 
   va_end(args);
 }
 
+void LOG_Raw(const char *fmt, ...){
+  va_list args;
+  va_start(args, fmt);
 
-
-
+  vdprintf(logger.log_fd[LOG_RAW], fmt, args);
+  
+  va_end(args);
+}
 
 

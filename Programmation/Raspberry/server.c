@@ -86,6 +86,8 @@ void random_stuff(RC_Server *server){
   RC_Server_Get_Args(server, str);
   RC_Server_Return(server);
 
-  log_vinfo("Logs received : %s", str);
-  printf("%s\n", str);
+  //Protection against unterminated strings
+  str[RC_STR_SIZE-1] = '\0';
+  
+  log_raw(str);
 }
