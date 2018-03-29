@@ -22,6 +22,18 @@ Team wait_start(){
   return team;
 }
 
+
+void remote_stop(){
+  int i = JACK_FILTER;
+  while(--i){
+    if(!JACK_PLUGGED){
+      i = JACK_FILTER;
+    }
+    HAL_Delay(1);
+  }
+  HAL_NVIC_SystemReset();
+}
+
 void stop(){
   //Stop match timer
   HAL_TIM_Base_Stop_IT(&htim2);
@@ -34,5 +46,6 @@ void stop(){
 }
 
 void hlt(){
+  __disable_irq();
   do{}while(1);
 }

@@ -21,6 +21,7 @@ Team wait_start();
  */
 
 void stop();
+void remote_stop();
 void hlt();
 
 #endif

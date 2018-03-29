@@ -42,6 +42,7 @@
 
 #include "gpio.h"
 #include "dma.h"
+#include "system.h"
 
 /* USER CODE BEGIN 0 */
 RP_Interface pi_iface;
@@ -60,6 +61,12 @@ uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint3
   return 0;
 }
 
+void RP_Packet_Received(RP_Interface *iface, RP_Packet *packet){
+  //Remote stop hack
+  if(packet->len == 1 && packet->data[0] == 0xFF){
+    stop();
+  }
+}
 /* USER CODE END 0 */
 
 /* USART1 init function */
