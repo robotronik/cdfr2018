@@ -3157,7 +3157,7 @@
   )
 
   (module Resistors_SMD:R_1206_HandSoldering (layer F.Cu) (tedit 58E0A804) (tstamp 5ABD5E3F)
-    (at 213 156)
+    (at 202 173.5)
     (descr "Resistor SMD 1206, hand soldering")
     (tags "resistor 1206")
     (path /5A77847D)
