@@ -76,6 +76,14 @@ int main(){
       RP_Process_Data(&f4_iface, f4_iface.buffer_in, count);
     }
   }while(run && !stop);
+
+  if(stop){
+    //Stop the nucleo
+    f4_iface.s_packet.len = 1;
+    f4_iface.s_packet.data[0] = 0xFF;
+    RP_Sync(&f4_iface, RC_TRANSFERT_TIMEOUT);
+    RP_Send(&f4_iface, &f4_iface.s_packet, RC_TRANSFERT_TIMEOUT);
+  }
   
   close(uart_fd);
 

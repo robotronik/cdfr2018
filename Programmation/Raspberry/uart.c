@@ -63,8 +63,8 @@ uint8_t send_uart(void* link_handler, uint8_t *data, uint16_t len, uint32_t time
   fflush(stdout);
 #endif
   
-  write(*((int*) link_handler), data, len);
-  tcdrain(*((int*) link_handler));
+ write(*((int*) link_handler), data, len);
+ tcdrain(*((int*) link_handler));
 
   return 0;
 }
