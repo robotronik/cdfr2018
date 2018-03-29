@@ -2,17 +2,16 @@
 
 void gas(RC_Server *server){
   RC_Server_Return(server);
-  
   log_info("Received start request");
   
-  //Start scoreboard server
+  //Start scoreboard client
   if(SC_Start(ID_ROBOT, IP_ESP, PORT_ESP) == -1){
     log_verror("Could not start Scoreboard Client as %d at %s:%s", ID_ROBOT, IP_ESP, PORT_ESP);
   }else{
     log_info("Scoreboard Client started");
   }
 
-  //Start match song
+  //GAS GAS GAS
   Stop_Player();
   Start_Player(MATCH_SONG);
 
@@ -24,25 +23,36 @@ void ragequit(RC_Server *server){
   RC_Server_Return(server);
   log_info("Received stop request");
   
-  run = 0;
+  //Stop scoreboard client
   SC_Stop();
 
   //Restart boombox
   Stop_Player();
   Start_Player(SONGS_PATH);
-  
-}
+
+  //Stop recording
+  Stop_Camera();
+
+  //Stop UART
+  run = 0;
+}  
 
 void wasted(RC_Server *server){
   RC_Server_Return(server);
   log_info("Received error");
+
+  //Stop scoreboard client
+  SC_Stop();
   
   //Start error song
   Stop_Player();
   Start_Player(ERROR_SONG);
-  
+
+  //Stop recording
+  Stop_Camera();
+
+  //Stop uart
   run = 0;
-  SC_Stop();
 }
 
 void so_points_much_score(RC_Server *server){    

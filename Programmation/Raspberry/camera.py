@@ -4,14 +4,12 @@ import re
 import sys
 import os
 import io
+import signal
 import socket
 import struct
 from os import listdir
 from os.path import isfile, join
-import time
-import select
 import subprocess
-import numpy as np
 import picamera
 
 CV_SOCKET_PATH = './cv_socket'
@@ -34,11 +32,6 @@ def get_video_path(directory):
         number = max(numbers) + 1
     return join(directory, "record"+str(number).zfill(3)+".h264")
 
-def start_recording(camera, path):
-    print("Recording to "+path+"\n")
-    #camera.resolution = (1280, 720)
-    #camera.start_recording(path)
-
 def run_cv():
     #Opening socket
     try:
@@ -55,51 +48,56 @@ def run_cv():
 
     #Waiting for connection
     connection = cv_socket.accept()[0]
-    print("Connected.")
+    print("[camera.py] Connected to cv program")
+
+    #Capturing img
+    print("[camera.py] Capturing image")
+    stream = io.BytesIO()
+    CAMERA.capture(stream, format='jpeg')
+    #img = open("capture.jpg", "rb")
+    #stream.write(bytearray(img.read()))
+    #img.close()
 
     #Sending img
-    stream = io.BytesIO()
-    #camera.capture(stream, format='jpeg')
-    img = open("capture.jpg", "rb")
-    stream.write(bytearray(img.read()))
-    img.close()
-    
+    print("[camera.py] Sending image...")
     print(stream.tell())
-    buff = []
-    print("Sending image...")
     connection.send(bytearray(struct.pack('<L', stream.tell())))
     stream.seek(0)
     connection.send(bytearray(stream.read()))
 
-    print("Waiting for OpenCV...")
-    result = connection.recv(4).decode("utf-8")
-    
+    print("[camera.py] Waiting for OpenCV...")
+    r_cv = connection.recv(4).decode("utf-8")
     connection.close()
     cv_socket.close()
+    return r_cv
 
-    return result;
-
-def wait_request(t, socket):
-    start = time.time()
-    while(time.time() - start < t):
-        try:
-            string = socket.recv(1024).decode("utf-8")
-            if string == str("read\0"):
-                print("CV request received")
-                result = run_cv()
-                #time.sleep(1);
-                socket.send(result.encode())
-                print("Result sent")
-        except:
-            continue
+def sigterm_handler(_signo, _stack_frame):
+    sys.exit(0)
 
 check_args()
-socket_cmd = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-socket_cmd.connect(sys.argv[2])
-socket_cmd.settimeout(0.1)
+signal.signal(signal.SIGTERM, sigterm_handler)
 
-#camera = picamera.PiCamera()
-#start_recording(get_video_path(str(sys.argv[1])))
-wait_request(90, socket_cmd)
-#camera.stop_recording()
-socket_cmd.close()
+SOCKET_CMD = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+SOCKET_CMD.connect(sys.argv[2])
+SOCKET_CMD.settimeout(0.1)
+
+CAMERA = picamera.PiCamera()
+CAMERA.resolution = (1280, 720)
+CAMERA.start_recording(get_video_path(str(sys.argv[1])))
+
+try:
+    while True:
+        try:
+            STRING = SOCKET_CMD.recv(1024).decode("utf-8")
+            if STRING == str("read\0"):
+                print("[camera.py] CV request received")
+                RESULT = run_cv()
+                SOCKET_CMD.send(RESULT.encode())
+                print("[camera.py] Result" + RESULT + " sent")
+        except:
+            continue
+finally:
+    CAMERA.stop_recording()
+    SOCKET_CMD.close()
+    print("[camere.py] Clean stop.")
+    

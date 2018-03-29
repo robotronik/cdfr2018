@@ -7,6 +7,7 @@ static int start_date = 0;
 
 int Start_Camera(){
   if(camera_pid != -1){
+    log_vwarning("Camera script were already running (%d). Restarting.", camera_pid);
     Stop_Camera();
   }
   
@@ -16,8 +17,10 @@ int Start_Camera(){
     execlp("unlink", "unlink", CAMERA_SOCKET, NULL);
   }else if(unlink_pid != -1){
     waitpid(unlink_pid, NULL, 0);
+  }else{
+    log_warning("Could not unlink camera socket.");
   }
-
+  
   //Socket
   camera_socket = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
   if(camera_socket == -1){
@@ -91,14 +94,14 @@ CV_State Read_Plan(char colors[4]){
     
     if(count == -1 && errno == EWOULDBLOCK){
       if(get_time_ms() - start_date > CV_TIMEOUT){
-	read_started = 0;
+	read_started = false;
 	log_error("Read plan timed out");
 	return CV_ERR_TIMEOUT;
       }
     }else{
-      read_started = 0;
+      read_started = false;
       if(colors[0] == '-'){
-	log_info("Plan was invalid");
+	log_info("No plan found on image");
 	return CV_ERR;
       }else{
 	log_vinfo("Received plan : %s", colors);
@@ -112,7 +115,7 @@ CV_State Read_Plan(char colors[4]){
     }
     colors[0] = colors[1] = colors[2] = '-';
     colors[3] = '\0';
-    read_started = 1;
+    read_started = true;
     start_date = get_time_ms();
   }
 
