@@ -55,12 +55,15 @@ int SC_Start(const char *id, const char* server_ip, const char* server_port){
   /*****************/
   /*     SIGNAL    */
   /*****************/
+  //Irrelevent when the running program has more than one child
+  #ifdef SC_CATCH_SIGCHLD
   struct sigaction act;
   memset(&act, 0, sizeof(act));
   act.sa_handler = SC_SIGCHLD_Handler;
   if(sigaction(SIGCHLD, &act, NULL) == -1){
     perror("Scoreboard_Client: Failed to set SIGCHLD handler");
   }
+  #endif
 
   /*********************/
   /*   CHILD PROCESS   */
@@ -72,6 +75,9 @@ int SC_Start(const char *id, const char* server_ip, const char* server_port){
     return -1;
   }
   else if(sc_client.pid == 0){
+    if(signal(SIGINT, SIG_IGN) == SIG_ERR){
+      perror("Scoreboard_Client : Failed to ignore SIGINT");
+    }
     if(execl(SC_CLIENT_PATH, SC_CLIENT_PATH, id, server_ip, server_port, NULL) == -1){
       perror("Scoreboard_Client : Could not start client");
       exit(EXIT_FAILURE);
@@ -89,10 +95,13 @@ void SC_Stop(){
   
   //Child process
   if(sc_client.pid != -1){
-    struct sigaction act;
+#ifdef SC_CATCH_SIGCHLD
+    struct sigaction act, old;
     memset(&act, 0, sizeof(act));
     act.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &act, NULL);
+    sigaction(SIGCHLD, &act, &old);
+#endif
+
     kill(sc_client.pid, SIGTERM); usleep(100);
     kill(sc_client.pid, SIGTERM); usleep(100);
     kill(sc_client.pid, SIGTERM); usleep(100);
@@ -101,6 +110,10 @@ void SC_Stop(){
       kill(sc_client.pid, SIGKILL);
     }fflush(stdout);
     while(waitpid(sc_client.pid, NULL, 0) == EINTR);
+
+#ifdef SC_CATCH_SIGCHLD
+    sigaction(SIGCHLD, &old, NULL);
+#endif
   }
   
   //Shared memory
@@ -138,9 +151,11 @@ int SC_Update(uint16_t score){
   return 0;
 }
 
+#ifdef SC_CATCH_SIGCHLD
 void SC_SIGCHLD_Handler(int signo){
   if(signo == SIGCHLD){
     //sc_running = 0;
     fprintf(stderr, "Scoreboard_Client : Client stopped working\n");
   }
 }
+#endif

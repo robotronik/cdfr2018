@@ -11,7 +11,7 @@ volatile sig_atomic_t stop = 0;//Ctrl+C
 int main(){
   LOG_Set_Level(LOG_INFO_LEVEL);
   log_info("Initializing...");
-
+  
   //Signals initializations
   struct sigaction act_sigterm, act_sigint;
   sigemptyset(&act_sigterm.sa_mask);
@@ -65,6 +65,14 @@ int main(){
     log_error("Error while adding function");
   }
 
+  if(RC_Server_Add_Function(&server, GET_ASSER_DATA, get_asser_data, "b", "bffff", RC_IMMEDIATE) == -1){
+    log_error("Error while adding function");
+  }
+
+  if(load_pid_data()){
+    log_error("Failed to load asser data");
+  }
+
   //Mode boombox
   Start_Player(SONGS_PATH);
 
@@ -88,7 +96,8 @@ int main(){
   close(uart_fd);
 
   log_info("Main loop stopped. Idle state.");
-  while(!stop);
+
+  blink_end();
 
   log_info("Quit");
   
@@ -115,4 +124,21 @@ void sigint_handler(int signo){
     Stop_Player();
     stop = 1;
   }
+}
+
+void blink_end(){
+  wiringPiSetup();
+  softPwmCreate(PWM_PIN, 0, 255);
+
+  const int T = 2;
+  while(!stop){
+    int i;
+    for(i = 0; i < 20*T; i++){
+      softPwmWrite(PWM_PIN, (int) ((1.+cos(2.*3.141592*((double)i)/(T*20.-1.)))*255.*0.5));
+      usleep(50000);
+    }
+  }
+  usleep(50000);
+  softPwmWrite(PWM_PIN, 0);
+  usleep(50000);
 }

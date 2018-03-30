@@ -28,7 +28,7 @@ void ragequit(RC_Server *server){
 
   //Restart boombox
   Stop_Player();
-  Start_Player(SONGS_PATH);
+  //Start_Player(SONGS_PATH);
 
   //Stop recording
   Stop_Camera();
@@ -53,6 +53,8 @@ void wasted(RC_Server *server){
 
   //Stop uart
   run = 0;
+
+  while(!stop);
 }
 
 void so_points_much_score(RC_Server *server){    
@@ -90,4 +92,59 @@ void random_stuff(RC_Server *server){
   str[RC_STR_SIZE-1] = '\0';
   
   log_raw(str);
+}
+
+typedef struct PID_DATA_S{
+  float Te, Kp, Ki, Kd;
+}PID_DATA;
+
+typedef enum PID_DATA_INDEX_E{
+  PID_POS_SUM,
+  PID_POS_DIFF,
+  PID_Z
+}PID_DATA_INDEX_E;
+
+static int read_asser(FILE *f, PID_DATA *data){
+  char buff[64];
+  int matchs = fscanf(f, "%s\nTe %f\nKp %f\nKi %f\nKd %f\n\n", buff, &data->Te, &data->Kp, &data->Ki, &data->Kd);
+  if(matchs == EOF){
+    log_verror("Failed to read asser data : %s", STR_ERRNO);
+  }else if(matchs != 5){
+    log_error("Failed to read asser data : bad format");
+  }else{
+    return 0;
+  }
+  
+  return -1;
+}
+
+static PID_DATA pid_data[3];
+int load_pid_data(){
+  FILE* f_asser = fopen(ASSER_PATH, "r");
+
+  do{
+    if(read_asser(f_asser, &pid_data[0])) break;
+    if(read_asser(f_asser, &pid_data[1])) break;
+    if(read_asser(f_asser, &pid_data[2])) break;
+    fclose(f_asser);
+    return 0;
+  }while(0);
+  
+  fclose(f_asser);
+  return -1;
+}
+
+void get_asser_data(RC_Server *server){
+  uint8_t index;
+  RC_Server_Get_Args(server, &index);
+  if(index > 2){
+    RC_Server_Return(server, 0, 0., 0., 0., 0.);
+    return;
+  }
+  
+  RC_Server_Return(server, 1,
+		   pid_data[index].Te,
+		   pid_data[index].Kp,
+		   pid_data[index].Ki,
+		   pid_data[index].Kd);
 }

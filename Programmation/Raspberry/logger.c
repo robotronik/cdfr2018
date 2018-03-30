@@ -24,7 +24,7 @@ void LOG_Set_Output(Log_Type type, int fd){
 }
 
 void LOG_Write(Log_Type type, const char *file, const char *function, int line, const char *fmt, ...){
-  static char str_type[4][16] = {[LOG_RAW] = MAG "[RAW]",
+  static char str_type[4][32] = {[LOG_RAW] = MAG "[RAW]",
 				 [LOG_ERROR] = RED "[ERROR]",
 				 [LOG_WARNING] = YEL "[WARNING]",
 				 [LOG_INFO] = GRN "[INFO]"};

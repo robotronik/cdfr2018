@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-W -Wall -ansi -std=c99 -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/SDL -D_DEFAULT_SOURCE -lrt -pthread
 LD=ld
-LDFLAGS=-L/usr/local/lib -lrt -lpthread
+LDFLAGS=-L/usr/local/lib -lrt -lpthread -lwiringPi -lm
 EXEC=rasptronik
 SRC= $(wildcard *.c ./uart/*.c ./client-api/client_api.c)
 HDR = $(wildcard *.h)

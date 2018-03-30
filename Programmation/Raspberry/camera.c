@@ -51,6 +51,9 @@ int Start_Camera(){
   }
 
   if(camera_pid == 0){
+    if(signal(SIGINT, SIG_IGN) == SIG_ERR){
+      log_warning("Player : failed to ignore SIGINT");
+    }
     if(execlp("python3", "python3", CAMERA_PATH, VIDEO_PATH, CAMERA_SOCKET, NULL) == -1){
       log_verror("Camera : exec failed : %s", STR_ERRNO);
       exit(EXIT_FAILURE);

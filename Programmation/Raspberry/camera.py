@@ -15,9 +15,12 @@ import picamera
 CV_SOCKET_PATH = './cv_socket'
 CV_PROG_PATH = './RobotrOvision'
 
+def print_color(str):
+    print("\x1B[34;1m"+str+"\x1B[0m");
+
 def check_args():
     if len(sys.argv) < 3:
-        print("Usage : python3 camera.py <video-path> <socket-cmd-path>")
+        print_color("Usage : python3 camera.py <video-path> <socket-cmd-path>")
         sys.exit(0)
 
 def get_video_path(directory):
@@ -48,10 +51,10 @@ def run_cv():
 
     #Waiting for connection
     connection = cv_socket.accept()[0]
-    print("[camera.py] Connected to cv program")
+    print_color("[camera.py] Connected to cv program")
 
     #Capturing img
-    print("[camera.py] Capturing image")
+    print_color("[camera.py] Capturing image")
     stream = io.BytesIO()
     CAMERA.capture(stream, format='jpeg')
     #img = open("capture.jpg", "rb")
@@ -59,13 +62,13 @@ def run_cv():
     #img.close()
 
     #Sending img
-    print("[camera.py] Sending image...")
-    print(stream.tell())
+    print_color("[camera.py] Sending image...")
+    print_color(stream.tell())
     connection.send(bytearray(struct.pack('<L', stream.tell())))
     stream.seek(0)
     connection.send(bytearray(stream.read()))
 
-    print("[camera.py] Waiting for OpenCV...")
+    print_color("[camera.py] Waiting for OpenCV...")
     r_cv = connection.recv(4).decode("utf-8")
     connection.close()
     cv_socket.close()
@@ -76,6 +79,7 @@ def sigterm_handler(_signo, _stack_frame):
 
 check_args()
 signal.signal(signal.SIGTERM, sigterm_handler)
+signal.signal(signal.SIGINT, sigterm_handler)
 
 SOCKET_CMD = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 SOCKET_CMD.connect(sys.argv[2])
@@ -85,19 +89,20 @@ CAMERA = picamera.PiCamera()
 CAMERA.resolution = (1280, 720)
 CAMERA.start_recording(get_video_path(str(sys.argv[1])))
 
-try:
-    while True:
-        try:
-            STRING = SOCKET_CMD.recv(1024).decode("utf-8")
-            if STRING == str("read\0"):
-                print("[camera.py] CV request received")
-                RESULT = run_cv()
-                SOCKET_CMD.send(RESULT.encode())
-                print("[camera.py] Result" + RESULT + " sent")
-        except:
-            continue
-finally:
-    CAMERA.stop_recording()
-    SOCKET_CMD.close()
-    print("[camere.py] Clean stop.")
-    
+while True:
+    try:
+        STRING = SOCKET_CMD.recv(1024).decode("utf-8")
+        if STRING == str("read\0"):
+            print_color("[camera.py] CV request received")
+            RESULT = run_cv()
+            SOCKET_CMD.send(RESULT.encode())
+            print_color("[camera.py] Result" + RESULT + " sent")
+    except socket.timeout:
+        continue
+    except SystemExit:
+        CAMERA.stop_recording()
+        SOCKET_CMD.close()
+        print_color("[camera.py] Clean stop.")
+        break
+    except:
+        continue

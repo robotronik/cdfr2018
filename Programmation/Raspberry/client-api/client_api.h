@@ -27,6 +27,14 @@
 #define SC_SERVER_IP "192.168.0.4"
 #define SC_SERVER_PORT 80
 
+//define SC_CATCH_SIGCHLD
+/*
+ * Uncomment this define if you want the SIGCHLD handled by this
+ * API. This is not relevant when your program can have multiple child
+ * processes running, because the API could catch SIGCHLD fired by
+ * another process than the SC client.
+ */
+
 typedef struct Scoreboard_Client_S{
   int shm_fd;
   uint16_t *score;//It is mapped to a shared memory, do NOT modify it
@@ -60,6 +68,8 @@ int SC_Update(uint16_t score);
  * score has been updated and is ready to be sent.
  */
 
+#ifdef SC_CATCH_SIGCHLD
 void SC_SIGCHLD_Handler(int signo);
+#endif
 
 #endif
