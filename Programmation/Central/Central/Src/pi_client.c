@@ -11,7 +11,8 @@ int PI_Init(){
   if(RC_Client_Add_Function(&pi_client, PI_SCORE, "B", "")) return -1;
   if(RC_Client_Add_Function(&pi_client, PI_PLAN, "", "bs")) return -1;
   if(RC_Client_Add_Function(&pi_client, PI_LOG, "s", "")) return -1;
-
+  if(RC_Client_Add_Function(&pi_client, PI_ASSER, "b", "bffff")) return -1;
+  
   return 0;
 }
 
@@ -41,6 +42,28 @@ int PI_Error(){
   if(RC_Call(&pi_client, PI_ERROR) != 0){
     return -1;
   }
+
+  return 0;
+}
+
+int PI_Log(const char *fmt, ...){
+  va_list args;
+  va_start(args, fmt);
+  
+  char log[RC_STR_SIZE];
+  vsnprintf(log, RC_STR_SIZE, fmt, args);  
+
+  va_end(args);
+
+  return RC_Call(&pi_client, PI_LOG, log);
+}
+
+int PI_Asser_Test(){
+  uint8_t ok;
+  float Te, Kp, Ki, Kd;
+  RC_Call(&pi_client, PI_ASSER, 2, &ok, &Te, &Kp, &Ki, &Kd);
+
+  PI_Log("Kp Axe Z : %lf", Kp);
 
   return 0;
 }

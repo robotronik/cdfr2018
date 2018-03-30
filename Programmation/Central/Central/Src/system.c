@@ -29,7 +29,6 @@ void remote_stop(){
     if(!JACK_PLUGGED){
       i = JACK_FILTER;
     }
-    HAL_Delay(1);
   }
   HAL_NVIC_SystemReset();
 }

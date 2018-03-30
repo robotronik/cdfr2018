@@ -48,6 +48,7 @@
 #include "system.h"
 #include "tof.h"
 #include "pi_client.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -138,6 +139,9 @@ int main(void)
 
   Team t = wait_start();
   PI_Start();
+
+  HAL_Delay(2000);
+  PI_Asser_Test();
   
   /* USER CODE END 2 */
 
@@ -294,7 +298,8 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 void HardFault_Handler(void){
-  stop();
+  PI_Error();
+  hlt();
 }
 /* USER CODE END 4 */
 
