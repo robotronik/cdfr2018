@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Project>
-<ProjectName>/home/maxime/Bureau/Robotique/git/cdfr2018/Programmation/Axe_Z/Asser_moteur_z/\Asser_moteur_z</ProjectName>
+<ProjectName>/home/antonin/Documents/Robotronik/git/cdfr2018/Programmation/Axe_Z/Asser_moteur_z/\Asser_moteur_z</ProjectName>
 <ProjectNature>C</ProjectNature> 
 <CMSIS>Drivers/CMSIS</CMSIS>
-<HAL_Driver>/home/maxime/STM32Cube/Repository//STM32Cube_FW_F3_V1.9.0/Drivers/CMSIS</HAL_Driver>
+<HAL_Driver>/home/antonin/STM32Cube/Repository//STM32Cube_FW_F3_V1.9.0/Drivers/CMSIS</HAL_Driver>
 <Toolchain>Makefile</Toolchain>
 <Version>0</Version>
 
@@ -77,12 +77,6 @@
 						</file>
 						<file>
 							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_exti.c</name>
-						</file>
-						<file>
-							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc.c</name>
-						</file>
-						<file>
-							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_adc_ex.c</name>
 						</file>
 						<file>
 							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_i2c.c</name>
@@ -171,10 +165,6 @@
                                 </file>
 
                                 <file>
-                                 <name>Src/adc.c</name>
-                                </file>
-
-                                <file>
                                  <name>Src/dma.c</name>
                                 </file>
 
@@ -204,15 +194,6 @@
 
 
 
-    <group>
-        <name>Src</name>
-                    <group>
-                    <name>adc.c</name>
-                                    <file>
-                                            <name>Src/adc.c</name>
-                                    </file>
-                    </group>
-    </group>
     <group>
         <name>Src</name>
                     <group>

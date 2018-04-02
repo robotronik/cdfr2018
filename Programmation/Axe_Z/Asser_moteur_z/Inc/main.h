@@ -68,8 +68,6 @@
 #define INV_GPIO_Port GPIOA
 #define EN_Pin GPIO_PIN_5
 #define EN_GPIO_Port GPIOA
-#define FB_Pin GPIO_PIN_6
-#define FB_GPIO_Port GPIOA
 #define NSF_Pin GPIO_PIN_7
 #define NSF_GPIO_Port GPIOA
 #define D1_Pin GPIO_PIN_0
