@@ -16,6 +16,7 @@ void FSM_Stack_Init(FSM_Stack*);
 
 void FSM_Pos_3(FSM_Stack*);
 void FSM_Detect_Cube(FSM_Stack*);
+void FSM_Pos_2(FSM_Stack*);
 void FSM_Open(FSM_Stack*);
 void FSM_Go_Down(FSM_Stack*);
 void FSM_Close(FSM_Stack*);
