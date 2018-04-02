@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -80,7 +80,7 @@ AX_Interface interface;
 /* USER CODE BEGIN 0 */
 void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* p_hwwdg){
   if(p_hwwdg == &hwwdg){
-    
+
   }
 }
 /* USER CODE END 0 */
@@ -157,9 +157,12 @@ int main(void)
   interface.set_direction = AX_Set_Direction_HAL;
   interface.delay = HAL_Delay;
 
-  AX servo_ar = {.id = 1, .interface = &interface};
-  AX servo_g = {.id = 2, .interface = &interface};
-  AX servo_d = {.id = 3, .interface = &interface};
+  servo_ar.id = 1;
+  servo_ar.interface = &interface;
+  servo_g.id = 2;
+  servo_g.interface = &interface;
+  servo_d.id = 3;
+  servo_d.interface = &interface;
   //AX_Say_Hello(&servo);
   /*AX_Configure_ID(&servo, 2);
   //AX_Configure_Angle_Limit(&servo_ar, 255, 750);
@@ -192,7 +195,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_Delay(500);
 
 
   //https://www.pololu.com/product/1212
@@ -201,9 +203,7 @@ int main(void)
   init_encoder(&encoder,&htim2,&htim15);
   start_encoder(&encoder);
 
-  int n=0;
-
-  imp_goal=-2000;//warning no positive values
+  imp_goal=0;//warning no positive values
   while (1)
   {
     HAL_WWDG_Refresh(&hwwdg);
@@ -229,7 +229,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -242,7 +242,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -264,11 +264,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -305,7 +305,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
