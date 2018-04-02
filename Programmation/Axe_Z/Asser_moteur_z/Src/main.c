@@ -194,13 +194,27 @@ int main(void)
   init_encoder(&encoder,&htim2,&htim15);
   start_encoder(&encoder);
 
+  uint8_t check_presence=1,presence=0;
+  int n=0;
+
   imp_goal=-2000;//warning no positive values
   while (1)
   {
-
     float voltage=pid(&pid_z,imp_goal-encoder.steps);
     MOTOR_VOLTAGE(voltage);
     HAL_Delay(Te);
+
+    if(check_presence)
+    {
+      imp_goal=Ppresence;
+      n++;
+      if(n>25)
+      {
+        if(encoder.steps<PpresenceLim) presence=0;//pas de cube
+        else presence=0;
+        n=0;
+      }
+    }
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

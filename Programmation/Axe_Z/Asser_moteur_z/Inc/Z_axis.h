@@ -5,8 +5,17 @@
 #ifndef __Robotronik_corp_Z_axis_H
 #define __Robotronik_corp_Z_axis_H
 
+#define P0 -4000
+#define P1 -4050
+#define P2 -3000
+#define P3 -3050
+#define Ppresence P2-20
+#define PpresenceLim P2-10
+
 #define PWM_MAX 100//max 255
 #define VOLTAGE_FC 2
+
+int cube_present();
 
 #define MOTOR_INIT \
   TIM_OC_InitTypeDef sConfigOC;\
