@@ -61,6 +61,7 @@ remote_call.c \
 Robotronik_corp_pid.c \
 robotronik_protocol.c \
 Z_axis.c \
+fsm_stack.c \
 Src/stm32f3xx_it.c \
 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c \
 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim_ex.c \
