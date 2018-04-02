@@ -16,6 +16,7 @@ typedef enum Z_Functions_E{
   Z_ARM_OUT,
   Z_ARM_IN,
   Z_STACK,
+  Z_STACK_LAST,
   Z_UNSTACK,
   Z_PLACE
 }Z_Functions;
@@ -33,5 +34,9 @@ void balec(RC_Server* pserver);
 void punch_bee(RC_Server* pserver);
 void arm_in(RC_Server* pserver);
 void arm_out(RC_Server* pserver);
+void stack(RC_Server* pserver);
+void stack_last(RC_Server* pserver);
+void unstack(RC_Server* pserver);
+void place(RC_Server* pserver);
 
 #endif

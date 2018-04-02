@@ -140,6 +140,10 @@ int main(void)
   RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "","", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_ARM_IN,arm_in, "","", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_ARM_OUT,arm_out, "","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK,stack, "","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last,"","",RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "","", RC_IMMEDIATE);
 
 
   //==================================================
