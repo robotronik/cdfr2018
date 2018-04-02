@@ -177,6 +177,8 @@ int main(void)
   pid_z.Ki=0;
   pid_z.Kd=0;
   pid_z.Te=0.01;
+  pid_z.position_tolerance=100;
+  pid_z.speed_tolerance=100;
   pid_init(&pid_z);
 
   /* USER CODE END 2 */
