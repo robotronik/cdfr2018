@@ -19,5 +19,6 @@ typedef struct{
 
 void pid_init(volatile PID_DATA *pid);
 float pid(volatile PID_DATA *pid, int eps);
+int reached(volatile PID_DATA *pid,int eps);
 
 #endif
