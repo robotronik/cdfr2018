@@ -33,7 +33,7 @@ cfd:
 comp:
 	@echo -e "${vert_gras}+--------------------[ Compilation ]--------------------+ ${fin}"
 	cd $(PROJECT_DIR) ;\
-	make all
+	make all -j5
 	cd $(ORI);\
 
 	@echo -e "${vert_gras}+----------------[ Compilation terminée ]---------------+ ${fin}"
