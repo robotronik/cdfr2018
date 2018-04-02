@@ -1,18 +1,20 @@
 #Position_sum
-Te 0.01
 Kp 0.01
 Ki 0.01
 Kd 0.0001
+pos_eps 0
+speed_eps 0
 
 #Position_diff
-Te 0.01
 Kp 0.01
 Ki 0.01
 Kd 0.0001
+pos_eps 0
+speed_eps 0
 
 #Axe_Z
-Te 0.01
 Kp 0.001
 Ki 0
 Kd 0
-
+pos_eps 0
+speed_eps 0

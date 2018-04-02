@@ -65,7 +65,7 @@ int main(){
     log_error("Error while adding function");
   }
 
-  if(RC_Server_Add_Function(&server, GET_ASSER_DATA, get_asser_data, "b", "bffff", RC_IMMEDIATE) == -1){
+  if(RC_Server_Add_Function(&server, GET_ASSER_DATA, get_asser_data, "b", "bfffii", RC_IMMEDIATE) == -1){
     log_error("Error while adding function");
   }
 

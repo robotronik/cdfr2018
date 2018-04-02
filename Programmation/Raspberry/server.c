@@ -95,7 +95,8 @@ void random_stuff(RC_Server *server){
 }
 
 typedef struct PID_DATA_S{
-  float Te, Kp, Ki, Kd;
+  float Kp, Ki, Kd;
+  int pos_eps, speed_eps
 }PID_DATA;
 
 typedef enum PID_DATA_INDEX_E{
@@ -106,7 +107,7 @@ typedef enum PID_DATA_INDEX_E{
 
 static int read_asser(FILE *f, PID_DATA *data){
   char buff[64];
-  int matchs = fscanf(f, "%s\nTe %f\nKp %f\nKi %f\nKd %f\n\n", buff, &data->Te, &data->Kp, &data->Ki, &data->Kd);
+  int matchs = fscanf(f, "%s\nKp %f\nKi %f\nKd %f\npos_eps %d\nspeed_eps %d\n\n", buff, &data->Kp, &data->Ki, &data->Kd, &data->pos_eps, &data->speed_eps);
   if(matchs == EOF){
     log_verror("Failed to read asser data : %s", STR_ERRNO);
   }else if(matchs != 5){
@@ -138,13 +139,14 @@ void get_asser_data(RC_Server *server){
   uint8_t index;
   RC_Server_Get_Args(server, &index);
   if(index > 2){
-    RC_Server_Return(server, 0, 0., 0., 0., 0.);
+    RC_Server_Return(server, 0, 0., 0., 0., 0, 0);
     return;
   }
   
   RC_Server_Return(server, 1,
-		   pid_data[index].Te,
 		   pid_data[index].Kp,
 		   pid_data[index].Ki,
-		   pid_data[index].Kd);
+		   pid_data[index].Kd,
+		   pid_data[index].pos_eps,
+		   pid_data[index].speed_eps);
 }
