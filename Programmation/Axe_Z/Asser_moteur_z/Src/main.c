@@ -75,23 +75,6 @@ void SystemClock_Config(void);
 
 AX_Interface interface;
 
-uint8_t AX_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
-  HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
-  return (status==HAL_OK)?0:1;
-}
-
-uint8_t AX_Send_HAL(uint8_t *data, uint16_t size, uint32_t timeout){
-  HAL_StatusTypeDef status = HAL_UART_Transmit(&huart1, data, size, timeout);
-  return (status==HAL_OK)?0:1;
-}
-
-void AX_Set_Direction_HAL(AX_Direction dir){
-  HAL_GPIO_WritePin(EN_Servo_GPIO_Port, EN_Servo_Pin, (dir==AX_SEND)?GPIO_PIN_SET:GPIO_PIN_RESET);
-}
-
-void AX_Delay_HAL(uint32_t t){
-  HAL_Delay(t);
-}
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -138,17 +121,25 @@ int main(void)
   extern RP_Interface Z_interface;
   extern RC_Server Z_server;
 
+  //==================================================
+  //                    UART                         
+  //==================================================
   RP_Init_Interface(&Z_interface, USART2, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
 
+  //==================================================
+  //              Remote Call Server                           
+  //==================================================
   RC_Server_Init(&Z_server,&Z_interface);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "b","b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "b", "b", RC_DELAYED);
 
-
+  //==================================================
+  //                  AX-12A                           
+  //==================================================
   interface.receive = AX_Receive_HAL;
   interface.send = AX_Send_HAL;
   interface.set_direction = AX_Set_Direction_HAL;
-  interface.delay = AX_Delay_HAL;
+  interface.delay = HAL_Delay;
 
   AX servo_ar = {.id = 1, .interface = &interface};
   AX servo_g = {.id = 2, .interface = &interface};
