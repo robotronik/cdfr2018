@@ -55,7 +55,6 @@
 #include "stm32f3xx_ll_exti.h"
 
 /* USER CODE BEGIN Includes */
-#include "usart.h"
 #include "ax_12a_hal.h"
 /* USER CODE END Includes */
 

@@ -1,5 +1,8 @@
 #include "ax_12a_hal.h"
 
+#include "stm32f3xx_hal.h"
+#include "usart.h"
+
 uint8_t AX_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout){
   HAL_StatusTypeDef status = HAL_UART_Receive(&huart1, buffer, size, timeout);
   return (status==HAL_OK)?0:1;

@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#include "stm32f3xx_hal.h"
-#include "usart.h"
 #include "ax_12a.h"
 
 uint8_t AX_Receive_HAL(uint8_t *buffer, uint16_t size, uint32_t timeout);
