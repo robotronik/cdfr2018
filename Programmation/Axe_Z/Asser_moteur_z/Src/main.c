@@ -136,6 +136,7 @@ int main(void)
   RC_Server_Add_Function(&Z_server, Z_RESET,reset,"","", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_SET_ASSER,set_asser,"fffif","", RC_IMMEDIATE);
 
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "","", RC_IMMEDIATE);
 
   RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "","", RC_IMMEDIATE);
 
