@@ -62,8 +62,10 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-PID_DATA pid_z;
+volatile PID_DATA pid_z;
 volatile Encoder encoder;
+volatile int imp_goal;
+TIM_OC_InitTypeDef sConfigOC;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -134,6 +136,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM15_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   extern RP_Interface Z_interface;
   extern RC_Server Z_server;
@@ -150,9 +153,6 @@ int main(void)
   interface.set_direction = AX_Set_Direction_HAL;
   interface.delay = AX_Delay_HAL;
 
-  float voltage=0;
-  int imp_goal;
-  int Te=10;
   pid_z.Kp=0.001;
   pid_z.Ki=0;
   pid_z.Kd=0;
@@ -179,34 +179,26 @@ int main(void)
   //AX_Configure_Angle_Limit(&servo_g, 430, 540);
   //AX_Configure_Angle_Limit(&servo_d, 480, 590);
 
-  while(1)
-  {
-    AX_Set_Goal_Position(&servo_ar, 255, AX_NOW);
-    AX_Set_Goal_Position(&servo_g, 430, AX_NOW);
-    AX_Set_Goal_Position(&servo_d, 590, AX_NOW);
-    HAL_Delay(2000);
-    AX_Set_Goal_Position(&servo_ar, 750, AX_NOW);
-    AX_Set_Goal_Position(&servo_g, 540, AX_NOW);
-    AX_Set_Goal_Position(&servo_d, 480, AX_NOW);
-    HAL_Delay(2000);
-  }
 
   //https://www.pololu.com/product/1212
   MOTOR_INIT;
   MOTOR_FC;
   init_encoder(&encoder,&htim2,&htim15);
   start_encoder(&encoder);
+  MOTOR_START_SERVITUDE;
+
   imp_goal=-2000;//warning no positive values
   while (1)
   {
-
-    //HAL_ADC_PollForConversion(&hadc2, 100);
-    //adcResult = HAL_ADC_GetValue(&hadc2);
-    //voltage=pid(&pid_z,imp_goal-encoder.steps);
-    voltage=0;
-    MOTOR_VOLTAGE(voltage);
-    HAL_Delay(Te);
+    AX_Set_Goal_Position(&servo_ar, 255, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 430, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 590, AX_NOW);
+    HAL_Delay(2000);
     HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
+    AX_Set_Goal_Position(&servo_ar, 750, AX_NOW);
+    AX_Set_Goal_Position(&servo_g, 540, AX_NOW);
+    AX_Set_Goal_Position(&servo_d, 480, AX_NOW);
+    HAL_Delay(2000);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -254,10 +246,11 @@ void SystemClock_Config(void)
   }
 
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_ADC12;
+                              |RCC_PERIPHCLK_TIM1|RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);

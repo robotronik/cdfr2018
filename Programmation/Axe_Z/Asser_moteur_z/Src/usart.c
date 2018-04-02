@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -39,6 +39,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usart.h"
+
 #include "gpio.h"
 #include "dma.h"
 
@@ -102,10 +103,10 @@ void MX_USART2_UART_Init(void)
   LL_GPIO_InitTypeDef GPIO_InitStruct;
   /* Peripheral clock enable */
   LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2);
-
-  /**USART2 GPIO Configuration
+  
+  /**USART2 GPIO Configuration  
   PA2   ------> USART2_TX
-  PA3   ------> USART2_RX
+  PA3   ------> USART2_RX 
   */
   GPIO_InitStruct.Pin = LL_GPIO_PIN_2|LL_GPIO_PIN_3;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
@@ -116,7 +117,7 @@ void MX_USART2_UART_Init(void)
   LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USART2 DMA Init */
-
+  
   /* USART2_RX Init */
   LL_DMA_SetDataTransferDirection(DMA1, LL_DMA_CHANNEL_6, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
@@ -166,10 +167,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
   /* USER CODE END USART1_MspInit 0 */
     /* USART1 clock enable */
     __HAL_RCC_USART1_CLK_ENABLE();
-
-    /**USART1 GPIO Configuration
+  
+    /**USART1 GPIO Configuration    
     PA9     ------> USART1_TX
-    PA10     ------> USART1_RX
+    PA10     ------> USART1_RX 
     */
     GPIO_InitStruct.Pin = TX_Servo_Pin|RX_Servo_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -194,10 +195,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
   /* USER CODE END USART1_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_USART1_CLK_DISABLE();
-
-    /**USART1 GPIO Configuration
+  
+    /**USART1 GPIO Configuration    
     PA9     ------> USART1_TX
-    PA10     ------> USART1_RX
+    PA10     ------> USART1_RX 
     */
     HAL_GPIO_DeInit(GPIOA, TX_Servo_Pin|RX_Servo_Pin);
 
@@ -205,7 +206,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
 
   /* USER CODE END USART1_MspDeInit 1 */
   }
-}
+} 
 
 /* USER CODE BEGIN 1 */
 

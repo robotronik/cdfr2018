@@ -40,9 +40,13 @@
 #include "robotronik_protocol.h"
 #include "robotronik_protocol_stm32f3.h"
 #include "usart.h"
+#include "Z_axis.h"
+#include "Robotronik_corp_pid.h"
+#include "tim.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 
 /******************************************************************************/
@@ -217,6 +221,7 @@ void TIM1_BRK_TIM15_IRQHandler(void)
   /* USER CODE BEGIN TIM1_BRK_TIM15_IRQn 0 */
 
   /* USER CODE END TIM1_BRK_TIM15_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim1);
   HAL_TIM_IRQHandler(&htim15);
   /* USER CODE BEGIN TIM1_BRK_TIM15_IRQn 1 */
 
@@ -238,11 +243,19 @@ void USART2_IRQHandler(void)
 
 /* USER CODE BEGIN 1 */
 extern Encoder encoder;
+extern int imp_goal;
+extern PID_DATA pid_z;
+extern TIM_OC_InitTypeDef sConfigOC;
 
 void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef *htim)
 {
   if(htim->Instance == htim15.Instance){
     update_encoder(&encoder);
+  }
+  else if(htim->Instance == htim1.Instance)
+  {
+    float voltage=pid(&pid_z,imp_goal-encoder.steps);
+    MOTOR_VOLTAGE(voltage);
   }
 }
 /* USER CODE END 1 */
