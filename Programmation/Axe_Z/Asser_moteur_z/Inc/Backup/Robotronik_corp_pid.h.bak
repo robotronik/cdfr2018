@@ -15,7 +15,7 @@ typedef struct{
   float Te;
 } PID_DATA;
 
-void pid_init(PID_DATA *pid);
-float pid(PID_DATA *pid, int eps);
+void pid_init(volatile PID_DATA *pid);
+float pid(volatile PID_DATA *pid, int eps);
 
 #endif

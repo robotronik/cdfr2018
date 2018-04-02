@@ -8,7 +8,8 @@
 #define PWM_MAX 100//max 255
 #define VOLTAGE_FC 2
 
-#define MOTOR_INIT {\
+#define MOTOR_INIT \
+  TIM_OC_InitTypeDef sConfigOC;\
   sConfigOC.OCMode = TIM_OCMODE_PWM1;\
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;\
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;\
@@ -16,7 +17,6 @@
   HAL_GPIO_WritePin(EN_GPIO_Port, EN_Pin,1); \
   HAL_GPIO_WritePin(INV_GPIO_Port, INV_Pin,0); \
   HAL_GPIO_WritePin(D1_GPIO_Port, D1_Pin,0); \
-}
 
 //if positive, goes up
 #define MOTOR_VOLTAGE(voltage){\
@@ -43,10 +43,6 @@
   MOTOR_VOLTAGE(VOLTAGE_FC);\
   while(HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin)==0) i++;\
   MOTOR_VOLTAGE(0);\
-}
-
-#define MOTOR_START_SERVITUDE {\
-  HAL_TIM_Base_Start_IT(&htim1);\
 }
 
 #endif

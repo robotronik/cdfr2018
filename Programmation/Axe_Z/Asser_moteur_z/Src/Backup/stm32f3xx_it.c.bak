@@ -40,6 +40,7 @@
 #include "robotronik_protocol.h"
 #include "robotronik_protocol_stm32f3.h"
 #include "usart.h"
+#include "Z_axis.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -47,7 +48,7 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 
 /******************************************************************************/
-/*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
+/*            Cortex-M4 Processor Interruption and Exception Handlers         */
 /******************************************************************************/
 
 /**
@@ -204,7 +205,7 @@ void DMA1_Channel6_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
   DMAx_Streamx_IRQHandler(1, 6, Z_interface);
   /* USER CODE END DMA1_Channel6_IRQn 0 */
-  
+
   /* USER CODE BEGIN DMA1_Channel6_IRQn 1 */
 
   /* USER CODE END DMA1_Channel6_IRQn 1 */
