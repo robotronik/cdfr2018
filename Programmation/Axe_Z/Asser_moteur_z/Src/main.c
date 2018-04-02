@@ -78,6 +78,11 @@ AX_Interface interface;
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* p_hwwdg){
+  if(p_hwwdg == &hwwdg){
+    
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -201,6 +206,7 @@ int main(void)
   imp_goal=-2000;//warning no positive values
   while (1)
   {
+    HAL_WWDG_Refresh(&hwwdg);
     float voltage=pid(&pid_z,imp_goal-encoder.steps);
     MOTOR_VOLTAGE(voltage);
     HAL_Delay(Te);
