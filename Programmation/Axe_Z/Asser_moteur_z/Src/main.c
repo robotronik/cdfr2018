@@ -136,7 +136,7 @@ int main(void)
   //              Remote Call Server
   //==================================================
   RC_Server_Init(&Z_server,&Z_interface);
-  RC_Server_Add_Function(&Z_server, Z_GET_STATE,get_state,"","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_GET_STATE, get_state, "", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_RESET,reset,"","", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_SET_ASSER,set_asser,"fffif","", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_BALEC,balec, "","", RC_IMMEDIATE);
