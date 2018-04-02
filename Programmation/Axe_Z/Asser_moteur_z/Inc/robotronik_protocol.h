@@ -63,7 +63,7 @@ typedef struct RP_Packet_S{
 
 typedef struct RP_Interface_S{
   
-  uint8_t (*send)(uint8_t *, uint16_t, uint32_t);//data, size, timeout_ms
+  uint8_t (*send)(void* link_handler, uint8_t *data, uint16_t length, uint32_t timeout_ms);
   uint32_t (*get_tick)();
   
   //Reception buffer
@@ -101,6 +101,9 @@ typedef struct RP_Interface_S{
 
   //Position set externally
   uint16_t sync_pos;
+
+  //Link Handler
+  void* link_handler;
 }RP_Interface;
 
 //==================================================
@@ -108,7 +111,8 @@ typedef struct RP_Interface_S{
 //==================================================
 
 void RP_Init_Interface(RP_Interface *interface,
-		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t),
+		       void* link_handler,
+		       uint8_t (*send)(void*, uint8_t *, uint16_t, uint32_t),
 		       uint32_t (*get_tick)());
 /**
  * Init the interface and its associated FSM and set send and get_tick

@@ -230,7 +230,7 @@ void TIM1_BRK_TIM15_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-  USARTx_IRQHandler(1, 1, 6, Z_interface);
+  USARTx_IRQHandler(2, 1, 6, Z_interface);
   /* USER CODE END USART2_IRQn 0 */
   /* USER CODE BEGIN USART2_IRQn 1 */
 

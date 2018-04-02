@@ -58,7 +58,6 @@ extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
    extern RP_Interface Z_interface;
-   extern RP_Interface nucleo_interface;
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);
@@ -67,7 +66,7 @@ void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-   uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout);
+   uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint32_t timeout);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus
