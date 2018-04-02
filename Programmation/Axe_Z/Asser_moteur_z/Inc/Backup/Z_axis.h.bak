@@ -45,8 +45,4 @@
   MOTOR_VOLTAGE(0);\
 }
 
-#define MOTOR_START_SERVITUDE {\
-  HAL_TIM_Base_Start_IT(&htim1);\
-}
-
 #endif

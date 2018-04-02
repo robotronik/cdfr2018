@@ -4,6 +4,7 @@
 #include "robotronik_protocol.h"
 #include "robotronik_protocol_stm32f3.h"
 #include "remote_call.h"
+#include "stm32f3xx_it.h"
 
 typedef enum Z_Functions_E{
   Z_RESET,
@@ -23,6 +24,8 @@ typedef enum Z_States_E{
   Z_ERROR
 }Z_States;
 
+void reset(RC_Server* pserver);
+void set_asser(RC_Server* pserver);
 void punch_bee(RC_Server* pserver);
 
 #endif

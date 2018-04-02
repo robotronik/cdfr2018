@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -44,11 +44,12 @@
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
+#include "wwdg.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
 #include "Robotronik_corp_pid.h"
-#include "ax_12a.h"
+#include "ax_12a_hal.h"
 #include "Z_axis.h"
 #include "encoder.h"
 
@@ -117,6 +118,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM15_Init();
+  MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
   extern RP_Interface Z_interface;
   extern RC_Server Z_server;
@@ -131,7 +133,12 @@ int main(void)
   //              Remote Call Server                           
   //==================================================
   RC_Server_Init(&Z_server,&Z_interface);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "b", "b", RC_DELAYED);
+  RC_Server_Add_Function(&Z_server, Z_RESET,reset,"","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_SET_ASSER,set_asser,"fffif","", RC_IMMEDIATE);
+
+
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "","", RC_IMMEDIATE);
+
 
   //==================================================
   //                  AX-12A                           
@@ -168,6 +175,8 @@ int main(void)
   pid_z.Ki=0;
   pid_z.Kd=0;
   pid_z.Te=0.01;
+  pid_z.position_tolerance=100;
+  pid_z.speed_tolerance=100;
   pid_init(&pid_z);
 
   /* USER CODE END 2 */
@@ -209,7 +218,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -222,7 +231,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -246,11 +255,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time
+    /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick
+    /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -287,7 +296,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

@@ -14,3 +14,9 @@ float pid(volatile PID_DATA *pid, int eps)
   pid->prev_eps=eps;
   return output;
 }
+
+int reached(volatile PID_DATA *pid,int eps)
+{
+  if(eps<pid->position_tolerance && (eps-pid->prev_eps)/pid->Te<pid->speed_tolerance) return 1;
+  return 0;
+}

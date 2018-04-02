@@ -55,8 +55,10 @@ static void RP_FSM_END(RP_Interface *interface);
 //==================================================
 
 void RP_Init_Interface(RP_Interface *interface,
-		       uint8_t (*send)(uint8_t *, uint16_t, uint32_t),
+		       void* link_handler,
+		       uint8_t (*send)(void*, uint8_t *, uint16_t, uint32_t),
 		       uint32_t (*get_tick)()){
+  interface->link_handler = link_handler;
   interface->send = send;
   interface->get_tick = get_tick;
   interface->received = false;
@@ -127,7 +129,7 @@ int RP_Build_Frame(RP_Packet *packet, uint8_t buffer[RP_BUFFER_SIZE]){
 int RP_Sync(RP_Interface *interface, uint32_t timeout){
   uint8_t byte = RP_EOF;
 
-  if(interface->send(&byte, 1, timeout) != 0){
+  if(interface->send(interface->link_handler, &byte, 1, timeout) != 0){
     err = RP_ERR_LINK | RP_ERR_TIMEOUT;
     return -1;
   }
@@ -142,7 +144,7 @@ int RP_Send(RP_Interface *interface, RP_Packet *packet, uint32_t timeout){
     return -1;
   }
 
-  if(interface->send(interface->buffer_out, len, timeout) != 0){
+  if(interface->send(interface->link_handler, interface->buffer_out, len, timeout) != 0){
     err = RP_ERR_LINK | RP_ERR_TIMEOUT;
     return -1;
   }

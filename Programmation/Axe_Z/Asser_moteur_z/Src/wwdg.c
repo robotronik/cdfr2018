@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * File Name          : WWDG.c
+  * Description        : This file provides code for the configuration
+  *                      of the WWDG instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -37,81 +37,58 @@
   ******************************************************************************
   */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H__
-#define __MAIN_H__
-
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f3xx_ll_usart.h"
-#include "stm32f3xx_ll_rcc.h"
-#include "stm32f3xx_ll_bus.h"
-#include "stm32f3xx_ll_cortex.h"
-#include "stm32f3xx_ll_system.h"
-#include "stm32f3xx_ll_utils.h"
-#include "stm32f3xx_ll_pwr.h"
-#include "stm32f3xx_ll_gpio.h"
-#include "stm32f3xx_ll_dma.h"
+#include "wwdg.h"
 
-#include "stm32f3xx_ll_exti.h"
+/* USER CODE BEGIN 0 */
 
-/* USER CODE BEGIN Includes */
+/* USER CODE END 0 */
 
-/* USER CODE END Includes */
+WWDG_HandleTypeDef hwwdg;
 
-/* Private define ------------------------------------------------------------*/
+/* WWDG init function */
+void MX_WWDG_Init(void)
+{
 
-#define Encodeur_Ch_A_Pin GPIO_PIN_0
-#define Encodeur_Ch_A_GPIO_Port GPIOA
-#define Encodeur_Ch_B_Pin GPIO_PIN_1
-#define Encodeur_Ch_B_GPIO_Port GPIOA
-#define INV_Pin GPIO_PIN_4
-#define INV_GPIO_Port GPIOA
-#define EN_Pin GPIO_PIN_5
-#define EN_GPIO_Port GPIOA
-#define FB_Pin GPIO_PIN_6
-#define FB_GPIO_Port GPIOA
-#define NSF_Pin GPIO_PIN_7
-#define NSF_GPIO_Port GPIOA
-#define D1_Pin GPIO_PIN_0
-#define D1_GPIO_Port GPIOB
-#define ND2_Pin GPIO_PIN_1
-#define ND2_GPIO_Port GPIOB
-#define EN_Servo_Pin GPIO_PIN_8
-#define EN_Servo_GPIO_Port GPIOA
-#define TX_Servo_Pin GPIO_PIN_9
-#define TX_Servo_GPIO_Port GPIOA
-#define RX_Servo_Pin GPIO_PIN_10
-#define RX_Servo_GPIO_Port GPIOA
-#define IN1_Pin GPIO_PIN_11
-#define IN1_GPIO_Port GPIOA
-#define IN2_Pin GPIO_PIN_12
-#define IN2_GPIO_Port GPIOA
-#define LED_Pin GPIO_PIN_15
-#define LED_GPIO_Port GPIOA
-#define FC_Pin GPIO_PIN_3
-#define FC_GPIO_Port GPIOB
+  hwwdg.Instance = WWDG;
+  hwwdg.Init.Prescaler = WWDG_PRESCALER_1;
+  hwwdg.Init.Window = 64;
+  hwwdg.Init.Counter = 64;
+  hwwdg.Init.EWIMode = WWDG_EWI_ENABLE;
+  if (HAL_WWDG_Init(&hwwdg) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
 
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
-
-/* USER CODE BEGIN Private defines */
-
-/* USER CODE END Private defines */
-
-#ifdef __cplusplus
- extern "C" {
-#endif
-void _Error_Handler(char *, int);
-
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
-#ifdef __cplusplus
 }
-#endif
 
-#endif /* __MAIN_H__ */
+void HAL_WWDG_MspInit(WWDG_HandleTypeDef* wwdgHandle)
+{
+
+  if(wwdgHandle->Instance==WWDG)
+  {
+  /* USER CODE BEGIN WWDG_MspInit 0 */
+
+  /* USER CODE END WWDG_MspInit 0 */
+    /* WWDG clock enable */
+    __HAL_RCC_WWDG_CLK_ENABLE();
+  /* USER CODE BEGIN WWDG_MspInit 1 */
+
+  /* USER CODE END WWDG_MspInit 1 */
+  }
+}
+ 
+
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
