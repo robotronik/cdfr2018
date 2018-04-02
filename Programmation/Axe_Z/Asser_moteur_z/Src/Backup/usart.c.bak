@@ -51,17 +51,16 @@
 RP_Interface Z_interface;
 RC_Server Z_server;
 
-uint8_t RP_UART_Transmit(uint8_t *data, uint16_t size, uint32_t timeout){
+uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint32_t timeout){
+  USART_TypeDef *usart_handler = (USART_TypeDef*) link_handler;
   int i;
   for(i = 0; i < size; i++){
-    LL_USART_TransmitData8(USART2, data[i]);
-    while(LL_USART_IsActiveFlag_TXE(USART2) == 0);
+    __disable_irq();
+    LL_USART_TransmitData8(usart_handler, data[i]);
+    while(LL_USART_IsActiveFlag_TXE(usart_handler) == 0);
+    __enable_irq();
   }
   return 0;
-}
-
-uint32_t RP_Get_Tick(){
-  return HAL_GetTick();
 }
 
 void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){

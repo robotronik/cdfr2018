@@ -118,6 +118,9 @@
 							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_ll_dma.c</name>
 						</file>
 						<file>
+							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_wwdg.c</name>
+						</file>
+						<file>
 							<name>Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal.c</name>
 						</file>
 						<file>
@@ -185,6 +188,10 @@
 
                                 <file>
                                  <name>Src/usart.c</name>
+                                </file>
+
+                                <file>
+                                 <name>Src/wwdg.c</name>
                                 </file>
 
                                 <file>
@@ -266,6 +273,15 @@
                     <name>stm32f3xx_it.c</name>
                                     <file>
                                             <name>Src/stm32f3xx_it.c</name>
+                                    </file>
+                    </group>
+    </group>
+    <group>
+        <name>Src</name>
+                    <group>
+                    <name>wwdg.c</name>
+                                    <file>
+                                            <name>Src/wwdg.c</name>
                                     </file>
                     </group>
     </group>

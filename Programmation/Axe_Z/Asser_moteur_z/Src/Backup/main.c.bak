@@ -95,7 +95,6 @@ void AX_Delay_HAL(uint32_t t){
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-uint8_t punch_bee_order;
 /* USER CODE END 0 */
 
 /**
@@ -135,16 +134,19 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM15_Init();
-  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   extern RP_Interface Z_interface;
   extern RC_Server Z_server;
 
-  RP_Init_Interface(&Z_interface, RP_UART_Transmit, HAL_GetTick);
+  RP_Init_Interface(&Z_interface, USART2, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
 
   RC_Server_Init(&Z_server,&Z_interface);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "b","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_RESET,reset,"","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_SET_ASSER,set_asser,"fffif","", RC_IMMEDIATE);
+
+
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "","", RC_IMMEDIATE);
 
 
   interface.receive = AX_Receive_HAL;
@@ -179,6 +181,8 @@ int main(void)
   pid_z.Ki=0;
   pid_z.Kd=0;
   pid_z.Te=0.01;
+  pid_z.position_tolerance=100;
+  pid_z.speed_tolerance=100;
   pid_init(&pid_z);
 
   /* USER CODE END 2 */
@@ -193,7 +197,6 @@ int main(void)
   MOTOR_FC;
   init_encoder(&encoder,&htim2,&htim15);
   start_encoder(&encoder);
-  MOTOR_START_SERVITUDE;
 
   imp_goal=-2000;//warning no positive values
   while (1)
@@ -249,11 +252,10 @@ void SystemClock_Config(void)
   }
 
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_TIM1|RCC_PERIPHCLK_ADC12;
+                              |RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
-  PeriphClkInit.Tim1ClockSelection = RCC_TIM1CLK_HCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
