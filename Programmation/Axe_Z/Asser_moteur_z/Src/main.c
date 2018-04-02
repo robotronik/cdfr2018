@@ -95,7 +95,6 @@ void AX_Delay_HAL(uint32_t t){
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-uint8_t punch_bee_order;
 /* USER CODE END 0 */
 
 /**
@@ -143,7 +142,7 @@ int main(void)
   RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
 
   RC_Server_Init(&Z_server,&Z_interface);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "b","", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "b","b", RC_IMMEDIATE);
 
 
   interface.receive = AX_Receive_HAL;
