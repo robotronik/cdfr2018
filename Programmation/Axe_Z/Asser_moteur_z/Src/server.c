@@ -1,8 +1,5 @@
 #include "server.h"
 
-extern RP_Interface Z_interface;
-extern RC_Server Z_server;
-extern PID_DATA pid_z;
 
 volatile uint8_t global_state=Z_BUSY, punch_bee_order=0, balec_order=0, arm_in_order=0, arm_out_order=0,stack_order=0,
                   stack_last_order=0,unstack_order=0, place_order=0;

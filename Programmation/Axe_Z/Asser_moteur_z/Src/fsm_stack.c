@@ -1,9 +1,5 @@
 #include "fsm_stack.h"
 
-extern int imp_goal;
-extern Encoder encoder;
-extern PID_DATA pid_z;
-
 void FSM_Stack_Init(FSM_Stack *fsm){
   fsm->n = 0;
   fsm->status=FSM_RUNNING;
@@ -47,12 +43,10 @@ void FSM_Pos_2(FSM_Stack *fsm)
 
 void FSM_Open(FSM_Stack *fsm)
 {
-  uint16_t pos_d,pos_g;
-  AX_Set_Goal_Position(&servo_g, 430, AX_NOW);
-  AX_Set_Goal_Position(&servo_d, 590, AX_NOW);
-  AX_Get_Current_Position(&servo_g, &pos_g);
-  AX_Get_Current_Position(&servo_d, &pos_d);
-  if(abs(pos_g-430)<5 && abs(pos_d-590)<5) fsm->run=FSM_Go_Down;
+  Z_Open();
+  
+if(Z_Is_Open())
+    fsm->run = FSM_Go_Down;
 }
 
 void FSM_Go_Down(FSM_Stack *fsm)
@@ -68,8 +62,7 @@ void FSM_Close(FSM_Stack *fsm)
 {
   uint16_t load_d,load_g;
   AX_Wheel_Direction d;
-  AX_Set_Goal_Position(&servo_g, 540, AX_NOW);
-  AX_Set_Goal_Position(&servo_d, 480, AX_NOW);
+  Z_Close();
   AX_Get_Current_Load(&servo_g, &d, &load_g);
   AX_Get_Current_Load(&servo_d, &d, &load_d);//TODO check direction
   if(load_d>250 && load_g>250) fsm->run=FSM_Go_Down;//TODO check the value

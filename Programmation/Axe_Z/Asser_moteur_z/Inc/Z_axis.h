@@ -10,6 +10,17 @@
 #include "stm32f3xx_hal.h"
 #include "ax_12a.h"
 #include "ax_12a_hal.h"
+#include "Robotronik_corp_pid.h"
+#include "fsm_master.h"
+#include "encoder.h"
+
+/*** Global variables ***/
+extern Encoder encoder;
+extern volatile int imp_goal;
+extern volatile PID_DATA pid_z;
+extern AX servo_ar, servo_g, servo_d;
+extern int err;
+FSM_Instance *volatile fsm;
 
 #define Z_DELAY 10
 
@@ -24,8 +35,15 @@
 #define AX_LEFT_OPEN 430
 #define AX_RIGHT_OPEN 590
 
+#define AX_ARM_START 255
+#define AX_ARM_DEPLOY 400
+#define AX_ARM_END 750
+
 #define AX_EPSILON 10
 
+
+
+/*** Functions ***/
 void Z_Init_AX();
 /**
  * Init the servos.
@@ -38,12 +56,34 @@ int Z_Check_AX();
  */
 
 void Z_Enable_AX(bool enable);
+/**
+ * If enable == true, turns the servomotors on, otherwise turns them
+ * off.
+ */
 
 void Z_Open();
-void Z_Close();
-int Z_Is_Open();
-int Z_Is_Closed();
+/**
+ * Opens the pliers.
+ */
 
+int Z_Is_Open();
+/**
+ * Return 1 if the pliers is open, 0 if it's not, -1 on error.
+ */
+
+void Z_Close();
+/**
+ * Close the pliers.
+ */
+
+int Z_Is_Closed();
+/**
+ * Return 1 if the pliers is closed, 0 if it's not, -1 on error.
+ */
+
+void Z_Set_Goal(int goal);
+
+int Z_Goal_Reached();
 
 /*** PID ***/
 #define P0 -4000
@@ -55,8 +95,6 @@ int Z_Is_Closed();
 
 #define PWM_MAX 100//max 255
 #define VOLTAGE_FC 2
-
-extern AX servo_ar, servo_g, servo_d;
 
 int cube_present();
 

@@ -52,12 +52,14 @@
 /* USER CODE BEGIN Includes */
 #include "robotronik_protocol.h"
 #include "robotronik_protocol_stm32f3.h"
+#include "remote_call.h"
 /* USER CODE END Includes */
 
 extern UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN Private defines */
    extern RP_Interface Z_interface;
+   extern RC_Server Z_server;
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);

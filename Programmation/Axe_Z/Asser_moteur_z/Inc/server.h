@@ -6,6 +6,7 @@
 #include "remote_call.h"
 #include "stm32f3xx_it.h"
 #include "Robotronik_corp_pid.h"
+#include "Z_axis.h"
 
 typedef enum Z_Functions_E{
   Z_GET_STATE,

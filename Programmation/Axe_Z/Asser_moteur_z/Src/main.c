@@ -64,9 +64,7 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-volatile PID_DATA pid_z;
-volatile Encoder encoder;
-volatile int imp_goal;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -122,8 +120,6 @@ int main(void)
   MX_TIM15_Init();
   MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
-  extern RP_Interface Z_interface;
-  extern RC_Server Z_server;
 
   //==================================================
   //                    UART
@@ -172,14 +168,14 @@ int main(void)
   //==================================================
   MOTOR_INIT;
   MOTOR_FC;
-  init_encoder(&encoder,&htim2,&htim15);
+  init_encoder(&encoder, &htim2, &htim15);
   start_encoder(&encoder);
 
   //==================================================
   //                    FSM
   //==================================================
   FSM_Start fsm_start;
-  FSM_Instance *fsm = (FSM_Instance*) &fsm_start;
+  fsm = (FSM_Instance*volatile) &fsm_start;
 
   /* USER CODE END 2 */
 

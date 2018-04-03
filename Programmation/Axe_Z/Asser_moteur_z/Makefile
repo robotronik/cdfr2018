@@ -66,6 +66,8 @@ remote_call.c \
 Robotronik_corp_pid.c \
 robotronik_protocol.c \
 Z_axis.c \
+fsm_master.c \
+fsm_start.c \
 fsm_stack.c \
 Src/stm32f3xx_it.c \
 /Src/system_stm32f3xx.c \

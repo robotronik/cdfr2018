@@ -1,8 +1,14 @@
 #include "Z_axis.h"
 
+Encoder encoder;
+
 static AX_Interface ax_iface;
 AX servo_ar, servo_g, servo_d;
 
+volatile int imp_goal;
+volatile PID_DATA pid_z;
+FSM_Instance *volatile fsm;
+int err;
 
 void Z_Init_AX(){
   ax_iface.receive = AX_Receive_HAL;
@@ -71,4 +77,12 @@ inline int Z_Is_Open(){
 
 inline int Z_Is_Closed(){
   return Z_Check_AX_Goal(AX_LEFT_CLOSE, AX_RIGHT_CLOSE);
+}
+
+void Z_Set_Goal(int goal){
+  imp_goal = goal;
+}
+
+inline int Z_Goal_Reached(){
+  return reached(&pid_z, imp_goal-encoder.steps);
 }
