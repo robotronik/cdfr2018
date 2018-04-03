@@ -2,9 +2,50 @@
  * Library for Cdfr2018 @Robotronik
  * You may freely rage with this software
  */
-#ifndef __Robotronik_corp_Z_axis_H
-#define __Robotronik_corp_Z_axis_H
+#ifndef Z_AXIS_H
+#define Z_AXIS_H
 
+#include <stdbool.h>
+#include <stdlib.h>
+#include "stm32f3xx_hal.h"
+#include "ax_12a.h"
+#include "ax_12a_hal.h"
+
+#define Z_DELAY 10
+
+/*** SERVOS ***/
+#define AX_ARM_ID 1
+#define AX_LEFT_ID 2
+#define AX_RIGHT_ID 3
+
+#define AX_LEFT_CLOSE 540
+#define AX_RIGHT_CLOSE 480
+
+#define AX_LEFT_OPEN 430
+#define AX_RIGHT_OPEN 590
+
+#define AX_EPSILON 10
+
+void Z_Init_AX();
+/**
+ * Init the servos.
+ */
+
+int Z_Check_AX();
+/**
+ * Check if the servos are connected and ready to use. Returns 0 if
+ * servos are ready, -1 otherwise.
+ */
+
+void Z_Enable_AX(bool enable);
+
+void Z_Open();
+void Z_Close();
+int Z_Is_Open();
+int Z_Is_Closed();
+
+
+/*** PID ***/
 #define P0 -4000
 #define P1 -4050
 #define P2 -3000
@@ -14,6 +55,8 @@
 
 #define PWM_MAX 100//max 255
 #define VOLTAGE_FC 2
+
+extern AX servo_ar, servo_g, servo_d;
 
 int cube_present();
 

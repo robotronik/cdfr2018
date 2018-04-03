@@ -47,15 +47,17 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "Robotronik_corp_pid.h"
-#include "ax_12a_hal.h"
-#include "Z_axis.h"
-#include "encoder.h"
-
 #include "robotronik_protocol.h"
 #include "robotronik_protocol_stm32f3.h"
 #include "remote_call.h"
-#include "functions.h"
+#include "ax_12a_hal.h"
+#include "Robotronik_corp_pid.h"
+#include "encoder.h"
+
+#include "Z_axis.h"
+#include "server.h"
+#include "fsm_master.h"
+#include "fsm_start.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -72,8 +74,6 @@ void SystemClock_Config(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
-AX_Interface interface;
 
 /* USER CODE END PFP */
 
@@ -93,7 +93,6 @@ void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* p_hwwdg){
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -131,58 +130,35 @@ int main(void)
   //==================================================
   RP_Init_Interface(&Z_interface, USART2, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
-
+  
   //==================================================
   //              Remote Call Server
   //==================================================
   RC_Server_Init(&Z_server,&Z_interface);
+  
+  RC_Server_Add_Function(&Z_server, Z_RESET, reset, "", "", RC_IMMEDIATE);    
+  RC_Server_Add_Function(&Z_server, Z_SET_ASSER, set_asser, "fffif", "", RC_IMMEDIATE);
+
   RC_Server_Add_Function(&Z_server, Z_GET_STATE, get_state, "", "", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_RESET,reset,"","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_SET_ASSER,set_asser,"fffif","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_BALEC,balec, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_IN,arm_in, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_OUT,arm_out, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK,stack, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last,"","",RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "","", RC_IMMEDIATE);
-
-
+    
+  RC_Server_Add_Function(&Z_server, Z_BALEC, balec, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_IN, arm_in, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_OUT, arm_out, "", "b", RC_IMMEDIATE);
+  //RC_Server_Add_Function(&Z_server, Z_STACK_FIRST, stack_first, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK, stack, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last, "", "b",RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "", "b", RC_IMMEDIATE);
+  
   //==================================================
   //                  AX-12A
   //==================================================
-  interface.receive = AX_Receive_HAL;
-  interface.send = AX_Send_HAL;
-  interface.set_direction = AX_Set_Direction_HAL;
-  interface.delay = HAL_Delay;
+  Z_Init_AX();
 
-  servo_ar.id = 1;
-  servo_ar.interface = &interface;
-  servo_g.id = 2;
-  servo_g.interface = &interface;
-  servo_d.id = 3;
-  servo_d.interface = &interface;
-  //AX_Say_Hello(&servo);
-  /*AX_Configure_ID(&servo, 2);
-  //AX_Configure_Angle_Limit(&servo_ar, 255, 750);
-  //AX_Configure_Angle_Limit(&servo_g, 430, 540);
-  //AX_Configure_Angle_Limit(&servo_d, 480, 590);
-  while(1)
-  {
-    HAL_Delay(10);
-  }
-  */
-  /*AX_Set_Goal_Position(&servo_ar, 255, AX_NOW);
-  AX_Set_Goal_Position(&servo_g, 430, AX_NOW);
-  AX_Set_Goal_Position(&servo_d, 590, AX_NOW);
-  HAL_Delay(2000);
-  HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
-  AX_Set_Goal_Position(&servo_ar, 750, AX_NOW);
-  AX_Set_Goal_Position(&servo_g, 540, AX_NOW);
-  AX_Set_Goal_Position(&servo_d, 480, AX_NOW);
-  HAL_Delay(2000);*/
-  int Te=10;
+  //==================================================
+  //                  Default PID
+  //==================================================
   pid_z.Kp=0.001;
   pid_z.Ki=0;
   pid_z.Kd=0;
@@ -191,6 +167,20 @@ int main(void)
   pid_z.speed_tolerance=100;
   pid_init(&pid_z);
 
+  //==================================================
+  //              Motor & Encoder
+  //==================================================
+  MOTOR_INIT;
+  MOTOR_FC;
+  init_encoder(&encoder,&htim2,&htim15);
+  start_encoder(&encoder);
+
+  //==================================================
+  //                    FSM
+  //==================================================
+  FSM_Start fsm_start;
+  FSM_Instance *fsm = (FSM_Instance*) &fsm_start;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -198,18 +188,23 @@ int main(void)
 
 
   //https://www.pololu.com/product/1212
-  MOTOR_INIT;
-  MOTOR_FC;
-  init_encoder(&encoder,&htim2,&htim15);
-  start_encoder(&encoder);
+
 
   imp_goal=0;//warning no positive values
   while (1)
   {
+    //Watchdog refresh
     HAL_WWDG_Refresh(&hwwdg);
-    float voltage=pid(&pid_z,imp_goal-encoder.steps);
+
+    //Asser
+    float voltage = pid(&pid_z, imp_goal - encoder.steps);
     MOTOR_VOLTAGE(voltage);
-    HAL_Delay(Te);
+
+    //FSM
+    fsm->run(fsm);
+    
+    //Delay
+    HAL_Delay(Z_DELAY);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

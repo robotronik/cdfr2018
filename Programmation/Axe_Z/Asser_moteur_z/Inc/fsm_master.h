@@ -1,5 +1,5 @@
-#ifndef __FSM_MASTER_H
-#define __FSM_MASTER_H
+#ifndef FSM_MASTER_H
+#define FSM_MASTER_H
 
 typedef enum FSM_Status_E{
   FSM_RUNNING,
@@ -7,8 +7,14 @@ typedef enum FSM_Status_E{
   FSM_ERROR
 }FSM_Status;
 
-typedef struct FSM_Master_S{
+struct FSM_Instance_S;
+typedef void (*FSM_Procedure)(struct FSM_Instance_S*);
 
-}FSM_Master;
+typedef struct FSM_Instance_S{
+  FSM_Procedure run;
+  FSM_Status status;
+}FSM_Instance;
+
+void FSM_NOP(FSM_Instance *fsm);
 
 #endif

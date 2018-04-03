@@ -1,7 +1,5 @@
 #include "fsm_stack.h"
 
-#define abs(a) ((a >= 0)?a:(-a))
-
 extern int imp_goal;
 extern Encoder encoder;
 extern PID_DATA pid_z;

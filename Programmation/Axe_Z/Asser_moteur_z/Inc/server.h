@@ -1,5 +1,5 @@
-#ifndef __functions_H
-#define __functions_H
+#ifndef __SERVER_H_
+#define __SERVER_H_
 
 #include "robotronik_protocol.h"
 #include "robotronik_protocol_stm32f3.h"
@@ -15,6 +15,7 @@ typedef enum Z_Functions_E{
   Z_PUNCH_BEE,
   Z_ARM_OUT,
   Z_ARM_IN,
+  Z_STACK_FIRST,
   Z_STACK,
   Z_STACK_LAST,
   Z_UNSTACK,

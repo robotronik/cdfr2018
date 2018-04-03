@@ -1,4 +1,4 @@
-#include "functions.h"
+#include "server.h"
 
 extern RP_Interface Z_interface;
 extern RC_Server Z_server;
@@ -19,11 +19,12 @@ void reset(RC_Server* pserver)
 
 void set_asser(RC_Server* pserver)
 {
-  RC_Server_Get_Args(pserver,&(pid_z.Kp));
-  RC_Server_Get_Args(pserver,&(pid_z.Ki));
-  RC_Server_Get_Args(pserver,&(pid_z.Kd));
-  RC_Server_Get_Args(pserver,&(pid_z.position_tolerance));
-  RC_Server_Get_Args(pserver,&(pid_z.speed_tolerance));
+  RC_Server_Get_Args(pserver,
+		     &pid_z.Kp,
+		     &pid_z.Ki,
+		     &pid_z.Kd,
+		     &pid_z.position_tolerance,
+		     &pid_z.speed_tolerance);
   RC_Server_Return(pserver);
 }
 

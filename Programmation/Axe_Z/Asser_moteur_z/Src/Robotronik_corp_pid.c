@@ -1,7 +1,5 @@
 #include "Robotronik_corp_pid.h"
 
-#define abs(a) ((a >= 0)?a:(-a))
-
 void pid_init(volatile PID_DATA *pid)
 {
   pid->prev_eps=0;

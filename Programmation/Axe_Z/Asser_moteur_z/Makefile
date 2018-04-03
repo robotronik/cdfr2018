@@ -61,7 +61,7 @@ ax_12a.c \
 ax_12a_hal.c \
 crc_16.c \
 encoder.c \
-functions.c \
+server.c \
 remote_call.c \
 Robotronik_corp_pid.c \
 robotronik_protocol.c \

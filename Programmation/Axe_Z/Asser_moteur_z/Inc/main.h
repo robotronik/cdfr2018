@@ -97,7 +97,7 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-AX servo_ar,servo_g,servo_d;
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
