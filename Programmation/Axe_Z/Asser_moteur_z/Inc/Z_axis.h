@@ -35,11 +35,15 @@ FSM_Instance *volatile fsm;
 #define AX_LEFT_OPEN 430
 #define AX_RIGHT_OPEN 590
 
+#define AX_CLOSE_LOAD 250
+
 #define AX_ARM_START 255
 #define AX_ARM_DEPLOY 400
 #define AX_ARM_END 750
 
 #define AX_EPSILON 10
+
+#define MAX_PERIOD_DETECT_CUBE 25
 
 
 
