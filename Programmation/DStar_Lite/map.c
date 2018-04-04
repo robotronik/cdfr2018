@@ -1,6 +1,6 @@
 #include "map.h"
 
-static Cube_Set const sets[NB_CUBE_SETS] = {
+Cube_Set const sets[NB_CUBE_SETS] = {
   {.x = 300, .y = 1190},
   {.x = 850, .y = 540},
   {.x = 1100, .y = 1500},
@@ -18,7 +18,7 @@ static Cube_Set const sets[NB_CUBE_SETS] = {
 
 #define EXPAND_CUBES_FROM_SET_INDEX(i) EXPAND_CUBES_FROM_POS(sets[i].x, sets[i].y)
 
-static Cube cubes[NB_CUBES] = {
+Cube cubes[NB_CUBES] = {
   EXPAND_CUBES_FROM_POS(300, 1190),
   EXPAND_CUBES_FROM_POS(850, 540),
   EXPAND_CUBES_FROM_POS(1100, 1500),
@@ -27,40 +27,32 @@ static Cube cubes[NB_CUBES] = {
   EXPAND_CUBES_FROM_POS(2700, 1190),
 };
 
-void draw_cubes(SDL_Renderer *renderer, SDL_Texture *texture){
-  SDL_SetRenderTarget(renderer, texture);
 
-  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
-  SDL_RenderClear(renderer);
-
-  int i;
-  for(i = 0; i < NB_CUBES; i++){
-    int color = i%5;
-    if(cubes[i].x > 1500){
-      printf("%d\n", color);
-      if(color == GREEN) color = ORANGE;
-      else if(color == ORANGE) color = GREEN;
+void init_map(Map *map){
+  int i,j;
+  for(i = 0; i < MAP_HEIGHT; i++){
+    for(j = 0; j < MAP_WIDTH; j++){
+      map->obs[i][j] = 0;
     }
-    switch(color){
-    case GREEN:
-      SDL_SetRenderDrawColor(renderer, 97, 153, 59, 0xFF);
-      break;
-    case YELLOW:
-      SDL_SetRenderDrawColor(renderer, 247, 181, 0, 0xFF);
-      break;
-    case ORANGE:
-      SDL_SetRenderDrawColor(renderer, 208, 93, 40, 0xFF);
-      break;
-    case BLACK:
-      SDL_SetRenderDrawColor(renderer, 14, 14, 16, 0xFF);
-      break;
-    case BLUE:
-      SDL_SetRenderDrawColor(renderer, 0, 124, 176, 0xFF);
-      break;      
-    }
-    SDL_Rect rect = {.x = cubes[i].x / RATIO - (CUBE_SIZE / RATIO)/2, .y = cubes[i].y / RATIO - (CUBE_SIZE / RATIO)/2, .w = CUBE_SIZE / RATIO, .h = CUBE_SIZE / RATIO};
-    SDL_RenderFillRect(renderer, &rect);
   }
-    
-  SDL_SetRenderTarget(renderer, NULL);
+  
+  int n;
+  int r = ((CUBE_SIZE / 2) + ROBOT_RADIUS * PADDING)/SQUARE_SIZE + 1;
+  for(n = 0; n < NB_CUBES; n++){
+    int x0 = cubes[n].x / SQUARE_SIZE;
+    int y0 = cubes[n].y / SQUARE_SIZE;
+    int x, y;
+    for(x = 0; x < r; x++){
+      float alpha = acos((float) x / (float) r);
+      int y_max = (float) r * sin(alpha) + 1;
+      for(y = 0; y < y_max; y++){
+	if(x0+x < MAP_WIDTH && x0-x > 0 && y0+y < MAP_HEIGHT && y0-y > 0){
+	  map->obs[y0+y][x0+x] = 1;
+	  map->obs[y0-y][x0+x] = 1;
+	  map->obs[y0+y][x0-x] = 1;
+	  map->obs[y0-y][x0-x] = 1;
+	}
+      }
+    }
+  }
 }
