@@ -4,13 +4,16 @@
 #include <stdbool.h>
 #include "main.h"
 
-#define SQUARE_SIZE (10/RATIO)//1cm
-#define MAP_HEIGHT (HEIGHT / SQUARE_SIZE)
-#define MAP_WIDTH (WIDTH / SQUARE_SIZE)
+#define SQUARE_SIZE 50//2cm
+#define AREA_HEIGHT 2000
+#define AREA_WIDTH 3000
+#define MAP_HEIGHT (AREA_HEIGHT / SQUARE_SIZE)
+#define MAP_WIDTH (AREA_WIDTH / SQUARE_SIZE)
 #define NB_CUBE_SETS 6
 #define NB_CUBES (5*NB_CUBE_SETS)
-
 #define CUBE_SIZE 58
+#define ROBOT_RADIUS 167
+#define PADDING 1.2
 
 typedef enum Cube_Color_E{
   GREEN,
@@ -32,6 +35,9 @@ typedef struct Map_S{
   int obs[MAP_HEIGHT][MAP_WIDTH];
 }Map;
 
-void draw_cubes(SDL_Renderer *renderer, SDL_Texture *texture);
+extern Cube_Set const sets[NB_CUBE_SETS];
+extern Cube cubes[NB_CUBES];
+
+void init_map(Map *map);
 
 #endif
