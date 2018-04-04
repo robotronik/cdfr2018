@@ -13,6 +13,10 @@
 #include "Robotronik_corp_pid.h"
 #include "fsm_master.h"
 #include "encoder.h"
+#include "fsm_stack.h"
+#include "fsm_arm.h"
+#include "fsm_unstack.h"
+#include "fsm_place.h"
 
 /*** Global variables ***/
 extern Encoder encoder;

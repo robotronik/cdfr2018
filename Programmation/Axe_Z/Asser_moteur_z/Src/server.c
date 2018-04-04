@@ -1,12 +1,13 @@
 #include "server.h"
 
-
-volatile uint8_t global_state=Z_BUSY, punch_bee_order=0, balec_order=0, arm_in_order=0, arm_out_order=0,stack_order=0,
-                  stack_last_order=0,unstack_order=0, place_order=0;
+extern FSM_Stack fsm_stack;
+extern FSM_Arm fsm_arm;
+extern FSM_Unstack fsm_unstack;
+extern FSM_Place fsm_place;
 
 void get_state(RC_Server* pserver)
 {
-  RC_Server_Return(pserver,global_state);
+  RC_Server_Return(pserver,1);
 }
 
 void reset(RC_Server* pserver)
@@ -27,47 +28,52 @@ void set_asser(RC_Server* pserver)
 
 void balec(RC_Server* pserver)
 {
-  balec_order=1;
   RC_Server_Return(pserver);
 }
 
 void punch_bee(RC_Server* pserver){
-  punch_bee_order = 1;
+  fsm_arm.instance.run=FSM_ARM_OUT;
   RC_Server_Return(pserver);
 }
 
 void arm_in(RC_Server* pserver)
 {
-  arm_in_order=1;
+  __disable_irq();
   RC_Server_Return(pserver);
+  AX_Set_Goal_Position(&servo_ar, AX_ARM_START, AX_NOW);
+  __enable_irq();
 }
 
 void arm_out(RC_Server* pserver)
 {
-  arm_out_order=1;
+  __disable_irq();
   RC_Server_Return(pserver);
+  AX_Set_Goal_Position(&servo_ar, AX_ARM_DEPLOY, AX_NOW);
+  __enable_irq();
 }
 
 void stack(RC_Server* pserver)
 {
-  stack_order=1;
+  fsm_stack.instance.run=FSM_Stack_Init;
+  fsm_stack.last=0;
   RC_Server_Return(pserver);
 }
 
 void stack_last(RC_Server* pserver)
 {
-  stack_last_order=1;
+  fsm_stack.instance.run=FSM_Stack_Init;
+  fsm_stack.last=1;
   RC_Server_Return(pserver);
 }
 
 void unstack(RC_Server* pserver)
 {
-  unstack_order=1;
+  fsm_unstack.instance.run=FSM_Unstack_Init;
   RC_Server_Return(pserver);
 }
 
 void place(RC_Server* pserver)
 {
-  place_order=1;
+  fsm_unstack.instance.run=FSM_Place_Init;
   RC_Server_Return(pserver);
 }

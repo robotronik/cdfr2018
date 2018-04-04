@@ -10,6 +10,12 @@ volatile PID_DATA pid_z;
 FSM_Instance *volatile fsm;
 int err;
 
+FSM_Stack fsm_stack;
+FSM_Arm fsm_arm;
+FSM_Unstack fsm_unstack;
+FSM_Place fsm_place;
+
+
 void Z_Init_AX(){
   ax_iface.receive = AX_Receive_HAL;
   ax_iface.send = AX_Send_HAL;
@@ -18,10 +24,10 @@ void Z_Init_AX(){
 
   servo_ar.id = AX_ARM_ID;
   servo_ar.interface = &ax_iface;
-  
+
   servo_g.id = AX_LEFT_ID;
   servo_g.interface = &ax_iface;
-  
+
   servo_d.id = AX_RIGHT_ID;
   servo_d.interface = &ax_iface;
 }
@@ -67,7 +73,7 @@ static int Z_Check_AX_Goal(uint16_t goal_left, uint16_t goal_right){
   if(AX_Get_Current_Position(&servo_d, &pos_d) != 0){
     return -1;
   }
-  
+
   return AX_GOAL_REACHED(pos_g, goal_left) && AX_GOAL_REACHED(pos_d, goal_right);
 }
 

@@ -7,6 +7,11 @@
 #include "stm32f3xx_it.h"
 #include "Robotronik_corp_pid.h"
 #include "Z_axis.h"
+#include "fsm_stack.h"
+#include "fsm_arm.h"
+#include "fsm_unstack.h"
+#include "fsm_place.h"
+
 
 typedef enum Z_Functions_E{
   Z_GET_STATE,
