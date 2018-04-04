@@ -3,7 +3,7 @@ PROJECT_DIR=Asser_moteur_z
 PROJECT_NAME=Asser_moteur_z
 DOC_DIR= /home/$(USER)/STM32Cube/
 BINPATH= /usr/bin
-CUSTOM_C_SOURCES=ax_12a.c,ax_12a_hal.c,crc_16.c,encoder.c,server.c,remote_call.c,Robotronik_corp_pid.c,robotronik_protocol.c,Z_axis.c,fsm_master.c,fsm_start.c,fsm_stack.c
+CUSTOM_C_SOURCES=ax_12a.c,ax_12a_hal.c,crc_16.c,encoder.c,server.c,remote_call.c,Robotronik_corp_pid.c,robotronik_protocol.c,Z_axis.c,fsm_master.c,fsm_start.c,fsm_stack.c,fsm_arm.c,fsm_unstack.c,fsm_place.c
 
 rouge = \033[0;31m
 vert = \033[0;32m
