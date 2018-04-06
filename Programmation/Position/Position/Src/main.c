@@ -132,6 +132,19 @@ int main(void)
   RP_Init_Interface(&P_interface, USART2, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, P_interface);
 
+  //==================================================
+  //              Remote Call Server
+  //==================================================
+  RC_Server_Init(&P_server,&P_interface);
+
+  RC_Server_Add_Function(&P_server, P_RESET, reset, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_SET_ASSER_SUM, set_asser_sum, "fffif", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_SET_ASSER_DIFF, set_asser_diff, "fffif", "", RC_IMMEDIATE);
+
+  RC_Server_Add_Function(&P_server, P_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
+
+  RC_Server_Add_Function(&P_server, P_BALEC, balec, "", "b", RC_IMMEDIATE);
+
   /**************************************************/
   /*            PID INIT                            */
   /**************************************************/
