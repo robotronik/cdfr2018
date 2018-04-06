@@ -37,6 +37,9 @@
 
 /* USER CODE BEGIN 0 */
 #include "odometry.h"
+#include "robotronik_protocol.h"
+#include "robotronik_protocol_stm32f3.h"
+#include "usart.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -44,7 +47,7 @@ extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim15;
 
 /******************************************************************************/
-/*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
+/*            Cortex-M4 Processor Interruption and Exception Handlers         */
 /******************************************************************************/
 
 /**
@@ -199,9 +202,9 @@ void SysTick_Handler(void)
 void DMA1_Channel6_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA1_Channel6_IRQn 0 */
-
+  DMAx_Streamx_IRQHandler(1, 6, P_interface);
   /* USER CODE END DMA1_Channel6_IRQn 0 */
-  
+
   /* USER CODE BEGIN DMA1_Channel6_IRQn 1 */
 
   /* USER CODE END DMA1_Channel6_IRQn 1 */
@@ -220,6 +223,19 @@ void TIM1_BRK_TIM15_IRQHandler(void)
   /* USER CODE BEGIN TIM1_BRK_TIM15_IRQn 1 */
 
   /* USER CODE END TIM1_BRK_TIM15_IRQn 1 */
+}
+
+/**
+* @brief This function handles USART2 global interrupt / USART2 wake-up interrupt through EXT line 26.
+*/
+void USART2_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART2_IRQn 0 */
+  USARTx_IRQHandler(2, 1, 6, P_interface);
+  /* USER CODE END USART2_IRQn 0 */
+  /* USER CODE BEGIN USART2_IRQn 1 */
+
+  /* USER CODE END USART2_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

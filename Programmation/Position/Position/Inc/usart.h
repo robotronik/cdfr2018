@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -49,11 +49,14 @@
 #include "main.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "robotronik_protocol.h"
+#include "robotronik_protocol_stm32f3.h"
+#include "remote_call.h"
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN Private defines */
-
+extern RP_Interface P_interface;
+extern RC_Server P_server;
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);
@@ -61,7 +64,7 @@ extern void _Error_Handler(char *, int);
 void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint32_t timeout);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

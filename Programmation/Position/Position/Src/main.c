@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -43,12 +43,20 @@
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
+#include "wwdg.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
 #include "motor.h"
 #include "odometry.h"
 #include "Robotronik_corp_pid.h"
+
+#include "robotronik_protocol.h"
+#include "robotronik_protocol_stm32f3.h"
+#include "remote_call.h"
+
+#include "server.h"
+#include "fsm_master.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -58,6 +66,8 @@
 
 Odometry odometry;
 int sum_goal,diff_goal;
+PID_DATA pid_sum;
+PID_DATA pid_diff;
 
 /* USER CODE END PV */
 
@@ -70,7 +80,11 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* p_hwwdg){
+  if(p_hwwdg == &hwwdg){
 
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -109,22 +123,28 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM3_Init();
   MX_TIM15_Init();
+  MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
 
-  int Te = 10;//in ms
-  
+  //==================================================
+  //                    UART
+  //==================================================
+  RP_Init_Interface(&P_interface, USART2, RP_UART_Transmit, HAL_GetTick);
+  RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, P_interface);
+
   /**************************************************/
   /*            PID INIT                            */
   /**************************************************/
+  int Te = 10;//in ms
   //PID Sum
-  PID_DATA pid_sum = (PID_DATA) {.Te = 0.01,
+  pid_sum = (PID_DATA) {.Te = 0.01,
 				 .Kp = 0.01,
 				 .Ki = 0.01,
 				 .Kd = 0.0001};
   pid_init(&pid_sum);
-  
+
   //PID Diff
-  PID_DATA pid_diff = (PID_DATA) {.Te = 0.01,
+  pid_diff = (PID_DATA) {.Te = 0.01,
 				  .Kp = 0.01,
 				  .Ki = 0.01,
 				  .Kd = 0.0001};
@@ -135,7 +155,7 @@ int main(void)
   /**************************************************/
   //Init odometry struct and start sampling
   init_odometry(&odometry, &htim2, &htim1, &htim15);
-  
+
   /**************************************************/
   /*            Motors Init                         */
   /**************************************************/
@@ -144,7 +164,7 @@ int main(void)
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  
+
   //PWM Start
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);//EN_2
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);//EN_1
@@ -168,7 +188,7 @@ int main(void)
 
   sum_goal=1000;
   diff_goal=0;
-  
+
 #if TEST_ENCODER != 0
   while (1) {
     int i;
@@ -186,19 +206,21 @@ int main(void)
   float cor_sum, cor_diff;
   while (1)
   {
+    //Watchdog refresh
+    HAL_WWDG_Refresh(&hwwdg);
+
     //Process PID
     cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));
     cor_diff = pid(&pid_diff, diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps));
-    
+
     float val_r = cor_sum + cor_diff;
     float val_l = cor_sum - cor_diff;
 
     //Motors control
     DRIVE_MOTOR_R(val_r);
     DRIVE_MOTOR_L(val_l);
-    
+
     HAL_Delay(Te);
-    //TODO generateur de consigne
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -219,7 +241,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -232,7 +254,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -254,11 +276,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -295,7 +317,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

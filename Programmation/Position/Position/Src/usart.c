@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -44,7 +44,30 @@
 #include "dma.h"
 
 /* USER CODE BEGIN 0 */
+#include "robotronik_protocol.h"
+#include "robotronik_protocol_stm32f3.h"
+#include "remote_call.h"
 
+RP_Interface P_interface;
+RC_Server P_server;
+
+uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint32_t timeout){
+  USART_TypeDef *usart_handler = (USART_TypeDef*) link_handler;
+  int i;
+  for(i = 0; i < size; i++){
+    __disable_irq();
+    LL_USART_TransmitData8(usart_handler, data[i]);
+    while(LL_USART_IsActiveFlag_TXE(usart_handler) == 0);
+    __enable_irq();
+  }
+  return 0;
+}
+
+void RP_Packet_Received(RP_Interface *interface, RP_Packet *packet){
+  if(interface == &P_interface && packet->len >= 1){
+    RC_Server_Get_Request(&P_server, packet);
+  }
+}
 /* USER CODE END 0 */
 
 /* USART2 init function */
@@ -56,10 +79,10 @@ void MX_USART2_UART_Init(void)
   LL_GPIO_InitTypeDef GPIO_InitStruct;
   /* Peripheral clock enable */
   LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_USART2);
-  
-  /**USART2 GPIO Configuration  
+
+  /**USART2 GPIO Configuration
   PA2   ------> USART2_TX
-  PA3   ------> USART2_RX 
+  PA3   ------> USART2_RX
   */
   GPIO_InitStruct.Pin = LL_GPIO_PIN_2|LL_GPIO_PIN_3;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
@@ -70,7 +93,7 @@ void MX_USART2_UART_Init(void)
   LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USART2 DMA Init */
-  
+
   /* USART2_RX Init */
   LL_DMA_SetDataTransferDirection(DMA1, LL_DMA_CHANNEL_6, LL_DMA_DIRECTION_PERIPH_TO_MEMORY);
 
@@ -85,6 +108,10 @@ void MX_USART2_UART_Init(void)
   LL_DMA_SetPeriphSize(DMA1, LL_DMA_CHANNEL_6, LL_DMA_PDATAALIGN_BYTE);
 
   LL_DMA_SetMemorySize(DMA1, LL_DMA_CHANNEL_6, LL_DMA_MDATAALIGN_BYTE);
+
+  /* USART2 interrupt Init */
+  NVIC_SetPriority(USART2_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(),0, 0));
+  NVIC_EnableIRQ(USART2_IRQn);
 
   USART_InitStruct.BaudRate = 1000000;
   USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
