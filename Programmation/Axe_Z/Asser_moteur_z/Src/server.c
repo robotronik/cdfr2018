@@ -7,11 +7,12 @@ extern FSM_Place fsm_place;
 
 void get_state(RC_Server* pserver)
 {
-  RC_Server_Return(pserver,1);
+  RC_Server_Return(pserver,fsm->status);
 }
 
 void reset(RC_Server* pserver)
 {
+  RC_Server_Return(pserver);
   HAL_NVIC_SystemReset();
 }
 
@@ -33,6 +34,7 @@ void balec(RC_Server* pserver)
 
 void punch_bee(RC_Server* pserver){
   fsm_arm.instance.run=FSM_ARM_OUT;
+  fsm = (FSM_Instance*volatile) &fsm_arm;
   RC_Server_Return(pserver);
 }
 
@@ -56,6 +58,7 @@ void stack(RC_Server* pserver)
 {
   fsm_stack.instance.run=FSM_Stack_Init;
   fsm_stack.last=0;
+  fsm = (FSM_Instance*volatile) &fsm_stack;
   RC_Server_Return(pserver);
 }
 
@@ -63,17 +66,20 @@ void stack_last(RC_Server* pserver)
 {
   fsm_stack.instance.run=FSM_Stack_Init;
   fsm_stack.last=1;
+  fsm = (FSM_Instance*volatile) &fsm_stack;
   RC_Server_Return(pserver);
 }
 
 void unstack(RC_Server* pserver)
 {
   fsm_unstack.instance.run=FSM_Unstack_Init;
+  fsm = (FSM_Instance*volatile) &fsm_unstack;
   RC_Server_Return(pserver);
 }
 
 void place(RC_Server* pserver)
 {
-  fsm_unstack.instance.run=FSM_Place_Init;
+  fsm_place.instance.run=FSM_Place_Init;
+  fsm = (FSM_Instance*volatile) &fsm_place;
   RC_Server_Return(pserver);
 }

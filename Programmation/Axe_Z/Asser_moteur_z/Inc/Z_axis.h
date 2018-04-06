@@ -39,6 +39,9 @@ FSM_Instance *volatile fsm;
 #define AX_LEFT_OPEN 430
 #define AX_RIGHT_OPEN 590
 
+#define AX_LEFT_OPEN_SMALL 500
+#define AX_RIGHT_OPEN_SMALL 440
+
 #define AX_CLOSE_LOAD 250
 
 #define AX_ARM_START 255
@@ -70,11 +73,13 @@ void Z_Enable_AX(bool enable);
  */
 
 void Z_Open();
+void Z_Open_Small();
 /**
  * Opens the pliers.
  */
 
 int Z_Is_Open();
+int Z_Is_Open_Small();
 /**
  * Return 1 if the pliers is open, 0 if it's not, -1 on error.
  */

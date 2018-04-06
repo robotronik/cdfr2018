@@ -12,8 +12,8 @@ void FSM_Unstack_Init(FSM_Instance *fsm)
 
 void FSM_Unstack_Open(FSM_Instance *fsm)
 {
-  Z_Open();
-  if(Z_Is_Open())
+  Z_Open_Small();
+  if(Z_Is_Open_Small())
     fsm->run=FSM_Unstack_P3;
 }
 

@@ -46,9 +46,9 @@ void FSM_Pos_2(FSM_Instance *fsm)
 
 void FSM_Open(FSM_Instance *fsm)
 {
-  Z_Open();
+  Z_Open_Small();
 
-if(Z_Is_Open())
+if(Z_Is_Open_Small())
     FSM_NEXT(fsm, FSM_Go_Down, 1000);
 }
 
@@ -86,8 +86,8 @@ void FSM_Instance_Lift(FSM_Instance *fsm)
 
 void FSM_Err_Open(FSM_Instance *fsm)
 {
-  Z_Open();
-  if(Z_Is_Open())
+  Z_Open_Small();
+  if(Z_Is_Open_Small())
     fsm->run = FSM_Err_Pos_3;
 }
 

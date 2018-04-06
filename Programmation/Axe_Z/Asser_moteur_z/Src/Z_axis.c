@@ -56,6 +56,11 @@ void Z_Open(){
   AX_Set_Goal_Position(&servo_d, AX_RIGHT_OPEN, AX_NOW);
 }
 
+void Z_Open_Small(){
+  AX_Set_Goal_Position(&servo_g, AX_LEFT_OPEN_SMALL, AX_NOW);
+  AX_Set_Goal_Position(&servo_d, AX_RIGHT_OPEN_SMALL, AX_NOW);
+}
+
 void Z_Close(){
   AX_Set_Goal_Position(&servo_g, AX_LEFT_CLOSE, AX_NOW);
   AX_Set_Goal_Position(&servo_d, AX_RIGHT_CLOSE, AX_NOW);
@@ -79,6 +84,10 @@ static int Z_Check_AX_Goal(uint16_t goal_left, uint16_t goal_right){
 
 inline int Z_Is_Open(){
   return Z_Check_AX_Goal(AX_LEFT_OPEN, AX_RIGHT_OPEN);
+}
+
+inline int Z_Is_Open_Small(){
+  return Z_Check_AX_Goal(AX_LEFT_OPEN_SMALL, AX_RIGHT_OPEN_SMALL);
 }
 
 inline int Z_Is_Closed(){

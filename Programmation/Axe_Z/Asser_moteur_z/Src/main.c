@@ -126,17 +126,17 @@ int main(void)
   //==================================================
   RP_Init_Interface(&Z_interface, USART2, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
-  
+
   //==================================================
   //              Remote Call Server
   //==================================================
   RC_Server_Init(&Z_server,&Z_interface);
-  
-  RC_Server_Add_Function(&Z_server, Z_RESET, reset, "", "", RC_IMMEDIATE);    
+
+  RC_Server_Add_Function(&Z_server, Z_RESET, reset, "", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_SET_ASSER, set_asser, "fffif", "", RC_IMMEDIATE);
 
-  RC_Server_Add_Function(&Z_server, Z_GET_STATE, get_state, "", "", RC_IMMEDIATE);
-    
+  RC_Server_Add_Function(&Z_server, Z_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
+
   RC_Server_Add_Function(&Z_server, Z_BALEC, balec, "", "b", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "", "b", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_ARM_IN, arm_in, "", "b", RC_IMMEDIATE);
@@ -146,7 +146,7 @@ int main(void)
   RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last, "", "b",RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "", "b", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_PLACE,place, "", "b", RC_IMMEDIATE);
-  
+
   //==================================================
   //                  AX-12A
   //==================================================
@@ -198,7 +198,7 @@ int main(void)
 
     //FSM
     fsm->run(fsm);
-    
+
     //Delay
     HAL_Delay(Z_DELAY);
   /* USER CODE END WHILE */
