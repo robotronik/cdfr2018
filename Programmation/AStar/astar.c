@@ -2,6 +2,9 @@
 #include "astar.h"
 #include "heap.h"
 
+#define D_ADJ 1
+#define D_DIAG 2
+
 #define INFINITE ((uint32_t) ~0)
 #define H(s, goal) ({							\
       uint32_t const dx = abs(s->x - goal->x);				\
@@ -13,13 +16,14 @@ static void init_cells();
 
 #define NEIGHBOR_NUMBER 8
 static int neighbor_offset[NEIGHBOR_NUMBER] = {
-  -MAP_WIDTH-1,
   -MAP_WIDTH,
-  -MAP_WIDTH+1,
   -1,
   +1,
-  +MAP_WIDTH-1,
   +MAP_WIDTH,
+  
+  -MAP_WIDTH-1,
+  -MAP_WIDTH+1,
+  +MAP_WIDTH-1,
   +MAP_WIDTH+1};
 
 #define NEIGHBOR(p_cell, k) (p_cell+neighbor_offset[k])  
@@ -59,7 +63,7 @@ Cell* A_Star(Cell *start, Cell *goal){
 	insert(neighbor);
       }
 
-      uint32_t g = current->g + 1;
+      uint32_t g = current->g + ((k<4)?D_ADJ:D_DIAG);
       if(g >= neighbor->g)
 	continue;
 
