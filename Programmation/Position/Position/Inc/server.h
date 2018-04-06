@@ -9,19 +9,19 @@
 #include "fsm_master.h"
 
 
-typedef enum Z_Functions_E{
-  Z_GET_STATE,
-  Z_RESET,
-  Z_SET_ASSER_SUM,
-  Z_SET_ASSER_DIFF,
-  Z_BALEC
-}Z_Functions;
+typedef enum P_Functions_E{
+  P_GET_STATE,
+  P_RESET,
+  P_SET_ASSER_SUM,
+  P_SET_ASSER_DIFF,
+  P_BALEC
+}P_Functions;
 
-typedef enum Z_States_E{
-  Z_READY,
-  Z_BUSY,
-  Z_ERROR
-}Z_States;
+typedef enum P_States_E{
+  P_READY,
+  P_BUSY,
+  P_ERROR
+}P_States;
 
 void reset(RC_Server* pserver);
 void get_state(RC_Server* pserver);
