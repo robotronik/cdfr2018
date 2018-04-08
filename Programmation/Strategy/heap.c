@@ -4,6 +4,8 @@
 #include <assert.h>
 #endif
 
+#include <stdlib.h>
+
 static int heap_size = 0;
 static Cell* heap[HEAP_SIZE];
 

@@ -1,5 +1,4 @@
 #include "graphics.h"
-#include "map.h"
 
 void draw_empty_grid(SDL_Renderer *renderer, SDL_Texture *texture){
   SDL_SetRenderTarget(renderer, texture);
@@ -25,7 +24,7 @@ void draw_grid_obs(SDL_Renderer *renderer, SDL_Texture *texture){
 
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0x00);
   SDL_RenderClear(renderer);
-  SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
+  SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xC0);
 
   int i, j;
   for(i = 0; i < MAP_HEIGHT; i++){
@@ -47,10 +46,10 @@ void draw_path(SDL_Renderer *renderer, SDL_Texture *texture, Cell *goal){
   SDL_RenderClear(renderer);
 
   if(goal != NULL){
-    SDL_SetRenderDrawColor(renderer, 0x40, 0x40, 0xFF, 0x80);
+    SDL_SetRenderDrawColor(renderer, 0x40, 0x40, 0xFF, 0xD0);
 
     Cell *tmpCell;
-    for (tmpCell = goal; tmpCell != start; tmpCell = tmpCell->pred){
+    for (tmpCell = goal; tmpCell != NULL; tmpCell = tmpCell->pred){
       SDL_Rect rect = {.x = tmpCell->x*GRAPHIC_SQUARE_SIZE, .y = tmpCell->y*GRAPHIC_SQUARE_SIZE, .w = GRAPHIC_SQUARE_SIZE, .h = GRAPHIC_SQUARE_SIZE};
       SDL_RenderFillRect(renderer, &rect);
     }
@@ -84,32 +83,31 @@ void draw_cubes(SDL_Renderer *renderer, SDL_Texture *texture){
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
   SDL_RenderClear(renderer);
 
-  int i;
-  for(i = 0; i < NB_CUBES; i++){
-    int color = i%5;
-    if(cubes[i].x > 1500){
-      if(color == GREEN) color = ORANGE;
-      else if(color == ORANGE) color = GREEN;
+  int i,j;
+  for(i = 0; i < NB_CUBE_SETS; i++){
+    for(j = 0; j < CUBES_PER_SET; j++){
+      Cube *c = &cube[i*CUBES_PER_SET+j];
+      uint8_t alpha = (c->availability==LIKELY)?0xFF:0xA0;
+      switch(c->color){
+      case GREEN:
+	SDL_SetRenderDrawColor(renderer, 97, 153, 59, alpha);
+	break;
+      case YELLOW:
+	SDL_SetRenderDrawColor(renderer, 247, 181, 0, alpha);
+	break;
+      case ORANGE:
+	SDL_SetRenderDrawColor(renderer, 208, 93, 40, alpha);
+	break;
+      case BLACK:
+	SDL_SetRenderDrawColor(renderer, 14, 14, 16, alpha);
+	break;
+      case BLUE:
+	SDL_SetRenderDrawColor(renderer, 0, 124, 176, alpha);
+	break;      
+      }
+      SDL_Rect rect = {.x = c->x / RATIO - (CUBE_SIZE / RATIO)/2, .y = c->y / RATIO - (CUBE_SIZE / RATIO)/2, .w = CUBE_SIZE / RATIO, .h = CUBE_SIZE / RATIO};
+      SDL_RenderFillRect(renderer, &rect);
     }
-    switch(color){
-    case GREEN:
-      SDL_SetRenderDrawColor(renderer, 97, 153, 59, 0xFF);
-      break;
-    case YELLOW:
-      SDL_SetRenderDrawColor(renderer, 247, 181, 0, 0xFF);
-      break;
-    case ORANGE:
-      SDL_SetRenderDrawColor(renderer, 208, 93, 40, 0xFF);
-      break;
-    case BLACK:
-      SDL_SetRenderDrawColor(renderer, 14, 14, 16, 0xFF);
-      break;
-    case BLUE:
-      SDL_SetRenderDrawColor(renderer, 0, 124, 176, 0xFF);
-      break;      
-    }
-    SDL_Rect rect = {.x = cubes[i].x / RATIO - (CUBE_SIZE / RATIO)/2, .y = cubes[i].y / RATIO - (CUBE_SIZE / RATIO)/2, .w = CUBE_SIZE / RATIO, .h = CUBE_SIZE / RATIO};
-    SDL_RenderFillRect(renderer, &rect);
   }
     
   SDL_SetRenderTarget(renderer, NULL);
@@ -124,9 +122,9 @@ void draw_cubes_obstacles(SDL_Renderer *renderer, SDL_Texture *texture){
   int i;
   for(i = 0; i < NB_CUBES; i++){
     SDL_Rect rect;
-    rect.x = cubes[i].x / RATIO;
-    rect.y = cubes[i].y / RATIO;
-    rect.w = rect.h = ((CUBE_SIZE / 2) + (int) (ROBOT_RADIUS * PADDING)) / RATIO;
+    rect.x = cube[i].x / RATIO;
+    rect.y = cube[i].y / RATIO;
+    rect.w = rect.h = ((CUBE_SIZE / 2) + (int) (ROBOT_RADIUS)) / RATIO;
     SDL_Color c = {.r = 0xFF, .g = 0x00, .b = 0x00, .a = 0x40};
     draw_circle(renderer, texture, &c, &rect);
   }

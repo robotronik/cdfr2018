@@ -1,15 +1,15 @@
 #include <stdlib.h>
-#include "astar.h"
+#include "strategy.h"
 #include "heap.h"
 
-#define D_ADJ 1
-#define D_DIAG 2
+#define D_ADJ 10
+#define D_DIAG 18
 
-#define INFINITE ((uint32_t) ~0)
+#define INFINITE ((uint16_t) ~0)
 #define H(s, goal) ({							\
       uint32_t const dx = abs(s->x - goal->x);				\
       uint32_t const dy = abs(s->y - goal->y);				\
-      (dx > dy)?((dx-dy)+1.4*dy):((dy-dx)+1.4*dx);			\
+      ((dx > dy)?(10*(dx-dy)+14*dy):(10*(dy-dx)+14*dx));		\
     })
 
 static void init_cells();
@@ -37,9 +37,10 @@ Cell* A_Star(Cell *start, Cell *goal){
   start->f = H(start, goal);
   insert(start);
 
+  uint32_t max = 0;
   while(!is_empty()){
     Cell *current = peek();
-    //printf("ok\n");fflush(stdout);
+
     if(current == goal){
       return goal;
     }
@@ -53,10 +54,6 @@ Cell* A_Star(Cell *start, Cell *goal){
       
       if(!CHECK_NEIGHBOR(neighbor) || neighbor->evaluated)
 	continue;
-
-      if(current->y == 0 && current->x == 0){
-	printf("%d %d %d %d\n", k, neighbor_offset[k], neighbor->x, neighbor->y);
-      }
       
       if(neighbor->new_){
 	neighbor->new_ = 0;
@@ -70,9 +67,11 @@ Cell* A_Star(Cell *start, Cell *goal){
       neighbor->pred = current;
       neighbor->g = g;
       neighbor->f = neighbor->g + H(neighbor, goal);
+      if(neighbor->f > max){
+	max = neighbor->f;	
+      }
     }
   }
-  
   return NULL;
 }
 
@@ -84,6 +83,7 @@ static void init_cells(){
       cell->g = cell->f = INFINITE;
       cell->evaluated = 0;
       cell->new_ = 1;
+      cell->pred = NULL;
     }
   }
 }

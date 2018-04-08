@@ -1,7 +1,6 @@
 #include "main.h"
 #include "graphics.h"
 #include "heap.h"
-#include "astar.h"
 
 void test_heap(){
   Cell a, b, c, d;
@@ -44,6 +43,7 @@ int main(int argc, char *argv[]){
   }
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
   SDL_RenderClear(renderer);
 
@@ -65,6 +65,8 @@ int main(int argc, char *argv[]){
   SDL_Surface *bg_surface = IMG_Load("./aire_jeu.bmp");
   SDL_Texture *bg = SDL_CreateTextureFromSurface(renderer, bg_surface);
   SDL_FreeSurface(bg_surface);
+
+  Init_Strategy(GREEN_TEAM);
   
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
@@ -74,8 +76,10 @@ int main(int argc, char *argv[]){
   pos_grid.x = 0, pos_grid.y = 0;
   SDL_QueryTexture(grid, NULL, NULL, &pos_grid.w, &pos_grid.h);
 
-  init_map();
-  Cell *end = A_Star(&map[1][1], &map[MAP_HEIGHT-2][(MAP_WIDTH-2)/2]);
+  Cell *start = &Get_Cell(me.x, me.y);
+  int x_goal = MAP_WIDTH-3;
+  int y_goal = MAP_HEIGHT-3;
+  Cell *end = Compute_Path(start, &map[y_goal][x_goal]);
 
   if(end == NULL){
     printf("FUUUUUUUUUUUUUUUCK !\n");
@@ -98,8 +102,8 @@ int main(int argc, char *argv[]){
     SDL_RenderCopy(renderer, bg, NULL, &pos_grid);
     SDL_RenderCopy(renderer, obs, NULL, &pos_grid);
     SDL_RenderCopy(renderer, grid, NULL, &pos_grid);
-    SDL_RenderCopy(renderer, cubes, NULL, &pos_grid);
     SDL_RenderCopy(renderer, circles, NULL, &pos_grid);
+    SDL_RenderCopy(renderer, cubes, NULL, &pos_grid);
     SDL_RenderCopy(renderer, path, NULL, &pos_grid);
     SDL_RenderPresent(renderer);
     
@@ -113,7 +117,32 @@ int main(int argc, char *argv[]){
       case SDL_KEYDOWN:
 	switch(e.key.keysym.sym){
 	case SDLK_RIGHT:
-	  
+	  if(++x_goal < MAP_WIDTH-1){	    
+	    draw_path(renderer, path, Compute_Path(start, &map[y_goal][x_goal]));
+	  }else{
+	    x_goal = MAP_WIDTH-2;
+	  }
+	  break;
+	case SDLK_LEFT:
+	  if(--x_goal > 0){	    
+	    draw_path(renderer, path, Compute_Path(start, &map[y_goal][x_goal]));
+	  }else{
+	    x_goal = 1;
+	  }
+	  break;
+	case SDLK_DOWN:
+	  if(++y_goal < MAP_HEIGHT-1){	    
+	    draw_path(renderer, path, Compute_Path(start, &map[y_goal][x_goal]));
+	  }else{
+	    y_goal = MAP_HEIGHT-1;
+	  }
+	  break;
+	case SDLK_UP:
+	  if(--y_goal > 0){	    
+	    draw_path(renderer, path, Compute_Path(start, &map[y_goal][x_goal]));
+	  }else{
+	    y_goal = 1;
+	  }
 	  break;
 	}
 	break;

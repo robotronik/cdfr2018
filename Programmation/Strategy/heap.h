@@ -1,8 +1,7 @@
 #ifndef HEAP_H
 #define HEAP_H
 
-#include "config.h"
-#include "map.h"
+#include "strategy.h"
 
 void empty_heap();
 /**

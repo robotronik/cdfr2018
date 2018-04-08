@@ -2,7 +2,7 @@ CC=gcc
 CFLAGS=-W -Wall -ansi -std=c99 -I/usr/local/include -I/usr/local/include/SDL -I/usr/include/SDL
 LD=ld
 LDFLAGS=-L/usr/local/lib -lSDL2 -lSDL2_image -lm
-EXEC=astar
+EXEC=strategy
 SRC= $(wildcard *.c)
 HDR = $(wildcard *.h)
 OBJ= $(SRC:.c=.o)
