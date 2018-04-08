@@ -14,6 +14,10 @@ uint16_t score;
 static Cube_Color construction_plan[3];
 static uint8_t valid_plan = 0;
 
+static Cube* stack[5];
+static uint8_t stack_start = 0;
+static uint8_t stack_size = 0;
+
 //==================================================//
 //                     Cubes                        //
 //==================================================//
@@ -196,10 +200,89 @@ void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top)
   valid_plan = 1;
 }
 
+#define PLAN_TOP construction_plan[0]
+#define PLAN_MIDDLE construction_plan[1]
+#define PLAN_BOTTOM construction_plan[2]
+
+typedef enum FSM_Plan_State_E{
+  FSM_PLAN_NONE,
+  FSM_PLAN_T,
+  FSM_PLAN_TM,
+  FSM_PLAN_B,
+  FSM_PLAN_BM,
+  FSM_PLAN_COMPLETE
+}FSM_Plan_State;
+
+#define STACK(k) stack[(stack_start+k)%5]
+
+static FSM_Plan_State Check_Construction(){
+  if(!valid_plan){
+    return FSM_PLAN_NONE;
+  }
+  
+  FSM_Plan_State fsm_plan = FSM_PLAN_NONE;
+  int k;
+  for(k = 0; k < stack_size; k++){
+    switch(fsm_plan){
+    case FSM_PLAN_NONE:
+      if(STACK(k)->color == PLAN_TOP){
+	fsm_plan = FSM_PLAN_T;
+      }else if(STACK(k)->color == PLAN_BOTTOM){
+	fsm_plan = FSM_PLAN_B;
+      }
+      break;
+    case FSM_PLAN_T:
+      if(STACK(k)->color == PLAN_MIDDLE){
+	fsm_plan = FSM_PLAN_TM;
+      }else if(STACK(k)->color == PLAN_BOTTOM){
+	fsm_plan = FSM_PLAN_B;
+      }else if(STACK(k)->color != PLAN_TOP){
+	fsm_plan = FSM_PLAN_NONE;
+      }
+      break;
+    case FSM_PLAN_B:
+      if(STACK(k)->color == PLAN_MIDDLE){
+	fsm_plan = FSM_PLAN_BM;
+      }else if(STACK(k)->color == PLAN_TOP){
+	fsm_plan = FSM_PLAN_T;
+      }else if(STACK(k)->color != PLAN_BOTTOM){
+	fsm_plan = FSM_PLAN_NONE;
+      }
+      break;
+    case FSM_PLAN_TM:
+      if(STACK(k)->color == PLAN_BOTTOM){
+	fsm_plan = FSM_PLAN_COMPLETE;
+      }else if(STACK(k)->color == PLAN_TOP){
+	fsm_plan = FSM_PLAN_T;
+      }else{
+	fsm_plan = FSM_PLAN_NONE;
+      }
+      break;
+    case FSM_PLAN_BM:
+      if(STACK(k)->color == PLAN_TOP){
+	fsm_plan = FSM_PLAN_COMPLETE;
+      }else if(STACK(k)->color == PLAN_BOTTOM){
+	fsm_plan = FSM_PLAN_B;
+      }else{
+	fsm_plan = FSM_PLAN_NONE;
+      }
+      break;
+    case FSM_PLAN_COMPLETE:
+      return FSM_PLAN_COMPLETE;
+      break;
+    }
+  }
+  
+  return fsm_plan;
+}
+
 int Select_Building_Materials(){
   Cube_Set *best_set = &set[0];
-
   int k;
+
+  //Checking current construction
+  FSM_Plan_State plan_state = Check_Construction();
+  
   for(k = 1; k < NB_SETS; k++){
     Cube_Set *const current_set = &set[2];
 
@@ -207,7 +290,10 @@ int Select_Building_Materials(){
     if(valid_plan){
       /*
        * TODO : function that count the number of plan materials that
-       can complete the current stack.
+       * can complete the current stack. Take them into account only
+       * if they will complete the building. Sometimes the needed
+       * cubes are there but can't be taken in the right order (often
+       * when the yellow is needed).
       */
     }
     
@@ -217,11 +303,16 @@ int Select_Building_Materials(){
       break;
     }
 
-    //Check for distance
-
     //Check for cubes number
+    //Do not take cubes that cannot be stacked into account, prefer a
+    //set with the right number of cubes.
+    
+    //Check for distance
     
   }
+
+  //Once the set is selected, do NOT take the pattern's cubes that
+  //can't lead to a complete building.
   
   return 0;
 }
