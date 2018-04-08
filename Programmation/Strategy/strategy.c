@@ -11,6 +11,9 @@ Cell map[MAP_HEIGHT][MAP_WIDTH];
 uint8_t built_buildings;
 uint16_t score;
 
+static Cube_Color construction_plan[3];
+static uint8_t valid_plan = 0;
+
 //==================================================//
 //                     Cubes                        //
 //==================================================//
@@ -33,7 +36,7 @@ Cube cube[NB_CUBES] = {
 //==================================================//
 //                  Cubes sets                      //
 //==================================================//
-Cube_Set set[NB_CUBE_SETS] = {
+Cube_Set set[NB_SETS] = {
   {.x = 300, .y = 1190},
   {.x = 850, .y = 540},
   {.x = 1100, .y = 1500},
@@ -59,7 +62,7 @@ void Init_Strategy(Team _team){
   for(k = 0; k < NB_CUBES; k++){
     cube[k].availability = ((_team==GREEN_TEAM) != (k >= (NB_CUBES/2)))?LIKELY:UNCERTAIN;
   }
-  for(k = 0; k < NB_CUBE_SETS; k++){
+  for(k = 0; k < NB_SETS; k++){
     set[k].availability = CUBE_SET(k, 0).availability;
   }
 
@@ -84,14 +87,14 @@ void Init_Strategy(Team _team){
 }
 
 #define ADD_PADDING(coord, size, limit) {		\
-    if(coord > ROBOT_RADIUS){			\
-      coord -= ROBOT_RADIUS;			\
-      size += ROBOT_RADIUS;			\
+    if(coord > ROBOT_RADIUS){				\
+      coord -= ROBOT_RADIUS;				\
+      size += ROBOT_RADIUS;				\
     }else{						\
       coord = 0;					\
     }							\
-    if(coord+size+(ROBOT_RADIUS) < limit){	\
-      size += ROBOT_RADIUS;			\
+    if(coord+size+ROBOT_RADIUS < limit){		\
+      size += ROBOT_RADIUS;				\
     }else{						\
       size = limit-coord;				\
     }							\
@@ -105,7 +108,7 @@ static void square_limit(uint32_t real_x, uint32_t real_y, uint32_t width, uint3
   const uint8_t y = (float) real_y / SQUARE_SIZE + .5;
   const uint8_t w = (float) width / SQUARE_SIZE + .5;
   const uint8_t h = (float) height / SQUARE_SIZE + .5;
-
+  
   int i, j;
   for(i = y; i < y+h; i++){
     for(j = x; j < x+w; j++){
@@ -181,4 +184,44 @@ void Refresh_Map(){
   //Treatment plants
   square_limit(TP_X, TP_Y, TP_W, TP_H);
 
+}
+
+//==================================================//
+//               Building Strategy                  //
+//==================================================//
+void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top){
+  construction_plan[0] = top;
+  construction_plan[1] = middle;
+  construction_plan[2] = bottom;
+  valid_plan = 1;
+}
+
+int Select_Building_Materials(){
+  Cube_Set *best_set = &set[0];
+
+  int k;
+  for(k = 1; k < NB_SETS; k++){
+    Cube_Set *const current_set = &set[2];
+
+    //Check for plan materials
+    if(valid_plan){
+      /*
+       * TODO : function that count the number of plan materials that
+       can complete the current stack.
+      */
+    }
+    
+    //Check for availability
+    if(current_set->availability > best_set->availability){
+      best_set = current_set;
+      break;
+    }
+
+    //Check for distance
+
+    //Check for cubes number
+    
+  }
+  
+  return 0;
 }

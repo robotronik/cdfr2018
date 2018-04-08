@@ -84,7 +84,7 @@ void draw_cubes(SDL_Renderer *renderer, SDL_Texture *texture){
   SDL_RenderClear(renderer);
 
   int i,j;
-  for(i = 0; i < NB_CUBE_SETS; i++){
+  for(i = 0; i < NB_SETS; i++){
     for(j = 0; j < CUBES_PER_SET; j++){
       Cube *c = &cube[i*CUBES_PER_SET+j];
       uint8_t alpha = (c->availability==LIKELY)?0xFF:0xA0;

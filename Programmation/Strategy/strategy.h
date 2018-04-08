@@ -4,15 +4,15 @@
 #include <stdint.h>
 
 //MAP
-#define SQUARE_SIZE 50//5cm
+#define SQUARE_SIZE 40//mm
 #define AREA_HEIGHT 2000
 #define AREA_WIDTH 3000
 #define MAP_HEIGHT (AREA_HEIGHT / SQUARE_SIZE)
 #define MAP_WIDTH (AREA_WIDTH / SQUARE_SIZE)
-#define NB_CUBE_SETS 6
-#define NB_CUBES (5*NB_CUBE_SETS)
+#define NB_SETS 6
+#define NB_CUBES (5*NB_SETS)
 #define CUBE_SIZE 58
-#define ROBOT_RADIUS (110 + 20)
+#define ROBOT_RADIUS (110 + 0)
 
 //HEAP
 #define HEAP_SIZE (MAP_HEIGHT*MAP_WIDTH)
@@ -31,10 +31,12 @@
 #define WD_SIDE_Y 840
 #define WD_BOTTOM_X 610
 //Treatment Plants
-#define TP_X 894
-#define TP_Y 1800
 #define TP_W 1200
-#define TP_H 250
+#define TP_H 175
+#define TP_X 894
+#define TP_Y 2000-TP_H
+
+
 
 //Teams
 typedef enum Team_E{
@@ -61,10 +63,10 @@ typedef enum Cube_Color_E{
 
 //Probabilities
 typedef enum Probability_E{
-  LIKELY, //Element on our side
-  UNCERTAIN, //Element on the enemy side
-  UNLIKELY, //Element on which we saw another robot
   ZERO_PROBABILITY, //Element removed
+  UNLIKELY, //Element on which we saw another robot
+  UNCERTAIN, //Element on the enemy side
+  LIKELY, //Element on our side
 }Probability;
 
 //Cubes
@@ -75,7 +77,7 @@ typedef struct Cube_S{
 }Cube;
 
 //Cubes sets
-#define CUBES_PER_SET (NB_CUBES/NB_CUBE_SETS)
+#define CUBES_PER_SET (NB_CUBES/NB_SETS)
 #define CUBE_SET(set, n) (cube[set+n])
 typedef struct Cube_Set_S{
   uint16_t x, y;
@@ -97,7 +99,7 @@ extern Team team;
 extern Robot me;
 extern Robot other_robots[3];
 extern Cube cube[NB_CUBES];
-extern Cube_Set set[NB_CUBE_SETS];
+extern Cube_Set set[NB_SETS];
 extern Cell map[MAP_HEIGHT][MAP_WIDTH];
 
 extern uint8_t built_buildings;
@@ -125,7 +127,31 @@ Cell* A_Star(Cell *start, Cell *goal);
  */
 
 //Building strategy
+void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top);
+/**
+ * This function stores the construction plan for further use in
+ * strategy.
+ */
 
+int Select_Building_Materials();
+/**
+ * This function selects cubes in the map to complete the current
+ * stack. It returns 0 on success, -1 if no cubes were found.
+ */
+
+Cube* John_The_Builder();
+/**
+ * This function apply a brute force on the selected building
+ * materials to make the best decision possible. It returns a sorted
+ * list of the cubes to retrieve. Please note that this list may be
+ * empty : it means that either there are no more materials left,
+ * either the best action to do now is to place the current building
+ * on the construction zone.
+ */
+
+//void Stack_Cube(Cube *cube);
+//void Unstack_Cube();
+//void Remove_Cube(Cube *cube);
 
 //Time
 uint32_t Remaining_Time(void);
