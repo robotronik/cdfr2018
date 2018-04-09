@@ -14,9 +14,7 @@ uint16_t score;
 static Cube_Color construction_plan[3];
 static uint8_t valid_plan = 0;
 
-static Cube* stack[5];
-static uint8_t stack_start = 0;
-static uint8_t stack_size = 0;
+Stack current_stack;
 
 //==================================================//
 //                     Cubes                        //
@@ -48,6 +46,37 @@ Cube_Set set[NB_SETS] = {
   {.x = 2150, .y = 540},
   {.x = 2700, .y = 1190}
 };
+
+//==================================================//
+//                Stack management                  //
+//==================================================//
+void Empty_Stack(Stack *stack){
+  stack->start = stack->size = 0;
+}
+
+int Stack_Cube(Cube *cube, Stack *stack){
+  if(stack->size == STACK_SIZE){
+    return -1;
+  }
+
+  stack->data[(stack->start + stack->size)%STACK_SIZE] = cube;
+  stack->size++;
+
+  return 0;
+}
+
+Cube* Unstack_Cube(Stack *stack){
+  if(stack->size == 0){
+    return NULL;
+  }
+
+  Cube *tmp = stack->data[stack->start];
+  stack->size--;
+  stack->start = (stack->start + 1)%STACK_SIZE;
+  return tmp;
+}
+
+#define stack_iterator(k, p_stack, p_elt) for(; (k) < STACK_SIZE; (k)++, (p_elt) = (p_stack)->data[((p_stack)->start + (k))%STACK_SIZE])
 
 //==================================================//
 //               Init Strategy                      //
@@ -213,55 +242,54 @@ typedef enum FSM_Plan_State_E{
   FSM_PLAN_COMPLETE
 }FSM_Plan_State;
 
-#define STACK(k) stack[(stack_start+k)%5]
-
 static FSM_Plan_State Check_Construction(){
   if(!valid_plan){
     return FSM_PLAN_NONE;
   }
   
   FSM_Plan_State fsm_plan = FSM_PLAN_NONE;
-  int k;
-  for(k = 0; k < stack_size; k++){
+
+  int k = 0; Cube *elt;
+  stack_iterator(k, &current_stack, elt){
     switch(fsm_plan){
     case FSM_PLAN_NONE:
-      if(STACK(k)->color == PLAN_TOP){
+      if(elt->color == PLAN_TOP){
 	fsm_plan = FSM_PLAN_T;
-      }else if(STACK(k)->color == PLAN_BOTTOM){
+      }else if(elt->color == PLAN_BOTTOM){
 	fsm_plan = FSM_PLAN_B;
       }
       break;
     case FSM_PLAN_T:
-      if(STACK(k)->color == PLAN_MIDDLE){
+      if(elt->color == PLAN_MIDDLE){
 	fsm_plan = FSM_PLAN_TM;
-      }else if(STACK(k)->color == PLAN_BOTTOM){
+      }else if(elt->color == PLAN_BOTTOM){
 	fsm_plan = FSM_PLAN_B;
-      }else if(STACK(k)->color != PLAN_TOP){
+      }else if(elt->color != PLAN_TOP){
 	fsm_plan = FSM_PLAN_NONE;
       }
       break;
     case FSM_PLAN_B:
-      if(STACK(k)->color == PLAN_MIDDLE){
+      if(elt->color == PLAN_MIDDLE){
 	fsm_plan = FSM_PLAN_BM;
-      }else if(STACK(k)->color == PLAN_TOP){
+      }else if(elt->color == PLAN_TOP){
 	fsm_plan = FSM_PLAN_T;
-      }else if(STACK(k)->color != PLAN_BOTTOM){
+      }else if(elt->color != PLAN_BOTTOM){
 	fsm_plan = FSM_PLAN_NONE;
       }
       break;
     case FSM_PLAN_TM:
-      if(STACK(k)->color == PLAN_BOTTOM){
+      if(elt->color == PLAN_BOTTOM){
 	fsm_plan = FSM_PLAN_COMPLETE;
-      }else if(STACK(k)->color == PLAN_TOP){
+      }else if(elt->color == PLAN_TOP){
 	fsm_plan = FSM_PLAN_T;
       }else{
 	fsm_plan = FSM_PLAN_NONE;
       }
       break;
     case FSM_PLAN_BM:
-      if(STACK(k)->color == PLAN_TOP){
+      if(elt->color == PLAN_TOP){
 	fsm_plan = FSM_PLAN_COMPLETE;
-      }else if(STACK(k)->color == PLAN_BOTTOM){
+      }else if(elt->color == PLAN_BOTTOM){
 	fsm_plan = FSM_PLAN_B;
       }else{
 	fsm_plan = FSM_PLAN_NONE;
