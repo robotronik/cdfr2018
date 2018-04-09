@@ -1,3 +1,7 @@
+/* inspired by https://techthetroll.files.wordpress.com/2016/07/trajectoire_courbe.pdf
+from Pierre-François GIMENEZ pierre-francois.gimenez@irit.fr
+*/
+
 #ifndef FSM_POSITION_PTS_H
 #define FSM_POSITION_PTS_H
 
