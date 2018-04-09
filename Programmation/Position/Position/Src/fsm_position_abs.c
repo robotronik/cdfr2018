@@ -16,14 +16,23 @@ void FSM_Pos_Init(FSM_Instance *fsm)
   FSM_Position_Abs *fsm_pos=(FSM_Position_Abs *) fsm;
   fsm->status=FSM_RUNNING;
   fsm_pos->n=0;
+  fsm_pos->initial_sum=sum_goal;
   fsm->run=FSM_Pos_Generator;
 }
 
 void FSM_Pos_Generator(FSM_Instance *fsm)
 {
   FSM_Position_Abs *fsm_pos=(FSM_Position_Abs *) fsm;
-  while(fsm_pos->pos/fsm_pos->linear_speed >fsm_pos->n*pid_sum.Te)
-  fsm_pos->n++;
+  if(fsm_pos->pos/fsm_pos->linear_speed >fsm_pos->n*pid_sum.Te)
+  {
+    sum_goal=fsm_pos->initial_sum+fsm_pos->n*fsm_pos->linear_speed*pid_sum.Te/ENCODER_STEP_DIST;
+    fsm_pos->n++;
+  }
+  else
+  {
+    sum_goal=fsm_pos->initial_sum+fsm_pos->pos/ENCODER_STEP_DIST;
+    fsm->run=FSM_Pos_Wait;
+  }
 }
 
 void FSM_Pos_Wait(FSM_Instance *fsm)
@@ -62,5 +71,5 @@ void FSM_Angle_Generator(FSM_Instance *fsm)
 
 void FSM_Angle_Wait(FSM_Instance *fsm)
 {
-  if(reached(&pid_diff,sum_goal- diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps))) fsm->run=FSM_Abs_End;
+  if(reached(&pid_diff,diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps))) fsm->run=FSM_Abs_End;
 }
