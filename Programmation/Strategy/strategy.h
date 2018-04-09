@@ -17,6 +17,9 @@
 //HEAP
 #define HEAP_SIZE (MAP_HEIGHT*MAP_WIDTH)
 
+//Stack
+#define STACK_SIZE 5
+
 //ROBOT
 #define ROBOT_X0 200
 #define ROBOT_Y0 450
@@ -94,6 +97,13 @@ typedef struct Cell_S{
   uint16_t f;
 }Cell;
 
+//Stack
+typedef struct Stack_S{
+  Cube* data[STACK_SIZE];
+  uint8_t start;
+  uint8_t size;
+}Stack;
+
 //Global variables
 extern Team team;
 extern Robot me;
@@ -104,6 +114,7 @@ extern Cell map[MAP_HEIGHT][MAP_WIDTH];
 
 extern uint8_t built_buildings;
 extern uint16_t score;
+extern Stack current_stack;
 
 //Init
 void Init_Strategy(Team team);
@@ -124,6 +135,25 @@ Cell* A_Star(Cell *start, Cell *goal);
  * Computes a shortest path according to the A* algorithm.  Returns a
  * list of the cells constituing the path on success, NULL on error.
  * start and goal must NOT be on any edges of the map.
+ */
+
+//Stack Management
+#define Init_Stack() Empty_Stack()
+void Empty_Stack(Stack *stack);
+/**
+ * Clear the stack.
+ */
+
+int Stack_Cube(Cube *cube, Stack *stack);
+/**
+ * Add the cube '*cube' to the stack '*stack' if the stack is not full
+ * and return 0, however do nothing and return -1.
+ */
+
+Cube* Unstack_Cube(Stack *stack);
+/**
+ * Return a pointer on the first cube in the stack if the stack is not
+ * empty, however return NULL.
  */
 
 //Building strategy
