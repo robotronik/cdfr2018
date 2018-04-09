@@ -69,6 +69,8 @@ int sum_goal,diff_goal;
 PID_DATA pid_sum;
 PID_DATA pid_diff;
 
+extern FSM_Instance *volatile fsm;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -104,7 +106,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  extern FSM_Position *volatile fsm_pos;
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -141,8 +143,15 @@ int main(void)
   RC_Server_Add_Function(&P_server, P_SET_ASSER_SUM, set_asser_sum, "fffif", "", RC_IMMEDIATE);//sets the pid parameters P I D steps tolerance and speed tolerance
   RC_Server_Add_Function(&P_server, P_SET_ASSER_DIFF, set_asser_diff, "fffif", "", RC_IMMEDIATE);
 
+//all values are in cm, rad and seconds
+
   RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "ff", "", RC_IMMEDIATE);//sets the odometry parameters ENCODER_DIST and ENCODER_STEP_DIST
   RC_Server_Add_Function(&P_server, P_GET_ODO, get_odo, "", "fff", RC_IMMEDIATE);//returns the position x y angle
+
+  RC_Server_Add_Function(&P_server, P_SET_POS, set_pos, "ff", "", RC_IMMEDIATE);//speed distance in cm makes the robot go forard or backward
+  RC_Server_Add_Function(&P_server, P_SET_ANGLE, set_angle, "ff", "", RC_IMMEDIATE);
+
+  RC_Server_Add_Function(&P_server, P_SET_2_POINTS, set_2_points, "fffff", "", RC_IMMEDIATE);//gives 2 points for position interpolation from current position
 
   RC_Server_Add_Function(&P_server, P_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
 
@@ -202,7 +211,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  sum_goal=1000;
+  sum_goal=0;
   diff_goal=0;
 
 #if TEST_ENCODER != 0
@@ -225,7 +234,7 @@ int main(void)
     //Watchdog refresh
     HAL_WWDG_Refresh(&hwwdg);
     //FSM
-
+    fsm->run(fsm);
 
     //Process PID
     cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));

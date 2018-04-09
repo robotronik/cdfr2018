@@ -59,7 +59,8 @@ server.c \
 remote_call.c \
 robotronik_protocol.c \
 fsm_master.c \
-fsm_position.c \
+fsm_position_abs.c \
+fsm_position_pts.c \
 Src/main.c \
 Src/stm32f3xx_it.c \
 Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_dma.c \
