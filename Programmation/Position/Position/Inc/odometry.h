@@ -7,10 +7,6 @@
 
 #include "encoder.h"
 
-#define ENCODER_DIST 20//distance between encoders
-#define ENCODER_STEP_DIST 0.01//distance for 1 encoder step/2
-#define deltaL ENCODER_STEP_DIST/ENCODER_DIST
-
 typedef struct Odometry_S{
   Encoder encoder_l;
   Encoder encoder_r;

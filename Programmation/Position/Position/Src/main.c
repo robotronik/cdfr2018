@@ -104,7 +104,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  extern FSM_Position *volatile fsm_pos;
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -138,8 +138,11 @@ int main(void)
   RC_Server_Init(&P_server,&P_interface);
 
   RC_Server_Add_Function(&P_server, P_RESET, reset, "", "", RC_IMMEDIATE);
-  RC_Server_Add_Function(&P_server, P_SET_ASSER_SUM, set_asser_sum, "fffif", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_SET_ASSER_SUM, set_asser_sum, "fffif", "", RC_IMMEDIATE);//sets the pid parameters P I D steps tolerance and speed tolerance
   RC_Server_Add_Function(&P_server, P_SET_ASSER_DIFF, set_asser_diff, "fffif", "", RC_IMMEDIATE);
+
+  RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "ff", "", RC_IMMEDIATE);//sets the odometry parameters ENCODER_DIST and ENCODER_STEP_DIST
+  RC_Server_Add_Function(&P_server, P_GET_ODO, get_odo, "", "fff", RC_IMMEDIATE);//returns the position x y angle
 
   RC_Server_Add_Function(&P_server, P_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
 
@@ -221,6 +224,8 @@ int main(void)
   {
     //Watchdog refresh
     HAL_WWDG_Refresh(&hwwdg);
+    //FSM
+
 
     //Process PID
     cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));
