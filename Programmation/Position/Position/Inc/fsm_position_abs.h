@@ -12,6 +12,7 @@ typedef struct FSM_Position_Abs_S{
   float linear_speed;//in cm/s
   float angular_speed;//in rad/s
   int n;
+  int initial_sum;
 }FSM_Position_Abs;
 
 void FSM_Pos_Init(FSM_Instance*);
