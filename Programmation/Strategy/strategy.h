@@ -18,6 +18,7 @@
 #define HEAP_SIZE (MAP_HEIGHT*MAP_WIDTH)
 
 //Stack
+#define PATTERN_SIZE 3
 #define STACK_SIZE 5
 
 //ROBOT
@@ -63,6 +64,7 @@ typedef enum Cube_Color_E{
   BLACK,
   BLUE
 }Cube_Color;
+#define CENTER_COLOR YELLOW
 
 //Probabilities
 typedef enum Probability_E{
@@ -81,7 +83,8 @@ typedef struct Cube_S{
 
 //Cubes sets
 #define CUBES_PER_SET (NB_CUBES/NB_SETS)
-#define CUBE_SET(set, n) (cube[set+n])
+#define CUBE_SET(set, n) (cube[set*CUBES_PER_SET+n])
+
 typedef struct Cube_Set_S{
   uint16_t x, y;
   Probability availability;
@@ -138,7 +141,7 @@ Cell* A_Star(Cell *start, Cell *goal);
  */
 
 //Stack Management
-#define Init_Stack() Empty_Stack()
+#define Init_Stack(p_stack) Empty_Stack(p_stack)
 void Empty_Stack(Stack *stack);
 /**
  * Clear the stack.

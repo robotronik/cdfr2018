@@ -66,8 +66,13 @@ int main(int argc, char *argv[]){
   SDL_Texture *bg = SDL_CreateTextureFromSurface(renderer, bg_surface);
   SDL_FreeSurface(bg_surface);
 
+  //STRATEGY
   Init_Strategy(GREEN_TEAM);
-  
+  Set_Construction_Plan(GREEN, YELLOW, BLUE);
+  Stack_Cube(&cube[BLACK], &current_stack);
+  cube[BLACK].availability = ZERO_PROBABILITY;
+  Select_Building_Materials();
+  return EXIT_SUCCESS;
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
   draw_cubes_obstacles(renderer, circles);
