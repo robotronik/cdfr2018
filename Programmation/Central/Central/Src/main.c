@@ -67,7 +67,10 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-
+#define TOF_FRONT_LEFT 0x52
+#define TOF_FRONT_RIGHT 0x54
+#define TOF_REAR_LEFT 0x56
+#define TOF_REAR_RIGHT 0x58
 
 /* USER CODE END 0 */
 
@@ -110,6 +113,7 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
+  LED_OFF;
   //==================================================//
   //           UART PROTOCOL INIT                     //
   //==================================================//
@@ -137,85 +141,51 @@ int main(void)
   //                 WAIT START                       //
   //==================================================//
 
-  Team t = wait_start();
-  PI_Start();
+  //Team t = wait_start();
+  //PI_Start();
+  RP_Sync(&pi_iface, 0);
 
-  HAL_Delay(2000);
-  PI_Asser_Test();
-  
+  HAL_Delay(1000);
+  //PI_Asser_Test();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-#if 0
-  HAL_Delay(2000);
-  if( == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : START SENT");
-  }
-
-
-  HAL_Delay(2000);
-  if(RC_Call(&pi_client, PI_SCORE, 10) == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : SCORE SENT");
-  }
-
-  HAL_Delay(2000);
-  if(RC_Call(&pi_client, PI_SCORE, 10) == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : SCORE SENT");
-  }
-
-  int r;
-  char colors[RC_STR_SIZE];
-  HAL_Delay(500);
-  if(RC_Call(&pi_client, PI_PLAN, &r, colors) == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : READ REQUEST");
-  }
-
-  HAL_Delay(500);
-  if(RC_Call(&pi_client, PI_PLAN, &r, colors) == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : READ REQUEST");
-  }
-
-  if(r == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : WAITING FOR READ");
-  }
-
-  HAL_Delay(1000);
-  if(RC_Call(&pi_client, PI_PLAN, &r, colors) == 0){
-    RC_Call(&pi_client, PI_LOG, "NUCLEO : READ REQUEST");
-  }
-
-  HAL_Delay(500);
-  RC_Call(&pi_client, PI_LOG, colors);
-
-  HAL_Delay(2000);
-  volatile int jean_michel_segfault = *((int*) 9999999999);
-#endif
-  
+  /* USER CODE BEGIN WHILE */  
   ToF_Dev tof_dev;
   ToF_Params params;
   ToF_Data tof_data;
 
-  ToF_Init_Struct(&tof_dev, &hi2c3, 0x52);
+  ToF_Init_Struct(&tof_dev, &hi2c3, TOF_FRONT_LEFT);
+  /*
+   * Addr 52 & 53 : ok; 54 : fail
+   */
   
   do{
     //Check the initial address
     if(ToF_Poke(&tof_dev) == -1)
       break;
+    else
+      PI_Log("ToF @0x%2.2X\n", TOF_FRONT_LEFT);
 
     //Set a new address
-    if(ToF_Set_Address(&tof_dev, 0x52) == -1)
-      break;
-
+    //if(ToF_Set_Address(&tof_dev, 0x58) == -1)
+    //  break;
+    
     //Init the device
     if(ToF_Init_Device(&tof_dev) == -1)
       break;
+    else
+      PI_Log("ToF init successful\n");
 
     //Long range config
     TOF_LONG_RANGE_CONFIG(params);
 
     //Configure the device
-    ToF_Configure_Device(&tof_dev, &params);
+    if(ToF_Configure_Device(&tof_dev, &params) == -1)
+      break;
+    else
+      PI_Log("ToF config successful");
   }while(0);
   
   
@@ -224,10 +194,10 @@ int main(void)
     ToF_Perform_Measurement(&tof_dev, &tof_data);
     if(tof_data.RangeStatus == 0){
       //tof_dev.LeakyRange (mm)
-      HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+      //LED_ON;
     }else{
       //Out of range
-      HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+      //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
     }
   /* USER CODE END WHILE */
 

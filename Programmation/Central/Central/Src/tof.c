@@ -1,4 +1,5 @@
 #include "tof.h"
+#include "pi_client.h"
 
 void ToF_Init_Struct(ToF_Dev *dev, I2C_HandleTypeDef *hi2c, uint8_t addr){
   dev->I2cHandle = hi2c;
@@ -12,14 +13,14 @@ void ToF_Init_Struct(ToF_Dev *dev, I2C_HandleTypeDef *hi2c, uint8_t addr){
 int ToF_Poke(ToF_Dev *dev){
   int status;
   //Read ID to know if the address is correct
-  uint16_t id;
+  uint16_t id = 0;
   status = VL53L0X_RdWord(dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID, &id);
   
   //I2C error or bad ID
   if(status || id != 0xEEAA){
     return -1;
   }
-
+  
   return 0;
 }
 
@@ -48,31 +49,54 @@ int ToF_Init_Device(ToF_Dev *dev){
 }
 
 int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params){
-  //Ref calibration
-  VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
+  int status = 0;
 
-  //Ref Spad Management
-  VL53L0X_PerformRefSpadManagement(dev, &params->refSpadCount, &params->isApertureSpads);
+  do{
+    //Ref Spad Management
+    status = VL53L0X_PerformRefSpadManagement(dev, &params->refSpadCount, &params->isApertureSpads);
+    if(status) PI_Log("RefSpad failed : %d\n", status);
+    if(status) break;
 
-  //Set single ranging mode
-  VL53L0X_SetDeviceMode(dev, VL53L0X_DEVICEMODE_SINGLE_RANGING);
+    //Ref calibration
+    //status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
+    if(status) break;
+   
+    //Set single ranging mode
+    status = VL53L0X_SetDeviceMode(dev, VL53L0X_DEVICEMODE_SINGLE_RANGING);
+    if(status) break;
+  
+    //Enable Sigma Limit
+    status = VL53L0X_SetLimitCheckEnable(dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+    if(status) break;
+  
+    //Enable Signal Limit
+    status = VL53L0X_SetLimitCheckEnable(dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+    if(status) break;
+  
+    status = VL53L0X_SetLimitCheckValue(dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, params->signalLimit);
+    if(status) break;
+  
+    status = VL53L0X_SetLimitCheckValue(dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, params->sigmaLimit);
+    if(status) break;
+  
+    status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(dev, params->timingBudget);
+    if(status) break;
+  
+    status = VL53L0X_SetVcselPulsePeriod(dev, VL53L0X_VCSEL_PERIOD_PRE_RANGE, params->preRangeVcselPeriod);
+    if(status) break;
 
-  //Enable Sigma Limit
-  VL53L0X_SetLimitCheckEnable(dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+    status = VL53L0X_SetVcselPulsePeriod(dev, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, params->finalRangeVcselPeriod);
+    if(status) break;
+  
+    status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
+    if(status) break;
+  
+    dev->LeakyFirst = 1;
 
-  //Enable Signal Limit
-  VL53L0X_SetLimitCheckEnable(dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
-
-  VL53L0X_SetLimitCheckValue(dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, params->signalLimit);
-  VL53L0X_SetLimitCheckValue(dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, params->sigmaLimit);
-  VL53L0X_SetMeasurementTimingBudgetMicroSeconds(dev, params->timingBudget);
-  VL53L0X_SetVcselPulsePeriod(dev, VL53L0X_VCSEL_PERIOD_PRE_RANGE, params->preRangeVcselPeriod);
-  VL53L0X_SetVcselPulsePeriod(dev, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, params->finalRangeVcselPeriod);
-  VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
-
-  dev->LeakyFirst = 1;
-
-  return 0;
+    return 0;
+  }while(0);
+  
+  return -1;
 }
 
 int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
@@ -80,7 +104,9 @@ int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
 
   if(!dev->Present) return -1;
 
-  VL53L0X_PerformSingleRangingMeasurement(dev, data);
+  if(VL53L0X_PerformSingleRangingMeasurement(dev, data) == 0){
+    //LED_ON;
+  }
 
   //Sensor_SetNewRange
   /* Store new ranging data into the device structure, apply leaky

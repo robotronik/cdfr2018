@@ -35,7 +35,7 @@
 
 
 uint8_t _I2CBuffer[64];
-
+#include "../../../Inc/pi_client.h"
 int _I2CWrite(VL53L0X_DEV Dev, uint8_t *pdata, uint32_t count) {
     int status;
     int i2c_time_out = I2C_TIME_OUT_BASE+ count* I2C_TIME_OUT_BYTE;

@@ -1072,6 +1072,7 @@ VL53L0X_Error VL53L0X_perform_single_ref_calibration(VL53L0X_DEV Dev,
 				VL53L0X_REG_SYSRANGE_MODE_START_STOP |
 				vhv_init_byte);
 
+
 	if (Status == VL53L0X_ERROR_NONE)
 		Status = VL53L0X_measurement_poll_for_completion(Dev);
 
@@ -1227,11 +1228,9 @@ VL53L0X_Error VL53L0X_perform_ref_calibration(VL53L0X_DEV Dev,
 	Status = VL53L0X_perform_vhv_calibration(
 			Dev, pVhvSettings, get_data_enable, 0);
 
-
 	if (Status == VL53L0X_ERROR_NONE)
 		Status = VL53L0X_perform_phase_calibration(
 			Dev, pPhaseCal, get_data_enable, 0);
-
 
 	if (Status == VL53L0X_ERROR_NONE) {
 		/* restore the previous Sequence Config */

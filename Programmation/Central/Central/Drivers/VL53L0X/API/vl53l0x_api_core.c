@@ -57,7 +57,7 @@ VL53L0X_Error VL53L0X_reverse_bytes(uint8_t *data, uint32_t size)
 	}
 	return Status;
 }
-
+		  #include "pi_client.h"
 VL53L0X_Error VL53L0X_measurement_poll_for_completion(VL53L0X_DEV Dev)
 {
 	VL53L0X_Error Status = VL53L0X_ERROR_NONE;
@@ -77,6 +77,7 @@ VL53L0X_Error VL53L0X_measurement_poll_for_completion(VL53L0X_DEV Dev)
 			break; /* done note that status == 0 */
 
 		LoopNb++;
+					PI_Log("REF_CAL\n");
 		if (LoopNb >= VL53L0X_DEFAULT_MAX_LOOP) {
 			Status = VL53L0X_ERROR_TIME_OUT;
 			break;

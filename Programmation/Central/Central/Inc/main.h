@@ -106,7 +106,8 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-
+#define LED_ON (HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET))
+#define LED_OFF (HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET))
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
