@@ -364,24 +364,32 @@ static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern, uint16_t from_x, ui
 }
 
 int Select_Building_Materials(){
-  Cube_Set *best_set = &set[0];
-  int k;
-
   //Checking current construction
   FSM_Plan_State plan_state = Check_Construction(&current_stack);
   printf("Plan state : %d\n", plan_state);
-  
+
+  Cube_Set *best_set = &set[0];
+  Stack best_stack;
+  float best_distance = dist(0, 0, AREA_WIDTH, AREA_HEIGHT);
+  uint8_t best_is_pattern_compatible = 0;
+  int best_cubes_number = 0;
+
+  Init_Stack(&best_stack);
+  int k;
   for(k = 0; k < NB_SETS; k++){
     Cube_Set *const current_set = &set[k];
     Stack stack_set;
+    float distance = dist(me.x, me.y, current_set->x, current_set->y);
     Init_Stack(&stack_set);
     
     printf("Checking set %d\n", k);
-    //Check for plan materials
-    uint8_t nb_cubes_pattern = 0;
+
+    if(current_set->availability == ZERO_PROBABILITY) continue;
+    
+    //Search for plan materials
     uint8_t nb_cubes_set = Get_Nb_Cubes_Set(k);
 
-    uint8_t pattern_compatibility = 0;
+    uint8_t pattern_compatible = 0;
     if(valid_plan && plan_state != FSM_PLAN_COMPLETE){
       uint8_t mcbp;//max cube before pattern
       if(plan_state != FSM_PLAN_NONE){
@@ -402,7 +410,7 @@ int Select_Building_Materials(){
 	  Stack_Cube(top, &stack_set);
 	  Stack_Cube(middle, &stack_set);
 	  Stack_Cube(bottom, &stack_set);
-	  pattern_compatibility = 1;
+	  pattern_compatible = 1;
 	}
 	break;
       case FSM_PLAN_T:
@@ -412,7 +420,7 @@ int Select_Building_Materials(){
 	if(bottom != NULL && middle != NULL){
 	  Stack_Cube(bottom, &stack_set);
 	  Stack_Cube(middle, &stack_set);
-	  pattern_compatibility = 1;
+	  pattern_compatible = 1;
 	}
 	break;
       case FSM_PLAN_B:
@@ -422,7 +430,7 @@ int Select_Building_Materials(){
 	if(middle != NULL && top != NULL){
 	  Stack_Cube(middle, &stack_set);
 	  Stack_Cube(top, &stack_set);
-	  pattern_compatibility = 1;
+	  pattern_compatible = 1;
 	}
 	break;
       case FSM_PLAN_BM:
@@ -430,7 +438,7 @@ int Select_Building_Materials(){
 	top = CHECK_ACCESSIBILITY(k, PLAN_TOP, nb_cubes_set, 0, stack_set);
 	if(top != NULL){
 	  Stack_Cube(top, &stack_set);
-	  pattern_compatibility = 1;
+	  pattern_compatible = 1;
 	}
 	break;
       case FSM_PLAN_TM:
@@ -438,42 +446,57 @@ int Select_Building_Materials(){
 	bottom = CHECK_ACCESSIBILITY(k, PLAN_BOTTOM, nb_cubes_set, 0, stack_set);
 	if(bottom != NULL){
 	  Stack_Cube(bottom, &stack_set);
-	  pattern_compatibility = 1;
+	  pattern_compatible = 1;
 	}
 	break;
       default:
 	break;
       }
     }else{
-      pattern_compatibility = 1;
+      pattern_compatible = 1;
     }
 
-    printf("nb cubes : %d\n", nb_cubes_set);
-    if(pattern_compatibility){
-      printf("The set is compatible with the pattern\n");
+    //Checking pattern compatibility
+    if(best_is_pattern_compatible && !pattern_compatible){
+      printf("Ignoring uncompatible set\n");
+      continue;
     }
-    else{
-      printf("The set is not compatible with the pattern\n");
+
+    //Completing set
+    while(stack_set.size + current_stack.size < 5){
+      Cube *found = Find_Cube(0, 1, current_set->x, current_set->y);
+      if(found == NULL) break;
+      Stack_Cube(found, &stack_set);
     }
+
+    //Evaluating distances empirically
+    int i; Cube *elt;
+    stack_iterator(i, &stack_set, elt){
+      distance += dist(current_set->x, current_set->y, elt->x, elt->y);
+    }
+    printf("Distance : %f\n", distance);
+    
+    //Making a decision
+
+    if((pattern_compatible && !best_is_pattern_compatible)
+       || (current_set->availability > best_set->availability)
+       || (distance < best_distance)
+       || (nb_cubes_set > best_cubes_number)){
+      
+      printf("Set is the new best.");
+    }
+    best_set = current_set;
+    Empty_Stack(&best_stack);
+    stack_iterator(i, &stack_set, elt){
+      best_stack.data[i] = stack_set.data[i];
+    }
+    best_stack.size = stack_set.size;
+
+    best_distance = distance;
+    best_is_pattern_compatible = pattern_compatible;
+    best_cubes_number = nb_cubes_set;
     printf("\n");
-    //TODO : Complete pattern
-    
-    //Check for availability
-    if(current_set->availability > best_set->availability){
-      best_set = current_set;
-      break;
-    }
-
-    //Check for cubes number
-    //Do not take cubes that cannot be stacked into account, prefer a
-    //set with the right number of cubes.
-    
-    //Check for distance
-    
   }
-
-  //Once the set is selected, do NOT take the pattern's cubes that
-  //can't lead to a complete building.
   
   return 0;
 }
