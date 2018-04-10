@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>//TMP
 #include <math.h>
+
 #define max(a, b) ((a>=b)?a:b)
+#define dist(x_a, y_a, x_b, y_b) sqrt(pow(y_b-y_a, 2) + pow(x_b-x_a, 2))
 
 Team team;
 Robot me;
@@ -227,13 +229,6 @@ void Refresh_Map(){
 //==================================================//
 //               Building Strategy                  //
 //==================================================//
-void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top){
-  construction_plan[0] = top;
-  construction_plan[1] = middle;
-  construction_plan[2] = bottom;
-  valid_plan = 1;
-}
-
 #define PLAN_TOP construction_plan[0]
 #define PLAN_MIDDLE construction_plan[1]
 #define PLAN_BOTTOM construction_plan[2]
@@ -247,7 +242,18 @@ typedef enum FSM_Plan_State_E{
   FSM_PLAN_COMPLETE
 }FSM_Plan_State;
 
-static FSM_Plan_State Check_Construction(){
+static FSM_Plan_State Check_Construction(Stack *stack);
+static int Get_Nb_Cubes_Set(int index_set);
+static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern, uint16_t from_x, uint16_t from_y);
+
+void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top){
+  PLAN_TOP = top;
+  PLAN_MIDDLE = middle;
+  PLAN_BOTTOM = bottom;
+  valid_plan = 1;
+}
+
+static FSM_Plan_State Check_Construction(Stack *stack){
   if(!valid_plan){
     return FSM_PLAN_NONE;
   }
@@ -255,7 +261,7 @@ static FSM_Plan_State Check_Construction(){
   FSM_Plan_State fsm_plan = FSM_PLAN_NONE;
 
   int k = 0; Cube *elt;
-  stack_iterator(k, &current_stack, elt){
+  stack_iterator(k, stack, elt){
     switch(fsm_plan){
     case FSM_PLAN_NONE:
       if(elt->color == PLAN_TOP){
@@ -309,33 +315,73 @@ static FSM_Plan_State Check_Construction(){
   return fsm_plan;
 }
 
-#define CHECK_ACCESSIBILITY(color, ncs, mcb, ncp)		\
-  if((color) != CENTER_COLOR || ((ncs) - (mcb) <= 2)){		\
-    (ncp)++;							\
+#define CHECK_ACCESSIBILITY(k, color, ncs, mcb, stack) (((CUBE_SET(k, color)).availability >= UNCERTAIN && ((color) != CENTER_COLOR || ((ncs) - (mcb) <= 2)))?&CUBE_SET(k, color):Find_Cube(color, 0, set[k].x, set[k].y))
+
+static int Get_Nb_Cubes_Set(int index_set){
+  int nb_cubes_set = 0;
+  int i;
+  for(i = 0; i < CUBES_PER_SET; i++){
+    if(CUBE_SET(index_set, i).availability >= UNCERTAIN){
+      nb_cubes_set++;
+    }
   }
+
+  return nb_cubes_set;
+}
+
+static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern, uint16_t from_x, uint16_t from_y){
+
+  Cube *best_cube = NULL;
+  Probability best_availability = ZERO_PROBABILITY;
+  float best_dist = dist(0, 0, AREA_WIDTH, AREA_HEIGHT);
+  
+  int k;
+  for(k = 0; k < NB_CUBES; k++){
+    Cube *const current_cube = &cube[k];
+
+    //Checking color
+    if((no_pattern && ((current_cube->color == PLAN_TOP)
+		       || (current_cube->color == PLAN_BOTTOM)
+		       || (current_cube->color == PLAN_BOTTOM)))
+       || (!no_pattern && current_cube->color != color)
+       || (color == CENTER_COLOR && Get_Nb_Cubes_Set((current_cube-&cube[0])/CUBES_PER_SET) > 2))
+      break;
+
+    //Checking availability
+    if(current_cube->availability < best_availability)
+      break;
+
+    //Checking distance
+    float distance = dist(from_x, from_y, current_cube->x, current_cube->y);
+    if(current_cube->availability > best_availability || distance < best_dist){
+      best_cube = current_cube;
+      best_availability = current_cube->availability;
+      best_dist = distance;
+    }
+  }
+
+  return best_cube;
+}
 
 int Select_Building_Materials(){
   Cube_Set *best_set = &set[0];
   int k;
 
   //Checking current construction
-  FSM_Plan_State plan_state = Check_Construction();
+  FSM_Plan_State plan_state = Check_Construction(&current_stack);
   printf("Plan state : %d\n", plan_state);
   
   for(k = 0; k < NB_SETS; k++){
     Cube_Set *const current_set = &set[k];
-
+    Stack stack_set;
+    Init_Stack(&stack_set);
+    
     printf("Checking set %d\n", k);
     //Check for plan materials
     uint8_t nb_cubes_pattern = 0;
-    uint8_t nb_cubes_set = 0;
-    int i;
-    for(i = 0; i < CUBES_PER_SET; i++){
-      if(CUBE_SET(k, i).availability >= UNCERTAIN){
-	nb_cubes_set++;
-      }
-    }
-    
+    uint8_t nb_cubes_set = Get_Nb_Cubes_Set(k);
+
+    uint8_t pattern_compatibility = 0;
     if(valid_plan && plan_state != FSM_PLAN_COMPLETE){
       uint8_t mcbp;//max cube before pattern
       if(plan_state != FSM_PLAN_NONE){
@@ -345,54 +391,71 @@ int Select_Building_Materials(){
       }
 
       //Searching for cubes to complete the pattern
-      if(CUBE_SET(k, PLAN_TOP).availability >= UNCERTAIN){
-	switch(plan_state){
-	case FSM_PLAN_NONE:
-	  CHECK_ACCESSIBILITY(PLAN_TOP, nb_cubes_set, mcbp + 2, nb_cubes_pattern);
-	  break;
-	case FSM_PLAN_B:
-	  CHECK_ACCESSIBILITY(PLAN_TOP, nb_cubes_set, 1, nb_cubes_pattern);
-	  break;
-	case FSM_PLAN_BM:
-	  CHECK_ACCESSIBILITY(PLAN_TOP, nb_cubes_set, 0, nb_cubes_pattern);
-	  break;
-	default:
-	  break;
+      Cube *top, *middle, *bottom;
+      switch(plan_state){
+      case FSM_PLAN_NONE:
+	if(current_stack.size > 2) break;
+        top = CHECK_ACCESSIBILITY(k, PLAN_TOP, nb_cubes_set, mcbp + 2, stack_set);
+	middle = CHECK_ACCESSIBILITY(k, PLAN_MIDDLE, nb_cubes_set, mcbp + 1, stack_set);
+	bottom = CHECK_ACCESSIBILITY(k, PLAN_BOTTOM, nb_cubes_set, mcbp + 2, stack_set);
+	if(top != NULL && bottom != NULL && middle != NULL){
+	  Stack_Cube(top, &stack_set);
+	  Stack_Cube(middle, &stack_set);
+	  Stack_Cube(bottom, &stack_set);
+	  pattern_compatibility = 1;
 	}
-      }
-      
-      if(CUBE_SET(k, PLAN_BOTTOM).availability >= UNCERTAIN){
-	switch(plan_state){
-	case FSM_PLAN_NONE:
-	  CHECK_ACCESSIBILITY(PLAN_BOTTOM, nb_cubes_set, mcbp + 2, nb_cubes_pattern);
-	  break;
-	case FSM_PLAN_T:
-	  CHECK_ACCESSIBILITY(PLAN_BOTTOM, nb_cubes_set, 1, nb_cubes_pattern);
-	  break;
-	case FSM_PLAN_TM:
-	  CHECK_ACCESSIBILITY(PLAN_BOTTOM, nb_cubes_set, 0, nb_cubes_pattern);
-	  break;
-	default:
-	  break;
+	break;
+      case FSM_PLAN_T:
+	if(current_stack.size > 3) break;
+	bottom = CHECK_ACCESSIBILITY(k, PLAN_BOTTOM, nb_cubes_set, 1, stack_set);
+	middle = CHECK_ACCESSIBILITY(k, PLAN_MIDDLE, nb_cubes_set, 0, stack_set);
+	if(bottom != NULL && middle != NULL){
+	  Stack_Cube(bottom, &stack_set);
+	  Stack_Cube(middle, &stack_set);
+	  pattern_compatibility = 1;
 	}
-      }
-
-      if(CUBE_SET(k, PLAN_MIDDLE).availability >= UNCERTAIN){
-	switch(plan_state){
-	case FSM_PLAN_NONE:
-	  CHECK_ACCESSIBILITY(PLAN_MIDDLE, nb_cubes_set, mcbp + 1, nb_cubes_pattern);
-	  break;
-	case FSM_PLAN_T:
-	case FSM_PLAN_B:
-	  CHECK_ACCESSIBILITY(PLAN_MIDDLE, nb_cubes_set, 0, nb_cubes_pattern);
-	  break;
-	default:
-	  break;
+	break;
+      case FSM_PLAN_B:
+	if(current_stack.size > 3) break;
+	middle = CHECK_ACCESSIBILITY(k, PLAN_MIDDLE, nb_cubes_set, 0, stack_set);
+	top = CHECK_ACCESSIBILITY(k, PLAN_TOP, nb_cubes_set, 1, stack_set);
+	if(middle != NULL && top != NULL){
+	  Stack_Cube(middle, &stack_set);
+	  Stack_Cube(top, &stack_set);
+	  pattern_compatibility = 1;
 	}
+	break;
+      case FSM_PLAN_BM:
+	if(current_stack.size > 4) break;
+	top = CHECK_ACCESSIBILITY(k, PLAN_TOP, nb_cubes_set, 0, stack_set);
+	if(top != NULL){
+	  Stack_Cube(top, &stack_set);
+	  pattern_compatibility = 1;
+	}
+	break;
+      case FSM_PLAN_TM:
+	if(current_stack.size > 4) break;
+	bottom = CHECK_ACCESSIBILITY(k, PLAN_BOTTOM, nb_cubes_set, 0, stack_set);
+	if(bottom != NULL){
+	  Stack_Cube(bottom, &stack_set);
+	  pattern_compatibility = 1;
+	}
+	break;
+      default:
+	break;
       }
+    }else{
+      pattern_compatibility = 1;
     }
 
-    printf("nb cubes : %d\nnb cubes pattern : %d\n\n", nb_cubes_set, nb_cubes_pattern);
+    printf("nb cubes : %d\n", nb_cubes_set);
+    if(pattern_compatibility){
+      printf("The set is compatible with the pattern\n");
+    }
+    else{
+      printf("The set is not compatible with the pattern\n");
+    }
+    printf("\n");
     //TODO : Complete pattern
     
     //Check for availability

@@ -182,10 +182,6 @@ Cube* John_The_Builder();
  * on the construction zone.
  */
 
-//void Stack_Cube(Cube *cube);
-//void Unstack_Cube();
-//void Remove_Cube(Cube *cube);
-
 //Time
 uint32_t Remaining_Time(void);
 /**
