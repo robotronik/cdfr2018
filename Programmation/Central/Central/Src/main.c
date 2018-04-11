@@ -249,7 +249,8 @@ void HardFault_Handler(void){
 }
 
 static int Init_ToF(ToF_Handler *htof, uint8_t i2c_addr, GPIO_TypeDef *xshut_port, uint32_t xshut_pin){
-  //Enable the chip by setting xshut_pin to high impedance
+  //You definitely don't want to know what we're doing
+  //there. Seriously, don't do that. Please.
   GPIO_InitTypeDef GPIO_InitStruct;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
