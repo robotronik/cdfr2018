@@ -42,6 +42,7 @@
 
 #include "gpio.h"
 #include "dma.h"
+#include "system.h"
 
 /* USER CODE BEGIN 0 */
 RP_Interface pi_iface;

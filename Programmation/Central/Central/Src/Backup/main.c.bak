@@ -151,91 +151,19 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  ToF_Dev tof_front_left, tof_front_right, tof_rear_left, tof_rear_right;
+  /* USER CODE BEGIN WHILE */  
+  ToF_Dev tof_dev;
   ToF_Params params;
   ToF_Data tof_data;
 
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  
-  ToF_Init_Struct(&tof_front_left, &hi2c3, TOF_FRONT_LEFT);
-  ToF_Init_Struct(&tof_front_right, &hi2c3, TOF_FRONT_LEFT);
-  ToF_Init_Struct(&tof_rear_left, &hi2c3, TOF_FRONT_LEFT);
-  ToF_Init_Struct(&tof_rear_right, &hi2c3, TOF_FRONT_LEFT);
-
-  GPIO_InitStruct.Pin = TOF_RR_RESET_Pin;
-  HAL_GPIO_Init(TOF_RR_RESET_GPIO_Port, &GPIO_InitStruct);
-  HAL_Delay(100);
-  if(ToF_Set_Address(&tof_rear_right, TOF_REAR_RIGHT) != -1){
-    //LED_ON;
-  }
-
-  GPIO_InitStruct.Pin = TOF_RL_RESET_Pin;
-  HAL_GPIO_Init(TOF_RL_RESET_GPIO_Port, &GPIO_InitStruct);
-  HAL_Delay(100);
-  if(ToF_Set_Address(&tof_rear_left, TOF_REAR_LEFT) != -1){
-    //LED_ON;
-  }
-
-  GPIO_InitStruct.Pin = TOF_FR_RESET_Pin;
-  HAL_GPIO_Init(TOF_FR_RESET_GPIO_Port, &GPIO_InitStruct);
-  HAL_Delay(100);
-  if(ToF_Set_Address(&tof_front_right, TOF_FRONT_RIGHT) != -1){
-    //LED_ON;
-  }
-
-  GPIO_InitStruct.Pin = TOF_FL_RESET_Pin;
-  HAL_GPIO_Init(TOF_FL_RESET_GPIO_Port, &GPIO_InitStruct);
-  ToF_Set_Address(&tof_front_left, TOF_FRONT_LEFT);
-
-  ToF_Init_Device(&tof_front_left);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_front_left, &params);
-
-  ToF_Init_Device(&tof_front_right);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_front_right, &params);
-
-  ToF_Init_Device(&tof_rear_left);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_rear_left, &params);
-
-  ToF_Init_Device(&tof_rear_right);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_rear_right, &params);
-  
-  
-  if(ToF_Poke(&tof_front_left) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-    HAL_Delay(1000);
-    
-  if(ToF_Poke(&tof_rear_left) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-    HAL_Delay(1000);
-  if(ToF_Poke(&tof_rear_right) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-    HAL_Delay(1000);
-  if(ToF_Poke(&tof_front_right) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-  
+  ToF_Init_Struct(&tof_dev, &hi2c3, TOF_FRONT_LEFT);
   /*
+   * Addr 52 & 53 : ok; 54 : fail
+   */
+  
   do{
     //Check the initial address
-    if(ToF_Poke(&tof_front_left) == -1){
+    if(ToF_Poke(&tof_dev) == -1){
       break;
     }
     else{
@@ -243,11 +171,11 @@ int main(void)
     }
 
     //Set a new address
-    //if(ToF_Set_Address(&tof_front_left, 0x58) == -1)
+    //if(ToF_Set_Address(&tof_dev, 0x58) == -1)
     //  break;
     
     //Init the device
-    if(ToF_Init_Device(&tof_front_left) == -1)
+    if(ToF_Init_Device(&tof_dev) == -1)
       break;
     else
       PI_Log("ToF init successful\n");
@@ -256,22 +184,19 @@ int main(void)
     TOF_LONG_RANGE_CONFIG(params);
 
     //Configure the device
-    if(ToF_Configure_Device(&tof_front_left, &params)== -1)
+    if(ToF_Configure_Device(&tof_dev, &params) == -1)
       break;
     else
       PI_Log("ToF config successful");
   }while(0);
-  */
+  
   
   while (1)
   {
-    ToF_Perform_Measurement(&tof_front_left, &tof_data);
-    ToF_Perform_Measurement(&tof_rear_left, &tof_data);
-    ToF_Perform_Measurement(&tof_front_right, &tof_data);
-    ToF_Perform_Measurement(&tof_rear_right, &tof_data);
+    ToF_Perform_Measurement(&tof_dev, &tof_data);
     if(tof_data.RangeStatus == 0){
-      //tof_front_left.LeakyRange (mm)
-      //LED_ON;
+      //tof_dev.LeakyRange (mm)
+      LED_ON;
     }else{
       //Out of range
       //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);

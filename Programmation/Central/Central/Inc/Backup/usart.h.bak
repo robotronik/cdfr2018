@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file           : main.h
-  * @brief          : Header for main.c file.
-  *                   This file contains the common defines of the application.
+  * File Name          : USART.h
+  * Description        : This file provides code for the configuration
+  *                      of the USART instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -36,98 +36,50 @@
   *
   ******************************************************************************
   */
-
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __MAIN_H__
-#define __MAIN_H__
-
-/* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_ll_dma.h"
-#include "stm32f4xx_hal.h"
-#include "stm32f4xx_ll_usart.h"
-#include "stm32f4xx_ll_rcc.h"
-#include "stm32f4xx_ll_bus.h"
-#include "stm32f4xx_ll_cortex.h"
-#include "stm32f4xx_ll_system.h"
-#include "stm32f4xx_ll_utils.h"
-#include "stm32f4xx_ll_pwr.h"
-#include "stm32f4xx_ll_gpio.h"
-
-#include "stm32f4xx_ll_exti.h"
-
-/* USER CODE BEGIN Includes */
-
-/* USER CODE END Includes */
-
-/* Private define ------------------------------------------------------------*/
-
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
-#define TOF_FL_RESET_Pin GPIO_PIN_3
-#define TOF_FL_RESET_GPIO_Port GPIOC
-#define POSITION_TX_Pin GPIO_PIN_2
-#define POSITION_TX_GPIO_Port GPIOA
-#define POSITION_RX_Pin GPIO_PIN_3
-#define POSITION_RX_GPIO_Port GPIOA
-#define LD2_Pin GPIO_PIN_5
-#define LD2_GPIO_Port GPIOA
-#define LED_GREEN_Pin GPIO_PIN_6
-#define LED_GREEN_GPIO_Port GPIOA
-#define LED_RED_Pin GPIO_PIN_7
-#define LED_RED_GPIO_Port GPIOA
-#define TOF_FR_RESET_Pin GPIO_PIN_4
-#define TOF_FR_RESET_GPIO_Port GPIOC
-#define I2C_TOF_EN_Pin GPIO_PIN_10
-#define I2C_TOF_EN_GPIO_Port GPIOB
-#define SELEC_Pin GPIO_PIN_6
-#define SELEC_GPIO_Port GPIOC
-#define JACK_START_Pin GPIO_PIN_8
-#define JACK_START_GPIO_Port GPIOC
-#define TOF_RL_RESET_Pin GPIO_PIN_9
-#define TOF_RL_RESET_GPIO_Port GPIOC
-#define I2C_TOF_SCL_Pin GPIO_PIN_8
-#define I2C_TOF_SCL_GPIO_Port GPIOA
-#define RASPBERRY_TX_Pin GPIO_PIN_9
-#define RASPBERRY_TX_GPIO_Port GPIOA
-#define RASPBERRY_RX_Pin GPIO_PIN_10
-#define RASPBERRY_RX_GPIO_Port GPIOA
-#define PINCE_TX_Pin GPIO_PIN_11
-#define PINCE_TX_GPIO_Port GPIOA
-#define PINCE_RX_Pin GPIO_PIN_12
-#define PINCE_RX_GPIO_Port GPIOA
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
-#define TOF_RR_RESET_Pin GPIO_PIN_11
-#define TOF_RR_RESET_GPIO_Port GPIOC
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
-#define I2C_TOF_SDA_Pin GPIO_PIN_4
-#define I2C_TOF_SDA_GPIO_Port GPIOB
-
-/* ########################## Assert Selection ############################## */
-/**
-  * @brief Uncomment the line below to expanse the "assert_param" macro in the 
-  *        HAL drivers code
-  */
-/* #define USE_FULL_ASSERT    1U */
-
-/* USER CODE BEGIN Private defines */
-#define LED_ON (HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET))
-#define LED_OFF (HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET))
-/* USER CODE END Private defines */
-
+#ifndef __usart_H
+#define __usart_H
 #ifdef __cplusplus
  extern "C" {
 #endif
-void _Error_Handler(char *, int);
 
-#define Error_Handler() _Error_Handler(__FILE__, __LINE__)
+/* Includes ------------------------------------------------------------------*/
+#include "stm32f4xx_ll_usart.h"
+#include "stm32f4xx_ll_rcc.h"
+#include "main.h"
+
+/* USER CODE BEGIN Includes */
+   #include "robotronik_protocol.h"
+   #include "robotronik_protocol_stm32f4.h"
+/* USER CODE END Includes */
+
+/* USER CODE BEGIN Private defines */
+   extern RP_Interface pi_iface;
+   extern RP_Interface pos_iface;
+   extern RP_Interface z_iface;
+/* USER CODE END Private defines */
+
+extern void _Error_Handler(char *, int);
+
+void MX_USART1_UART_Init(void);
+void MX_USART2_UART_Init(void);
+void MX_USART6_UART_Init(void);
+
+/* USER CODE BEGIN Prototypes */
+   uint8_t RP_UART_Transmit(void *link_handler, uint8_t *data, uint16_t size, uint32_t timeout);
+/* USER CODE END Prototypes */
+
 #ifdef __cplusplus
 }
 #endif
+#endif /*__ usart_H */
 
-#endif /* __MAIN_H__ */
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

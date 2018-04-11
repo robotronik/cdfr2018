@@ -27,7 +27,7 @@ int ToF_Poke(ToF_Dev *dev){
 int ToF_Set_Address(ToF_Dev *dev, uint8_t addr){
   //Set device address
   int status = VL53L0X_SetDeviceAddress(dev, addr);
-  //if(status) return -1;
+  if(status) return -1;
   dev->I2cDevAddr = addr;
 
   //Check if the device work with the new address
