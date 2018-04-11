@@ -1,13 +1,13 @@
 #include "tof.h"
 #include "pi_client.h"
 
-void ToF_Init_Struct(ToF_Dev *dev, I2C_HandleTypeDef *hi2c, uint8_t addr){
-  dev->I2cHandle = hi2c;
-  dev->I2cDevAddr = addr;
-  dev->Present = 0;
+void ToF_Init_Struct(ToF_Handler *htof, I2C_HandleTypeDef *hi2c){
+  htof->dev.I2cHandle = hi2c;
+  htof->dev.I2cDevAddr = 0x52;
+  htof->dev.Present = 0;
 
   //Set I2C speed to 400KHz
-  VL53L0X_WrByte(dev, 0x88, 0x00);
+  VL53L0X_WrByte(&htof->dev, 0x88, 0x00);
 }
 
 int ToF_Poke(ToF_Dev *dev){
@@ -27,7 +27,7 @@ int ToF_Poke(ToF_Dev *dev){
 int ToF_Set_Address(ToF_Dev *dev, uint8_t addr){
   //Set device address
   int status = VL53L0X_SetDeviceAddress(dev, addr);
-  //if(status) return -1;
+  if(status) return -1;
   dev->I2cDevAddr = addr;
 
   //Check if the device work with the new address
@@ -48,21 +48,20 @@ int ToF_Init_Device(ToF_Dev *dev){
   return 0;
 }
 
-int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params){
+int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params, VL53L0X_DeviceModes mode){
   int status = 0;
 
   do{
     //Ref Spad Management
     status = VL53L0X_PerformRefSpadManagement(dev, &params->refSpadCount, &params->isApertureSpads);
-    if(status) PI_Log("RefSpad failed : %d\n", status);
     if(status) break;
 
     //Ref calibration
-    //status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
+    status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
     if(status) break;
    
     //Set single ranging mode
-    status = VL53L0X_SetDeviceMode(dev, VL53L0X_DEVICEMODE_SINGLE_RANGING);
+    status = VL53L0X_SetDeviceMode(dev, mode);
     if(status) break;
   
     //Enable Sigma Limit
@@ -99,18 +98,11 @@ int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params){
   return -1;
 }
 
-int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
-  static int LeakyFactorFix8 = (int)( 0.6 *256);
-
-  if(!dev->Present) return -1;
-
-  if(VL53L0X_PerformSingleRangingMeasurement(dev, data) == 0){
-    //LED_ON;
-  }
-
-  //Sensor_SetNewRange
+static void ToF_SetNewRange(ToF_Dev *dev, ToF_Data *data){
   /* Store new ranging data into the device structure, apply leaky
      integrator if needed */
+  static int LeakyFactorFix8 = (int)( 0.6 *256);
+    
   if(data->RangeStatus == 0){
     if(dev->LeakyFirst){
       dev->LeakyFirst = 0;
@@ -123,6 +115,46 @@ int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
   else{
     dev->LeakyFirst = 1;
   }
+}
+
+int ToF_Poll_Measurement_Data(ToF_Handler *htof){
+  if(!htof->dev.Present) return -1;
+  
+  uint8_t ready;
+  if(VL53L0X_GetMeasurementDataReady(&htof->dev, &ready) != VL53L0X_ERROR_NONE){
+    return -1;
+  }
+
+  if(!ready){
+    return 1;
+  }
+
+  if(VL53L0X_GetRangingMeasurementData(&htof->dev, &htof->data) != VL53L0X_ERROR_NONE){
+    return -1;
+  }
+
+  ToF_SetNewRange(&htof->dev, &htof->data);
+  
+  VL53L0X_ClearInterruptMask(&htof->dev, -1);
   
   return 0;
+}
+
+int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
+  if(!dev->Present) return -1;
+
+  if(VL53L0X_PerformSingleRangingMeasurement(dev, data) != VL53L0X_ERROR_NONE){
+    return -1;
+  }
+
+  ToF_SetNewRange(dev, data);
+  
+  return 0;
+}
+
+int ToF_Get_Last_Range(ToF_Handler *htof){
+  __disable_irq();
+  int r = (htof->data.RangeStatus==0)?(htof->dev.LeakyRange):-1;
+  __enable_irq();
+  return r;
 }

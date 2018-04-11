@@ -1,13 +1,13 @@
 #include "tof.h"
 #include "pi_client.h"
 
-void ToF_Init_Struct(ToF_Dev *dev, I2C_HandleTypeDef *hi2c, uint8_t addr){
-  dev->I2cHandle = hi2c;
-  dev->I2cDevAddr = addr;
-  dev->Present = 0;
+void ToF_Init_Struct(ToF_Handler *htof, I2C_HandleTypeDef *hi2c){
+  htof->dev.I2cHandle = hi2c;
+  htof->dev.I2cDevAddr = 0x52;
+  htof->dev.Present = 0;
 
   //Set I2C speed to 400KHz
-  VL53L0X_WrByte(dev, 0x88, 0x00);
+  VL53L0X_WrByte(&htof->dev, 0x88, 0x00);
 }
 
 int ToF_Poke(ToF_Dev *dev){
@@ -48,21 +48,20 @@ int ToF_Init_Device(ToF_Dev *dev){
   return 0;
 }
 
-int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params){
+int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params, VL53L0X_DeviceModes mode){
   int status = 0;
 
   do{
     //Ref Spad Management
     status = VL53L0X_PerformRefSpadManagement(dev, &params->refSpadCount, &params->isApertureSpads);
-    if(status) PI_Log("RefSpad failed : %d\n", status);
     if(status) break;
 
     //Ref calibration
-    //status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
+    status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
     if(status) break;
    
     //Set single ranging mode
-    status = VL53L0X_SetDeviceMode(dev, VL53L0X_DEVICEMODE_SINGLE_RANGING);
+    status = VL53L0X_SetDeviceMode(dev, mode);
     if(status) break;
   
     //Enable Sigma Limit
@@ -98,6 +97,10 @@ int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params){
   
   return -1;
 }
+
+//VL53L0X_Error VL53L0X_GetMeasurementDataReady(VL53L0X_DEV Dev, uint8_t *pMeasurementDataReady);
+//VL53L0X_Error VL53L0X_GetRangingMeasurementData(VL53L0X_DEV Dev, VL53L0X_RangingMeasurementData_t *pRangingMeasurementData);
+//VL53L0X_ClearInterruptMask(pDev, -1);
 
 int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
   static int LeakyFactorFix8 = (int)( 0.6 *256);

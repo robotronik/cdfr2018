@@ -1,3 +1,4 @@
+
 /**
   ******************************************************************************
   * @file           : main.c
@@ -46,8 +47,8 @@
 
 /* USER CODE BEGIN Includes */
 #include "system.h"
-#include "tof.h"
 #include "pi_client.h"
+#include "tof.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -67,10 +68,10 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-#define TOF_FRONT_LEFT 0x52
-#define TOF_FRONT_RIGHT 0x54
-#define TOF_REAR_LEFT 0x56
-#define TOF_REAR_RIGHT 0x58
+
+ToF_Handler tof[NB_TOF];
+
+static int Init_ToF(ToF_Handler *htof, uint8_t i2c_addr, GPIO_TypeDef *xshut_port, uint32_t xshut_pin);
 
 /* USER CODE END 0 */
 
@@ -113,9 +114,23 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  LED_OFF;
   //==================================================//
-  //           UART PROTOCOL INIT                     //
+  //            ToF Initialisation                    //
+  //==================================================//
+  //Wait for the devices to reset
+  HAL_Delay(TOF_DELAY);
+
+  //Init the time of flight sensors
+  Init_ToF(&tof[TOF_FRONT_LEFT], 0x54, TOF_FL_RESET_GPIO_Port, TOF_FL_RESET_Pin);
+  Init_ToF(&tof[TOF_FRONT_RIGHT], 0x56, TOF_FR_RESET_GPIO_Port, TOF_FR_RESET_Pin);
+  Init_ToF(&tof[TOF_REAR_LEFT], 0x58, TOF_RL_RESET_GPIO_Port, TOF_RL_RESET_Pin);
+  Init_ToF(&tof[TOF_REAR_RIGHT], 0x60, TOF_RR_RESET_GPIO_Port, TOF_RR_RESET_Pin);
+
+  //Enable the polling timer
+  HAL_TIM_Base_Start_IT(&htim1);
+  
+  //==================================================//
+  //           UART Protocol Init                     //
   //==================================================//
 
   //Raspberry
@@ -131,19 +146,18 @@ int main(void)
   RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_1, USART6, z_iface);
 
   //==================================================//
-  //           REMOTE CALL CLIENT INIT                //
+  //           Remote Call Client Init                //
   //==================================================//
 
   //Raspberry
   PI_Init();
   
   //==================================================//
-  //                 WAIT START                       //
+  //                 Wait Start                       //
   //==================================================//
 
   //Team t = wait_start();
-  //PI_Start();
-  RP_Sync(&pi_iface, 0);
+  PI_Start();
 
   HAL_Delay(1000);
   //PI_Asser_Test();
@@ -152,134 +166,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  ToF_Dev tof_front_left, tof_front_right, tof_rear_left, tof_rear_right;
-  ToF_Params params;
-  ToF_Data tof_data;
-
-  GPIO_InitTypeDef GPIO_InitStruct;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  
-  ToF_Init_Struct(&tof_front_left, &hi2c3, TOF_FRONT_LEFT);
-  ToF_Init_Struct(&tof_front_right, &hi2c3, TOF_FRONT_LEFT);
-  ToF_Init_Struct(&tof_rear_left, &hi2c3, TOF_FRONT_LEFT);
-  ToF_Init_Struct(&tof_rear_right, &hi2c3, TOF_FRONT_LEFT);
-
-  GPIO_InitStruct.Pin = TOF_RR_RESET_Pin;
-  HAL_GPIO_Init(TOF_RR_RESET_GPIO_Port, &GPIO_InitStruct);
-  HAL_Delay(100);
-  if(ToF_Set_Address(&tof_rear_right, TOF_REAR_RIGHT) != -1){
-    //LED_ON;
-  }
-
-  GPIO_InitStruct.Pin = TOF_RL_RESET_Pin;
-  HAL_GPIO_Init(TOF_RL_RESET_GPIO_Port, &GPIO_InitStruct);
-  HAL_Delay(100);
-  if(ToF_Set_Address(&tof_rear_left, TOF_REAR_LEFT) != -1){
-    //LED_ON;
-  }
-
-  GPIO_InitStruct.Pin = TOF_FR_RESET_Pin;
-  HAL_GPIO_Init(TOF_FR_RESET_GPIO_Port, &GPIO_InitStruct);
-  HAL_Delay(100);
-  if(ToF_Set_Address(&tof_front_right, TOF_FRONT_RIGHT) != -1){
-    //LED_ON;
-  }
-
-  GPIO_InitStruct.Pin = TOF_FL_RESET_Pin;
-  HAL_GPIO_Init(TOF_FL_RESET_GPIO_Port, &GPIO_InitStruct);
-  ToF_Set_Address(&tof_front_left, TOF_FRONT_LEFT);
-
-  ToF_Init_Device(&tof_front_left);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_front_left, &params);
-
-  ToF_Init_Device(&tof_front_right);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_front_right, &params);
-
-  ToF_Init_Device(&tof_rear_left);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_rear_left, &params);
-
-  ToF_Init_Device(&tof_rear_right);
-  TOF_LONG_RANGE_CONFIG(params);
-  ToF_Configure_Device(&tof_rear_right, &params);
   
   
-  if(ToF_Poke(&tof_front_left) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-    HAL_Delay(1000);
-    
-  if(ToF_Poke(&tof_rear_left) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-    HAL_Delay(1000);
-  if(ToF_Poke(&tof_rear_right) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-    HAL_Delay(1000);
-  if(ToF_Poke(&tof_front_right) != -1){
-    LED_ON;
-    HAL_Delay(1000);
-    LED_OFF;
-  }
-  
-  /*
-  do{
-    //Check the initial address
-    if(ToF_Poke(&tof_front_left) == -1){
-      break;
-    }
-    else{
-      PI_Log("ToF @0x%2.2X\n", TOF_FRONT_LEFT);
-    }
-
-    //Set a new address
-    //if(ToF_Set_Address(&tof_front_left, 0x58) == -1)
-    //  break;
-    
-    //Init the device
-    if(ToF_Init_Device(&tof_front_left) == -1)
-      break;
-    else
-      PI_Log("ToF init successful\n");
-
-    //Long range config
-    TOF_LONG_RANGE_CONFIG(params);
-
-    //Configure the device
-    if(ToF_Configure_Device(&tof_front_left, &params)== -1)
-      break;
-    else
-      PI_Log("ToF config successful");
-  }while(0);
-  */
-  
-  while (1)
-  {
-    ToF_Perform_Measurement(&tof_front_left, &tof_data);
-    ToF_Perform_Measurement(&tof_rear_left, &tof_data);
-    ToF_Perform_Measurement(&tof_front_right, &tof_data);
-    ToF_Perform_Measurement(&tof_rear_right, &tof_data);
-    if(tof_data.RangeStatus == 0){
-      //tof_front_left.LeakyRange (mm)
-      //LED_ON;
-    }else{
-      //Out of range
-      //HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
-    }
+  while (1){
+    //Test des capteurs
+    HAL_Delay(250);
+    PI_Log("avant gauche : %d\n", ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]));
+    PI_Log("avant droit : %d\n", ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]));
+    PI_Log("arrière gauche : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]));
+    PI_Log("avant gauche : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-
+    
   }
   /* USER CODE END 3 */
 
@@ -347,6 +246,49 @@ void SystemClock_Config(void)
 void HardFault_Handler(void){
   PI_Error();
   hlt();
+}
+
+static int Init_ToF(ToF_Handler *htof, uint8_t i2c_addr, GPIO_TypeDef *xshut_port, uint32_t xshut_pin){
+  //Enable the chip by setting xshut_pin to high impedance
+  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pin = xshut_pin;
+  
+  HAL_GPIO_Init(xshut_port, &GPIO_InitStruct);
+
+  //Wait for the chip to start
+  HAL_Delay(TOF_DELAY);
+
+  //Init structure
+  ToF_Init_Struct(htof, &hi2c3);
+
+  ToF_Params params;
+    
+  //Check the initial address
+  if(ToF_Poke(&htof->dev) == -1)
+    return -1;
+
+  //Set the new address
+  if(ToF_Set_Address(&htof->dev, i2c_addr) == -1)
+    return -1;
+    
+  //Init the device
+  if(ToF_Init_Device(&htof->dev) == -1)
+    return -1;
+
+  //Long range config
+  TOF_LONG_RANGE_CONFIG(params);
+
+  //Configure the device
+  if(ToF_Configure_Device(&htof->dev, &params, VL53L0X_DEVICEMODE_CONTINUOUS_RANGING)== -1)
+    return -1;
+
+  //Start the device
+  if(VL53L0X_StartMeasurement(&htof->dev) == -1)
+    return -1;
+    
+  return 0;
 }
 /* USER CODE END 4 */
 

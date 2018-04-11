@@ -41,11 +41,23 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
+#include "tof.h"
+
 static int tim2 = 4+1;
+extern ToF_Handler tof[NB_TOF];
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
   if(htim->Instance == htim2.Instance){
+    //Match timer
     if(!(--tim2)){
       stop();
+    }
+  }
+  else if(htim->Instance == htim1.Instance){
+    //ToF polling timer
+    int i;
+    for(i = 0; i < NB_TOF; i++){
+      ToF_Poll_Measurement_Data(&tof[i]);
     }
   }
 }
@@ -94,7 +106,7 @@ void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 42000-1;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 45000-1;
+  htim2.Init.Period = 50000-1;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {

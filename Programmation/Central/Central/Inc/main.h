@@ -56,7 +56,20 @@
 #include "stm32f4xx_ll_exti.h"
 
 /* USER CODE BEGIN Includes */
+#define NB_TOF 4
 
+typedef enum ToF_ID_E{
+  TOF_FRONT_LEFT,
+  TOF_FRONT_RIGHT,
+  TOF_REAR_LEFT,
+  TOF_REAR_RIGHT
+}ToF_ID;
+
+/*
+ * Note : addresses must be pair, and it is better to avoid using 0x52
+ * because it's the default address and it may conflict if a device
+ * that fail to change its adddress.
+ */
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/

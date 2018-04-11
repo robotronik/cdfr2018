@@ -56,13 +56,28 @@
 #include "stm32f4xx_ll_exti.h"
 
 /* USER CODE BEGIN Includes */
+#define NB_TOF 4
 
+typedef enum ToF_ID_E{
+  TOF_FRONT_LEFT,
+  TOF_FRONT_RIGHT,
+  TOF_REAR_LEFT,
+  TOF_REAR_RIGHT
+}ToF_ID;
+
+/*
+ * Note : addresses must be pair, and it is better to avoid using 0x52
+ * because it's the default address and it may conflict if a device
+ * that fail to change its adddress.
+ */
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
 
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
+#define TOF_FL_RESET_Pin GPIO_PIN_3
+#define TOF_FL_RESET_GPIO_Port GPIOC
 #define POSITION_TX_Pin GPIO_PIN_2
 #define POSITION_TX_GPIO_Port GPIOA
 #define POSITION_RX_Pin GPIO_PIN_3
@@ -73,12 +88,16 @@
 #define LED_GREEN_GPIO_Port GPIOA
 #define LED_RED_Pin GPIO_PIN_7
 #define LED_RED_GPIO_Port GPIOA
+#define TOF_FR_RESET_Pin GPIO_PIN_4
+#define TOF_FR_RESET_GPIO_Port GPIOC
 #define I2C_TOF_EN_Pin GPIO_PIN_10
 #define I2C_TOF_EN_GPIO_Port GPIOB
 #define SELEC_Pin GPIO_PIN_6
 #define SELEC_GPIO_Port GPIOC
 #define JACK_START_Pin GPIO_PIN_8
 #define JACK_START_GPIO_Port GPIOC
+#define TOF_RL_RESET_Pin GPIO_PIN_9
+#define TOF_RL_RESET_GPIO_Port GPIOC
 #define I2C_TOF_SCL_Pin GPIO_PIN_8
 #define I2C_TOF_SCL_GPIO_Port GPIOA
 #define RASPBERRY_TX_Pin GPIO_PIN_9
@@ -93,6 +112,8 @@
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
+#define TOF_RR_RESET_Pin GPIO_PIN_11
+#define TOF_RR_RESET_GPIO_Port GPIOC
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
 #define I2C_TOF_SDA_Pin GPIO_PIN_4
