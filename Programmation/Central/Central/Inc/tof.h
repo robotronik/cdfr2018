@@ -1,3 +1,7 @@
+/*
+ * The code below is inspired by the STMicroelectronics X-CUBE-53L0A1 example source code.
+ * See en.SLA0044.txt for the corresponding licence.
+ */
 #ifndef TOF_H
 #define TOF_H
 
