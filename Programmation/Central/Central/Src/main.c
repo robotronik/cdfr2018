@@ -127,7 +127,7 @@ int main(void)
   Init_ToF(&tof[TOF_REAR_RIGHT], 0x60, TOF_RR_RESET_GPIO_Port, TOF_RR_RESET_Pin);
 
   //Enable the polling timer
-  //HAL_TIM_Base_Start_IT(&htim3);
+  HAL_TIM_Base_Start_IT(&htim3);
   
   //==================================================//
   //           UART Protocol Init                     //
@@ -171,10 +171,10 @@ int main(void)
   while (1){
     //Test des capteurs
     HAL_Delay(250);
-    PI_Log("avant gauche : %d\n", ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]));
-    PI_Log("avant droit : %d\n", ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]));
-    PI_Log("arrière gauche : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]));
-    PI_Log("avant gauche : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
+    PI_Log("AvG : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]));
+    PI_Log("AvD : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]));
+    PI_Log("ArG : %d\t", ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]));
+    PI_Log("ArD : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

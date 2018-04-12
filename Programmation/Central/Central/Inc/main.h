@@ -96,8 +96,8 @@ typedef enum ToF_ID_E{
 #define SELEC_GPIO_Port GPIOC
 #define JACK_START_Pin GPIO_PIN_8
 #define JACK_START_GPIO_Port GPIOC
-#define TOF_RL_RESET_Pin GPIO_PIN_9
-#define TOF_RL_RESET_GPIO_Port GPIOC
+#define TOF_RR_RESET_Pin GPIO_PIN_9
+#define TOF_RR_RESET_GPIO_Port GPIOC
 #define I2C_TOF_SCL_Pin GPIO_PIN_8
 #define I2C_TOF_SCL_GPIO_Port GPIOA
 #define RASPBERRY_TX_Pin GPIO_PIN_9
@@ -112,8 +112,8 @@ typedef enum ToF_ID_E{
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
-#define TOF_RR_RESET_Pin GPIO_PIN_11
-#define TOF_RR_RESET_GPIO_Port GPIOC
+#define TOF_RL_RESET_Pin GPIO_PIN_11
+#define TOF_RL_RESET_GPIO_Port GPIOC
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
 #define I2C_TOF_SDA_Pin GPIO_PIN_4
