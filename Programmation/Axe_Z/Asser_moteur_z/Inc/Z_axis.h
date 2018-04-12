@@ -44,9 +44,9 @@ FSM_Instance *volatile fsm;
 
 #define AX_CLOSE_LOAD 250
 
-#define AX_ARM_START 255
-#define AX_ARM_DEPLOY 400
-#define AX_ARM_END 750
+#define AX_ARM_START 270
+#define AX_ARM_DEPLOY 525
+#define AX_ARM_END 680
 
 #define AX_EPSILON 10
 
@@ -107,7 +107,7 @@ int Z_Goal_Reached();
 #define PpresenceLim P2-10
 
 #define PWM_MAX 100//max 255
-#define VOLTAGE_FC 2
+#define VOLTAGE_FC 4
 
 int cube_present();
 
