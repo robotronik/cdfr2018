@@ -156,10 +156,11 @@ int main(void)
   //                 Wait Start                       //
   //==================================================//
 
-  //Team t = wait_start();
+  Team t = wait_start();
   PI_Start();
 
-  HAL_Delay(1000);
+  HAL_Delay(5000);
+  //volatile int jean_michel_segfault = *((int*)99999999999);
   //PI_Asser_Test();
 
   /* USER CODE END 2 */
@@ -175,7 +176,8 @@ int main(void)
     PI_Log("AvD : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]));
     PI_Log("ArG : %d\t", ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]));
     PI_Log("ArD : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
-  /* USER CODE END WHILE */
+
+    /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
     
