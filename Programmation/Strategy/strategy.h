@@ -19,7 +19,9 @@
 
 //Stack
 #define PATTERN_SIZE 3
-#define STACK_SIZE 5
+#define CIRCULAR_BUFFER_SIZE 5
+#define STACK_SIZE CIRCULAR_BUFFER_SIZE
+#define QUEUE_SIZE CIRCULAR_BUFFER_SIZE
 
 //ROBOT
 #define ROBOT_X0 200
@@ -101,11 +103,14 @@ typedef struct Cell_S{
 }Cell;
 
 //Stack
-typedef struct Stack_S{
+typedef struct Circular_Buffer_S{
   Cube* data[STACK_SIZE];
   uint8_t start;
   uint8_t size;
-}Stack;
+}Circular_Buffer;
+
+typedef Circular_Buffer Stack;
+typedef Circular_Buffer Queue;
 
 //Global variables
 extern Team team;
@@ -140,22 +145,50 @@ Cell* A_Star(Cell *start, Cell *goal);
  * start and goal must NOT be on any edges of the map.
  */
 
+//Circular buffer
+void Empty_Circular_Buffer(Circular_Buffer *buff);
+int Add_Last(Cube *cube, Circular_Buffer *buff);
+int Add_First(Cube *cube, Circular_Buffer *buff);
+Cube *Remove_First(Circular_Buffer *buff);
+Cube *Remove_Last(Circular_Buffer *buff);
+
 //Stack Management
-#define Init_Stack(p_stack) Empty_Stack(p_stack)
-void Empty_Stack(Stack *stack);
+#define Init_Stack(p_stack) Empty_Stack((p_stack))
+#define Empty_Stack(p_stack) Empty_Circular_Buffer((p_stack))
 /**
  * Clear the stack.
  */
 
-int Stack_Cube(Cube *cube, Stack *stack);
+#define Stack_Cube(p_cube, p_stack) Add_Last((p_cube), (p_stack))
 /**
  * Add the cube '*cube' to the stack '*stack' if the stack is not full
  * and return 0, however do nothing and return -1.
  */
 
-Cube* Unstack_Cube(Stack *stack);
+#define Unstack_Cube(p_stack) Remove_Last((p_stack))
 /**
  * Return a pointer on the first cube in the stack if the stack is not
+ * empty, however return NULL.
+ */
+
+#define stack_iterator(k, p_stack, p_elt) for((k) = 0, (p_elt) = (p_stack)->data[(p_stack)->start]; (k) < (p_stack)->size; (k)++, (p_elt) = (p_stack)->data[((p_stack)->start + (k))%STACK_SIZE])
+
+//Queue Management
+#define Init_Queue(p_queue) Empty_Queue((p_queue))
+#define Empty_Queue(p_queue) Empty_Circular_Buffer((p_queue))
+/**
+ * Clear the queue.
+ */
+
+#define Enqueue_Cube(p_cube, p_queue) Add_Last((p_cube), (p_queue))
+/**
+ * Add the cube '*cube' to the queue '*queue' if the queue is not full
+ * and return 0, however do nothing and return -1.
+ */
+
+#define Dequeue_Cube(p_queue) Remove_First((p_queue))
+/**
+ * Return a pointer on the first cube in the queue if the queue is not
  * empty, however return NULL.
  */
 
@@ -166,7 +199,7 @@ void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top)
  * strategy.
  */
 
-int Select_Building_Materials();
+int Select_Building_Materials(Stack *selected);
 /**
  * This function selects cubes in the map to complete the current
  * stack. It returns 0 on success, -1 if no cubes were found.

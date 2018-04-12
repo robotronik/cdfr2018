@@ -131,3 +131,29 @@ void draw_cubes_obstacles(SDL_Renderer *renderer, SDL_Texture *texture){
 
   SDL_SetRenderTarget(renderer, NULL);
 }
+
+void highlight_cubes(SDL_Renderer *renderer, SDL_Texture *texture, Stack *selected){
+  SDL_SetRenderTarget(renderer, texture);
+
+  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
+  SDL_RenderClear(renderer);
+  
+  
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+  int i; Cube *elt;
+  stack_iterator(i, selected, elt){
+    SDL_Rect rect = {.x = elt->x / RATIO - (CUBE_SIZE / RATIO)/2, .y = elt->y / RATIO - (CUBE_SIZE / RATIO)/2, .w = CUBE_SIZE / RATIO, .h = CUBE_SIZE / RATIO};
+    SDL_SetRenderDrawColor(renderer, 0x40, 0xFF, 0x40, 0xFF);
+    SDL_RenderFillRect(renderer, &rect);
+
+    rect.x += 5;
+    rect.y += 5;
+    rect.w -= 10;
+    rect.h -= 10;
+    SDL_SetRenderDrawColor(renderer, 0xA0, 0xFF, 0xA0, 0x00);
+    SDL_RenderFillRect(renderer, &rect);
+  }
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    
+  SDL_SetRenderTarget(renderer, NULL);
+}

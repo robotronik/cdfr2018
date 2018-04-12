@@ -62,6 +62,9 @@ int main(int argc, char *argv[]){
   SDL_Texture *path = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
   SDL_SetTextureBlendMode(path, SDL_BLENDMODE_BLEND);
 
+  SDL_Texture *highlight = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+  SDL_SetTextureBlendMode(highlight, SDL_BLENDMODE_BLEND);
+
   SDL_Surface *bg_surface = IMG_Load("./aire_jeu.bmp");
   SDL_Texture *bg = SDL_CreateTextureFromSurface(renderer, bg_surface);
   SDL_FreeSurface(bg_surface);
@@ -71,11 +74,15 @@ int main(int argc, char *argv[]){
   Set_Construction_Plan(GREEN, YELLOW, BLUE);
   Stack_Cube(&cube[BLACK], &current_stack);
   cube[BLACK].availability = ZERO_PROBABILITY;
-  Select_Building_Materials();
-  return EXIT_SUCCESS;
+  cube[GREEN].availability = ZERO_PROBABILITY;
+  Stack selected;
+  Select_Building_Materials(&selected);
+  highlight_cubes(renderer, highlight, &selected);
+
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
   draw_cubes_obstacles(renderer, circles);
+
 
   SDL_Rect pos_grid;
   pos_grid.x = 0, pos_grid.y = 0;
@@ -109,6 +116,7 @@ int main(int argc, char *argv[]){
     SDL_RenderCopy(renderer, grid, NULL, &pos_grid);
     SDL_RenderCopy(renderer, circles, NULL, &pos_grid);
     SDL_RenderCopy(renderer, cubes, NULL, &pos_grid);
+    SDL_RenderCopy(renderer, highlight, NULL, &pos_grid);
     SDL_RenderCopy(renderer, path, NULL, &pos_grid);
     SDL_RenderPresent(renderer);
     

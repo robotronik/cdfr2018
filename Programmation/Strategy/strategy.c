@@ -4,6 +4,7 @@
 #include <stdio.h>//TMP
 #include <math.h>
 
+#define min(a, b) ((a<b)?a:b)
 #define max(a, b) ((a>=b)?a:b)
 #define dist(x_a, y_a, x_b, y_b) sqrt(pow(y_b-y_a, 2) + pow(x_b-x_a, 2))
 
@@ -52,35 +53,94 @@ Cube_Set set[NB_SETS] = {
 };
 
 //==================================================//
-//                Stack management                  //
+//                Circular buffer                   //
 //==================================================//
-void Empty_Stack(Stack *stack){
-  stack->start = stack->size = 0;
+void Empty_Circular_Buffer(Circular_Buffer *buff){
+  buff->start = buff->size = 0;
 }
 
-int Stack_Cube(Cube *cube, Stack *stack){
-  if(stack->size == STACK_SIZE){
+int Add_Last(Cube *cube, Circular_Buffer *buff){
+  if(buff->size == CIRCULAR_BUFFER_SIZE){
     return -1;
   }
 
-  stack->data[(stack->start + stack->size)%STACK_SIZE] = cube;
-  stack->size++;
+  buff->data[(buff->start + buff->size)%CIRCULAR_BUFFER_SIZE] = cube;
+  buff->size++;
 
   return 0;
 }
 
-Cube* Unstack_Cube(Stack *stack){
-  if(stack->size == 0){
+int Add_First(Cube *cube, Circular_Buffer *buff){
+  if(buff->size == CIRCULAR_BUFFER_SIZE){
+    return -1;
+  }
+  
+  buff->start = (buff->start - 1)%CIRCULAR_BUFFER_SIZE;
+  buff->data[buff->start] = cube;
+  buff->size++;
+
+  return 0;
+}
+
+Cube *Remove_First(Circular_Buffer *buff){
+  if(buff->size == 0){
     return NULL;
   }
 
-  Cube *tmp = stack->data[stack->start];
-  stack->size--;
-  stack->start = (stack->start + 1)%STACK_SIZE;
+  Cube *tmp = buff->data[buff->start];
+  buff->size--;
+  buff->start = (buff->start + 1)%CIRCULAR_BUFFER_SIZE;
   return tmp;
 }
 
-#define stack_iterator(k, p_stack, p_elt) for((k) = 0, (p_elt) = (p_stack)->data[(p_stack)->start]; (k) < (p_stack)->size; (k)++, (p_elt) = (p_stack)->data[((p_stack)->start + (k))%STACK_SIZE])
+Cube *Remove_Last(Circular_Buffer *buff){
+  if(buff->size == 0){
+    return NULL;
+  }
+
+  Cube *tmp = buff->data[buff->size-1];
+  buff->size--;
+  
+  return tmp;
+}
+
+//==================================================//
+//                 Cubes sort                       //
+//==================================================//
+
+static Cube *cube_sort[NB_CUBES];
+uint16_t from_x, from_y;
+
+static void Init_Cube_Sort(){
+  int i;
+  for(i = 0; i < NB_CUBES; i++){
+    cube_sort[i] = &cube[i];
+  }
+}
+
+static int Compare_Cubes(const void* a, const void* b){
+  Cube *const c_a = *((Cube**)a);
+  Cube *const c_b = *((Cube**)b);
+  if(c_a->availability < c_b->availability){
+    return 1;
+  }else if(c_a->availability == c_b->availability){
+    float dist_a = dist(from_x, from_y, c_a->x, c_a->y);
+    float dist_b = dist(from_x, from_y, c_b->x, c_b->y);
+    if(dist_a > dist_b){
+      return 1;
+    }else if(dist_a == dist_b){
+      return 0;
+    }
+  }
+  return -1;
+} 
+
+
+static void Cube_Sort(uint16_t from_x_, uint16_t from_y_){
+  from_x = from_x_;
+  from_y = from_y_;
+  qsort(cube_sort, NB_CUBES, sizeof(Cube*), Compare_Cubes);
+}
 
 //==================================================//
 //               Init Strategy                      //
@@ -124,6 +184,8 @@ void Init_Strategy(Team _team){
 
   //Stack init
   Init_Stack(&current_stack);
+  
+  Init_Cube_Sort();
 }
 
 #define ADD_PADDING(coord, size, limit) {		\
@@ -244,7 +306,8 @@ typedef enum FSM_Plan_State_E{
 
 static FSM_Plan_State Check_Construction(Stack *stack);
 static int Get_Nb_Cubes_Set(int index_set);
-static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern, uint16_t from_x, uint16_t from_y);
+static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern);
+static int Find_Cubes(Cube_Color color, uint8_t no_pattern, Stack *to_complete, int nmax);
 
 void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top){
   PLAN_TOP = top;
@@ -315,7 +378,7 @@ static FSM_Plan_State Check_Construction(Stack *stack){
   return fsm_plan;
 }
 
-#define CHECK_ACCESSIBILITY(k, color, ncs, mcb, stack) (((CUBE_SET(k, color)).availability >= UNCERTAIN && ((color) != CENTER_COLOR || ((ncs) - (mcb) <= 2)))?&CUBE_SET(k, color):Find_Cube(color, 0, set[k].x, set[k].y))
+#define CHECK_ACCESSIBILITY(k, color, ncs, mcb, stack) (((CUBE_SET(k, color)).availability >= UNCERTAIN && ((color) != CENTER_COLOR || ((ncs) - (mcb) <= 2)))?&CUBE_SET(k, color):Find_Cube(color, 0))
 
 static int Get_Nb_Cubes_Set(int index_set){
   int nb_cubes_set = 0;
@@ -329,58 +392,69 @@ static int Get_Nb_Cubes_Set(int index_set){
   return nb_cubes_set;
 }
 
-static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern, uint16_t from_x, uint16_t from_y){
+static int Find_Cubes(Cube_Color color, uint8_t no_pattern, Stack *to_complete, int nmax){
 
-  Cube *best_cube = NULL;
-  Probability best_availability = ZERO_PROBABILITY;
-  float best_dist = dist(0, 0, AREA_WIDTH, AREA_HEIGHT);
-  
-  int k;
-  for(k = 0; k < NB_CUBES; k++){
-    Cube *const current_cube = &cube[k];
+  int k, n;
+  for(k = 0, n = 0; (k < NB_CUBES) && (n < nmax) && (to_complete->size < STACK_SIZE); k++){
+    Cube *const current_cube = cube_sort[k];
 
     //Checking color
     if((no_pattern && ((current_cube->color == PLAN_TOP)
-		       || (current_cube->color == PLAN_BOTTOM)
+		       || (current_cube->color == PLAN_MIDDLE)
 		       || (current_cube->color == PLAN_BOTTOM)))
        || (!no_pattern && current_cube->color != color)
-       || (color == CENTER_COLOR && Get_Nb_Cubes_Set((current_cube-&cube[0])/CUBES_PER_SET) > 2))
-      break;
+       || (color == CENTER_COLOR && Get_Nb_Cubes_Set((current_cube-&cube[0])/CUBES_PER_SET) > 2)
+       || current_cube->availability <= UNLIKELY)
+      continue;
 
-    //Checking availability
-    if(current_cube->availability < best_availability)
-      break;
-
-    //Checking distance
-    float distance = dist(from_x, from_y, current_cube->x, current_cube->y);
-    if(current_cube->availability > best_availability || distance < best_dist){
-      best_cube = current_cube;
-      best_availability = current_cube->availability;
-      best_dist = distance;
-    }
+    n++;
+    Stack_Cube(current_cube, to_complete);    
   }
 
-  return best_cube;
+  return (n == nmax);
 }
 
-int Select_Building_Materials(){
+static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern){
+  int k;
+  for(k = 0; k < NB_CUBES; k++){
+    Cube *const current_cube = cube_sort[k];
+
+    //Checking color
+    if((no_pattern && ((current_cube->color == PLAN_TOP)
+		       || (current_cube->color == PLAN_MIDDLE)
+		       || (current_cube->color == PLAN_BOTTOM)))
+       || (!no_pattern && current_cube->color != color)
+       || (color == CENTER_COLOR && Get_Nb_Cubes_Set((current_cube-&cube[0])/CUBES_PER_SET) > 2)
+       || current_cube->availability <= UNLIKELY)
+      continue;
+
+    return current_cube;
+  }
+
+  return NULL;
+}
+
+int Select_Building_Materials(Stack *selected){
   //Checking current construction
   FSM_Plan_State plan_state = Check_Construction(&current_stack);
   printf("Plan state : %d\n", plan_state);
 
   Cube_Set *best_set = &set[0];
-  Stack best_stack;
+  Init_Stack(selected);
   float best_distance = dist(0, 0, AREA_WIDTH, AREA_HEIGHT);
   uint8_t best_is_pattern_compatible = 0;
   int best_cubes_number = 0;
 
-  Init_Stack(&best_stack);
+
   int k;
   for(k = 0; k < NB_SETS; k++){
     Cube_Set *const current_set = &set[k];
     Stack stack_set;
     float distance = dist(me.x, me.y, current_set->x, current_set->y);
     Init_Stack(&stack_set);
+    
+    //Sort cubes for finding
+    Cube_Sort(current_set->x, current_set->y);
     
     printf("Checking set %d\n", k);
 
@@ -463,11 +537,7 @@ int Select_Building_Materials(){
     }
 
     //Completing set
-    while(stack_set.size + current_stack.size < 5){
-      Cube *found = Find_Cube(0, 1, current_set->x, current_set->y);
-      if(found == NULL) break;
-      Stack_Cube(found, &stack_set);
-    }
+    Find_Cubes(0, 1, &stack_set, STACK_SIZE - current_stack.size - stack_set.size);
 
     //Evaluating distances empirically
     int i; Cube *elt;
@@ -475,22 +545,36 @@ int Select_Building_Materials(){
       distance += dist(current_set->x, current_set->y, elt->x, elt->y);
     }
     printf("Distance : %f\n", distance);
-    
-    //Making a decision
 
-    if((pattern_compatible && !best_is_pattern_compatible)
-       || (current_set->availability > best_set->availability)
-       || (distance < best_distance)
-       || (nb_cubes_set > best_cubes_number)){
-      
-      printf("Set is the new best.");
+    nb_cubes_set = stack_set.size;
+    //Making a decision
+    if(best_is_pattern_compatible && pattern_compatible){
+      if(current_set->availability < best_set->availability){
+	continue;
+      }
+      else if(current_set->availability == best_set->availability){
+	if(distance > best_distance){
+	  continue;
+	}else if(distance == best_distance){
+	  if(nb_cubes_set <= best_cubes_number){
+	    continue;
+	  }
+	}
+      }
     }
+    
+    printf("compatibility : %d  (%d)\n", pattern_compatible, best_is_pattern_compatible);
+    printf("availability : %d (%d)\n", current_set->availability, best_set->availability);
+    printf("distance : %f (%f)\n", distance, best_distance);
+    printf("cubes number : %d (%d)\n", nb_cubes_set, best_cubes_number);
+    printf("Set is the new best.\n");
+    
     best_set = current_set;
-    Empty_Stack(&best_stack);
+    Empty_Stack(selected);
     stack_iterator(i, &stack_set, elt){
-      best_stack.data[i] = stack_set.data[i];
+      selected->data[i] = stack_set.data[i];
     }
-    best_stack.size = stack_set.size;
+    selected->size = stack_set.size;
 
     best_distance = distance;
     best_is_pattern_compatible = pattern_compatible;
