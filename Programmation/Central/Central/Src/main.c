@@ -110,8 +110,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART6_UART_Init();
-  MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   //==================================================//
@@ -127,7 +127,7 @@ int main(void)
   Init_ToF(&tof[TOF_REAR_RIGHT], 0x60, TOF_RR_RESET_GPIO_Port, TOF_RR_RESET_Pin);
 
   //Enable the polling timer
-  HAL_TIM_Base_Start_IT(&htim1);
+  //HAL_TIM_Base_Start_IT(&htim3);
   
   //==================================================//
   //           UART Protocol Init                     //
