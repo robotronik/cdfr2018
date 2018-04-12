@@ -118,7 +118,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM15_Init();
-  MX_WWDG_Init();
+  //MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
 
   //==================================================
@@ -166,6 +166,8 @@ int main(void)
   //==================================================
   //              Motor & Encoder
   //==================================================
+  AX_Set_Goal_Position(&servo_g, AX_LEFT_CLOSE, AX_NOW);
+  AX_Set_Goal_Position(&servo_d, AX_RIGHT_CLOSE, AX_NOW);
   MOTOR_INIT;
   MOTOR_FC;
   init_encoder(&encoder, &htim2, &htim15);
@@ -184,6 +186,21 @@ int main(void)
 
 
   //https://www.pololu.com/product/1212
+
+  /*while(1)
+  {
+    //AX_Set_Goal_Position(&servo_g, AX_LEFT_OPEN, AX_NOW);
+    //AX_Set_Goal_Position(&servo_d, AX_RIGHT_OPEN, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, AX_ARM_START, AX_NOW);
+    HAL_Delay(1000);
+    //AX_Set_Goal_Position(&servo_g, AX_LEFT_CLOSE, AX_NOW);
+    //AX_Set_Goal_Position(&servo_d, AX_RIGHT_CLOSE, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, AX_ARM_DEPLOY, AX_NOW);
+    HAL_Delay(1000);
+
+    AX_Set_Goal_Position(&servo_ar, AX_ARM_END, AX_NOW);
+    HAL_Delay(1000);
+  }*/
 
 
   imp_goal=0;//warning no positive values
