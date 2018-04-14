@@ -37,8 +37,8 @@ void trace_points(Interpol *pinterp,SDL_Renderer* renderer)
   SDL_SetRenderDrawColor( renderer, 255, 0, 0,0 );
   for(i=0;i<pinterp->n;i++)
   {
-    r.x = pinterp->x[i];
-    r.y = pinterp->y[i];
+    r.x = pinterp->x[i]-POINT_SIZE/2;
+    r.y = pinterp->y[i]-POINT_SIZE/2;
     SDL_RenderFillRect( renderer, &r );
   }
 }
