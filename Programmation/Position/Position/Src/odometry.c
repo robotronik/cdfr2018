@@ -27,11 +27,11 @@ void update_odometry(Odometry *odometry){
 
   if(odometry->theta>PI)//angle limitation to -PI +PI
   {
-    odometry->theta=2*PI-odometry->theta;
+    odometry->theta=odometry->theta-2*PI;
   }
   else if(odometry->theta<=-PI)
   {
-    odometry->theta=2*PI+odometry->theta;
+    odometry->theta=odometry->theta+2*PI;
   }
 }
 
