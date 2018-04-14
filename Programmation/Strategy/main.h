@@ -6,4 +6,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#define GRAPHICS
+
 #endif

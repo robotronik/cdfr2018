@@ -1,4 +1,5 @@
 #include "heap.h"
+#include "map.h"
 
 #ifdef DEBUG
 #include <assert.h>

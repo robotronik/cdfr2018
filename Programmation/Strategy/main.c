@@ -1,6 +1,7 @@
 #include "main.h"
 #include "graphics.h"
 #include "heap.h"
+#include "map.h"
 
 void test_heap(){
   Cell a, b, c, d;
@@ -106,7 +107,8 @@ int main(int argc, char *argv[]){
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
   SDL_RenderClear(renderer);
   SDL_SetRenderTarget(renderer, NULL);
-  
+
+  #ifdef GRAPHICS
   bool run = true;
   unsigned int last_time, time;
   last_time = time = SDL_GetTicks();
@@ -171,6 +173,7 @@ int main(int argc, char *argv[]){
     }
     last_time = SDL_GetTicks();
   }
+  #endif
 
   SDL_DestroyTexture(grid);
   SDL_DestroyTexture(circles);
