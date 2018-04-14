@@ -1,16 +1,23 @@
 #include <stdlib.h>
 #include "strategy.h"
 #include "heap.h"
+#include <math.h>
 
 #define D_ADJ 10
 #define D_DIAG 18
 
 #define INFINITE ((uint16_t) ~0)
+#define max(a,b) (((a)>(b))?(a):(b))
+
+//Chebyshev distance
 #define H(s, goal) ({							\
       uint32_t const dx = abs(s->x - goal->x);				\
       uint32_t const dy = abs(s->y - goal->y);				\
       ((dx > dy)?(10*(dx-dy)+14*dy):(10*(dy-dx)+14*dx));		\
-    })
+      })
+
+//sqrt(pow(s->x - goal->x, 2) + pow(s->y - goal->y, 2))
+//max(abs((goal)->x - (s)->x), abs((goal)->y - (s)->y))
 
 static void init_cells();
 

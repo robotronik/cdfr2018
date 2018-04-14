@@ -32,10 +32,10 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  window = SDL_CreateWindow("DStar_Lite",
+  window = SDL_CreateWindow("Strategy",
 			    SDL_WINDOWPOS_UNDEFINED,
 			    SDL_WINDOWPOS_UNDEFINED,
-			    SCREEN_WIDTH, SCREEN_HEIGHT,
+			    1200, 800,
 			    SDL_WINDOW_OPENGL);
   if(window == NULL){
     fprintf(stderr, "SDL_CreateWindow: %s\n", SDL_GetError());
@@ -43,6 +43,7 @@ int main(int argc, char *argv[]){
   }
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  SDL_RenderSetLogicalSize(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
   SDL_RenderClear(renderer);
@@ -77,8 +78,10 @@ int main(int argc, char *argv[]){
   cube[GREEN].availability = ZERO_PROBABILITY;
   Stack selected;
   Select_Building_Materials(&selected);
+  John_The_Builder(&selected);
   highlight_cubes(renderer, highlight, &selected);
 
+  
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
   draw_cubes_obstacles(renderer, circles);

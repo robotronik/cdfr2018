@@ -7,6 +7,7 @@
 #define min(a, b) ((a<b)?a:b)
 #define max(a, b) ((a>=b)?a:b)
 #define dist(x_a, y_a, x_b, y_b) sqrt(pow(y_b-y_a, 2) + pow(x_b-x_a, 2))
+#define swap(type, a, b) {type tmp = (a); (a) = (b); (b) = tmp;}
 
 Team team;
 Robot me;
@@ -20,6 +21,9 @@ static Cube_Color construction_plan[3];
 static uint8_t valid_plan = 0;
 
 Stack current_stack;
+
+static void Eval_Combination(Cube* comb_ref[], uint8_t mask);
+static void Eval_Permutation(Cube* comb[], int size);
 
 //==================================================//
 //                     Cubes                        //
@@ -584,3 +588,112 @@ int Select_Building_Materials(Stack *selected){
   
   return 0;
 }
+
+
+Queue* John_The_Builder(Stack *materials){
+  Cube *comb_ref[5];
+
+  int k; Cube *elt;
+  stack_iterator(k, materials, elt){
+    comb_ref[k] = elt;
+  }
+  
+  //For each number of cubes possible, generate all permutations
+  int n;
+int m = materials->size;
+  for(n = 1; n <= materials->size; n++){
+    uint8_t mask = (1 << n) - 1;//As most binary '1' as n.
+    uint8_t nb_left;
+    uint8_t current;
+
+    if(n == m){
+      Eval_Combination(comb_ref, mask);
+      continue;
+    }
+    do{
+      //eval
+      //printf("%d\n", mask&(~(1<<materials->size)));
+      Eval_Combination(comb_ref, mask);
+      
+      //Count the number of bits "at left"
+      current = m-1;
+      nb_left = 0;
+      while(mask&(1<<current)){
+	nb_left++;
+	current--;
+      }
+
+      //Get the next bit to move
+      while(!(mask&(1<<current))){
+	current--;
+      }
+      mask &= ((1<<current)-1);
+      mask |= ((1<<(nb_left+1))-1)<<(current+1);
+
+    }while(mask != (((1 << n) - 1) << (materials->size - n)));
+    Eval_Combination(comb_ref, mask);
+  }
+
+  return materials;
+}
+
+static void Eval_Combination(Cube* comb_ref[], uint8_t mask){
+  int i;
+  int c[5];
+  Cube* comb[5];
+
+  int n = 0;
+  for(i = 0; i < 5; i++){
+    if(mask&(1<<i)){
+      comb[n++] = comb_ref[i];
+    }
+    c[i] = 0;
+  }
+
+  Eval_Permutation(comb, n);
+    
+  i = 0;
+  while(i < n){
+    if(c[i] < i){
+      if(!(i%2)){
+	swap(Cube*, comb[0], comb[i]);
+      }else{
+	swap(Cube*, comb[c[i]], comb[i]);
+      }
+
+      Eval_Permutation(comb, n);
+	
+      c[i]++;
+      i = 0;
+    }else{
+      c[i] = 0;
+      i++;
+    }
+  }
+}
+
+static void Eval_Permutation(Cube* comb[], int size){
+   static char color_str[5][16] = {
+     [GREEN] = "GREEN",
+     [YELLOW] = "YELLOW",
+     [ORANGE] = "ORANGE",
+     [BLACK] = "BLACK",
+     [BLUE] = "BLUE"
+   };
+
+   int i;
+int score = 0;
+ Stack test;
+ Init_Stack(&test);
+   for(i = 0; i < size; i++){
+     printf("%s\t", color_str[comb[i]->color]);
+     score += i+1;
+     Stack_Cube(comb[i], &test);
+   }
+   FSM_Plan_State fsm_plan = Check_Construction(&test);
+   if(fsm_plan == FSM_PLAN_COMPLETE){
+     score += 30;
+   }
+   printf("%d\n", score);
+   
+ }

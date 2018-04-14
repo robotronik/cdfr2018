@@ -205,7 +205,7 @@ int Select_Building_Materials(Stack *selected);
  * stack. It returns 0 on success, -1 if no cubes were found.
  */
 
-Cube* John_The_Builder();
+Queue* John_The_Builder(Stack *materials);
 /**
  * This function apply a brute force on the selected building
  * materials to make the best decision possible. It returns a sorted
