@@ -5,11 +5,18 @@
 
 int main(int argc, char *argv[])
 {
-  (void)argc;
-  (void)argv;
+  int imin;
 
   SDL_Window *window;
   SDL_Renderer *renderer;
+
+  if(argc!=3)
+  {
+    printf("enter x and y of the robot\n");
+    return EXIT_FAILURE;
+  }
+
+  float robot_x=atof(argv[1]),robot_y=atof(argv[2]);
 
   if(SDL_Init(SDL_INIT_VIDEO) != 0){
     fprintf(stderr, "SDL_Init error: %s\n", SDL_GetError());
@@ -30,14 +37,22 @@ int main(int argc, char *argv[])
   clear_window(renderer);
   SDL_RenderPresent(renderer);
 
+  float robot_theta=0,thedes,flexion,kc;
   //BEGIN
   Interpol data;
   load_points(&data);
   trace_points(&data,renderer);
 
   interpol_calc(&data);
-  
+
+  trace_robot(robot_x,robot_y,robot_theta,renderer);
   trace_curve(&data,renderer);
+  SDL_RenderPresent(renderer);
+
+  kc=Kc(&data,1,1,robot_x,robot_y,robot_theta,&imin,&thedes,&flexion);
+
+  printf("Imin:%d theta_res:%f flexion:%f Kc:%f\n",imin,thedes,flexion,kc);
+  trace_min(&data,imin,thedes,renderer);
   SDL_RenderPresent(renderer);
   //END
 

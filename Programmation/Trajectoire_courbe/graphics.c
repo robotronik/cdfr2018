@@ -57,3 +57,27 @@ void trace_curve(Interpol *pinterp,SDL_Renderer* renderer)
     SDL_RenderFillRect( renderer, &r );
   }
 }
+
+void trace_robot(float robot_x,float robot_y,float robot_theta,SDL_Renderer* renderer)
+{
+  SDL_Rect r;
+    r.w = POINT_SIZE;
+    r.h = POINT_SIZE;
+  SDL_SetRenderDrawColor( renderer,0, 255, 0,0 );
+  r.x = robot_x-POINT_SIZE/2;
+  r.y = robot_y-POINT_SIZE/2;
+  SDL_RenderFillRect( renderer, &r );
+  SDL_RenderDrawLine(renderer,robot_x,robot_y,robot_x+VECTOR_LENGTH*cos(robot_theta),robot_y+VECTOR_LENGTH*sin(robot_theta));
+}
+
+void trace_min(Interpol *pinterp,int imin,float thedes,SDL_Renderer*renderer)
+{
+  SDL_Rect r;
+    r.w = POINT_SIZE/2;
+    r.h = POINT_SIZE/2;
+  SDL_SetRenderDrawColor( renderer,0, 0, 255,0 );
+  r.x = pinterp->r_x[imin]-POINT_SIZE/4;
+  r.y = pinterp->r_y[imin]-POINT_SIZE/4;
+  SDL_RenderFillRect( renderer, &r );
+  SDL_RenderDrawLine(renderer,pinterp->r_x[imin]-VECTOR_LENGTH*cos(thedes),pinterp->r_y[imin]-VECTOR_LENGTH*sin(thedes),pinterp->r_x[imin]+VECTOR_LENGTH*cos(thedes),pinterp->r_y[imin]+VECTOR_LENGTH*sin(thedes));
+}

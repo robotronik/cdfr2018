@@ -1,6 +1,8 @@
 #ifndef _H__INTERPOL
 #define _H__INTERPOL
 
+#include <math.h>
+
 #define TAB_POINT_LENGTH 400
 #define RESULT_LENGTH 1000
 
@@ -13,5 +15,7 @@ typedef struct Interp_S{
 }Interpol;
 
 void interpol_calc(Interpol *data);
+void proj(Interpol *data,float *ptheta_curve,float *pcurve_distance,float *pcurve_flexion,float robot_x,float robot_y, float robot_theta);
+float Kc(Interpol *data,float z,float w,float robot_x,float robot_y, float robot_theta,int *iret,float *thedes,float *flexio);
 
 #endif
