@@ -672,28 +672,112 @@ static void Eval_Combination(Cube* comb_ref[], uint8_t mask){
   }
 }
 
-static void Eval_Permutation(Cube* comb[], int size){
-   static char color_str[5][16] = {
-     [GREEN] = "GREEN",
-     [YELLOW] = "YELLOW",
-     [ORANGE] = "ORANGE",
-     [BLACK] = "BLACK",
-     [BLUE] = "BLUE"
-   };
+typedef enum Direction_E{
+  FROM_UP,
+  FROM_RIGHT,
+  FROM_BOT,
+  FROM_LEFT
+}Direction;
 
-   int i;
-int score = 0;
- Stack test;
- Init_Stack(&test);
-   for(i = 0; i < size; i++){
-     printf("%s\t", color_str[comb[i]->color]);
-     score += i+1;
-     Stack_Cube(comb[i], &test);
-   }
-   FSM_Plan_State fsm_plan = Check_Construction(&test);
-   if(fsm_plan == FSM_PLAN_COMPLETE){
-     score += 30;
-   }
-   printf("%d\n", score);
+#define IS_REMOVED(set_index, color) (CUBE_SET((set_index), (color)).availability == ZERO_PROBABILITY)
+
+static void Eval_Permutation(Cube* comb[], int size){
+  static char color_str[5][16] = {
+    [GREEN] = "GREEN",
+    [YELLOW] = "YELLOW",
+    [ORANGE] = "ORANGE",
+    [BLACK] = "BLACK",
+    [BLUE] = "BLUE"
+  };
+  
+  int i;
+  int score = 0;
+  Stack test;
+  Init_Stack(&test);
+
+  Probability prob_backup[5];
+
+  uint8_t ok = 0;
+  for(i = 0; i < size; i++){
+    Cube*const c = comb[i];
+    int set_i = (c-cube)/CUBES_PER_SET;
+    //Backup proba
+    prob_backup[i] = c->availability;
+
+    //Check if the cube can be taken
+    int d;
+
+    ok = 0;
+    for(d = 0; d < 4; d++){
+      switch(c->color){
+      case GREEN:
+	if(IS_REMOVED(set_i, YELLOW)
+	   || (d == FROM_RIGHT && team == ORANGE_TEAM)
+	   || (d == FROM_LEFT && team == GREEN_TEAM))
+	  ok = 1;
+	break;
+      case YELLOW:
+	switch(d){
+	case FROM_UP:
+	  if(IS_REMOVED(set_i, BLACK) 
+	     && IS_REMOVED(set_i, GREEN)
+	     && IS_REMOVED(set_i, ORANGE))
+	    ok = 1;
+	  break;
+	case FROM_RIGHT:
+	  if(IS_REMOVED(set_i, BLACK)
+	     && IS_REMOVED(set_i, BLUE)
+	     && IS_REMOVED(set_i, ((team==GREEN_TEAM)?ORANGE:GREEN)))
+	    ok = 1;
+	  break;
+	case FROM_BOT:
+	  if(IS_REMOVED(set_i, BLUE)
+	     && IS_REMOVED(set_i, ORANGE)
+	     && IS_REMOVED(set_i, GREEN))
+	    ok = 1;
+	  break;
+	case FROM_LEFT:
+	  if(IS_REMOVED(set_i, BLUE)
+	     && IS_REMOVED(set_i, BLACK)
+	     && IS_REMOVED(set_i, ((team==GREEN_TEAM)?GREEN:ORANGE)))
+	    ok = 1;
+	  break;
+	}
+	break;
+      case ORANGE:
+	if(IS_REMOVED(set_i, YELLOW)
+	   || (d == FROM_LEFT && team == ORANGE_TEAM)
+	   || (d == FROM_RIGHT && team == GREEN_TEAM))
+	  ok = 1;
+	break;
+      case BLACK:
+	if(d == FROM_UP || IS_REMOVED(set_i, YELLOW))
+	  ok = 1;
+	break;
+      case BLUE:
+	if(d == FROM_BOT || IS_REMOVED(set_i, YELLOW))
+	  ok = 1;
+	break;
+      }
+    }
+    if(!ok) break;
+    c->availability = ZERO_PROBABILITY;
+    
+    score += i+1;
+    Stack_Cube(c, &test);
+  }
+
+  //Restore proba
+  for(i = 0; i < size; i++){
+    if(ok)
+      printf("%s\t", color_str[comb[i]->color]);
+    comb[i]->availability = prob_backup[i];
+  }
+  
+  FSM_Plan_State fsm_plan = Check_Construction(&test);
+  if(fsm_plan == FSM_PLAN_COMPLETE){
+    score += 30;
+  }
+  printf("%d\n", score);
    
  }
