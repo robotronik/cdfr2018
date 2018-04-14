@@ -1,7 +1,10 @@
 #include <stdlib.h>
+#include <math.h>
+
 #include "strategy.h"
 #include "heap.h"
-#include <math.h>
+#include "map.h"
+
 
 #define D_ADJ 10
 #define D_DIAG 18

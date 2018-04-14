@@ -1,6 +1,7 @@
 #include "main.h"
 #include "graphics.h"
 #include "heap.h"
+#include "map.h"
 
 void test_heap(){
   Cell a, b, c, d;

@@ -1,4 +1,5 @@
 #include "graphics.h"
+#include "map.h"
 
 void draw_empty_grid(SDL_Renderer *renderer, SDL_Texture *texture){
   SDL_SetRenderTarget(renderer, texture);

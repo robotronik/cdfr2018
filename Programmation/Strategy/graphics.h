@@ -4,6 +4,7 @@
 #include <math.h>
 #include <SDL2/SDL.h>
 #include "strategy.h"
+#include "map.h"
 
 #define RATIO 2
 #define SCREEN_WIDTH 1500
