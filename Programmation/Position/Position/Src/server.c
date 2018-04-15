@@ -62,19 +62,12 @@ void get_odo(RC_Server* pserver)
   RC_Server_Return(pserver, odometry.x,odometry.y,odometry.theta);
 }
 
-void set_2_points(RC_Server* pserver)//5 parameters
-{
-  //fsm_position_pts.instance.run=;
-  fsm = (FSM_Instance*volatile) &fsm_pos_pts;
-  RC_Server_Return(pserver);
-}
-
 void set_pos(RC_Server* pserver) //2 parameters
 {
   RC_Server_Get_Args(pserver,
          &fsm_pos_abs.linear_speed,
          &fsm_pos_abs.pos);
-  fsm_pos_pts.instance.run=FSM_Pos_Init;
+  fsm_pos_abs.instance.run=FSM_Pos_Init;
   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
   RC_Server_Return(pserver);
 }
@@ -84,7 +77,49 @@ void set_angle(RC_Server* pserver)//2 parameters
   RC_Server_Get_Args(pserver,
          &fsm_pos_abs.angular_speed,
          &fsm_pos_abs.angle);
-  fsm_pos_pts.instance.run=FSM_Angle_Init;
+  fsm_pos_abs.instance.run=FSM_Angle_Init;
   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
   RC_Server_Return(pserver);
+}
+
+void set_n_points(RC_Server* pserver)//1 parameters
+{
+  RC_Server_Get_Args(pserver, &fsm_pos_pts.points.n);
+  RC_Server_Return(pserver);
+  fsm_pos_pts.reception=0;
+}
+
+void get_n_points(RC_Server* pserver)//1 parameters
+{
+  RC_Server_Get_Args(pserver, &fsm_pos_pts.points);
+  RC_Server_Return(pserver);
+  fsm_pos_pts.reception++;
+  if(fsm_pos_pts.reception==fsm_pos_pts.points.n)
+  {
+      interpol_calc(&fsm_pos_pts.points);
+      fsm_pos_pts.instance.run=FSM_Pts_Run;
+      fsm = (FSM_Instance*volatile) &fsm_pos_pts;//all data received
+      fsm->status=FSM_RUNNING;
+  }
+}
+
+void set_n_points_asser(RC_Server* pserver)
+{
+  float Kp,Ki,Kd;
+  RC_Server_Get_Args(pserver,
+                     &fsm_pos_pts.z,
+                     &fsm_pos_pts.w,
+                     &fsm_pos_pts.vc,
+                     &fsm_pos_pts.vr,
+                     &Kp,
+                     &Ki,
+                     &Kd,
+                     &fsm_pos_pts.speed_percent_tolerance);
+  RC_Server_Return(pserver);
+  fsm_pos_pts.pid_speed_l.Kp=Kp;
+  fsm_pos_pts.pid_speed_l.Ki=Ki;
+  fsm_pos_pts.pid_speed_l.Kd=Kd;
+  fsm_pos_pts.pid_speed_r.Kp=Kp;
+  fsm_pos_pts.pid_speed_r.Ki=Ki;
+  fsm_pos_pts.pid_speed_r.Kd=Kd;
 }
