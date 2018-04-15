@@ -24,6 +24,7 @@
 //ROBOT
 #define ROBOT_X0 200
 #define ROBOT_Y0 450
+#define ROBOT_A0 0
 
 //Cubes sets
 #define CUBES_PER_SET (NB_CUBES/NB_SETS)
@@ -44,19 +45,38 @@
 #define TP_X 894
 #define TP_Y 2000-TP_H
 
+//Costs evaluation
+#define ALIGN_COST 1.0
+#define ALIGN_DIST (ROBOT_RADIUS-CUBE_SIZE)
+#define APPROACH_DIST (ROBOT_RADIUS+CUBE_SIZE/2) 
+#define SPEED 0.3 //m/s
+#define MOVE_COEFF (1./(SPEED*1000.))
+#define STACK_COST 1.0
+#define ROTATE_COEFF (1./3.141592)
+
 //Teams
 typedef enum Team_E{
   GREEN_TEAM,
   ORANGE_TEAM,
 }Team;
 
-//Robots
-typedef struct Robot_S{
-  uint32_t last_detection;
-  uint16_t x, y;
-  uint16_t speed_x, speed_y;
-  uint16_t exists;
-}Robot;
+typedef enum FSM_Plan_State_E{
+  FSM_PLAN_NONE,
+  FSM_PLAN_T,
+  FSM_PLAN_TM,
+  FSM_PLAN_B,
+  FSM_PLAN_BM,
+  FSM_PLAN_COMPLETE
+}FSM_Plan_State;
+
+typedef enum Direction_E{
+  FROM_UP,
+  FROM_RIGHT,
+  FROM_BOT,
+  FROM_LEFT
+}Direction;
+
+
 
 //Cube colors
 typedef enum Cube_Color_E{
@@ -86,6 +106,28 @@ typedef struct Cube_Set_S{
   uint16_t x, y;
   Probability availability;
 }Cube_Set;
+
+//Robots
+typedef struct Other_Robot_S{
+  uint32_t last_detection;
+  uint16_t x, y;
+  uint16_t speed_x, speed_y;
+  uint16_t exists;
+}Other_Robot;
+
+typedef struct Target_S{
+  Cube *c;
+  Direction d;
+  uint16_t approach_x, approach_y;
+  struct Target_S *suiv;
+}Target;
+
+typedef struct Robot_S{
+  uint16_t x, y;
+  float angle;
+  uint8_t on_target;
+  Target last_target;
+}Robot;
 
 #endif
 

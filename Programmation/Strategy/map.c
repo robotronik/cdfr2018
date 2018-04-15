@@ -96,7 +96,8 @@ void Refresh_Map(){
   //Cubes
   int n;
   for(n = 0; n < NB_CUBES; n++){
-    circle_limit(cube[n].x, cube[n].y, (CUBE_SIZE*1.4)/2);
+    if(cube[n].availability > ZERO_PROBABILITY)
+      circle_limit(cube[n].x, cube[n].y, (CUBE_SIZE*1.4)/2);
   }
   
   //Construction zones
