@@ -16,10 +16,12 @@ typedef enum P_Functions_E{
   P_RESET,
   P_SET_ASSER_SUM,
   P_SET_ASSER_DIFF,
+  P_SET_N_POINTS_ASSER,
   P_SET_ODO,
   P_GET_ODO,
   P_BALEC,
-  P_SET_2_POINTS,
+  P_SET_N_POINTS,
+  P_GET_N_POINTS,
   P_SET_POS,
   P_SET_ANGLE
 }P_Functions;
@@ -42,6 +44,8 @@ void get_odo(RC_Server* pserver);
 void set_pos(RC_Server* pserver);
 void set_angle(RC_Server* pserver);
 
-void set_2_points(RC_Server* pserver);
+void set_n_points(RC_Server* pserver);//use to idicate the number of interpolation points
+void get_n_points(RC_Server* pserver);
+void set_n_points_asser(RC_Server* pserver);
 
 #endif

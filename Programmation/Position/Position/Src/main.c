@@ -57,6 +57,8 @@
 
 #include "server.h"
 #include "fsm_master.h"
+
+#include "interpol.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -70,6 +72,10 @@ PID_DATA pid_sum;
 PID_DATA pid_diff;
 
 extern FSM_Instance *volatile fsm;
+extern FSM_Position_Pts fsm_pos_pts;
+extern volatile int ENCODER_DIST;//distance between encoders
+extern volatile int ENCODER_STEP_DIST;//distance for 1 encoder step/2
+extern volatile int deltaL;
 
 /* USER CODE END PV */
 
@@ -142,6 +148,7 @@ int main(void)
   RC_Server_Add_Function(&P_server, P_RESET, reset, "", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&P_server, P_SET_ASSER_SUM, set_asser_sum, "fffif", "", RC_IMMEDIATE);//sets the pid parameters P I D steps tolerance and speed tolerance
   RC_Server_Add_Function(&P_server, P_SET_ASSER_DIFF, set_asser_diff, "fffif", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_SET_N_POINTS_ASSER, set_n_points_asser, "ffffffff", "", RC_IMMEDIATE);//z w vc vr P I D speed_percent_tolerance
 
 //all values are in cm, rad and seconds
 
@@ -151,7 +158,8 @@ int main(void)
   RC_Server_Add_Function(&P_server, P_SET_POS, set_pos, "ff", "", RC_IMMEDIATE);//speed distance in cm makes the robot go forard or backward
   RC_Server_Add_Function(&P_server, P_SET_ANGLE, set_angle, "ff", "", RC_IMMEDIATE);
 
-  RC_Server_Add_Function(&P_server, P_SET_2_POINTS, set_2_points, "fffff", "", RC_IMMEDIATE);//gives 2 points for position interpolation from current position
+  RC_Server_Add_Function(&P_server, P_SET_N_POINTS, set_n_points, "i", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_GET_N_POINTS, get_n_points, "ff", "", RC_IMMEDIATE);//reception of the points by packets of 1
 
   RC_Server_Add_Function(&P_server, P_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
 
@@ -161,6 +169,8 @@ int main(void)
   /*            PID INIT                            */
   /**************************************************/
   int Te = 10;//in ms
+  int prec_steps_l=0,prec_steps_r=0;
+  float kc=0,speed_percent=0,vr=0,vl=0,wc=0,val_r,val_l;//for interpolation
   //PID Sum
   pid_sum = (PID_DATA) {.Te = 0.01,
 				 .Kp = 0.01,
@@ -175,6 +185,14 @@ int main(void)
 				  .Kd = 0.0001};
   pid_init(&pid_diff);
 
+  fsm_pos_pts.pid_speed_l=(PID_SPEED_DATA) {.Te = 0.01,
+				 .Kp = 0.01,
+				 .Ki = 0.01,
+				 .Kd = 0.0001};
+  fsm_pos_pts.pid_speed_r=(PID_SPEED_DATA) {.Te = 0.01,
+				 .Kp = 0.01,
+				 .Ki = 0.01,
+				 .Kd = 0.0001};
   /**************************************************/
   /*            Odometry Start                      */
   /**************************************************/
@@ -237,11 +255,26 @@ int main(void)
     fsm->run(fsm);
 
     //Process PID
-    cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));
-    cor_diff = pid(&pid_diff, diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps));
+    if(fsm->run!=FSM_Pts_Run)//simple mode
+    {
+      cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));
+      cor_diff = pid(&pid_diff, diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps));
 
-    float val_r = cor_sum + cor_diff;
-    float val_l = cor_sum - cor_diff;
+      val_r = cor_sum + cor_diff;
+      val_l = cor_sum - cor_diff;
+    }
+    else//interpolation mode
+    {
+      kc=Kc(&(fsm_pos_pts.points),fsm_pos_pts.z,fsm_pos_pts.w,&speed_percent);
+      wc=kc*fsm_pos_pts.vr;
+      vr=fsm_pos_pts.vc*speed_percent+wc*ENCODER_DIST/2;
+      vl=fsm_pos_pts.vc*speed_percent-wc*ENCODER_DIST/2;
+      val_r=pid_speed(&fsm_pos_pts.pid_speed_r,vr-(odometry.encoder_r.steps-prec_steps_r)/Te);
+      val_l=pid_speed(&fsm_pos_pts.pid_speed_l,vl-(odometry.encoder_l.steps-prec_steps_l)/Te);
+      prec_steps_l=odometry.encoder_l.steps;
+      prec_steps_r=odometry.encoder_r.steps;
+      if(speed_percent<fsm_pos_pts.speed_percent_tolerance) fsm->status=FSM_SUCCESS;
+    }
 
     //Motors control
     DRIVE_MOTOR_R(val_r);
