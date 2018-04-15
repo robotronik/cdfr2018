@@ -4,18 +4,16 @@
 
 void interpol_calc(Interpol *data)
 {
-  int i,j,n=data->n,n1=n-1;
+  int i=0,j,n=data->n,n1=n-1;
   float tfact,t,tpow;
 
-  data->r_x[0]=data->x[0];
-  data->r_y[0]=data->y[0];//to avoid a division by 0
-  for(i=1;i<RESULT_LENGTH;i++)
+  for(i=0;i<RESULT_LENGTH-1;i++)
   {
     t=(float)i/(RESULT_LENGTH-1);
-    tfact=(1-t)/t;
+    tfact=t/(1-t);
     data->r_x[i]=0;
     data->r_y[i]=0;
-    tpow=pow(t,n-1);
+    tpow=pow(1-t,n-1);
     for(j=0;j<n;j++)
     {
       data->r_x[i]+=tpow*data->x[j];
@@ -23,6 +21,8 @@ void interpol_calc(Interpol *data)
       tpow*=tfact*(n1-j)/(j+1);
     }
   }
+  data->r_x[RESULT_LENGTH-1]=data->x[n-1];
+  data->r_y[RESULT_LENGTH-1]=data->y[n-1];//to avoid a division by 0
 }
 
 float d2(float x1,float y1,float x2, float y2)
@@ -31,9 +31,9 @@ float d2(float x1,float y1,float x2, float y2)
   return dx*dx+dy*dy;
 }
 
-float Kc(Interpol *data,float z,float w,float robot_x,float robot_y, float robot_theta,int *iret,float *thedes,float *flexio)//TODO on F3 global variables
+float Kc(Interpol *data,float z,float w,float *speed_percent,float robot_x,float robot_y, float robot_theta,int *iret,float *thedes,float *flexio)//TODO on F3 global variables
 {
-  float dmin=d2(robot_x,robot_y,data->r_x[0],data->r_y[0]),d,dx,dy,dx2,dy2,theta_des,flexion,theta_e,k1=w*w,k2=2*z*w;
+  float dmin=d2(robot_x,robot_y,data->r_x[0],data->r_y[0]),d,dx,dy,dx2,dy2,theta_des,flexion,theta_e,k1=w*w,k2=2*z*w,completion;
   int i,imin=0;
 
   for(i=1;i<RESULT_LENGTH;i++)//minimal distance calculation
@@ -48,16 +48,34 @@ float Kc(Interpol *data,float z,float w,float robot_x,float robot_y, float robot
     }
   }
 
+  completion=(float)imin/(RESULT_LENGTH-1);//speed generator
+  if(completion<0.333333) *speed_percent=0.05+(completion/0.333333)*(1-0.05);
+  else if(completion<0.666667) *speed_percent=1;
+  else *speed_percent=(1-completion)/(1-0.666667);
+
+  if(imin==0) imin=1;//to avoid errors during derivation operations
+  if(imin==RESULT_LENGTH-1) imin=RESULT_LENGTH-2;
+
+
   dx=(data->r_x[imin+1]-data->r_x[imin-1])/2;//angle of the curve
   dy=(data->r_y[imin+1]-data->r_y[imin-1])/2;
-  if(dx==0) theta_des=0;
+  if(dx==0) theta_des=PI/2;
   else theta_des=atan(dy/dx);
 
   dx2=(data->r_x[imin+1]+data->r_x[imin-1]-2*data->r_x[imin])/4;
   dy2=(data->r_y[imin+1]+data->r_y[imin-1]-2*data->r_y[imin])/4;
   flexion=(dx*dy2-dy*dx2)/pow(sqrt(dx*dx+dy*dy),3);//flexion of the curve
 
-  theta_e=robot_theta-theta_des;
+  if(robot_theta>PI/2)//TODO use an other variable
+  {
+    robot_theta=robot_theta-PI;//keep the direction
+  }
+  else if(robot_theta<-PI/2)
+  {
+    robot_theta=robot_theta+PI;//keep the direction
+  }
+
+  theta_e=robot_theta-theta_des;//limits the robot angle to -PI/2 PI/2
   if(theta_e>PI) theta_e=theta_e-2*PI;
   else if(theta_e<=-PI) theta_e=theta_e+2*PI;
 

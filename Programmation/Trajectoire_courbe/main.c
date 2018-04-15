@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   clear_window(renderer);
   SDL_RenderPresent(renderer);
 
-  float robot_theta=0,thedes,flexion,kc;
+  float robot_theta=0,thedes,flexion,kc,speed_percent;
   //BEGIN
   Interpol data;
   load_points(&data);
@@ -49,9 +49,9 @@ int main(int argc, char *argv[])
   trace_curve(&data,renderer);
   SDL_RenderPresent(renderer);
 
-  kc=Kc(&data,1,1,robot_x,robot_y,robot_theta,&imin,&thedes,&flexion);
+  kc=Kc(&data,1,1,&speed_percent,robot_x,robot_y,robot_theta,&imin,&thedes,&flexion);
 
-  printf("Imin:%d theta_res:%f flexion:%f Kc:%f\n",imin,thedes,flexion,kc);
+  printf("Imin:%d theta_res:%f flexion:%f speed_percent:%f Kc:%f\n",imin,thedes,flexion,speed_percent,kc);
   trace_min(&data,imin,thedes,renderer);
   SDL_RenderPresent(renderer);
   //END
