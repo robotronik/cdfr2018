@@ -91,12 +91,14 @@ void set_n_points(RC_Server* pserver)//1 parameters
 
 void get_n_points(RC_Server* pserver)//1 parameters
 {
-  RC_Server_Get_Args(pserver, &fsm_pos_pts.points);
+  RC_Server_Get_Args(pserver, &fsm_pos_pts.points.x[fsm_pos_pts.reception], &fsm_pos_pts.points.y[fsm_pos_pts.reception]);
   RC_Server_Return(pserver);
   fsm_pos_pts.reception++;
   if(fsm_pos_pts.reception==fsm_pos_pts.points.n)
   {
       interpol_calc(&fsm_pos_pts.points);
+      pid_speed_init(&fsm_pos_pts.pid_speed_l);
+      pid_speed_init(&fsm_pos_pts.pid_speed_r);
       fsm_pos_pts.instance.run=FSM_Pts_Run;
       fsm = (FSM_Instance*volatile) &fsm_pos_pts;//all data received
       fsm->status=FSM_RUNNING;
