@@ -88,6 +88,8 @@ void draw_cubes(SDL_Renderer *renderer, SDL_Texture *texture){
   for(i = 0; i < NB_SETS; i++){
     for(j = 0; j < CUBES_PER_SET; j++){
       Cube *c = &cube[i*CUBES_PER_SET+j];
+      if(c->availability == ZERO_PROBABILITY)
+	continue;
       uint8_t alpha = (c->availability==LIKELY)?0xFF:0xA0;
       switch(c->color){
       case GREEN:
@@ -133,7 +135,7 @@ void draw_cubes_obstacles(SDL_Renderer *renderer, SDL_Texture *texture){
   SDL_SetRenderTarget(renderer, NULL);
 }
 
-void highlight_cubes(SDL_Renderer *renderer, SDL_Texture *texture, Stack *selected){
+void highlight_cubes(SDL_Renderer *renderer, SDL_Texture *texture, Cube *selected[CUBES_PER_SET], int n){
   SDL_SetRenderTarget(renderer, texture);
 
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
@@ -141,9 +143,9 @@ void highlight_cubes(SDL_Renderer *renderer, SDL_Texture *texture, Stack *select
   
   
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-  int i; Cube *elt;
-  stack_iterator(i, selected, elt){
-    SDL_Rect rect = {.x = elt->x / RATIO - (CUBE_SIZE / RATIO)/2, .y = elt->y / RATIO - (CUBE_SIZE / RATIO)/2, .w = CUBE_SIZE / RATIO, .h = CUBE_SIZE / RATIO};
+  int i;
+  for(i = 0; i < n; i++){
+    SDL_Rect rect = {.x = selected[i]->x / RATIO - (CUBE_SIZE / RATIO)/2, .y = selected[i]->y / RATIO - (CUBE_SIZE / RATIO)/2, .w = CUBE_SIZE / RATIO, .h = CUBE_SIZE / RATIO};
     SDL_SetRenderDrawColor(renderer, 0x40, 0xFF, 0x40, 0xFF);
     SDL_RenderFillRect(renderer, &rect);
 

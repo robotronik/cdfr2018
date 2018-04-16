@@ -42,7 +42,7 @@ Cube *Remove_Last(Circular_Buffer *buff);
  * empty, however return NULL.
  */
 
-#define stack_iterator(k, p_stack, p_elt) for((k) = 0, (p_elt) = (p_stack)->data[(p_stack)->start]; (k) < (p_stack)->size; (k)++, (p_elt) = (p_stack)->data[((p_stack)->start + (k))%STACK_SIZE])
+#define buff_iterator(k, p_stack, p_elt) for((k) = 0, (p_elt) = (p_stack)->data[(p_stack)->start]; (k) < (p_stack)->size; (k)++, (p_elt) = (p_stack)->data[((p_stack)->start + (k))%STACK_SIZE])
 
 //Queue Management
 #define Init_Queue(p_queue) Empty_Queue((p_queue))

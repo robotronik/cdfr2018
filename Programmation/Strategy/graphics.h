@@ -19,6 +19,6 @@ void draw_cubes(SDL_Renderer *renderer, SDL_Texture *texture);
 void draw_circle(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Color *color, SDL_Rect *rect);
 void draw_cubes_obstacles(SDL_Renderer *renderer, SDL_Texture *texture);
 void draw_path(SDL_Renderer *renderer, SDL_Texture *texture, Cell *goal);
-void highlight_cubes(SDL_Renderer *renderer, SDL_Texture *texture, Stack *selected);
+void highlight_cubes(SDL_Renderer *renderer, SDL_Texture *texture, Cube *selected[CUBES_PER_SET], int n);
 
 #endif

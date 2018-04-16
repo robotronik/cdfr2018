@@ -73,15 +73,14 @@ int main(int argc, char *argv[]){
 
   //STRATEGY
   Init_Strategy(GREEN_TEAM);
-  Set_Construction_Plan(GREEN, YELLOW, BLUE);
-  Stack_Cube(&cube[BLACK], &current_stack);
-  cube[BLACK].availability = ZERO_PROBABILITY;
-  cube[GREEN].availability = ZERO_PROBABILITY;
-  Stack selected;
-  Select_Building_Materials(&selected);
-  John_The_Builder(&selected);
-  highlight_cubes(renderer, highlight, &selected);
-
+  Set_Construction_Plan(ORANGE, GREEN, BLUE);
+  //Set_Construction_Plan(GREEN, YELLOW, BLUE);
+  //Update_Construction(&cube[BLACK], &current_construction);
+  //cube[BLACK].availability = ZERO_PROBABILITY;
+  //cube[GREEN].availability = ZERO_PROBABILITY;
+  Refresh_Map();
+  Compute_Building_Strategy();
+  highlight_cubes(renderer, highlight, strat.materials, strat.nb_materials);
   
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
