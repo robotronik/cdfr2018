@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -47,24 +47,24 @@
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
-#include "Robotronik_corp_pid.h"
-#include "ax_12a_hal.h"
-#include "Z_axis.h"
-#include "encoder.h"
-
 #include "robotronik_protocol.h"
 #include "robotronik_protocol_stm32f3.h"
 #include "remote_call.h"
-#include "functions.h"
+#include "ax_12a_hal.h"
+#include "Robotronik_corp_pid.h"
+#include "encoder.h"
+
+#include "Z_axis.h"
+#include "server.h"
+#include "fsm_master.h"
+#include "fsm_start.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-volatile PID_DATA pid_z;
-volatile Encoder encoder;
-volatile int imp_goal;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -73,11 +73,14 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 
-AX_Interface interface;
-
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
+void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* p_hwwdg){
+  if(p_hwwdg == &hwwdg){
+
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -88,7 +91,6 @@ AX_Interface interface;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -116,10 +118,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM15_Init();
-  MX_WWDG_Init();
+  //MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
-  extern RP_Interface Z_interface;
-  extern RC_Server Z_server;
 
   //==================================================
   //                    UART
@@ -131,50 +131,30 @@ int main(void)
   //              Remote Call Server
   //==================================================
   RC_Server_Init(&Z_server,&Z_interface);
-  RC_Server_Add_Function(&Z_server, Z_GET_STATE,get_state,"","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_RESET,reset,"","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_SET_ASSER,set_asser,"fffif","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_BALEC,balec, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE,punch_bee, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_IN,arm_in, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_OUT,arm_out, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK,stack, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last,"","",RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "","", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "","", RC_IMMEDIATE);
 
+  RC_Server_Add_Function(&Z_server, Z_RESET, reset, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_SET_ASSER, set_asser, "fffif", "", RC_IMMEDIATE);
+
+  RC_Server_Add_Function(&Z_server, Z_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
+
+  RC_Server_Add_Function(&Z_server, Z_BALEC, balec, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_IN, arm_in, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_OUT, arm_out, "", "b", RC_IMMEDIATE);
+  //RC_Server_Add_Function(&Z_server, Z_STACK_FIRST, stack_first, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK, stack, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last, "", "b",RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "", "b", RC_IMMEDIATE);
 
   //==================================================
   //                  AX-12A
   //==================================================
-  interface.receive = AX_Receive_HAL;
-  interface.send = AX_Send_HAL;
-  interface.set_direction = AX_Set_Direction_HAL;
-  interface.delay = HAL_Delay;
+  Z_Init_AX();
 
-  AX servo_ar = {.id = 1, .interface = &interface};
-  AX servo_g = {.id = 2, .interface = &interface};
-  AX servo_d = {.id = 3, .interface = &interface};
-  //AX_Say_Hello(&servo);
-  /*AX_Configure_ID(&servo, 2);
-  //AX_Configure_Angle_Limit(&servo_ar, 255, 750);
-  //AX_Configure_Angle_Limit(&servo_g, 430, 540);
-  //AX_Configure_Angle_Limit(&servo_d, 480, 590);
-  while(1)
-  {
-    HAL_Delay(10);
-  }
-  */
-  /*AX_Set_Goal_Position(&servo_ar, 255, AX_NOW);
-  AX_Set_Goal_Position(&servo_g, 430, AX_NOW);
-  AX_Set_Goal_Position(&servo_d, 590, AX_NOW);
-  HAL_Delay(2000);
-  HAL_GPIO_TogglePin(LED_GPIO_Port,LED_Pin);
-  AX_Set_Goal_Position(&servo_ar, 750, AX_NOW);
-  AX_Set_Goal_Position(&servo_g, 540, AX_NOW);
-  AX_Set_Goal_Position(&servo_d, 480, AX_NOW);
-  HAL_Delay(2000);*/
-  int Te=10;
+  //==================================================
+  //                  Default PID
+  //==================================================
   pid_z.Kp=0.001;
   pid_z.Ki=0;
   pid_z.Kd=0;
@@ -183,27 +163,62 @@ int main(void)
   pid_z.speed_tolerance=100;
   pid_init(&pid_z);
 
+  //==================================================
+  //              Motor & Encoder
+  //==================================================
+  AX_Set_Goal_Position(&servo_g, AX_LEFT_CLOSE, AX_NOW);
+  AX_Set_Goal_Position(&servo_d, AX_RIGHT_CLOSE, AX_NOW);
+  MOTOR_INIT;
+  MOTOR_FC;
+  init_encoder(&encoder, &htim2, &htim15);
+  start_encoder(&encoder);
+
+  //==================================================
+  //                    FSM
+  //==================================================
+  FSM_Start fsm_start;
+  fsm = (FSM_Instance*volatile) &fsm_start;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_Delay(500);
 
 
   //https://www.pololu.com/product/1212
-  MOTOR_INIT;
-  MOTOR_FC;
-  init_encoder(&encoder,&htim2,&htim15);
-  start_encoder(&encoder);
 
-  int n=0;
+  /*while(1)
+  {
+    //AX_Set_Goal_Position(&servo_g, AX_LEFT_OPEN, AX_NOW);
+    //AX_Set_Goal_Position(&servo_d, AX_RIGHT_OPEN, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, AX_ARM_START, AX_NOW);
+    HAL_Delay(1000);
+    //AX_Set_Goal_Position(&servo_g, AX_LEFT_CLOSE, AX_NOW);
+    //AX_Set_Goal_Position(&servo_d, AX_RIGHT_CLOSE, AX_NOW);
+    AX_Set_Goal_Position(&servo_ar, AX_ARM_DEPLOY, AX_NOW);
+    HAL_Delay(1000);
 
-  imp_goal=-2000;//warning no positive values
+    AX_Set_Goal_Position(&servo_ar, AX_ARM_END, AX_NOW);
+    HAL_Delay(1000);
+  }*/
+
+
+  imp_goal=0;//warning no positive values
+  fsm->run=FSM_Start_Init;
   while (1)
   {
-    float voltage=pid(&pid_z,imp_goal-encoder.steps);
+    //Watchdog refresh
+    //HAL_WWDG_Refresh(&hwwdg);
+
+    //Asser
+    float voltage = pid(&pid_z, imp_goal - encoder.steps);
     MOTOR_VOLTAGE(voltage);
-    HAL_Delay(Te);
+
+    //FSM
+    fsm->run(fsm);
+
+    //Delay
+    HAL_Delay(Z_DELAY);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -223,7 +238,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -236,7 +251,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+    /**Initializes the CPU, AHB and APB busses clocks
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -258,11 +273,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time 
+    /**Configure the Systick interrupt time
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick 
+    /**Configure the Systick
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -299,7 +314,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

@@ -3,8 +3,10 @@
  * You may freely rage with this software
  */
 
-#ifndef __Robotronik_corp_pid_H
-#define __Robotronik_corp_pid_H
+#ifndef Robotronik_corp_pid_H
+#define Robotronik_corp_pid_H
+
+#include <stdlib.h>
 
 typedef struct{
   float Kp;

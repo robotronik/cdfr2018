@@ -2,8 +2,9 @@
 #define __ENCODER_H_
 
 #include "stm32f3xx_hal.h"
+#include <stdlib.h>
 
-#define ENCODER_MAX 1440
+#define ENCODER_MAX 14400
 
 //TEST ENCODER
 #define TEST_ENCODER 0

@@ -15,11 +15,7 @@ int update_encoder(volatile Encoder *encoder){
 
   int dl = cnt - encoder->last_pos;
   encoder->last_pos = cnt;
-  if(dl > 1){
-    dl = -1;
-  }else if(dl < -1){
-    dl = +1;
-  }
+  dl=dl%(ENCODER_MAX-1);
 
   encoder->steps += dl;
   return dl;
