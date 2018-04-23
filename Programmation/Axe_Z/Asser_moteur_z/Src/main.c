@@ -204,10 +204,11 @@ int main(void)
 
 
   imp_goal=0;//warning no positive values
+  fsm->run=FSM_Start_Init;
   while (1)
   {
     //Watchdog refresh
-    HAL_WWDG_Refresh(&hwwdg);
+    //HAL_WWDG_Refresh(&hwwdg);
 
     //Asser
     float voltage = pid(&pid_z, imp_goal - encoder.steps);

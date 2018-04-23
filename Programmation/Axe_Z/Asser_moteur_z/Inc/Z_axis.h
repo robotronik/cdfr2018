@@ -107,7 +107,7 @@ int Z_Goal_Reached();
 #define PpresenceLim P2-10
 
 #define PWM_MAX 100//max 255
-#define VOLTAGE_FC 4
+#define VOLTAGE_FC 2.5
 
 int cube_present();
 
