@@ -99,14 +99,14 @@ void Z_Set_Goal(int goal);
 int Z_Goal_Reached();
 
 /*** PID ***/
-#define P0 -4000
-#define P1 -4050
-#define P2 -3000
-#define P3 -3050
+#define P0 8000
+#define P1 4050
+#define P2 3000
+#define P3 3050
 #define Ppresence P2-20
 #define PpresenceLim P2-10
 
-#define PWM_MAX 100//max 255
+#define PWM_MAX 50//max 255
 #define VOLTAGE_FC 2.5
 
 int cube_present();
