@@ -10,6 +10,7 @@
 #define SENSOR_DIST_TANGENT 40 //TO ADAPT
 #define SENSOR_DIST_PERP 60 //TO ADAPT
 #define OBS_RADIUS 150 //TO ADAPT
+#define OBS_NODETECT_COUNT 5
 
 //Sensors
 typedef enum Sensor_E{
@@ -29,6 +30,8 @@ typedef struct Obstacle_S{
   int16_t x, y;
   //Guessed position (center)
   int16_t x_c, y_c;
+  uint16_t distance_c;
+  uint8_t no_detect;
 }Obstacle;
 
 extern Obstacle obstacle[N_MAX_OBSTACLES];

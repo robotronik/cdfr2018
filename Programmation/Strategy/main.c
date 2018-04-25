@@ -85,6 +85,7 @@ int main(int argc, char *argv[]){
 
   Update_Obstacles(&me, 450, 550, 0, 0);
   Print_Obstacles();
+
   
   highlight_cubes(renderer, highlight, strat.materials, strat.nb_materials);
   draw_empty_grid(renderer, grid);

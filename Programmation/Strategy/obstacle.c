@@ -58,7 +58,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
      && (dist(in_range[REAR_LEFT].x, in_range[REAR_LEFT].y,
 	      in_range[REAR_RIGHT].x, in_range[REAR_RIGHT].y)
 	 < 2*OBS_RADIUS)){
-    Compute_Obstacle(&updated[n++], ref, SENSOR_DIST_TANGENT + (rl_d + rr_d)/2, 0);
+    Compute_Obstacle(&updated[n++], ref, -(SENSOR_DIST_TANGENT + (rl_d + rr_d)/2), 0);
   }else{
     if(present[REAR_LEFT])
       updated[n++] = in_range[FRONT_LEFT];
@@ -70,17 +70,54 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   //are not a duplicate
   for(i = 0; n < N_MAX_OBSTACLES && i < nb_obstacles; i++){
     Obstacle *const obs = &obstacle[i];
+
+    //Has it expired ?
     if(ticks - obs->last_detection > OBSTACLE_LIFETIME){
       continue;
     }
+    
+    obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
+
+    //Is it a duplicate ?
     int j = 0;
     for(j = 0; j < n; j++){
-      if(dist(obs->x_c, obs->y_c, obstacle[j].x_c, obstacle[j].y_c) < 2*OBS_RADIUS)
+      if(dist(obs->x_c, obs->y_c, updated[j].x_c, updated[j].y_c) < 2*OBS_RADIUS)
 	break;
     }
-    if(j == n){
-      updated[n++] = *obs;
+    if(j != n){
+      break;
     }
+
+    //Is it explicitely NOT in range ?
+    {
+      int16_t x_ro = obs->x_c - ref->x;
+      int16_t y_ro = obs->y_c - ref->y;
+      
+      //Rotate
+      x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
+      y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
+
+      if((y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)//In range
+	 && (
+	     (x_ro > 0
+	     && (!fl_d || (x_ro + OBS_RADIUS < fl_d))//No detection at left
+	     && (!fr_d || (x_ro + OBS_RADIUS < fr_d))//No detection at right
+	     )
+	     ||
+	     (x_ro < 0
+	      && (!rl_d || (-x_ro + OBS_RADIUS < rl_d))
+	      && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
+	      )
+	     )
+	 ){
+	obs->no_detect++;
+      }
+    }
+    
+    if(obs->no_detect == OBS_NODETECT_COUNT)
+      break;
+    
+    updated[n++] = *obs;
   }
 
   //Then copy the updated table to the global table
@@ -96,29 +133,31 @@ static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int1
 
   //Distance ref -> obstacle
   obs->distance = sqrt(x_rel*x_rel + y_rel*y_rel);
-  Print("Distance : %"PRId16"\n", obs->distance);
+  //Print("Distance : %"PRId16"\n", obs->distance);
 
   //Change coordinate system to compute ref -> obstacle vector 
   int16_t x_ro = (float) x_rel*cos(ref->angle) - (float) y_rel*sin(ref->angle);
   int16_t y_ro = (float) x_rel*sin(ref->angle) + (float) y_rel*cos(ref->angle);
-  Print("(%d, %d)\n", x_ro, y_ro);
+  //Print("(%d, %d)\n", x_ro, y_ro);
   
   //Compute obstacle position
   obs->x = ref->x + x_ro;
   obs->y = ref->y + y_ro;
-  Print("(%d, %d)\n", obs->x, obs->y);
+  //Print("(%d, %d)\n", obs->x, obs->y);
   
   //Guess center of obstacle, assuming it's a robot
   float coeff = 1. + (float) OBS_RADIUS / (float) obs->distance;
   obs->x_c = ref->x + coeff * (float) x_ro;
   obs->y_c = ref->y + coeff * (float) y_ro;
-  Print("(%d, %d)\n", obs->x_c, obs->y_c);
+  obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
+  //Print("(%d, %d)\n", obs->x_c, obs->y_c);
   
   //Check if the obstacle is within the map
   if((obs->x_c >= OBS_RADIUS)
      && (obs->y_c >= OBS_RADIUS)
      && (obs->x_c <= AREA_WIDTH - OBS_RADIUS)
      && (obs->y_c <= AREA_HEIGHT - OBS_RADIUS)){
+    obs->no_detect = 0;
     return 0;
   }else{
     return -1;
