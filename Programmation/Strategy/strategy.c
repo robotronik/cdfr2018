@@ -7,8 +7,6 @@
 
 #include "map.h"
 
-#define min(a, b) ((a<b)?a:b)
-#define max(a, b) ((a>=b)?a:b)
 #define angle(x_a, y_a, x_b, y_b) (atan2((y_b) - (y_a), (x_b) - (x_a)))
 
 #define swap(type, a, b) {type tmp = (a); (a) = (b); (b) = tmp;}

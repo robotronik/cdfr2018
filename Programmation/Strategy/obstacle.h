@@ -44,4 +44,11 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
 
 void Print_Obstacles(void);
 
+int Materialize_Obstacle(Obstacle *obs, uint16_t margin);
+/**
+ * Try to materialize an obstacle for integration in path
+ * finding. Returns 0 on success. If it fails (ie. the obstacle is too
+ * close), returns -1.
+ */
+
 #endif

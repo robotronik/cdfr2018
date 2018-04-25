@@ -10,7 +10,7 @@
 #define D_DIAG 18
 
 #define INFINITE ((uint16_t) ~0)
-#define max(a,b) (((a)>(b))?(a):(b))
+//#define max(a,b) (((a)>(b))?(a):(b))
 
 //Chebyshev distance
 #define H(s, goal) ({							\

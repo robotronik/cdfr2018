@@ -83,7 +83,8 @@ int main(int argc, char *argv[]){
   Refresh_Map();
   Compute_Building_Strategy();
 
-  Update_Obstacles(&me, 450, 550, 0, 0);
+  Update_Obstacles(&me, 0, 1025, 0, 0);
+  Materialize_Obstacle(&obstacle[0], 100);
   Print_Obstacles();
 
   
@@ -91,6 +92,7 @@ int main(int argc, char *argv[]){
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
   draw_cubes_obstacles(renderer, circles);
+  draw_robots(renderer, circles);
 
   SDL_Rect pos_grid;
   pos_grid.x = 0, pos_grid.y = 0;

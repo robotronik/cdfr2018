@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "strategy.h"
+#include "map.h"
 #include "interface.h"
 
 Obstacle obstacle[N_MAX_OBSTACLES];
@@ -25,10 +26,10 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     [REAR_LEFT] = -(SENSOR_DIST_TANGENT + rl_d),
     [REAR_RIGHT] = -(SENSOR_DIST_TANGENT + rr_d)};
   int16_t y_rel[4] = {
-    [FRONT_LEFT] = SENSOR_DIST_PERP,
-    [FRONT_RIGHT] = -SENSOR_DIST_PERP,
-    [REAR_LEFT] = SENSOR_DIST_PERP,
-    [REAR_RIGHT] = -SENSOR_DIST_PERP};
+    [FRONT_LEFT] = -SENSOR_DIST_PERP,
+    [FRONT_RIGHT] = SENSOR_DIST_PERP,
+    [REAR_LEFT] = -SENSOR_DIST_PERP,
+    [REAR_RIGHT] = SENSOR_DIST_PERP};
   uint32_t ticks = Get_Ticks();
 
   //Compute obstacles
@@ -171,4 +172,45 @@ void Print_Obstacles(void){
     Print("Obstacle %d : %u, %" PRIu16 ", (%" PRId16 ", %" PRId16"), (%"PRId16", %"PRId16")\n",
 	  i, obs->last_detection, obs->distance, obs->x, obs->y, obs->x_c, obs->y_c);
   }
+}
+
+int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
+  //Check if the obstacle will not overlay our robot
+  uint16_t r = OBS_RADIUS + ROBOT_RADIUS + margin;
+  Print("Radius : %" PRIu16 "\n", r);
+  if(dist(me.x, me.y, obs->x_c, obs->y_c) <= (r + 1.415*SQUARE_SIZE)){
+    return -1;
+  }
+
+  
+  uint16_t X0 = obs->x_c/SQUARE_SIZE, Y0 = obs->y_c/SQUARE_SIZE;
+  uint16_t dx = obs->x_c%SQUARE_SIZE, dy = obs->y_c%SQUARE_SIZE;
+
+  //Number of cubes
+  int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
+  Print("N : %d\n", N);
+  
+  //Check if this circle can be drawn
+  if((X0 < N-1) || (X0 > MAP_WIDTH - N) || (Y0 < N-1) || (Y0 > MAP_HEIGHT - N)){
+    Print("fail %d %d", X0, Y0);
+    return -1;
+  }
+
+  //Draw the circle
+  int X = 0;
+  int R = N*SQUARE_SIZE - SQUARE_SIZE/2;
+  int DX = 0;
+  for(X = 0; X < N; X++, DX += SQUARE_SIZE){
+    float DY = (sqrt(R*R - DX*DX) - SQUARE_SIZE/2);
+    int NB_Y = 1 + (DY-SQUARE_SIZE/2.)/SQUARE_SIZE;
+    int Y;
+    for(Y = 0; Y < NB_Y; Y++){
+      map[Y0 + Y][X0 + X].obstacle = 1;
+      map[Y0 + Y][X0 - X].obstacle = 1;
+      map[Y0 - Y][X0 + X].obstacle = 1;
+      map[Y0 - Y][X0 - X].obstacle = 1;
+    }
+  }
+  
+  return 0;
 }
