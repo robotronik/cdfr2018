@@ -23,7 +23,6 @@ typedef struct Building_Strategy_S{
 //Global variables
 extern Team team;
 extern Robot me;
-extern Other_Robot other_robots[3];
 extern Cube cube[NB_CUBES];
 extern Cube_Set set[NB_SETS];
 
@@ -31,6 +30,9 @@ extern uint8_t built_buildings;
 extern uint16_t score;
 extern Construction current_construction;
 extern Building_Strategy strat;
+
+//Global defines
+#define dist(x_a, y_a, x_b, y_b) sqrt(pow((y_b)-(y_a), 2) + pow((x_b)-(x_a), 2))
 
 void Init_Construction(Construction *construction);
 int Update_Construction(Cube *c, Construction *construction);

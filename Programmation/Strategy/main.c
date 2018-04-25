@@ -2,6 +2,7 @@
 #include "graphics.h"
 #include "heap.h"
 #include "map.h"
+#include "obstacle.h"
 
 void test_heap(){
   Cell a, b, c, d;
@@ -73,6 +74,7 @@ int main(int argc, char *argv[]){
 
   //STRATEGY
   Init_Strategy(GREEN_TEAM);
+  
   Set_Construction_Plan(ORANGE, GREEN, BLUE);
   //Set_Construction_Plan(GREEN, YELLOW, BLUE);
   //Update_Construction(&cube[BLACK], &current_construction);
@@ -80,12 +82,14 @@ int main(int argc, char *argv[]){
   //cube[GREEN].availability = ZERO_PROBABILITY;
   Refresh_Map();
   Compute_Building_Strategy();
-  highlight_cubes(renderer, highlight, strat.materials, strat.nb_materials);
+
+  Update_Obstacles(&me, 450, 550, 0, 0);
+  Print_Obstacles();
   
+  highlight_cubes(renderer, highlight, strat.materials, strat.nb_materials);
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
   draw_cubes_obstacles(renderer, circles);
-
 
   SDL_Rect pos_grid;
   pos_grid.x = 0, pos_grid.y = 0;
@@ -99,9 +103,14 @@ int main(int argc, char *argv[]){
   if(end == NULL){
     printf("FUUUUUUUUUUUUUUUCK !\n");
   }
+
+
+  
   draw_grid_obs(renderer, obs);
 
   draw_path(renderer, path, end);
+
+  
 
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
   SDL_RenderClear(renderer);

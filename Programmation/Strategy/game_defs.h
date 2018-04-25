@@ -107,14 +107,6 @@ typedef struct Cube_Set_S{
   Probability availability;
 }Cube_Set;
 
-//Robots
-typedef struct Other_Robot_S{
-  uint32_t last_detection;
-  uint16_t x, y;
-  uint16_t speed_x, speed_y;
-  uint16_t exists;
-}Other_Robot;
-
 typedef struct Target_S{
   Cube *c;
   Direction d;

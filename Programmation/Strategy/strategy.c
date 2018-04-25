@@ -9,14 +9,12 @@
 
 #define min(a, b) ((a<b)?a:b)
 #define max(a, b) ((a>=b)?a:b)
-#define dist(x_a, y_a, x_b, y_b) sqrt(pow(y_b-y_a, 2) + pow(x_b-x_a, 2))
 #define angle(x_a, y_a, x_b, y_b) (atan2((y_b) - (y_a), (x_b) - (x_a)))
 
 #define swap(type, a, b) {type tmp = (a); (a) = (b); (b) = tmp;}
 
- Team team;
+Team team;
 Robot me;
-Other_Robot other_robots[3];
 
 uint8_t built_buildings;
 uint16_t score;
@@ -115,9 +113,6 @@ static void Cube_Sort(uint16_t from_x_, uint16_t from_y_){
 //               Init Strategy                      //
 //==================================================//
 
-#define BORDER_SIZE (ROBOT_RADIUS/SQUARE_SIZE + ((ROBOT_RADIUS%SQUARE_SIZE > SQUARE_SIZE/2)?1:0))
-static uint8_t border[BORDER_SIZE][BORDER_SIZE];
-
 void Init_Strategy(Team _team){
   team = _team;
   me.x = (team == GREEN_TEAM)?ROBOT_X0:(AREA_WIDTH-ROBOT_X0);
@@ -136,15 +131,6 @@ void Init_Strategy(Team _team){
 
   //Map positions
   Init_Map();
-
-  //Border
-  int i, j;
-  for(i = 0; i < BORDER_SIZE; i++){
-    int j_max = .5 + cos(asin((i+.5)/BORDER_SIZE));
-    for(j = 0; j < j_max; j++){
-      border[i][j] = 1;
-    }
-  }
     
   Refresh_Map();
 
@@ -720,7 +706,7 @@ static void Eval_Permutation(Cube* comb[], int size){
     c->availability = ZERO_PROBABILITY;
     f_robot = next_robot;
     cost_accum += best_cost;
-    printf("%d", best_d);
+    //printf("%d", best_d);
   }
  
   //Return to CZ
@@ -730,7 +716,7 @@ static void Eval_Permutation(Cube* comb[], int size){
   for(i = 0; i < size; i++){
     comb[i]->availability = prob_backup[i];
     if(best_d != -1){
-      printf("%s\t", color_str[comb[i]->color]);
+      //printf("%s\t", color_str[comb[i]->color]);
     }
   }
   
@@ -740,7 +726,7 @@ static void Eval_Permutation(Cube* comb[], int size){
   score += score_per_size[f_const.size];
   
   if(best_d != -1){
-    printf("Rank : %f (%d)\n", (float)score/cost_accum, score);
+    //printf("Rank : %f (%d)\n", (float)score/cost_accum, score);
   }
 }
 
