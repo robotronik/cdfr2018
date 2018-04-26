@@ -62,6 +62,11 @@ remote_call.c \
 tof.c \
 system.c \
 pi_client.c \
+heap.c \
+map.c \
+astar.c \
+obstacle.c \
+strategy.c \
 Drivers/VL53L0X/API/vl53l0x_api.c \
 Drivers/VL53L0X/API/vl53l0x_api_calibration.c \
 Drivers/VL53L0X/API/vl53l0x_api_core.c \

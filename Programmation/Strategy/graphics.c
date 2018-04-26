@@ -1,5 +1,6 @@
 #include "graphics.h"
 #include "map.h"
+#include "obstacle.h"
 
 void draw_empty_grid(SDL_Renderer *renderer, SDL_Texture *texture){
   SDL_SetRenderTarget(renderer, texture);
@@ -129,6 +130,32 @@ void draw_cubes_obstacles(SDL_Renderer *renderer, SDL_Texture *texture){
     rect.y = cube[i].y / RATIO;
     rect.w = rect.h = ((CUBE_SIZE / 2) + (int) (ROBOT_RADIUS)) / RATIO;
     SDL_Color c = {.r = 0xFF, .g = 0x00, .b = 0x00, .a = 0x40};
+    draw_circle(renderer, texture, &c, &rect);
+  }
+
+  SDL_SetRenderTarget(renderer, NULL);
+}
+
+void draw_robots(SDL_Renderer *renderer, SDL_Texture *texture){
+  SDL_SetRenderTarget(renderer, texture);
+  SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
+  
+
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+  
+  SDL_Rect rect;
+  rect.x = me.x / RATIO;
+  rect.y = me.y / RATIO;
+  rect.w = rect.h = ((int) (ROBOT_RADIUS)) / RATIO;
+  SDL_Color c = {.r = 0x00, .g = 0xFF, .b = 0x00, .a = 0xA0};
+  draw_circle(renderer, texture, &c, &rect);
+
+  int i;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    rect.x = obs->x_c / RATIO;
+    rect.y = obs->y_c / RATIO;
+    rect.w = rect.h = ((int) OBS_RADIUS + ROBOT_RADIUS + 100) / RATIO;
     draw_circle(renderer, texture, &c, &rect);
   }
 

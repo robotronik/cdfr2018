@@ -4,15 +4,9 @@
 #include "main.h"
 #include "tim.h"
 #include "pi_client.h"
+#include "strategy.h"
 
 #define JACK_FILTER 5
-
-//Team enum
-typedef enum Team_E{
-  //Just swap these two enums to mirror the select button
-  GREEN_TEAM = GPIO_PIN_RESET,
-  ORANGE_TEAM = GPIO_PIN_SET
-}Team;
 
 Team wait_start();
 /**

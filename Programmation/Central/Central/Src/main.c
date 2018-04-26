@@ -50,6 +50,8 @@
 #include "pi_client.h"
 #include "tof.h"
 #include <stdio.h>
+#include "strategy.h"
+#include "map.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -159,7 +161,19 @@ int main(void)
   Team t = wait_start();
   PI_Start();
 
-  HAL_Delay(5000);
+  
+  Init_Strategy(GREEN_TEAM);
+  Set_Construction_Plan(ORANGE, GREEN, BLUE);
+  volatile uint32_t ticks = HAL_GetTick();
+  Refresh_Map();//8ms
+  Cell *start = &Get_Cell(me.x, me.y);
+  int x_goal = MAP_WIDTH-3;
+  int y_goal = MAP_HEIGHT-3;
+  Cell *end = Compute_Path(start, &map[y_goal][x_goal]);//11ms
+  Compute_Building_Strategy();//110ms
+  ticks = HAL_GetTick() - ticks;
+
+  HAL_Delay(ticks);
   //volatile int jean_michel_segfault = *((int*)99999999999);
   //PI_Asser_Test();
 
