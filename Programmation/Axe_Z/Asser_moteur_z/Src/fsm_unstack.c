@@ -6,7 +6,7 @@ void FSM_Unstack_Init(FSM_Instance *fsm)
   imp_goal=P0;
   if(reached(&pid_z,imp_goal-encoder.steps))
   {
-      fsm->run=FSM_Place_Open;
+      fsm->run=FSM_Unstack_Open;
   }
 }
 

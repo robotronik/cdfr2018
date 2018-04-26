@@ -17,6 +17,8 @@ float pid(volatile PID_DATA *pid, int eps)
 
 int reached(volatile PID_DATA *pid,int eps)
 {
-  if(abs(eps)<pid->position_tolerance && (abs(eps-pid->prev_eps))/pid->Te<pid->speed_tolerance) return 1;
+  if(abs(eps) < pid->position_tolerance
+     //&& (abs(eps-pid->prev_eps))/pid->Te < pid->speed_tolerance <-- BALEC
+     ) return 1;
   return 0;
 }

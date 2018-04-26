@@ -155,11 +155,11 @@ int main(void)
   //==================================================
   //                  Default PID
   //==================================================
-  pid_z.Kp=0.006*0.6;//Ziegler-Nichols
+  pid_z.Kp=0.004*0.6;//Ziegler-Nichols
   pid_z.Ki=0.005/2;
   pid_z.Kd=0.00001;
   pid_z.Te=0.01;
-  pid_z.position_tolerance=1000;
+  pid_z.position_tolerance=2000;
   pid_z.speed_tolerance=1000;
   pid_init(&pid_z);
 
@@ -204,7 +204,9 @@ int main(void)
 
 
   imp_goal=0;//warning no negative values
-  fsm->run=FSM_Unstack_Init;
+  //fsm_stack.last = 0;
+  //fsm->run=FSM_Stack_Init;
+  stack(&Z_server);
   while (1)
   {
     //Watchdog refresh

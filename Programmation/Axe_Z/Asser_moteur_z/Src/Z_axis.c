@@ -94,6 +94,10 @@ inline int Z_Is_Closed(){
   return Z_Check_AX_Goal(AX_LEFT_CLOSE, AX_RIGHT_CLOSE);
 }
 
+inline int Z_Is_Closed_Cube(){
+  return Z_Check_AX_Goal(AX_LEFT_CLOSE-20, AX_RIGHT_CLOSE+20);
+}
+
 void Z_Set_Goal(int goal){
   imp_goal = goal;
 }

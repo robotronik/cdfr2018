@@ -39,10 +39,10 @@ FSM_Instance *volatile fsm;
 #define AX_LEFT_OPEN 430
 #define AX_RIGHT_OPEN 590
 
-#define AX_LEFT_OPEN_SMALL 430
-#define AX_RIGHT_OPEN_SMALL 590
+#define AX_LEFT_OPEN_SMALL 500
+#define AX_RIGHT_OPEN_SMALL 520
 
-#define AX_CLOSE_LOAD 250
+#define AX_CLOSE_LOAD 100
 
 #define AX_ARM_START 270
 #define AX_ARM_DEPLOY 525
@@ -90,6 +90,7 @@ void Z_Close();
  */
 
 int Z_Is_Closed();
+int Z_Is_Closed_Cube();
 /**
  * Return 1 if the pliers is closed, 0 if it's not, -1 on error.
  */
@@ -99,15 +100,15 @@ void Z_Set_Goal(int goal);
 int Z_Goal_Reached();
 
 /*** PID ***/
-#define P0 29000
-#define P1 2700
-#define P2 100
-#define P3 50
-#define Ppresence P2-20
-#define PpresenceLim P2-10
+#define P0 32000 //Position basse
+#define P1 28000 //Rouler
+#define P2 2000  //Au dessus du cube
+#define P3 1800 //Max
+#define Ppresence P2+200
+#define PpresenceLim P2+100
 
 #define PWM_MAX 50//max 255
-#define VOLTAGE_FC 2.5
+#define VOLTAGE_FC 3
 
 int cube_present();
 
