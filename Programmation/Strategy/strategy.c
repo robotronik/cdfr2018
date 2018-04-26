@@ -22,6 +22,16 @@ static uint8_t valid_plan = 0;
 static int score_per_size[6] = {0, 1, 1+2, 1+2+3, 1+2+3+4, 1+2+3+4+5};
 
 Construction current_construction;
+Target target_list[5];
+int nb_targets = 0;
+
+char color_str[5][16] = {
+    [GREEN] = "GREEN",
+    [YELLOW] = "YELLOW",
+    [ORANGE] = "ORANGE",
+    [BLACK] = "BLACK",
+    [BLUE] = "BLUE"
+  };
 
 #define PLAN_TOP construction_plan[0]
 #define PLAN_MIDDLE construction_plan[1]
@@ -30,8 +40,8 @@ Construction current_construction;
 static int Get_Nb_Cubes_Set(int index_set);
 static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern);
 static int Find_Cubes(Cube_Color color, uint8_t no_pattern, Cube *to_complete[CUBES_PER_SET], int *current_size, int nmax);
-static void Eval_Combination(Cube* comb_ref[], uint8_t mask);
-static void Eval_Permutation(Cube* comb[], int size);
+static void Eval_Combination(Cube* comb_ref[], uint8_t mask, float *best_rank);
+static void Eval_Permutation(Cube* comb[], int size, float *best_rank);
 static float Eval_Move(Robot *robot, uint16_t dest_x, uint16_t dest_y);
 static float Eval_Align_Stack(Target *t, Robot *robot);
 static float Eval_Place(Robot *robot);
@@ -221,7 +231,7 @@ Building_Strategy strat;
 
 void Compute_Building_Strategy(){
   strat.nb_materials = Select_Building_Materials(strat.materials);
-  printf("Nb materials : %d\n", strat.nb_materials);
+  //printf("Nb materials : %d\n", strat.nb_materials);
   John_The_Builder();
   //Eval_Move(&me, 205, 450);
   
@@ -285,7 +295,7 @@ static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern){
 
 int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
   //Checking current construction
-  printf("Plan state : %d\n", current_construction.plan_state);
+  //printf("Plan state : %d\n", current_construction.plan_state);
 
   Cube_Set *best_set = &set[0];
   float best_distance = dist(0, 0, AREA_WIDTH, AREA_HEIGHT);
@@ -304,7 +314,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
     //Sort cubes for finding
     Cube_Sort(current_set->x, current_set->y);
     
-    printf("Checking set %d\n", k);
+    //printf("Checking set %d\n", k);
 
     if(current_set->availability == ZERO_PROBABILITY) continue;
     
@@ -380,7 +390,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
 
     //Checking pattern compatibility
     if(best_is_pattern_compatible && !pattern_compatible){
-      printf("Ignoring uncompatible set\n");
+      //printf("Ignoring uncompatible set\n");
       continue;
     }
 
@@ -393,7 +403,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
     for(i = 0; i < nb_found; i++){
       distance += dist(current_set->x, current_set->y, found_cubes[i]->x, found_cubes[i]->y);
     }
-    printf("Distance : %f\n", distance);
+    //printf("Distance : %f\n", distance);
 
     nb_cubes_set = nb_found;
     //Making a decision
@@ -412,11 +422,11 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
       }
     }
     
-    printf("compatibility : %hhu (%hhu)\n", pattern_compatible, best_is_pattern_compatible);
+    /*printf("compatibility : %hhu (%hhu)\n", pattern_compatible, best_is_pattern_compatible);
     printf("availability : %d (%d)\n", current_set->availability, best_set->availability);
     printf("distance : %f (%f)\n", distance, best_distance);
     printf("cubes number : %hhu (%d)\n", nb_cubes_set, best_cubes_number);
-    printf("Set is the new best.\n");
+    printf("Set is the new best.\n");*/
     
     best_set = current_set;
     for(i = 0; i < nb_found; i++){
@@ -427,7 +437,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
     best_is_pattern_compatible = pattern_compatible;
     best_cubes_number = nb_cubes_set;
     best_found = nb_found;
-    printf("\n");
+    //printf("\n");
   }
   
   return best_found;
@@ -437,6 +447,8 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
 void John_The_Builder(){
   Cube *comb_ref[5];
 
+  float best_rank = 0;
+  
   //Copy selected materials to comb_ref
   int i;
   for(i = 0; i < strat.nb_materials; i++){
@@ -452,13 +464,13 @@ void John_The_Builder(){
     uint8_t current;
 
     if(n == m){
-      Eval_Combination(comb_ref, mask);
+      Eval_Combination(comb_ref, mask, &best_rank);
       continue;
     }
     do{
       //eval
       //printf("%d\n", mask&(~(1<<materials->size)));
-      Eval_Combination(comb_ref, mask);
+      Eval_Combination(comb_ref, mask, &best_rank);
       
       //Count the number of bits "at left"
       current = m-1;
@@ -476,11 +488,11 @@ void John_The_Builder(){
       mask |= ((1<<(nb_left+1))-1)<<(current+1);
 
     }while(mask != (((1 << n) - 1) << (m - n)));
-    Eval_Combination(comb_ref, mask);
+    Eval_Combination(comb_ref, mask, &best_rank);
   }
 }
 
-static void Eval_Combination(Cube* comb_ref[], uint8_t mask){
+static void Eval_Combination(Cube* comb_ref[], uint8_t mask, float *best_rank){
   int i;
   int c[5];
   Cube* comb[5];
@@ -494,7 +506,7 @@ static void Eval_Combination(Cube* comb_ref[], uint8_t mask){
     c[i] = 0;
   }
 
-  Eval_Permutation(comb, n);
+  Eval_Permutation(comb, n, best_rank);
     
   i = 0;
   while(i < n){
@@ -505,7 +517,7 @@ static void Eval_Combination(Cube* comb_ref[], uint8_t mask){
 	swap(Cube*, comb[c[i]], comb[i]);
       }
 
-      Eval_Permutation(comb, n);
+      Eval_Permutation(comb, n, best_rank);
 	
       c[i]++;
       i = 0;
@@ -629,15 +641,7 @@ static float Eval_Target(Target *t, Robot *robot){
   return cost;
 }
 
-static void Eval_Permutation(Cube* comb[], int size){
-  static char color_str[5][16] = {
-    [GREEN] = "GREEN",
-    [YELLOW] = "YELLOW",
-    [ORANGE] = "ORANGE",
-    [BLACK] = "BLACK",
-    [BLUE] = "BLUE"
-  };
-  
+static void Eval_Permutation(Cube* comb[], int size, float *best_rank){  
   //Temporary data
   Construction f_const = current_construction;
   Robot f_robot = me;
@@ -724,6 +728,14 @@ static void Eval_Permutation(Cube* comb[], int size){
   score += score_per_size[f_const.size];
   
   if(best_d != -1){
+    float rank = (float) score / cost_accum;
+    if(rank > *best_rank){
+      *best_rank = rank;
+      nb_targets = size;
+      for(i = 0; i < nb_targets; i++){
+	target_list[i] = target_list_tmp[i];
+      }
+    }
     //printf("Rank : %f (%d)\n", (float)score/cost_accum, score);
   }
 }

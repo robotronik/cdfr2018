@@ -31,6 +31,10 @@ extern uint16_t score;
 extern Construction current_construction;
 extern Building_Strategy strat;
 
+extern Target target_list[5];
+extern int nb_targets;
+extern char color_str[5][16];
+
 //Global defines
 #define dist(x_a, y_a, x_b, y_b) sqrt(pow((y_b)-(y_a), 2) + pow((x_b)-(x_a), 2))
 

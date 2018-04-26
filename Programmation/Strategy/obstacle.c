@@ -177,7 +177,7 @@ void Print_Obstacles(void){
 int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   //Check if the obstacle will not overlay our robot
   uint16_t r = OBS_RADIUS + ROBOT_RADIUS + margin;
-  Print("Radius : %" PRIu16 "\n", r);
+  //Print("Radius : %" PRIu16 "\n", r);
   if(dist(me.x, me.y, obs->x_c, obs->y_c) <= (r + 1.415*SQUARE_SIZE)){
     return -1;
   }
@@ -188,11 +188,10 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
 
   //Number of cubes
   int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
-  Print("N : %d\n", N);
+  //Print("N : %d\n", N);
   
   //Check if this circle can be drawn
   if((X0 < N-1) || (X0 > MAP_WIDTH - N) || (Y0 < N-1) || (Y0 > MAP_HEIGHT - N)){
-    Print("fail %d %d", X0, Y0);
     return -1;
   }
 

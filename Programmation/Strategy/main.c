@@ -83,6 +83,11 @@ int main(int argc, char *argv[]){
   Refresh_Map();
   Compute_Building_Strategy();
 
+  int i;
+  for(i = 0; i < nb_targets; i++){
+    printf("%s %d\n", color_str[target_list[i].c->color], target_list[i].d);
+  }
+  
   Update_Obstacles(&me, 0, 1025, 0, 0);
   Materialize_Obstacle(&obstacle[0], 100);
   Print_Obstacles();
