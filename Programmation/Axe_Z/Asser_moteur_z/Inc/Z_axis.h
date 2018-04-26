@@ -39,8 +39,8 @@ FSM_Instance *volatile fsm;
 #define AX_LEFT_OPEN 430
 #define AX_RIGHT_OPEN 590
 
-#define AX_LEFT_OPEN_SMALL 500
-#define AX_RIGHT_OPEN_SMALL 440
+#define AX_LEFT_OPEN_SMALL 430
+#define AX_RIGHT_OPEN_SMALL 590
 
 #define AX_CLOSE_LOAD 250
 
@@ -99,10 +99,10 @@ void Z_Set_Goal(int goal);
 int Z_Goal_Reached();
 
 /*** PID ***/
-#define P0 30000
-#define P1 27000
-#define P2 1000
-#define P3 500
+#define P0 29000
+#define P1 2700
+#define P2 100
+#define P3 50
 #define Ppresence P2-20
 #define PpresenceLim P2-10
 
