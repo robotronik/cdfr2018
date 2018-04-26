@@ -131,7 +131,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM3_Init();
   MX_TIM15_Init();
-  MX_WWDG_Init();
+  //MX_WWDG_Init();//TODO re-enable
   /* USER CODE BEGIN 2 */
 
   //==================================================
@@ -247,10 +247,14 @@ int main(void)
 #endif
 
   float cor_sum, cor_diff;
+  while(1)
+  {
+    HAL_Delay(100);
+  }
   while (1)
   {
     //Watchdog refresh
-    HAL_WWDG_Refresh(&hwwdg);
+    //HAL_WWDG_Refresh(&hwwdg);//TODO re-enable
     //FSM
     fsm->run(fsm);
 

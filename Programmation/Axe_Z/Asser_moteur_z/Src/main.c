@@ -155,9 +155,9 @@ int main(void)
   //==================================================
   //                  Default PID
   //==================================================
-  pid_z.Kp=0.0001;
-  pid_z.Ki=0;
-  pid_z.Kd=0;
+  pid_z.Kp=0.007*0.6;//Ziegler-Nichols
+  pid_z.Ki=0.006/3;
+  pid_z.Kd=0.00005;
   pid_z.Te=0.01;
   pid_z.position_tolerance=100;
   pid_z.speed_tolerance=100;
@@ -211,7 +211,6 @@ int main(void)
   //  HAL_WWDG_Refresh(&hwwdg);
 
     //Asser
-    imp_goal=30000;
     float voltage = pid(&pid_z, -imp_goal + encoder.steps);
     MOTOR_VOLTAGE(voltage);
 

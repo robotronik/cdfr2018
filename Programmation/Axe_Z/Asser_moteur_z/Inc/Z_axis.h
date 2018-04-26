@@ -99,10 +99,10 @@ void Z_Set_Goal(int goal);
 int Z_Goal_Reached();
 
 /*** PID ***/
-#define P0 8000
-#define P1 4050
-#define P2 3000
-#define P3 3050
+#define P0 30000
+#define P1 27000
+#define P2 1000
+#define P3 500
 #define Ppresence P2-20
 #define PpresenceLim P2-10
 

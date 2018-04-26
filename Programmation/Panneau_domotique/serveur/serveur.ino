@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 #include "./rpv1.h"
 
-#define AP_NAME "Robotronik-2A"
-#define AP_PASSWD "robotronik"
+#define AP_NAME "Robotronik"
+#define AP_PASSWD "xyz2la8ca4PfmRff5eda"
 
 #define DEBUG 0
 #if DEBUG==1
