@@ -4,7 +4,7 @@
 #define PWM_MAX 50 //a value between 0 and 255, 255 if not for debug
 
 #define DRIVE_MOTOR(voltage, side_port, side_pin, fwd_state, tim_channel) {	\
-  uint16_t value = (uint16_t) (voltage * (255.0 / 12.0));		\
+  int16_t value = (int16_t) (voltage * (255.0 / 12.0));		\
   									\
   if(voltage > 0){							\
     HAL_GPIO_WritePin(side_port, side_pin, fwd_state);	\

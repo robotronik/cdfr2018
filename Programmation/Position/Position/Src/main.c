@@ -73,6 +73,7 @@ PID_DATA pid_diff;
 
 extern FSM_Instance *volatile fsm;
 extern FSM_Position_Pts fsm_pos_pts;
+extern FSM_Position_Pts fsm_pos_abs;
 extern volatile int ENCODER_DIST;//distance between encoders
 extern volatile int ENCODER_STEP_DIST;//distance for 1 encoder step/2
 extern volatile int deltaL;
@@ -246,26 +247,29 @@ int main(void)
   }
 #endif
 
+  fsm= (FSM_Instance*)&fsm_pos_abs;
+  fsm->run=FSM_Abs_End;
   float cor_sum, cor_diff;
-  while(1)
-  {
-    HAL_Delay(100);
-  }
   while (1)
   {
     //Watchdog refresh
     //HAL_WWDG_Refresh(&hwwdg);//TODO re-enable
     //FSM
-    fsm->run(fsm);
+    //fsm->run(fsm);
 
     //Process PID
-    if(fsm->run!=FSM_Pts_Run)//simple mode
+
+    int i=0,max=100000;
+    if(1)//simple mode
     {
+      i++;
+      i=i%max;
       cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));
       cor_diff = pid(&pid_diff, diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps));
 
       val_r = cor_sum + cor_diff;
       val_l = cor_sum - cor_diff;
+
     }
     else//interpolation mode
     {
@@ -273,16 +277,15 @@ int main(void)
       wc=kc*fsm_pos_pts.vr;
       vr=fsm_pos_pts.vc*speed_percent+wc*ENCODER_DIST/2;
       vl=fsm_pos_pts.vc*speed_percent-wc*ENCODER_DIST/2;
-      val_r=pid_speed(&fsm_pos_pts.pid_speed_r,vr-(odometry.encoder_r.steps-prec_steps_r)/Te);
-      val_l=pid_speed(&fsm_pos_pts.pid_speed_l,vl-(odometry.encoder_l.steps-prec_steps_l)/Te);
+      float val_r=pid_speed(&fsm_pos_pts.pid_speed_r,vr-(odometry.encoder_r.steps-prec_steps_r)/Te);
+      float val_l=pid_speed(&fsm_pos_pts.pid_speed_l,vl-(odometry.encoder_l.steps-prec_steps_l)/Te);
       prec_steps_l=odometry.encoder_l.steps;
       prec_steps_r=odometry.encoder_r.steps;
       if(speed_percent<fsm_pos_pts.speed_percent_tolerance) fsm->status=FSM_SUCCESS;
     }
-
-    //Motors control
-    DRIVE_MOTOR_R(val_r);
+    //Motor control
     DRIVE_MOTOR_L(val_l);
+    DRIVE_MOTOR_R(val_r);
 
     HAL_Delay(Te);
   /* USER CODE END WHILE */
