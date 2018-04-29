@@ -9,17 +9,17 @@
 
 Obstacle obstacle[N_MAX_OBSTACLES];
 int nb_obstacles = 0;
+uint16_t sensor_raw[4];
 
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel);
 
 void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t rl_d, uint16_t rr_d){
   Obstacle in_range[4];
   bool present[4];
-  uint16_t d[4] = {
-    [FRONT_LEFT] = fl_d,
-    [FRONT_RIGHT] = fr_d,
-    [REAR_LEFT] = rl_d,
-    [REAR_RIGHT] = rr_d};
+  sensor_raw[FRONT_LEFT] = fl_d;
+  sensor_raw[FRONT_RIGHT] = fr_d;
+  sensor_raw[REAR_LEFT] = rl_d;
+  sensor_raw[REAR_RIGHT] = rr_d;
   int16_t x_rel[4] = {
     [FRONT_LEFT] = SENSOR_DIST_TANGENT + fl_d,
     [FRONT_RIGHT] = SENSOR_DIST_TANGENT + fr_d,
@@ -35,7 +35,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   //Compute obstacles
   int i;
   for(i = 0; i < 4; i++){
-    present[i] = d[i] && !Compute_Obstacle(&in_range[i], ref, x_rel[i], y_rel[i]);
+    present[i] = sensor_raw[i] && !Compute_Obstacle(&in_range[i], ref, x_rel[i], y_rel[i]);
   }
 
   Obstacle updated[N_MAX_OBSTACLES];
@@ -76,9 +76,11 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     if(ticks - obs->last_detection > OBSTACLE_LIFETIME){
       continue;
     }
-    
-    obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
 
+    //Update distances
+    obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
+    obs->distance = dist(ref->x, ref->y, obs->x, obs->y);
+    
     //Is it a duplicate ?
     int j = 0;
     for(j = 0; j < n; j++){
@@ -128,6 +130,25 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   nb_obstacles = n;
 }
 
+int Is_In_Range(Obstacle *obs, const Robot *ref){
+  int16_t x_ro = obs->x_c - ref->x;
+  int16_t y_ro = obs->y_c - ref->y;
+      
+  //Rotate
+  x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
+  y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
+  
+  if(!(y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){
+    return 0;
+  }
+
+  if(x_ro > 0){
+    return 1;
+  }
+  
+  return -1;
+}
+
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel){
   //Get ticks at detection time
   obs->last_detection = Get_Ticks();
@@ -174,6 +195,10 @@ void Print_Obstacles(void){
   }
 }
 
+int Is_Too_Close(Obstacle *obs, uint16_t margin){
+  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + margin + 1.415*SQUARE_SIZE));
+}
+
 int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   //Check if the obstacle will not overlay our robot
   uint16_t r = OBS_RADIUS + ROBOT_RADIUS + margin;
@@ -212,4 +237,15 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   }
   
   return 0;
+}
+
+int Materialize_Obstacles(uint16_t margin){
+  int i;
+  int status = 0;
+  for(i = 0; i < nb_obstacles; i++){
+    if(Materialize_Obstacle(&obstacle[i], margin) != 0){
+      status = -1;
+    }
+  }
+  return status;
 }
