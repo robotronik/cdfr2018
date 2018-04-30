@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <math.h>
 #include "strategy.h"
 #include "map.h"
@@ -168,9 +169,8 @@ static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int1
   //Print("(%d, %d)\n", obs->x, obs->y);
   
   //Guess center of obstacle, assuming it's a robot
-  float coeff = 1. + (float) OBS_RADIUS / (float) obs->distance;
-  obs->x_c = ref->x + coeff * (float) x_ro;
-  obs->y_c = ref->y + coeff * (float) y_ro;
+  obs->x_c = obs->x + OBS_RADIUS * cos(ref->angle);
+  obs->y_c = obs->y + OBS_RADIUS * sin(ref->angle);
   obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
   //Print("(%d, %d)\n", obs->x_c, obs->y_c);
   
@@ -201,9 +201,9 @@ int Is_Too_Close(Obstacle *obs, uint16_t margin){
 
 int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   //Check if the obstacle will not overlay our robot
-  uint16_t r = OBS_RADIUS + ROBOT_RADIUS + margin;
+  uint16_t r_obs = OBS_RADIUS + ROBOT_RADIUS;
   //Print("Radius : %" PRIu16 "\n", r);
-  if(dist(me.x, me.y, obs->x_c, obs->y_c) <= (r + 1.415*SQUARE_SIZE)){
+  if(dist(me.x, me.y, obs->x_c, obs->y_c) <= (r_obs + 1.415*SQUARE_SIZE)){
     return -1;
   }
 
@@ -212,6 +212,7 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   uint16_t dx = obs->x_c%SQUARE_SIZE, dy = obs->y_c%SQUARE_SIZE;
 
   //Number of cubes
+  int r = r_obs + margin;
   int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
   //Print("N : %d\n", N);
   
@@ -222,17 +223,37 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
 
   //Draw the circle
   int X = 0;
-  int R = N*SQUARE_SIZE - SQUARE_SIZE/2;
+  float R = N*SQUARE_SIZE - (float) SQUARE_SIZE/2.;
   int DX = 0;
+
+  //Vector O->R
+  int X_OR = me.x/SQUARE_SIZE - X0, Y_OR = me.y/SQUARE_SIZE - Y0;
+  float N_OR = sqrt(X_OR*X_OR + Y_OR*Y_OR);
+  X_OR *= (1. - 1.415 / N_OR);
+  Y_OR *= (1. - 1.415 / N_OR);
+  N_OR -= 1.415;
+
+  int treshold = N_OR * N_OR - 1;
   for(X = 0; X < N; X++, DX += SQUARE_SIZE){
-    float DY = (sqrt(R*R - DX*DX) - SQUARE_SIZE/2);
-    int NB_Y = 1 + (DY-SQUARE_SIZE/2.)/SQUARE_SIZE;
+    float DY = sqrt(R*R - DX*DX);
+    int NB_Y = 1 + (DY-(float)SQUARE_SIZE/2.)/SQUARE_SIZE;
     int Y;
     for(Y = 0; Y < NB_Y; Y++){
-      map[Y0 + Y][X0 + X].obstacle = 1;
-      map[Y0 + Y][X0 - X].obstacle = 1;
-      map[Y0 - Y][X0 + X].obstacle = 1;
-      map[Y0 - Y][X0 - X].obstacle = 1;
+      int p_scal = X_OR*X + Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 + Y][X0 + X].obstacle = 1;
+
+      p_scal = -X_OR*X + Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 + Y][X0 - X].obstacle = 1;
+
+      p_scal = X_OR*X - Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 - Y][X0 + X].obstacle = 1;
+ 
+      p_scal = -X_OR*X - Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 - Y][X0 - X].obstacle = 1;
     }
   }
   

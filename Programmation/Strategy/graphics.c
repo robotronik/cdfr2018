@@ -136,7 +136,7 @@ void draw_cubes_obstacles(SDL_Renderer *renderer, SDL_Texture *texture){
   SDL_SetRenderTarget(renderer, NULL);
 }
 
-void draw_robots(SDL_Renderer *renderer, SDL_Texture *texture){
+void draw_robots(SDL_Renderer *renderer, SDL_Texture *texture, int margin){
   SDL_SetRenderTarget(renderer, texture);
   SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF , 0xFF, 0x00);
   
@@ -155,7 +155,7 @@ void draw_robots(SDL_Renderer *renderer, SDL_Texture *texture){
     Obstacle *const obs = &obstacle[i];
     rect.x = obs->x_c / RATIO;
     rect.y = obs->y_c / RATIO;
-    rect.w = rect.h = ((int) OBS_RADIUS + ROBOT_RADIUS + 100) / RATIO;
+    rect.w = rect.h = ((int) OBS_RADIUS + ROBOT_RADIUS + margin) / RATIO;
     draw_circle(renderer, texture, &c, &rect);
   }
 

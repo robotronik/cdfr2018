@@ -87,9 +87,11 @@ int main(int argc, char *argv[]){
   for(i = 0; i < nb_targets; i++){
     printf("%s %d\n", color_str[target_list[i].c->color], target_list[i].d);
   }
-  
-  Update_Obstacles(&me, 0, 1025, 0, 0);
-  Materialize_Obstacle(&obstacle[0], 100);
+
+  me.x = AREA_WIDTH/2 - 400;
+  me.y = AREA_HEIGHT/2;
+  Update_Obstacles(&me, 1.415*SQUARE_SIZE+1, 0, 0, 0);
+  Materialize_Obstacle(&obstacle[0],400);
   Print_Obstacles();
 
   
@@ -97,7 +99,7 @@ int main(int argc, char *argv[]){
   draw_empty_grid(renderer, grid);
   draw_cubes(renderer, cubes);
   draw_cubes_obstacles(renderer, circles);
-  draw_robots(renderer, circles);
+  draw_robots(renderer, circles, 000);
 
   SDL_Rect pos_grid;
   pos_grid.x = 0, pos_grid.y = 0;
