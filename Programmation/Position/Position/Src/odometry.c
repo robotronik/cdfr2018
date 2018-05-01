@@ -1,8 +1,8 @@
 #include "odometry.h"
 
-volatile int ENCODER_DIST;//distance between encoders
-volatile int ENCODER_STEP_DIST;//distance for 1 encoder step/2
-volatile int deltaL;
+volatile float ENCODER_DIST=199.66;//distance between encoders
+volatile float ENCODER_STEP_DIST=20.65*2*M_PI/1440.0;//distance for 1 encoder step
+volatile int deltaL=(20.65*2*M_PI/1440.0)/199.66;//ENCODER_STEP_DIST/ENCODER_DIST
 
 void update_odometry(Odometry *odometry){
   int dl_l = update_encoder(&odometry->encoder_l);

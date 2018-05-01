@@ -260,7 +260,7 @@ int main(void)
     //Process PID
 
     int i=0,max=100000;
-    if(1)//simple mode
+    if(fsm->run!=FSM_Pts_Run)//simple mode
     {
       i++;
       i=i%max;
@@ -277,8 +277,8 @@ int main(void)
       wc=kc*fsm_pos_pts.vr;
       vr=fsm_pos_pts.vc*speed_percent+wc*ENCODER_DIST/2;
       vl=fsm_pos_pts.vc*speed_percent-wc*ENCODER_DIST/2;
-      float val_r=pid_speed(&fsm_pos_pts.pid_speed_r,vr-(odometry.encoder_r.steps-prec_steps_r)/Te);
-      float val_l=pid_speed(&fsm_pos_pts.pid_speed_l,vl-(odometry.encoder_l.steps-prec_steps_l)/Te);
+      val_r=pid_speed(&fsm_pos_pts.pid_speed_r,vr-(odometry.encoder_r.steps-prec_steps_r)/Te);
+      val_l=pid_speed(&fsm_pos_pts.pid_speed_l,vl-(odometry.encoder_l.steps-prec_steps_l)/Te);
       prec_steps_l=odometry.encoder_l.steps;
       prec_steps_r=odometry.encoder_r.steps;
       if(speed_percent<fsm_pos_pts.speed_percent_tolerance) fsm->status=FSM_SUCCESS;

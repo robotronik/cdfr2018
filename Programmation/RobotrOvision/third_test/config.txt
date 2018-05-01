@@ -15,7 +15,7 @@ ratio_canny= 3
 
 Hmin Hmax Smin Smax Vmin Vmax
 orange 5 22 127 255 50 255
-black 0 180 0 50 0 50
+black 0 180 0 200 0 200
 green 37 70 100 255 50 255
 yellow 22 37 127 255 50 255
 blue 85 130 50 255 50 255
