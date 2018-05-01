@@ -132,6 +132,7 @@ void brake(RC_Server* pserver)
 {
   RC_Server_Get_Args(pserver);
   fsm_pos_abs.instance.run=FSM_Pos_Wait;
+  fsm->status=FSM_RUNNING;
   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
   sum_goal=odometry.encoder_l.steps + odometry.encoder_r.steps;
   diff_goal=odometry.encoder_r.steps - odometry.encoder_l.steps;//to stay in place
