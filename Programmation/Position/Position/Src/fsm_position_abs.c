@@ -86,8 +86,8 @@ void FSM_Angle_Wait(FSM_Instance *fsm)
 void FSM_X_Y_Init(FSM_Instance *fsm)
 {
   FSM_Position_Abs *fsm_pos=(FSM_Position_Abs *) fsm;
-  fsm_pos->angle=((odometry.x*fsm_pos->x)+(odometry.y*fsm_pos->y))/
-                  (sqrt(pow(odometry.x,2)+pow(odometry.y,2))+sqrt(pow(fsm_pos->x,2)+pow(fsm_pos->y,2)));
+  fsm_pos->angle=acos(((odometry.x*fsm_pos->x)+(odometry.y*fsm_pos->y))/
+                  (sqrt(pow(odometry.x,2)+pow(odometry.y,2))+sqrt(pow(fsm_pos->x,2)+pow(fsm_pos->y,2))));
   fsm_pos->pos=sqrt(pow(odometry.x-fsm_pos->x,2)+pow(odometry.y-fsm_pos->y,2));
 }
 
