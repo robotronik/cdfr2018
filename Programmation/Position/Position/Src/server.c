@@ -9,6 +9,7 @@ extern volatile int deltaL;
 extern PID_DATA pid_sum;
 extern PID_DATA pid_diff;
 extern Odometry odometry;
+extern volatile int sum_goal,diff_goal;
 
 void get_state(RC_Server* pserver)
 {
@@ -124,4 +125,27 @@ void set_n_points_asser(RC_Server* pserver)
   fsm_pos_pts.pid_speed_r.Kp=Kp;
   fsm_pos_pts.pid_speed_r.Ki=Ki;
   fsm_pos_pts.pid_speed_r.Kd=Kd;
+}
+
+
+void brake(RC_Server* pserver)
+{
+  RC_Server_Get_Args(pserver);
+  fsm_pos_abs.instance.run=FSM_Pos_Wait;
+  fsm = (FSM_Instance*volatile) &fsm_pos_abs;
+  sum_goal=odometry.encoder_l.steps + odometry.encoder_r.steps;
+  diff_goal=odometry.encoder_r.steps - odometry.encoder_l.steps;//to stay in place
+  RC_Server_Return(pserver);
+}
+
+void set_position_x_y(RC_Server* pserver)
+{
+  RC_Server_Get_Args(pserver,
+                    &fsm_pos_abs.angular_speed,
+                    &fsm_pos_abs.linear_speed,
+                    &fsm_pos_abs.x,
+                    &fsm_pos_abs.y);
+  fsm_pos_abs.instance.run=FSM_X_Y_Init;
+  fsm = (FSM_Instance*volatile) &fsm_pos_abs;
+  RC_Server_Return(pserver);
 }

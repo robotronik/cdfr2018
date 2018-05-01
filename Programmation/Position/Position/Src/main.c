@@ -67,7 +67,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 Odometry odometry;
-int sum_goal,diff_goal;
+volatile int sum_goal,diff_goal;
 PID_DATA pid_sum;
 PID_DATA pid_diff;
 
@@ -158,6 +158,7 @@ int main(void)
 
   RC_Server_Add_Function(&P_server, P_SET_POS, set_pos, "ff", "", RC_IMMEDIATE);//speed distance in cm makes the robot go forard or backward
   RC_Server_Add_Function(&P_server, P_SET_ANGLE, set_angle, "ff", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_SET_POSITION_X_Y, set_position_x_y, "ffff", "", RC_IMMEDIATE);//rotation speed, linear speed, x point in cm, y point in cm
 
   RC_Server_Add_Function(&P_server, P_SET_N_POINTS, set_n_points, "i", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&P_server, P_GET_N_POINTS, get_n_points, "ff", "", RC_IMMEDIATE);//reception of the points by packets of 1
@@ -165,6 +166,10 @@ int main(void)
   RC_Server_Add_Function(&P_server, P_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
 
   RC_Server_Add_Function(&P_server, P_BALEC, balec, "", "b", RC_IMMEDIATE);
+
+
+  //added functions
+  RC_Server_Add_Function(&P_server, P_BRAKE, brake, "", "", RC_IMMEDIATE);
 
   /**************************************************/
   /*            PID INIT                            */
@@ -255,7 +260,7 @@ int main(void)
     //Watchdog refresh
     //HAL_WWDG_Refresh(&hwwdg);//TODO re-enable
     //FSM
-    //fsm->run(fsm);
+    fsm->run(fsm);
 
     //Process PID
 
@@ -277,8 +282,8 @@ int main(void)
       wc=kc*fsm_pos_pts.vr;
       vr=fsm_pos_pts.vc*speed_percent+wc*ENCODER_DIST/2;
       vl=fsm_pos_pts.vc*speed_percent-wc*ENCODER_DIST/2;
-      val_r=pid_speed(&fsm_pos_pts.pid_speed_r,vr-(odometry.encoder_r.steps-prec_steps_r)/Te);
-      val_l=pid_speed(&fsm_pos_pts.pid_speed_l,vl-(odometry.encoder_l.steps-prec_steps_l)/Te);
+      val_r=pid_speed(&fsm_pos_pts.pid_speed_r,vr-(odometry.encoder_r.steps-prec_steps_r)/pid_sum.Te);
+      val_l=pid_speed(&fsm_pos_pts.pid_speed_l,vl-(odometry.encoder_l.steps-prec_steps_l)/pid_sum.Te);
       prec_steps_l=odometry.encoder_l.steps;
       prec_steps_r=odometry.encoder_r.steps;
       if(speed_percent<fsm_pos_pts.speed_percent_tolerance) fsm->status=FSM_SUCCESS;

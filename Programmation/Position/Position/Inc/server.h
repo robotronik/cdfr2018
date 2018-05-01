@@ -23,7 +23,9 @@ typedef enum P_Functions_E{
   P_SET_N_POINTS,
   P_GET_N_POINTS,
   P_SET_POS,
-  P_SET_ANGLE
+  P_SET_ANGLE,
+  P_BRAKE,
+  P_SET_POSITION_X_Y
 }P_Functions;
 
 typedef enum P_States_E{
@@ -47,5 +49,8 @@ void set_angle(RC_Server* pserver);
 void set_n_points(RC_Server* pserver);//use to idicate the number of interpolation points
 void get_n_points(RC_Server* pserver);
 void set_n_points_asser(RC_Server* pserver);
+
+void brake(RC_Server* pserver);
+void set_position_x_y(RC_Server* pserver);
 
 #endif

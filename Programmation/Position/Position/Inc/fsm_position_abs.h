@@ -11,6 +11,8 @@ typedef struct FSM_Position_Abs_S{
   float pos;//in cm
   float linear_speed;//in cm/s
   float angular_speed;//in rad/s
+  float x;
+  float y;
   int n;
   int initial_sum;
 }FSM_Position_Abs;
@@ -22,5 +24,13 @@ void FSM_Angle_Generator(FSM_Instance*);
 void FSM_Pos_Wait(FSM_Instance*);
 void FSM_Angle_Wait(FSM_Instance*);
 void FSM_Abs_End(FSM_Instance*);
+
+void FSM_X_Y_Init(FSM_Instance*);
+void FSM_Angle_Init_X_Y(FSM_Instance*);
+void FSM_Angle_Generator_X_Y(FSM_Instance *fsm);
+void FSM_Angle_Wait_X_Y(FSM_Instance *fsm);
+void FSM_Pos_Init_X_Y(FSM_Instance *fsm);
+void FSM_Pos_Generator_X_Y(FSM_Instance *fsm);
+void FSM_Pos_Wait_X_Y(FSM_Instance *fsm);
 
 #endif
