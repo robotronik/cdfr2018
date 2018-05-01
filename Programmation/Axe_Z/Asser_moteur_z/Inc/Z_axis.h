@@ -99,6 +99,8 @@ void Z_Set_Goal(int goal);
 
 int Z_Goal_Reached();
 
+int ramp_generator(int goal, int start, int *nactual, int ntime);
+
 /*** PID ***/
 #define P0 32000 //Position basse
 #define P1 28000 //Rouler
@@ -106,6 +108,9 @@ int Z_Goal_Reached();
 #define P3 1800 //Max
 #define Ppresence P2+200
 #define PpresenceLim P2+100
+
+#define NCYCLEBIG 20
+#define NCYCLELITTLE 10
 
 #define PWM_MAX 50//max 255
 #define VOLTAGE_FC 3

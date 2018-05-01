@@ -159,7 +159,7 @@ int main(void)
   pid_z.Ki=0.005/2;
   pid_z.Kd=0.00001;
   pid_z.Te=0.01;
-  pid_z.position_tolerance=2000;
+  pid_z.position_tolerance=500;
   pid_z.speed_tolerance=1000;
   pid_init(&pid_z);
 
@@ -214,6 +214,11 @@ int main(void)
 
     //Asser
     float voltage = pid(&pid_z, -imp_goal + encoder.steps);
+    if(HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin)==1)//fin de course percute=probleme
+    {
+        voltage=0;
+        pid_z.integral = 0;
+    }
     MOTOR_VOLTAGE(voltage);
 
     //FSM

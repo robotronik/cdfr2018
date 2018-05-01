@@ -105,3 +105,12 @@ void Z_Set_Goal(int goal){
 inline int Z_Goal_Reached(){
   return reached(&pid_z, imp_goal-encoder.steps);
 }
+
+int ramp_generator(int goal, int start, int *nactual,int ntime)
+{
+  if(*nactual<ntime)
+  {
+    (*nactual)++;
+  }
+  return start+((float)(*nactual)/ntime)*(goal-start);
+}

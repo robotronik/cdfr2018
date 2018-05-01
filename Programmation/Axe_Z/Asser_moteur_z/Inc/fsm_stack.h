@@ -8,6 +8,8 @@
 
 typedef struct FSM_Stack_S{
   FSM_Instance instance;
+  int imp_start;
+  int nramp;
   int n;
   int last;
 }FSM_Stack;
