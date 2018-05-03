@@ -156,7 +156,8 @@ int main(void)
   PI_Init();
 
   //Position
-  Position_Init();
+  volatile int r = Position_Init();
+  r++;
   
   //==================================================//
   //                 Wait Start                       //
@@ -180,7 +181,14 @@ int main(void)
 
 
   Pos_Brake();
-  Pos_Go_Forward(10., 100.);
+
+  //while(1){
+  float speed = -10.;
+  float distance = 100.;
+  Pos_Go_Forward(speed, distance);
+    //HAL_Delay(5000);
+    //}
+  
   
   //volatile int jean_michel_segfault = *((int*)99999999999);
   //PI_Asser_Test();
