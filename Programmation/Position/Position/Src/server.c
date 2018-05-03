@@ -49,21 +49,24 @@ void balec(RC_Server* pserver)
   RC_Server_Return(pserver);
 }
 
+extern volatile float x0_, y0_;
 void set_odo(RC_Server* pserver)
 {
+  uint16_t X0, Y0;
   RC_Server_Get_Args(pserver,
-		     &ENCODER_DIST,
-		     &ENCODER_STEP_DIST);
-  deltaL=ENCODER_STEP_DIST/ENCODER_DIST;
+		     &X0,
+		     &Y0);
+  x0_ = (float) X0;
+  y0_ = (float) Y0;    
   RC_Server_Return(pserver);
 }
 
 void get_odo(RC_Server* pserver)
 {
-  RC_Server_Return(pserver, odometry.x,odometry.y,odometry.theta);
+  RC_Server_Return(pserver, (uint16_t) odometry.x, (uint16_t) odometry.y, odometry.theta);
 }
 
-void set_pos(RC_Server* pserver) //2 parameters
+void go_forward(RC_Server* pserver) //2 parameters
 {
   RC_Server_Get_Args(pserver,
          &fsm_pos_abs.linear_speed,
@@ -90,9 +93,13 @@ void set_n_points(RC_Server* pserver)//1 parameters
   fsm_pos_pts.reception=0;
 }
 
+typedef uint16_t uiont16_t;
 void get_n_points(RC_Server* pserver)//1 parameters
 {
-  RC_Server_Get_Args(pserver, &fsm_pos_pts.points.x[fsm_pos_pts.reception], &fsm_pos_pts.points.y[fsm_pos_pts.reception]);
+  uiont16_t pt_x, pt_y;
+  RC_Server_Get_Args(pserver, &pt_x, &pt_y);
+  fsm_pos_pts.points.x[fsm_pos_pts.reception] = (float) pt_x;
+  fsm_pos_pts.points.y[fsm_pos_pts.reception] = (float) pt_y;
   RC_Server_Return(pserver);
   fsm_pos_pts.reception++;
   if(fsm_pos_pts.reception==fsm_pos_pts.points.n)
@@ -141,11 +148,14 @@ void brake(RC_Server* pserver)
 
 void set_position_x_y(RC_Server* pserver)
 {
+  uint16_t x_, y_;
   RC_Server_Get_Args(pserver,
                     &fsm_pos_abs.angular_speed,
                     &fsm_pos_abs.linear_speed,
-                    &fsm_pos_abs.x,
-                    &fsm_pos_abs.y);
+                    &x_,
+                    &y_);
+  fsm_pos_abs.x = (float) x_;
+  fsm_pos_abs.y = (float) y_;
   fsm_pos_abs.instance.run=FSM_X_Y_Init;
   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
   RC_Server_Return(pserver);

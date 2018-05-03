@@ -1,0 +1,453 @@
+ARM GAS  /tmp/ccCyrih5.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"Robotronik_corp_pid.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.pid_init,"ax",%progbits
+  18              		.align	1
+  19              		.global	pid_init
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	pid_init:
+  26              	.LFB0:
+  27              		.file 1 "Src/Robotronik_corp_pid.c"
+   1:Src/Robotronik_corp_pid.c **** #include "Robotronik_corp_pid.h"
+   2:Src/Robotronik_corp_pid.c **** 
+   3:Src/Robotronik_corp_pid.c **** void pid_init(volatile PID_DATA *pid)
+   4:Src/Robotronik_corp_pid.c **** {
+  28              		.loc 1 4 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 8
+  31              		@ frame_needed = 1, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33 0000 80B4     		push	{r7}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 4
+  36              		.cfi_offset 7, -4
+  37 0002 83B0     		sub	sp, sp, #12
+  38              	.LCFI1:
+  39              		.cfi_def_cfa_offset 16
+  40 0004 00AF     		add	r7, sp, #0
+  41              	.LCFI2:
+  42              		.cfi_def_cfa_register 7
+  43 0006 7860     		str	r0, [r7, #4]
+   5:Src/Robotronik_corp_pid.c ****   pid->prev_eps=0;
+  44              		.loc 1 5 0
+  45 0008 7B68     		ldr	r3, [r7, #4]
+  46 000a 4FF00002 		mov	r2, #0
+  47 000e DA60     		str	r2, [r3, #12]	@ float
+   6:Src/Robotronik_corp_pid.c ****   pid->integral=0;
+  48              		.loc 1 6 0
+  49 0010 7B68     		ldr	r3, [r7, #4]
+  50 0012 4FF00002 		mov	r2, #0
+  51 0016 1A61     		str	r2, [r3, #16]	@ float
+   7:Src/Robotronik_corp_pid.c **** }
+ARM GAS  /tmp/ccCyrih5.s 			page 2
+
+
+  52              		.loc 1 7 0
+  53 0018 00BF     		nop
+  54 001a 0C37     		adds	r7, r7, #12
+  55              	.LCFI3:
+  56              		.cfi_def_cfa_offset 4
+  57 001c BD46     		mov	sp, r7
+  58              	.LCFI4:
+  59              		.cfi_def_cfa_register 13
+  60              		@ sp needed
+  61 001e 5DF8047B 		ldr	r7, [sp], #4
+  62              	.LCFI5:
+  63              		.cfi_restore 7
+  64              		.cfi_def_cfa_offset 0
+  65 0022 7047     		bx	lr
+  66              		.cfi_endproc
+  67              	.LFE0:
+  69              		.section	.text.pid,"ax",%progbits
+  70              		.align	1
+  71              		.global	pid
+  72              		.syntax unified
+  73              		.thumb
+  74              		.thumb_func
+  75              		.fpu fpv4-sp-d16
+  77              	pid:
+  78              	.LFB1:
+   8:Src/Robotronik_corp_pid.c **** 
+   9:Src/Robotronik_corp_pid.c **** float pid(volatile PID_DATA *pid, int eps)
+  10:Src/Robotronik_corp_pid.c **** {
+  79              		.loc 1 10 0
+  80              		.cfi_startproc
+  81              		@ args = 0, pretend = 0, frame = 16
+  82              		@ frame_needed = 1, uses_anonymous_args = 0
+  83              		@ link register save eliminated.
+  84 0000 80B4     		push	{r7}
+  85              	.LCFI6:
+  86              		.cfi_def_cfa_offset 4
+  87              		.cfi_offset 7, -4
+  88 0002 85B0     		sub	sp, sp, #20
+  89              	.LCFI7:
+  90              		.cfi_def_cfa_offset 24
+  91 0004 00AF     		add	r7, sp, #0
+  92              	.LCFI8:
+  93              		.cfi_def_cfa_register 7
+  94 0006 7860     		str	r0, [r7, #4]
+  95 0008 3960     		str	r1, [r7]
+  11:Src/Robotronik_corp_pid.c ****   float output;
+  12:Src/Robotronik_corp_pid.c ****   pid->integral=pid->integral+pid->Te*eps;
+  96              		.loc 1 12 0
+  97 000a 7B68     		ldr	r3, [r7, #4]
+  98 000c 93ED047A 		vldr.32	s14, [r3, #16]
+  99 0010 7B68     		ldr	r3, [r7, #4]
+ 100 0012 D3ED056A 		vldr.32	s13, [r3, #20]
+ 101 0016 3B68     		ldr	r3, [r7]
+ 102 0018 07EE903A 		vmov	s15, r3	@ int
+ 103 001c F8EEE77A 		vcvt.f32.s32	s15, s15
+ 104 0020 66EEA77A 		vmul.f32	s15, s13, s15
+ 105 0024 77EE277A 		vadd.f32	s15, s14, s15
+ARM GAS  /tmp/ccCyrih5.s 			page 3
+
+
+ 106 0028 7B68     		ldr	r3, [r7, #4]
+ 107 002a C3ED047A 		vstr.32	s15, [r3, #16]
+  13:Src/Robotronik_corp_pid.c ****   output=eps*pid->Kp+pid->Ki*pid->integral+pid->Kd*(eps-pid->prev_eps)/pid->Te;
+ 108              		.loc 1 13 0
+ 109 002e 3B68     		ldr	r3, [r7]
+ 110 0030 07EE903A 		vmov	s15, r3	@ int
+ 111 0034 B8EEE77A 		vcvt.f32.s32	s14, s15
+ 112 0038 7B68     		ldr	r3, [r7, #4]
+ 113 003a D3ED007A 		vldr.32	s15, [r3]
+ 114 003e 27EE277A 		vmul.f32	s14, s14, s15
+ 115 0042 7B68     		ldr	r3, [r7, #4]
+ 116 0044 D3ED016A 		vldr.32	s13, [r3, #4]
+ 117 0048 7B68     		ldr	r3, [r7, #4]
+ 118 004a D3ED047A 		vldr.32	s15, [r3, #16]
+ 119 004e 66EEA77A 		vmul.f32	s15, s13, s15
+ 120 0052 37EE277A 		vadd.f32	s14, s14, s15
+ 121 0056 7B68     		ldr	r3, [r7, #4]
+ 122 0058 D3ED026A 		vldr.32	s13, [r3, #8]
+ 123 005c 3B68     		ldr	r3, [r7]
+ 124 005e 07EE903A 		vmov	s15, r3	@ int
+ 125 0062 B8EEE76A 		vcvt.f32.s32	s12, s15
+ 126 0066 7B68     		ldr	r3, [r7, #4]
+ 127 0068 D3ED037A 		vldr.32	s15, [r3, #12]
+ 128 006c 76EE677A 		vsub.f32	s15, s12, s15
+ 129 0070 26EEA76A 		vmul.f32	s12, s13, s15
+ 130 0074 7B68     		ldr	r3, [r7, #4]
+ 131 0076 D3ED056A 		vldr.32	s13, [r3, #20]
+ 132 007a C6EE267A 		vdiv.f32	s15, s12, s13
+ 133 007e 77EE277A 		vadd.f32	s15, s14, s15
+ 134 0082 C7ED037A 		vstr.32	s15, [r7, #12]
+  14:Src/Robotronik_corp_pid.c ****   pid->prev_eps=eps;
+ 135              		.loc 1 14 0
+ 136 0086 3B68     		ldr	r3, [r7]
+ 137 0088 07EE903A 		vmov	s15, r3	@ int
+ 138 008c F8EEE77A 		vcvt.f32.s32	s15, s15
+ 139 0090 7B68     		ldr	r3, [r7, #4]
+ 140 0092 C3ED037A 		vstr.32	s15, [r3, #12]
+  15:Src/Robotronik_corp_pid.c ****   return output;
+ 141              		.loc 1 15 0
+ 142 0096 FB68     		ldr	r3, [r7, #12]	@ float
+ 143 0098 07EE903A 		vmov	s15, r3
+  16:Src/Robotronik_corp_pid.c **** }
+ 144              		.loc 1 16 0
+ 145 009c B0EE670A 		vmov.f32	s0, s15
+ 146 00a0 1437     		adds	r7, r7, #20
+ 147              	.LCFI9:
+ 148              		.cfi_def_cfa_offset 4
+ 149 00a2 BD46     		mov	sp, r7
+ 150              	.LCFI10:
+ 151              		.cfi_def_cfa_register 13
+ 152              		@ sp needed
+ 153 00a4 5DF8047B 		ldr	r7, [sp], #4
+ 154              	.LCFI11:
+ 155              		.cfi_restore 7
+ 156              		.cfi_def_cfa_offset 0
+ 157 00a8 7047     		bx	lr
+ 158              		.cfi_endproc
+ARM GAS  /tmp/ccCyrih5.s 			page 4
+
+
+ 159              	.LFE1:
+ 161              		.section	.text.reached,"ax",%progbits
+ 162              		.align	1
+ 163              		.global	reached
+ 164              		.syntax unified
+ 165              		.thumb
+ 166              		.thumb_func
+ 167              		.fpu fpv4-sp-d16
+ 169              	reached:
+ 170              	.LFB2:
+  17:Src/Robotronik_corp_pid.c **** 
+  18:Src/Robotronik_corp_pid.c **** int reached(volatile PID_DATA *pid,int eps)
+  19:Src/Robotronik_corp_pid.c **** {
+ 171              		.loc 1 19 0
+ 172              		.cfi_startproc
+ 173              		@ args = 0, pretend = 0, frame = 8
+ 174              		@ frame_needed = 1, uses_anonymous_args = 0
+ 175              		@ link register save eliminated.
+ 176 0000 80B4     		push	{r7}
+ 177              	.LCFI12:
+ 178              		.cfi_def_cfa_offset 4
+ 179              		.cfi_offset 7, -4
+ 180 0002 83B0     		sub	sp, sp, #12
+ 181              	.LCFI13:
+ 182              		.cfi_def_cfa_offset 16
+ 183 0004 00AF     		add	r7, sp, #0
+ 184              	.LCFI14:
+ 185              		.cfi_def_cfa_register 7
+ 186 0006 7860     		str	r0, [r7, #4]
+ 187 0008 3960     		str	r1, [r7]
+  20:Src/Robotronik_corp_pid.c ****   if(abs(eps)<pid->position_tolerance && (abs(eps-pid->prev_eps))/pid->Te<pid->speed_tolerance) ret
+ 188              		.loc 1 20 0
+ 189 000a 3B68     		ldr	r3, [r7]
+ 190 000c 83EAE372 		eor	r2, r3, r3, asr #31
+ 191 0010 A2EBE372 		sub	r2, r2, r3, asr #31
+ 192 0014 7B68     		ldr	r3, [r7, #4]
+ 193 0016 9B69     		ldr	r3, [r3, #24]
+ 194 0018 9A42     		cmp	r2, r3
+ 195 001a 23DA     		bge	.L5
+ 196              		.loc 1 20 0 is_stmt 0 discriminator 1
+ 197 001c 3B68     		ldr	r3, [r7]
+ 198 001e 07EE903A 		vmov	s15, r3	@ int
+ 199 0022 B8EEE77A 		vcvt.f32.s32	s14, s15
+ 200 0026 7B68     		ldr	r3, [r7, #4]
+ 201 0028 D3ED037A 		vldr.32	s15, [r3, #12]
+ 202 002c 77EE677A 		vsub.f32	s15, s14, s15
+ 203 0030 FDEEE77A 		vcvt.s32.f32	s15, s15
+ 204 0034 17EE903A 		vmov	r3, s15	@ int
+ 205 0038 002B     		cmp	r3, #0
+ 206 003a B8BF     		it	lt
+ 207 003c 5B42     		rsblt	r3, r3, #0
+ 208 003e 07EE903A 		vmov	s15, r3	@ int
+ 209 0042 F8EEE76A 		vcvt.f32.s32	s13, s15
+ 210 0046 7B68     		ldr	r3, [r7, #4]
+ 211 0048 D3ED057A 		vldr.32	s15, [r3, #20]
+ 212 004c 86EEA77A 		vdiv.f32	s14, s13, s15
+ 213 0050 7B68     		ldr	r3, [r7, #4]
+ARM GAS  /tmp/ccCyrih5.s 			page 5
+
+
+ 214 0052 D3ED077A 		vldr.32	s15, [r3, #28]
+ 215 0056 B4EEE77A 		vcmpe.f32	s14, s15
+ 216 005a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 217 005e 01D5     		bpl	.L5
+ 218              		.loc 1 20 0 discriminator 2
+ 219 0060 0123     		movs	r3, #1
+ 220 0062 00E0     		b	.L7
+ 221              	.L5:
+  21:Src/Robotronik_corp_pid.c ****   return 0;
+ 222              		.loc 1 21 0 is_stmt 1
+ 223 0064 0023     		movs	r3, #0
+ 224              	.L7:
+  22:Src/Robotronik_corp_pid.c **** }
+ 225              		.loc 1 22 0
+ 226 0066 1846     		mov	r0, r3
+ 227 0068 0C37     		adds	r7, r7, #12
+ 228              	.LCFI15:
+ 229              		.cfi_def_cfa_offset 4
+ 230 006a BD46     		mov	sp, r7
+ 231              	.LCFI16:
+ 232              		.cfi_def_cfa_register 13
+ 233              		@ sp needed
+ 234 006c 5DF8047B 		ldr	r7, [sp], #4
+ 235              	.LCFI17:
+ 236              		.cfi_restore 7
+ 237              		.cfi_def_cfa_offset 0
+ 238 0070 7047     		bx	lr
+ 239              		.cfi_endproc
+ 240              	.LFE2:
+ 242              		.section	.text.pid_speed_init,"ax",%progbits
+ 243              		.align	1
+ 244              		.global	pid_speed_init
+ 245              		.syntax unified
+ 246              		.thumb
+ 247              		.thumb_func
+ 248              		.fpu fpv4-sp-d16
+ 250              	pid_speed_init:
+ 251              	.LFB3:
+  23:Src/Robotronik_corp_pid.c **** 
+  24:Src/Robotronik_corp_pid.c **** 
+  25:Src/Robotronik_corp_pid.c **** void pid_speed_init(volatile PID_SPEED_DATA *pid)
+  26:Src/Robotronik_corp_pid.c **** {
+ 252              		.loc 1 26 0
+ 253              		.cfi_startproc
+ 254              		@ args = 0, pretend = 0, frame = 8
+ 255              		@ frame_needed = 1, uses_anonymous_args = 0
+ 256              		@ link register save eliminated.
+ 257 0000 80B4     		push	{r7}
+ 258              	.LCFI18:
+ 259              		.cfi_def_cfa_offset 4
+ 260              		.cfi_offset 7, -4
+ 261 0002 83B0     		sub	sp, sp, #12
+ 262              	.LCFI19:
+ 263              		.cfi_def_cfa_offset 16
+ 264 0004 00AF     		add	r7, sp, #0
+ 265              	.LCFI20:
+ 266              		.cfi_def_cfa_register 7
+ARM GAS  /tmp/ccCyrih5.s 			page 6
+
+
+ 267 0006 7860     		str	r0, [r7, #4]
+  27:Src/Robotronik_corp_pid.c ****   pid->prev_eps=0;
+ 268              		.loc 1 27 0
+ 269 0008 7B68     		ldr	r3, [r7, #4]
+ 270 000a 4FF00002 		mov	r2, #0
+ 271 000e DA60     		str	r2, [r3, #12]	@ float
+  28:Src/Robotronik_corp_pid.c ****   pid->integral=0;
+ 272              		.loc 1 28 0
+ 273 0010 7B68     		ldr	r3, [r7, #4]
+ 274 0012 4FF00002 		mov	r2, #0
+ 275 0016 1A61     		str	r2, [r3, #16]	@ float
+  29:Src/Robotronik_corp_pid.c **** }
+ 276              		.loc 1 29 0
+ 277 0018 00BF     		nop
+ 278 001a 0C37     		adds	r7, r7, #12
+ 279              	.LCFI21:
+ 280              		.cfi_def_cfa_offset 4
+ 281 001c BD46     		mov	sp, r7
+ 282              	.LCFI22:
+ 283              		.cfi_def_cfa_register 13
+ 284              		@ sp needed
+ 285 001e 5DF8047B 		ldr	r7, [sp], #4
+ 286              	.LCFI23:
+ 287              		.cfi_restore 7
+ 288              		.cfi_def_cfa_offset 0
+ 289 0022 7047     		bx	lr
+ 290              		.cfi_endproc
+ 291              	.LFE3:
+ 293              		.section	.text.pid_speed,"ax",%progbits
+ 294              		.align	1
+ 295              		.global	pid_speed
+ 296              		.syntax unified
+ 297              		.thumb
+ 298              		.thumb_func
+ 299              		.fpu fpv4-sp-d16
+ 301              	pid_speed:
+ 302              	.LFB4:
+  30:Src/Robotronik_corp_pid.c **** 
+  31:Src/Robotronik_corp_pid.c **** float pid_speed(volatile PID_SPEED_DATA *pid, float eps)
+  32:Src/Robotronik_corp_pid.c **** {
+ 303              		.loc 1 32 0
+ 304              		.cfi_startproc
+ 305              		@ args = 0, pretend = 0, frame = 16
+ 306              		@ frame_needed = 1, uses_anonymous_args = 0
+ 307              		@ link register save eliminated.
+ 308 0000 80B4     		push	{r7}
+ 309              	.LCFI24:
+ 310              		.cfi_def_cfa_offset 4
+ 311              		.cfi_offset 7, -4
+ 312 0002 85B0     		sub	sp, sp, #20
+ 313              	.LCFI25:
+ 314              		.cfi_def_cfa_offset 24
+ 315 0004 00AF     		add	r7, sp, #0
+ 316              	.LCFI26:
+ 317              		.cfi_def_cfa_register 7
+ 318 0006 7860     		str	r0, [r7, #4]
+ 319 0008 87ED000A 		vstr.32	s0, [r7]
+ARM GAS  /tmp/ccCyrih5.s 			page 7
+
+
+  33:Src/Robotronik_corp_pid.c ****   float output;
+  34:Src/Robotronik_corp_pid.c ****   pid->integral=pid->integral+pid->Te*eps;
+ 320              		.loc 1 34 0
+ 321 000c 7B68     		ldr	r3, [r7, #4]
+ 322 000e 93ED047A 		vldr.32	s14, [r3, #16]
+ 323 0012 7B68     		ldr	r3, [r7, #4]
+ 324 0014 D3ED056A 		vldr.32	s13, [r3, #20]
+ 325 0018 D7ED007A 		vldr.32	s15, [r7]
+ 326 001c 66EEA77A 		vmul.f32	s15, s13, s15
+ 327 0020 77EE277A 		vadd.f32	s15, s14, s15
+ 328 0024 7B68     		ldr	r3, [r7, #4]
+ 329 0026 C3ED047A 		vstr.32	s15, [r3, #16]
+  35:Src/Robotronik_corp_pid.c ****   output=eps*pid->Kp+pid->Ki*pid->integral+pid->Kd*(eps-pid->prev_eps)/pid->Te;
+ 330              		.loc 1 35 0
+ 331 002a 7B68     		ldr	r3, [r7, #4]
+ 332 002c 93ED007A 		vldr.32	s14, [r3]
+ 333 0030 D7ED007A 		vldr.32	s15, [r7]
+ 334 0034 27EE277A 		vmul.f32	s14, s14, s15
+ 335 0038 7B68     		ldr	r3, [r7, #4]
+ 336 003a D3ED016A 		vldr.32	s13, [r3, #4]
+ 337 003e 7B68     		ldr	r3, [r7, #4]
+ 338 0040 D3ED047A 		vldr.32	s15, [r3, #16]
+ 339 0044 66EEA77A 		vmul.f32	s15, s13, s15
+ 340 0048 37EE277A 		vadd.f32	s14, s14, s15
+ 341 004c 7B68     		ldr	r3, [r7, #4]
+ 342 004e D3ED026A 		vldr.32	s13, [r3, #8]
+ 343 0052 7B68     		ldr	r3, [r7, #4]
+ 344 0054 D3ED037A 		vldr.32	s15, [r3, #12]
+ 345 0058 97ED006A 		vldr.32	s12, [r7]
+ 346 005c 76EE677A 		vsub.f32	s15, s12, s15
+ 347 0060 26EEA76A 		vmul.f32	s12, s13, s15
+ 348 0064 7B68     		ldr	r3, [r7, #4]
+ 349 0066 D3ED056A 		vldr.32	s13, [r3, #20]
+ 350 006a C6EE267A 		vdiv.f32	s15, s12, s13
+ 351 006e 77EE277A 		vadd.f32	s15, s14, s15
+ 352 0072 C7ED037A 		vstr.32	s15, [r7, #12]
+  36:Src/Robotronik_corp_pid.c ****   pid->prev_eps=eps;
+ 353              		.loc 1 36 0
+ 354 0076 7B68     		ldr	r3, [r7, #4]
+ 355 0078 3A68     		ldr	r2, [r7]	@ float
+ 356 007a DA60     		str	r2, [r3, #12]	@ float
+  37:Src/Robotronik_corp_pid.c ****   return output;
+ 357              		.loc 1 37 0
+ 358 007c FB68     		ldr	r3, [r7, #12]	@ float
+ 359 007e 07EE903A 		vmov	s15, r3
+  38:Src/Robotronik_corp_pid.c **** }
+ 360              		.loc 1 38 0
+ 361 0082 B0EE670A 		vmov.f32	s0, s15
+ 362 0086 1437     		adds	r7, r7, #20
+ 363              	.LCFI27:
+ 364              		.cfi_def_cfa_offset 4
+ 365 0088 BD46     		mov	sp, r7
+ 366              	.LCFI28:
+ 367              		.cfi_def_cfa_register 13
+ 368              		@ sp needed
+ 369 008a 5DF8047B 		ldr	r7, [sp], #4
+ 370              	.LCFI29:
+ARM GAS  /tmp/ccCyrih5.s 			page 8
+
+
+ 371              		.cfi_restore 7
+ 372              		.cfi_def_cfa_offset 0
+ 373 008e 7047     		bx	lr
+ 374              		.cfi_endproc
+ 375              	.LFE4:
+ 377              		.text
+ 378              	.Letext0:
+ 379              		.file 2 "/usr/arm-none-eabi/include/sys/lock.h"
+ 380              		.file 3 "/usr/arm-none-eabi/include/sys/_types.h"
+ 381              		.file 4 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 382              		.file 5 "/usr/arm-none-eabi/include/sys/reent.h"
+ 383              		.file 6 "/usr/arm-none-eabi/include/stdlib.h"
+ 384              		.file 7 "Inc/Robotronik_corp_pid.h"
+ARM GAS  /tmp/ccCyrih5.s 			page 9
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 Robotronik_corp_pid.c
+     /tmp/ccCyrih5.s:18     .text.pid_init:0000000000000000 $t
+     /tmp/ccCyrih5.s:25     .text.pid_init:0000000000000000 pid_init
+     /tmp/ccCyrih5.s:70     .text.pid:0000000000000000 $t
+     /tmp/ccCyrih5.s:77     .text.pid:0000000000000000 pid
+     /tmp/ccCyrih5.s:162    .text.reached:0000000000000000 $t
+     /tmp/ccCyrih5.s:169    .text.reached:0000000000000000 reached
+     /tmp/ccCyrih5.s:243    .text.pid_speed_init:0000000000000000 $t
+     /tmp/ccCyrih5.s:250    .text.pid_speed_init:0000000000000000 pid_speed_init
+     /tmp/ccCyrih5.s:294    .text.pid_speed:0000000000000000 $t
+     /tmp/ccCyrih5.s:301    .text.pid_speed:0000000000000000 pid_speed
+
+NO UNDEFINED SYMBOLS

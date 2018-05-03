@@ -10,7 +10,7 @@
     HAL_GPIO_WritePin(side_port, side_pin, fwd_state);	\
   }									\
   else{									\
-    HAL_GPIO_WritePin(side_port, side_pin, ~(fwd_state&1)); \
+    HAL_GPIO_WritePin(side_port, side_pin, (~fwd_state)&1);		\
     value = -value;							\
   }									\
 									\

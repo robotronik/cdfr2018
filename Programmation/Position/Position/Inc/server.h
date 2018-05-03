@@ -22,7 +22,7 @@ typedef enum P_Functions_E{
   P_BALEC,
   P_SET_N_POINTS,
   P_GET_N_POINTS,
-  P_SET_POS,
+  P_GO_FORWARD,
   P_SET_ANGLE,
   P_BRAKE,
   P_SET_POSITION_X_Y
@@ -43,7 +43,7 @@ void balec(RC_Server* pserver);
 void set_odo(RC_Server* pserver);
 void get_odo(RC_Server* pserver);
 
-void set_pos(RC_Server* pserver);
+void go_forward(RC_Server* pserver);
 void set_angle(RC_Server* pserver);
 
 void set_n_points(RC_Server* pserver);//use to idicate the number of interpolation points

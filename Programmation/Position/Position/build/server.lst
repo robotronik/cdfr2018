@@ -1,0 +1,1277 @@
+ARM GAS  /tmp/ccnHCUp1.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"server.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.rodata.CHANNEL_OFFSET_TAB,"a",%progbits
+  18              		.align	2
+  21              	CHANNEL_OFFSET_TAB:
+  22 0000 08       		.byte	8
+  23 0001 1C       		.byte	28
+  24 0002 30       		.byte	48
+  25 0003 44       		.byte	68
+  26 0004 58       		.byte	88
+  27 0005 6C       		.byte	108
+  28 0006 80       		.byte	-128
+  29              		.comm	fsm,4,4
+  30              		.comm	fsm_pos_pts,2888,4
+  31              		.comm	fsm_pos_abs,44,4
+  32              		.section	.text.get_state,"ax",%progbits
+  33              		.align	1
+  34              		.global	get_state
+  35              		.syntax unified
+  36              		.thumb
+  37              		.thumb_func
+  38              		.fpu fpv4-sp-d16
+  40              	get_state:
+  41              	.LFB728:
+  42              		.file 1 "Src/server.c"
+   1:Src/server.c  **** #include "server.h"
+   2:Src/server.c  **** 
+   3:Src/server.c  **** FSM_Instance *volatile fsm;
+   4:Src/server.c  **** FSM_Position_Pts fsm_pos_pts;
+   5:Src/server.c  **** FSM_Position_Abs fsm_pos_abs;
+   6:Src/server.c  **** extern volatile int ENCODER_DIST;//distance between encoders
+   7:Src/server.c  **** extern volatile int ENCODER_STEP_DIST;//distance for 1 encoder step/2
+   8:Src/server.c  **** extern volatile int deltaL;
+   9:Src/server.c  **** extern PID_DATA pid_sum;
+  10:Src/server.c  **** extern PID_DATA pid_diff;
+  11:Src/server.c  **** extern Odometry odometry;
+  12:Src/server.c  **** extern volatile int sum_goal,diff_goal;
+  13:Src/server.c  **** 
+  14:Src/server.c  **** void get_state(RC_Server* pserver)
+  15:Src/server.c  **** {
+  43              		.loc 1 15 0
+  44              		.cfi_startproc
+  45              		@ args = 0, pretend = 0, frame = 8
+ARM GAS  /tmp/ccnHCUp1.s 			page 2
+
+
+  46              		@ frame_needed = 1, uses_anonymous_args = 0
+  47 0000 80B5     		push	{r7, lr}
+  48              	.LCFI0:
+  49              		.cfi_def_cfa_offset 8
+  50              		.cfi_offset 7, -8
+  51              		.cfi_offset 14, -4
+  52 0002 82B0     		sub	sp, sp, #8
+  53              	.LCFI1:
+  54              		.cfi_def_cfa_offset 16
+  55 0004 00AF     		add	r7, sp, #0
+  56              	.LCFI2:
+  57              		.cfi_def_cfa_register 7
+  58 0006 7860     		str	r0, [r7, #4]
+  16:Src/server.c  ****   RC_Server_Return(pserver,fsm->status);
+  59              		.loc 1 16 0
+  60 0008 054B     		ldr	r3, .L2
+  61 000a 1B68     		ldr	r3, [r3]
+  62 000c 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+  63 000e 1946     		mov	r1, r3
+  64 0010 7868     		ldr	r0, [r7, #4]
+  65 0012 FFF7FEFF 		bl	RC_Server_Return
+  17:Src/server.c  **** }
+  66              		.loc 1 17 0
+  67 0016 00BF     		nop
+  68 0018 0837     		adds	r7, r7, #8
+  69              	.LCFI3:
+  70              		.cfi_def_cfa_offset 8
+  71 001a BD46     		mov	sp, r7
+  72              	.LCFI4:
+  73              		.cfi_def_cfa_register 13
+  74              		@ sp needed
+  75 001c 80BD     		pop	{r7, pc}
+  76              	.L3:
+  77 001e 00BF     		.align	2
+  78              	.L2:
+  79 0020 00000000 		.word	fsm
+  80              		.cfi_endproc
+  81              	.LFE728:
+  83              		.section	.text.reset,"ax",%progbits
+  84              		.align	1
+  85              		.global	reset
+  86              		.syntax unified
+  87              		.thumb
+  88              		.thumb_func
+  89              		.fpu fpv4-sp-d16
+  91              	reset:
+  92              	.LFB729:
+  18:Src/server.c  **** 
+  19:Src/server.c  **** void reset(RC_Server* pserver)
+  20:Src/server.c  **** {
+  93              		.loc 1 20 0
+  94              		.cfi_startproc
+  95              		@ args = 0, pretend = 0, frame = 8
+  96              		@ frame_needed = 1, uses_anonymous_args = 0
+  97 0000 80B5     		push	{r7, lr}
+  98              	.LCFI5:
+  99              		.cfi_def_cfa_offset 8
+ARM GAS  /tmp/ccnHCUp1.s 			page 3
+
+
+ 100              		.cfi_offset 7, -8
+ 101              		.cfi_offset 14, -4
+ 102 0002 82B0     		sub	sp, sp, #8
+ 103              	.LCFI6:
+ 104              		.cfi_def_cfa_offset 16
+ 105 0004 00AF     		add	r7, sp, #0
+ 106              	.LCFI7:
+ 107              		.cfi_def_cfa_register 7
+ 108 0006 7860     		str	r0, [r7, #4]
+  21:Src/server.c  ****   RC_Server_Return(pserver);
+ 109              		.loc 1 21 0
+ 110 0008 7868     		ldr	r0, [r7, #4]
+ 111 000a FFF7FEFF 		bl	RC_Server_Return
+  22:Src/server.c  ****   HAL_NVIC_SystemReset();
+ 112              		.loc 1 22 0
+ 113 000e FFF7FEFF 		bl	HAL_NVIC_SystemReset
+  23:Src/server.c  **** }
+ 114              		.loc 1 23 0
+ 115 0012 00BF     		nop
+ 116 0014 0837     		adds	r7, r7, #8
+ 117              	.LCFI8:
+ 118              		.cfi_def_cfa_offset 8
+ 119 0016 BD46     		mov	sp, r7
+ 120              	.LCFI9:
+ 121              		.cfi_def_cfa_register 13
+ 122              		@ sp needed
+ 123 0018 80BD     		pop	{r7, pc}
+ 124              		.cfi_endproc
+ 125              	.LFE729:
+ 127              		.section	.text.set_asser_sum,"ax",%progbits
+ 128              		.align	1
+ 129              		.global	set_asser_sum
+ 130              		.syntax unified
+ 131              		.thumb
+ 132              		.thumb_func
+ 133              		.fpu fpv4-sp-d16
+ 135              	set_asser_sum:
+ 136              	.LFB730:
+  24:Src/server.c  **** 
+  25:Src/server.c  **** void set_asser_sum(RC_Server* pserver)
+  26:Src/server.c  **** {
+ 137              		.loc 1 26 0
+ 138              		.cfi_startproc
+ 139              		@ args = 0, pretend = 0, frame = 8
+ 140              		@ frame_needed = 1, uses_anonymous_args = 0
+ 141 0000 80B5     		push	{r7, lr}
+ 142              	.LCFI10:
+ 143              		.cfi_def_cfa_offset 8
+ 144              		.cfi_offset 7, -8
+ 145              		.cfi_offset 14, -4
+ 146 0002 84B0     		sub	sp, sp, #16
+ 147              	.LCFI11:
+ 148              		.cfi_def_cfa_offset 24
+ 149 0004 02AF     		add	r7, sp, #8
+ 150              	.LCFI12:
+ 151              		.cfi_def_cfa 7, 16
+ 152 0006 7860     		str	r0, [r7, #4]
+ARM GAS  /tmp/ccnHCUp1.s 			page 4
+
+
+  27:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 153              		.loc 1 27 0
+ 154 0008 084B     		ldr	r3, .L6
+ 155 000a 0193     		str	r3, [sp, #4]
+ 156 000c 084B     		ldr	r3, .L6+4
+ 157 000e 0093     		str	r3, [sp]
+ 158 0010 084B     		ldr	r3, .L6+8
+ 159 0012 094A     		ldr	r2, .L6+12
+ 160 0014 0949     		ldr	r1, .L6+16
+ 161 0016 7868     		ldr	r0, [r7, #4]
+ 162 0018 FFF7FEFF 		bl	RC_Server_Get_Args
+  28:Src/server.c  **** 		     &pid_sum.Kp,
+  29:Src/server.c  **** 		     &pid_sum.Ki,
+  30:Src/server.c  **** 		     &pid_sum.Kd,
+  31:Src/server.c  **** 		     &pid_sum.position_tolerance,
+  32:Src/server.c  **** 		     &pid_sum.speed_tolerance);
+  33:Src/server.c  ****   RC_Server_Return(pserver);
+ 163              		.loc 1 33 0
+ 164 001c 7868     		ldr	r0, [r7, #4]
+ 165 001e FFF7FEFF 		bl	RC_Server_Return
+  34:Src/server.c  **** }
+ 166              		.loc 1 34 0
+ 167 0022 00BF     		nop
+ 168 0024 0837     		adds	r7, r7, #8
+ 169              	.LCFI13:
+ 170              		.cfi_def_cfa_offset 8
+ 171 0026 BD46     		mov	sp, r7
+ 172              	.LCFI14:
+ 173              		.cfi_def_cfa_register 13
+ 174              		@ sp needed
+ 175 0028 80BD     		pop	{r7, pc}
+ 176              	.L7:
+ 177 002a 00BF     		.align	2
+ 178              	.L6:
+ 179 002c 1C000000 		.word	pid_sum+28
+ 180 0030 18000000 		.word	pid_sum+24
+ 181 0034 08000000 		.word	pid_sum+8
+ 182 0038 04000000 		.word	pid_sum+4
+ 183 003c 00000000 		.word	pid_sum
+ 184              		.cfi_endproc
+ 185              	.LFE730:
+ 187              		.section	.text.set_asser_diff,"ax",%progbits
+ 188              		.align	1
+ 189              		.global	set_asser_diff
+ 190              		.syntax unified
+ 191              		.thumb
+ 192              		.thumb_func
+ 193              		.fpu fpv4-sp-d16
+ 195              	set_asser_diff:
+ 196              	.LFB731:
+  35:Src/server.c  **** 
+  36:Src/server.c  **** void set_asser_diff(RC_Server* pserver)
+  37:Src/server.c  **** {
+ 197              		.loc 1 37 0
+ 198              		.cfi_startproc
+ 199              		@ args = 0, pretend = 0, frame = 8
+ 200              		@ frame_needed = 1, uses_anonymous_args = 0
+ARM GAS  /tmp/ccnHCUp1.s 			page 5
+
+
+ 201 0000 80B5     		push	{r7, lr}
+ 202              	.LCFI15:
+ 203              		.cfi_def_cfa_offset 8
+ 204              		.cfi_offset 7, -8
+ 205              		.cfi_offset 14, -4
+ 206 0002 84B0     		sub	sp, sp, #16
+ 207              	.LCFI16:
+ 208              		.cfi_def_cfa_offset 24
+ 209 0004 02AF     		add	r7, sp, #8
+ 210              	.LCFI17:
+ 211              		.cfi_def_cfa 7, 16
+ 212 0006 7860     		str	r0, [r7, #4]
+  38:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 213              		.loc 1 38 0
+ 214 0008 084B     		ldr	r3, .L9
+ 215 000a 0193     		str	r3, [sp, #4]
+ 216 000c 084B     		ldr	r3, .L9+4
+ 217 000e 0093     		str	r3, [sp]
+ 218 0010 084B     		ldr	r3, .L9+8
+ 219 0012 094A     		ldr	r2, .L9+12
+ 220 0014 0949     		ldr	r1, .L9+16
+ 221 0016 7868     		ldr	r0, [r7, #4]
+ 222 0018 FFF7FEFF 		bl	RC_Server_Get_Args
+  39:Src/server.c  **** 		     &pid_diff.Kp,
+  40:Src/server.c  **** 		     &pid_diff.Ki,
+  41:Src/server.c  **** 		     &pid_diff.Kd,
+  42:Src/server.c  **** 		     &pid_diff.position_tolerance,
+  43:Src/server.c  **** 		     &pid_diff.speed_tolerance);
+  44:Src/server.c  ****   RC_Server_Return(pserver);
+ 223              		.loc 1 44 0
+ 224 001c 7868     		ldr	r0, [r7, #4]
+ 225 001e FFF7FEFF 		bl	RC_Server_Return
+  45:Src/server.c  **** }
+ 226              		.loc 1 45 0
+ 227 0022 00BF     		nop
+ 228 0024 0837     		adds	r7, r7, #8
+ 229              	.LCFI18:
+ 230              		.cfi_def_cfa_offset 8
+ 231 0026 BD46     		mov	sp, r7
+ 232              	.LCFI19:
+ 233              		.cfi_def_cfa_register 13
+ 234              		@ sp needed
+ 235 0028 80BD     		pop	{r7, pc}
+ 236              	.L10:
+ 237 002a 00BF     		.align	2
+ 238              	.L9:
+ 239 002c 1C000000 		.word	pid_diff+28
+ 240 0030 18000000 		.word	pid_diff+24
+ 241 0034 08000000 		.word	pid_diff+8
+ 242 0038 04000000 		.word	pid_diff+4
+ 243 003c 00000000 		.word	pid_diff
+ 244              		.cfi_endproc
+ 245              	.LFE731:
+ 247              		.section	.text.balec,"ax",%progbits
+ 248              		.align	1
+ 249              		.global	balec
+ 250              		.syntax unified
+ARM GAS  /tmp/ccnHCUp1.s 			page 6
+
+
+ 251              		.thumb
+ 252              		.thumb_func
+ 253              		.fpu fpv4-sp-d16
+ 255              	balec:
+ 256              	.LFB732:
+  46:Src/server.c  **** 
+  47:Src/server.c  **** void balec(RC_Server* pserver)
+  48:Src/server.c  **** {
+ 257              		.loc 1 48 0
+ 258              		.cfi_startproc
+ 259              		@ args = 0, pretend = 0, frame = 8
+ 260              		@ frame_needed = 1, uses_anonymous_args = 0
+ 261 0000 80B5     		push	{r7, lr}
+ 262              	.LCFI20:
+ 263              		.cfi_def_cfa_offset 8
+ 264              		.cfi_offset 7, -8
+ 265              		.cfi_offset 14, -4
+ 266 0002 82B0     		sub	sp, sp, #8
+ 267              	.LCFI21:
+ 268              		.cfi_def_cfa_offset 16
+ 269 0004 00AF     		add	r7, sp, #0
+ 270              	.LCFI22:
+ 271              		.cfi_def_cfa_register 7
+ 272 0006 7860     		str	r0, [r7, #4]
+  49:Src/server.c  ****   RC_Server_Return(pserver);
+ 273              		.loc 1 49 0
+ 274 0008 7868     		ldr	r0, [r7, #4]
+ 275 000a FFF7FEFF 		bl	RC_Server_Return
+  50:Src/server.c  **** }
+ 276              		.loc 1 50 0
+ 277 000e 00BF     		nop
+ 278 0010 0837     		adds	r7, r7, #8
+ 279              	.LCFI23:
+ 280              		.cfi_def_cfa_offset 8
+ 281 0012 BD46     		mov	sp, r7
+ 282              	.LCFI24:
+ 283              		.cfi_def_cfa_register 13
+ 284              		@ sp needed
+ 285 0014 80BD     		pop	{r7, pc}
+ 286              		.cfi_endproc
+ 287              	.LFE732:
+ 289              		.section	.text.set_odo,"ax",%progbits
+ 290              		.align	1
+ 291              		.global	set_odo
+ 292              		.syntax unified
+ 293              		.thumb
+ 294              		.thumb_func
+ 295              		.fpu fpv4-sp-d16
+ 297              	set_odo:
+ 298              	.LFB733:
+  51:Src/server.c  **** 
+  52:Src/server.c  **** extern volatile float x0_, y0_;
+  53:Src/server.c  **** void set_odo(RC_Server* pserver)
+  54:Src/server.c  **** {
+ 299              		.loc 1 54 0
+ 300              		.cfi_startproc
+ 301              		@ args = 0, pretend = 0, frame = 16
+ARM GAS  /tmp/ccnHCUp1.s 			page 7
+
+
+ 302              		@ frame_needed = 1, uses_anonymous_args = 0
+ 303 0000 80B5     		push	{r7, lr}
+ 304              	.LCFI25:
+ 305              		.cfi_def_cfa_offset 8
+ 306              		.cfi_offset 7, -8
+ 307              		.cfi_offset 14, -4
+ 308 0002 84B0     		sub	sp, sp, #16
+ 309              	.LCFI26:
+ 310              		.cfi_def_cfa_offset 24
+ 311 0004 00AF     		add	r7, sp, #0
+ 312              	.LCFI27:
+ 313              		.cfi_def_cfa_register 7
+ 314 0006 7860     		str	r0, [r7, #4]
+  55:Src/server.c  ****   uint16_t X0, Y0;
+  56:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 315              		.loc 1 56 0
+ 316 0008 07F10C02 		add	r2, r7, #12
+ 317 000c 07F10E03 		add	r3, r7, #14
+ 318 0010 1946     		mov	r1, r3
+ 319 0012 7868     		ldr	r0, [r7, #4]
+ 320 0014 FFF7FEFF 		bl	RC_Server_Get_Args
+  57:Src/server.c  **** 		     &X0,
+  58:Src/server.c  **** 		     &Y0);
+  59:Src/server.c  ****   x0_ = (float) X0;
+ 321              		.loc 1 59 0
+ 322 0018 FB89     		ldrh	r3, [r7, #14]
+ 323 001a 07EE903A 		vmov	s15, r3	@ int
+ 324 001e F8EE677A 		vcvt.f32.u32	s15, s15
+ 325 0022 094B     		ldr	r3, .L13
+ 326 0024 C3ED007A 		vstr.32	s15, [r3]
+  60:Src/server.c  ****   y0_ = (float) Y0;    
+ 327              		.loc 1 60 0
+ 328 0028 BB89     		ldrh	r3, [r7, #12]
+ 329 002a 07EE903A 		vmov	s15, r3	@ int
+ 330 002e F8EE677A 		vcvt.f32.u32	s15, s15
+ 331 0032 064B     		ldr	r3, .L13+4
+ 332 0034 C3ED007A 		vstr.32	s15, [r3]
+  61:Src/server.c  ****   RC_Server_Return(pserver);
+ 333              		.loc 1 61 0
+ 334 0038 7868     		ldr	r0, [r7, #4]
+ 335 003a FFF7FEFF 		bl	RC_Server_Return
+  62:Src/server.c  **** }
+ 336              		.loc 1 62 0
+ 337 003e 00BF     		nop
+ 338 0040 1037     		adds	r7, r7, #16
+ 339              	.LCFI28:
+ 340              		.cfi_def_cfa_offset 8
+ 341 0042 BD46     		mov	sp, r7
+ 342              	.LCFI29:
+ 343              		.cfi_def_cfa_register 13
+ 344              		@ sp needed
+ 345 0044 80BD     		pop	{r7, pc}
+ 346              	.L14:
+ 347 0046 00BF     		.align	2
+ 348              	.L13:
+ 349 0048 00000000 		.word	x0_
+ 350 004c 00000000 		.word	y0_
+ARM GAS  /tmp/ccnHCUp1.s 			page 8
+
+
+ 351              		.cfi_endproc
+ 352              	.LFE733:
+ 354              		.global	__aeabi_f2d
+ 355              		.section	.text.get_odo,"ax",%progbits
+ 356              		.align	1
+ 357              		.global	get_odo
+ 358              		.syntax unified
+ 359              		.thumb
+ 360              		.thumb_func
+ 361              		.fpu fpv4-sp-d16
+ 363              	get_odo:
+ 364              	.LFB734:
+  63:Src/server.c  **** 
+  64:Src/server.c  **** void get_odo(RC_Server* pserver)
+  65:Src/server.c  **** {
+ 365              		.loc 1 65 0
+ 366              		.cfi_startproc
+ 367              		@ args = 0, pretend = 0, frame = 8
+ 368              		@ frame_needed = 1, uses_anonymous_args = 0
+ 369 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 370              	.LCFI30:
+ 371              		.cfi_def_cfa_offset 20
+ 372              		.cfi_offset 4, -20
+ 373              		.cfi_offset 5, -16
+ 374              		.cfi_offset 6, -12
+ 375              		.cfi_offset 7, -8
+ 376              		.cfi_offset 14, -4
+ 377 0002 85B0     		sub	sp, sp, #20
+ 378              	.LCFI31:
+ 379              		.cfi_def_cfa_offset 40
+ 380 0004 02AF     		add	r7, sp, #8
+ 381              	.LCFI32:
+ 382              		.cfi_def_cfa 7, 32
+ 383 0006 7860     		str	r0, [r7, #4]
+  66:Src/server.c  ****   RC_Server_Return(pserver, (uint16_t) odometry.x, (uint16_t) odometry.y, odometry.theta);
+ 384              		.loc 1 66 0
+ 385 0008 114B     		ldr	r3, .L16
+ 386 000a D3ED067A 		vldr.32	s15, [r3, #24]
+ 387 000e FCEEE77A 		vcvt.u32.f32	s15, s15
+ 388 0012 17EE903A 		vmov	r3, s15	@ int
+ 389 0016 9BB2     		uxth	r3, r3
+ 390 0018 1D46     		mov	r5, r3
+ 391 001a 0D4B     		ldr	r3, .L16
+ 392 001c D3ED077A 		vldr.32	s15, [r3, #28]
+ 393 0020 FCEEE77A 		vcvt.u32.f32	s15, s15
+ 394 0024 17EE903A 		vmov	r3, s15	@ int
+ 395 0028 9BB2     		uxth	r3, r3
+ 396 002a 1E46     		mov	r6, r3
+ 397 002c 084B     		ldr	r3, .L16
+ 398 002e 1B6A     		ldr	r3, [r3, #32]	@ float
+ 399 0030 1846     		mov	r0, r3	@ float
+ 400 0032 FFF7FEFF 		bl	__aeabi_f2d
+ 401              	.LVL0:
+ 402 0036 0346     		mov	r3, r0
+ 403 0038 0C46     		mov	r4, r1
+ 404 003a CDE90034 		strd	r3, [sp]
+ 405 003e 3246     		mov	r2, r6
+ARM GAS  /tmp/ccnHCUp1.s 			page 9
+
+
+ 406 0040 2946     		mov	r1, r5
+ 407 0042 7868     		ldr	r0, [r7, #4]
+ 408 0044 FFF7FEFF 		bl	RC_Server_Return
+  67:Src/server.c  **** }
+ 409              		.loc 1 67 0
+ 410 0048 00BF     		nop
+ 411 004a 0C37     		adds	r7, r7, #12
+ 412              	.LCFI33:
+ 413              		.cfi_def_cfa_offset 20
+ 414 004c BD46     		mov	sp, r7
+ 415              	.LCFI34:
+ 416              		.cfi_def_cfa_register 13
+ 417              		@ sp needed
+ 418 004e F0BD     		pop	{r4, r5, r6, r7, pc}
+ 419              	.L17:
+ 420              		.align	2
+ 421              	.L16:
+ 422 0050 00000000 		.word	odometry
+ 423              		.cfi_endproc
+ 424              	.LFE734:
+ 426              		.section	.text.go_forward,"ax",%progbits
+ 427              		.align	1
+ 428              		.global	go_forward
+ 429              		.syntax unified
+ 430              		.thumb
+ 431              		.thumb_func
+ 432              		.fpu fpv4-sp-d16
+ 434              	go_forward:
+ 435              	.LFB735:
+  68:Src/server.c  **** 
+  69:Src/server.c  **** void go_forward(RC_Server* pserver) //2 parameters
+  70:Src/server.c  **** {
+ 436              		.loc 1 70 0
+ 437              		.cfi_startproc
+ 438              		@ args = 0, pretend = 0, frame = 8
+ 439              		@ frame_needed = 1, uses_anonymous_args = 0
+ 440 0000 80B5     		push	{r7, lr}
+ 441              	.LCFI35:
+ 442              		.cfi_def_cfa_offset 8
+ 443              		.cfi_offset 7, -8
+ 444              		.cfi_offset 14, -4
+ 445 0002 82B0     		sub	sp, sp, #8
+ 446              	.LCFI36:
+ 447              		.cfi_def_cfa_offset 16
+ 448 0004 00AF     		add	r7, sp, #0
+ 449              	.LCFI37:
+ 450              		.cfi_def_cfa_register 7
+ 451 0006 7860     		str	r0, [r7, #4]
+  71:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 452              		.loc 1 71 0
+ 453 0008 084A     		ldr	r2, .L19
+ 454 000a 0949     		ldr	r1, .L19+4
+ 455 000c 7868     		ldr	r0, [r7, #4]
+ 456 000e FFF7FEFF 		bl	RC_Server_Get_Args
+  72:Src/server.c  ****          &fsm_pos_abs.linear_speed,
+  73:Src/server.c  ****          &fsm_pos_abs.pos);
+  74:Src/server.c  ****   fsm_pos_abs.instance.run=FSM_Pos_Init;
+ARM GAS  /tmp/ccnHCUp1.s 			page 10
+
+
+ 457              		.loc 1 74 0
+ 458 0012 084B     		ldr	r3, .L19+8
+ 459 0014 084A     		ldr	r2, .L19+12
+ 460 0016 1A60     		str	r2, [r3]
+  75:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
+ 461              		.loc 1 75 0
+ 462 0018 084B     		ldr	r3, .L19+16
+ 463 001a 064A     		ldr	r2, .L19+8
+ 464 001c 1A60     		str	r2, [r3]
+  76:Src/server.c  ****   RC_Server_Return(pserver);
+ 465              		.loc 1 76 0
+ 466 001e 7868     		ldr	r0, [r7, #4]
+ 467 0020 FFF7FEFF 		bl	RC_Server_Return
+  77:Src/server.c  **** }
+ 468              		.loc 1 77 0
+ 469 0024 00BF     		nop
+ 470 0026 0837     		adds	r7, r7, #8
+ 471              	.LCFI38:
+ 472              		.cfi_def_cfa_offset 8
+ 473 0028 BD46     		mov	sp, r7
+ 474              	.LCFI39:
+ 475              		.cfi_def_cfa_register 13
+ 476              		@ sp needed
+ 477 002a 80BD     		pop	{r7, pc}
+ 478              	.L20:
+ 479              		.align	2
+ 480              	.L19:
+ 481 002c 10000000 		.word	fsm_pos_abs+16
+ 482 0030 14000000 		.word	fsm_pos_abs+20
+ 483 0034 00000000 		.word	fsm_pos_abs
+ 484 0038 00000000 		.word	FSM_Pos_Init
+ 485 003c 00000000 		.word	fsm
+ 486              		.cfi_endproc
+ 487              	.LFE735:
+ 489              		.section	.text.set_angle,"ax",%progbits
+ 490              		.align	1
+ 491              		.global	set_angle
+ 492              		.syntax unified
+ 493              		.thumb
+ 494              		.thumb_func
+ 495              		.fpu fpv4-sp-d16
+ 497              	set_angle:
+ 498              	.LFB736:
+  78:Src/server.c  **** 
+  79:Src/server.c  **** void set_angle(RC_Server* pserver)//2 parameters
+  80:Src/server.c  **** {
+ 499              		.loc 1 80 0
+ 500              		.cfi_startproc
+ 501              		@ args = 0, pretend = 0, frame = 8
+ 502              		@ frame_needed = 1, uses_anonymous_args = 0
+ 503 0000 80B5     		push	{r7, lr}
+ 504              	.LCFI40:
+ 505              		.cfi_def_cfa_offset 8
+ 506              		.cfi_offset 7, -8
+ 507              		.cfi_offset 14, -4
+ 508 0002 82B0     		sub	sp, sp, #8
+ 509              	.LCFI41:
+ARM GAS  /tmp/ccnHCUp1.s 			page 11
+
+
+ 510              		.cfi_def_cfa_offset 16
+ 511 0004 00AF     		add	r7, sp, #0
+ 512              	.LCFI42:
+ 513              		.cfi_def_cfa_register 7
+ 514 0006 7860     		str	r0, [r7, #4]
+  81:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 515              		.loc 1 81 0
+ 516 0008 084A     		ldr	r2, .L22
+ 517 000a 0949     		ldr	r1, .L22+4
+ 518 000c 7868     		ldr	r0, [r7, #4]
+ 519 000e FFF7FEFF 		bl	RC_Server_Get_Args
+  82:Src/server.c  ****          &fsm_pos_abs.angular_speed,
+  83:Src/server.c  ****          &fsm_pos_abs.angle);
+  84:Src/server.c  ****   fsm_pos_abs.instance.run=FSM_Angle_Init;
+ 520              		.loc 1 84 0
+ 521 0012 084B     		ldr	r3, .L22+8
+ 522 0014 084A     		ldr	r2, .L22+12
+ 523 0016 1A60     		str	r2, [r3]
+  85:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
+ 524              		.loc 1 85 0
+ 525 0018 084B     		ldr	r3, .L22+16
+ 526 001a 064A     		ldr	r2, .L22+8
+ 527 001c 1A60     		str	r2, [r3]
+  86:Src/server.c  ****   RC_Server_Return(pserver);
+ 528              		.loc 1 86 0
+ 529 001e 7868     		ldr	r0, [r7, #4]
+ 530 0020 FFF7FEFF 		bl	RC_Server_Return
+  87:Src/server.c  **** }
+ 531              		.loc 1 87 0
+ 532 0024 00BF     		nop
+ 533 0026 0837     		adds	r7, r7, #8
+ 534              	.LCFI43:
+ 535              		.cfi_def_cfa_offset 8
+ 536 0028 BD46     		mov	sp, r7
+ 537              	.LCFI44:
+ 538              		.cfi_def_cfa_register 13
+ 539              		@ sp needed
+ 540 002a 80BD     		pop	{r7, pc}
+ 541              	.L23:
+ 542              		.align	2
+ 543              	.L22:
+ 544 002c 0C000000 		.word	fsm_pos_abs+12
+ 545 0030 18000000 		.word	fsm_pos_abs+24
+ 546 0034 00000000 		.word	fsm_pos_abs
+ 547 0038 00000000 		.word	FSM_Angle_Init
+ 548 003c 00000000 		.word	fsm
+ 549              		.cfi_endproc
+ 550              	.LFE736:
+ 552              		.section	.text.set_n_points,"ax",%progbits
+ 553              		.align	1
+ 554              		.global	set_n_points
+ 555              		.syntax unified
+ 556              		.thumb
+ 557              		.thumb_func
+ 558              		.fpu fpv4-sp-d16
+ 560              	set_n_points:
+ 561              	.LFB737:
+ARM GAS  /tmp/ccnHCUp1.s 			page 12
+
+
+  88:Src/server.c  **** 
+  89:Src/server.c  **** void set_n_points(RC_Server* pserver)//1 parameters
+  90:Src/server.c  **** {
+ 562              		.loc 1 90 0
+ 563              		.cfi_startproc
+ 564              		@ args = 0, pretend = 0, frame = 8
+ 565              		@ frame_needed = 1, uses_anonymous_args = 0
+ 566 0000 80B5     		push	{r7, lr}
+ 567              	.LCFI45:
+ 568              		.cfi_def_cfa_offset 8
+ 569              		.cfi_offset 7, -8
+ 570              		.cfi_offset 14, -4
+ 571 0002 82B0     		sub	sp, sp, #8
+ 572              	.LCFI46:
+ 573              		.cfi_def_cfa_offset 16
+ 574 0004 00AF     		add	r7, sp, #0
+ 575              	.LCFI47:
+ 576              		.cfi_def_cfa_register 7
+ 577 0006 7860     		str	r0, [r7, #4]
+  91:Src/server.c  ****   RC_Server_Get_Args(pserver, &fsm_pos_pts.points.n);
+ 578              		.loc 1 91 0
+ 579 0008 0749     		ldr	r1, .L25
+ 580 000a 7868     		ldr	r0, [r7, #4]
+ 581 000c FFF7FEFF 		bl	RC_Server_Get_Args
+  92:Src/server.c  ****   RC_Server_Return(pserver);
+ 582              		.loc 1 92 0
+ 583 0010 7868     		ldr	r0, [r7, #4]
+ 584 0012 FFF7FEFF 		bl	RC_Server_Return
+  93:Src/server.c  ****   fsm_pos_pts.reception=0;
+ 585              		.loc 1 93 0
+ 586 0016 054B     		ldr	r3, .L25+4
+ 587 0018 0022     		movs	r2, #0
+ 588 001a C3F8002B 		str	r2, [r3, #2816]
+  94:Src/server.c  **** }
+ 589              		.loc 1 94 0
+ 590 001e 00BF     		nop
+ 591 0020 0837     		adds	r7, r7, #8
+ 592              	.LCFI48:
+ 593              		.cfi_def_cfa_offset 8
+ 594 0022 BD46     		mov	sp, r7
+ 595              	.LCFI49:
+ 596              		.cfi_def_cfa_register 13
+ 597              		@ sp needed
+ 598 0024 80BD     		pop	{r7, pc}
+ 599              	.L26:
+ 600 0026 00BF     		.align	2
+ 601              	.L25:
+ 602 0028 2C030000 		.word	fsm_pos_pts+812
+ 603 002c 00000000 		.word	fsm_pos_pts
+ 604              		.cfi_endproc
+ 605              	.LFE737:
+ 607              		.section	.text.get_n_points,"ax",%progbits
+ 608              		.align	1
+ 609              		.global	get_n_points
+ 610              		.syntax unified
+ 611              		.thumb
+ 612              		.thumb_func
+ARM GAS  /tmp/ccnHCUp1.s 			page 13
+
+
+ 613              		.fpu fpv4-sp-d16
+ 615              	get_n_points:
+ 616              	.LFB738:
+  95:Src/server.c  **** 
+  96:Src/server.c  **** typedef uint16_t uiont16_t;
+  97:Src/server.c  **** void get_n_points(RC_Server* pserver)//1 parameters
+  98:Src/server.c  **** {
+ 617              		.loc 1 98 0
+ 618              		.cfi_startproc
+ 619              		@ args = 0, pretend = 0, frame = 16
+ 620              		@ frame_needed = 1, uses_anonymous_args = 0
+ 621 0000 80B5     		push	{r7, lr}
+ 622              	.LCFI50:
+ 623              		.cfi_def_cfa_offset 8
+ 624              		.cfi_offset 7, -8
+ 625              		.cfi_offset 14, -4
+ 626 0002 84B0     		sub	sp, sp, #16
+ 627              	.LCFI51:
+ 628              		.cfi_def_cfa_offset 24
+ 629 0004 00AF     		add	r7, sp, #0
+ 630              	.LCFI52:
+ 631              		.cfi_def_cfa_register 7
+ 632 0006 7860     		str	r0, [r7, #4]
+  99:Src/server.c  ****   uiont16_t pt_x, pt_y;
+ 100:Src/server.c  ****   RC_Server_Get_Args(pserver, &pt_x, &pt_y);
+ 633              		.loc 1 100 0
+ 634 0008 07F10C02 		add	r2, r7, #12
+ 635 000c 07F10E03 		add	r3, r7, #14
+ 636 0010 1946     		mov	r1, r3
+ 637 0012 7868     		ldr	r0, [r7, #4]
+ 638 0014 FFF7FEFF 		bl	RC_Server_Get_Args
+ 101:Src/server.c  ****   fsm_pos_pts.points.x[fsm_pos_pts.reception] = (float) pt_x;
+ 639              		.loc 1 101 0
+ 640 0018 FA89     		ldrh	r2, [r7, #14]
+ 641 001a 234B     		ldr	r3, .L30
+ 642 001c D3F8003B 		ldr	r3, [r3, #2816]
+ 643 0020 07EE902A 		vmov	s15, r2	@ int
+ 644 0024 F8EE677A 		vcvt.f32.u32	s15, s15
+ 645 0028 1F4A     		ldr	r2, .L30
+ 646 002a 0233     		adds	r3, r3, #2
+ 647 002c 9B00     		lsls	r3, r3, #2
+ 648 002e 1344     		add	r3, r3, r2
+ 649 0030 0433     		adds	r3, r3, #4
+ 650 0032 C3ED007A 		vstr.32	s15, [r3]
+ 102:Src/server.c  ****   fsm_pos_pts.points.y[fsm_pos_pts.reception] = (float) pt_y;
+ 651              		.loc 1 102 0
+ 652 0036 BA89     		ldrh	r2, [r7, #12]
+ 653 0038 1B4B     		ldr	r3, .L30
+ 654 003a D3F8003B 		ldr	r3, [r3, #2816]
+ 655 003e 07EE902A 		vmov	s15, r2	@ int
+ 656 0042 F8EE677A 		vcvt.f32.u32	s15, s15
+ 657 0046 184A     		ldr	r2, .L30
+ 658 0048 6633     		adds	r3, r3, #102
+ 659 004a 9B00     		lsls	r3, r3, #2
+ 660 004c 1344     		add	r3, r3, r2
+ 661 004e 0433     		adds	r3, r3, #4
+ 662 0050 C3ED007A 		vstr.32	s15, [r3]
+ARM GAS  /tmp/ccnHCUp1.s 			page 14
+
+
+ 103:Src/server.c  ****   RC_Server_Return(pserver);
+ 663              		.loc 1 103 0
+ 664 0054 7868     		ldr	r0, [r7, #4]
+ 665 0056 FFF7FEFF 		bl	RC_Server_Return
+ 104:Src/server.c  ****   fsm_pos_pts.reception++;
+ 666              		.loc 1 104 0
+ 667 005a 134B     		ldr	r3, .L30
+ 668 005c D3F8003B 		ldr	r3, [r3, #2816]
+ 669 0060 0133     		adds	r3, r3, #1
+ 670 0062 114A     		ldr	r2, .L30
+ 671 0064 C2F8003B 		str	r3, [r2, #2816]
+ 105:Src/server.c  ****   if(fsm_pos_pts.reception==fsm_pos_pts.points.n)
+ 672              		.loc 1 105 0
+ 673 0068 0F4B     		ldr	r3, .L30
+ 674 006a D3F8002B 		ldr	r2, [r3, #2816]
+ 675 006e 0E4B     		ldr	r3, .L30
+ 676 0070 D3F82C33 		ldr	r3, [r3, #812]
+ 677 0074 9A42     		cmp	r2, r3
+ 678 0076 12D1     		bne	.L29
+ 106:Src/server.c  ****   {
+ 107:Src/server.c  ****       interpol_calc(&fsm_pos_pts.points);
+ 679              		.loc 1 107 0
+ 680 0078 0C48     		ldr	r0, .L30+4
+ 681 007a FFF7FEFF 		bl	interpol_calc
+ 108:Src/server.c  ****       pid_speed_init(&fsm_pos_pts.pid_speed_l);
+ 682              		.loc 1 108 0
+ 683 007e 0C48     		ldr	r0, .L30+8
+ 684 0080 FFF7FEFF 		bl	pid_speed_init
+ 109:Src/server.c  ****       pid_speed_init(&fsm_pos_pts.pid_speed_r);
+ 685              		.loc 1 109 0
+ 686 0084 0B48     		ldr	r0, .L30+12
+ 687 0086 FFF7FEFF 		bl	pid_speed_init
+ 110:Src/server.c  ****       fsm_pos_pts.instance.run=FSM_Pts_Run;
+ 688              		.loc 1 110 0
+ 689 008a 074B     		ldr	r3, .L30
+ 690 008c 0A4A     		ldr	r2, .L30+16
+ 691 008e 1A60     		str	r2, [r3]
+ 111:Src/server.c  ****       fsm = (FSM_Instance*volatile) &fsm_pos_pts;//all data received
+ 692              		.loc 1 111 0
+ 693 0090 0A4B     		ldr	r3, .L30+20
+ 694 0092 054A     		ldr	r2, .L30
+ 695 0094 1A60     		str	r2, [r3]
+ 112:Src/server.c  ****       fsm->status=FSM_RUNNING;
+ 696              		.loc 1 112 0
+ 697 0096 094B     		ldr	r3, .L30+20
+ 698 0098 1B68     		ldr	r3, [r3]
+ 699 009a 0022     		movs	r2, #0
+ 700 009c 1A71     		strb	r2, [r3, #4]
+ 701              	.L29:
+ 113:Src/server.c  ****   }
+ 114:Src/server.c  **** }
+ 702              		.loc 1 114 0
+ 703 009e 00BF     		nop
+ 704 00a0 1037     		adds	r7, r7, #16
+ 705              	.LCFI53:
+ 706              		.cfi_def_cfa_offset 8
+ 707 00a2 BD46     		mov	sp, r7
+ARM GAS  /tmp/ccnHCUp1.s 			page 15
+
+
+ 708              	.LCFI54:
+ 709              		.cfi_def_cfa_register 13
+ 710              		@ sp needed
+ 711 00a4 80BD     		pop	{r7, pc}
+ 712              	.L31:
+ 713 00a6 00BF     		.align	2
+ 714              	.L30:
+ 715 00a8 00000000 		.word	fsm_pos_pts
+ 716 00ac 0C000000 		.word	fsm_pos_pts+12
+ 717 00b0 140B0000 		.word	fsm_pos_pts+2836
+ 718 00b4 2C0B0000 		.word	fsm_pos_pts+2860
+ 719 00b8 00000000 		.word	FSM_Pts_Run
+ 720 00bc 00000000 		.word	fsm
+ 721              		.cfi_endproc
+ 722              	.LFE738:
+ 724              		.section	.text.set_n_points_asser,"ax",%progbits
+ 725              		.align	1
+ 726              		.global	set_n_points_asser
+ 727              		.syntax unified
+ 728              		.thumb
+ 729              		.thumb_func
+ 730              		.fpu fpv4-sp-d16
+ 732              	set_n_points_asser:
+ 733              	.LFB739:
+ 115:Src/server.c  **** 
+ 116:Src/server.c  **** void set_n_points_asser(RC_Server* pserver)
+ 117:Src/server.c  **** {
+ 734              		.loc 1 117 0
+ 735              		.cfi_startproc
+ 736              		@ args = 0, pretend = 0, frame = 24
+ 737              		@ frame_needed = 1, uses_anonymous_args = 0
+ 738 0000 80B5     		push	{r7, lr}
+ 739              	.LCFI55:
+ 740              		.cfi_def_cfa_offset 8
+ 741              		.cfi_offset 7, -8
+ 742              		.cfi_offset 14, -4
+ 743 0002 8CB0     		sub	sp, sp, #48
+ 744              	.LCFI56:
+ 745              		.cfi_def_cfa_offset 56
+ 746 0004 06AF     		add	r7, sp, #24
+ 747              	.LCFI57:
+ 748              		.cfi_def_cfa 7, 32
+ 749 0006 7860     		str	r0, [r7, #4]
+ 118:Src/server.c  ****   float Kp,Ki,Kd;
+ 119:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 750              		.loc 1 119 0
+ 751 0008 1B4B     		ldr	r3, .L33
+ 752 000a 0493     		str	r3, [sp, #16]
+ 753 000c 07F10C03 		add	r3, r7, #12
+ 754 0010 0393     		str	r3, [sp, #12]
+ 755 0012 07F11003 		add	r3, r7, #16
+ 756 0016 0293     		str	r3, [sp, #8]
+ 757 0018 07F11403 		add	r3, r7, #20
+ 758 001c 0193     		str	r3, [sp, #4]
+ 759 001e 174B     		ldr	r3, .L33+4
+ 760 0020 0093     		str	r3, [sp]
+ 761 0022 174B     		ldr	r3, .L33+8
+ARM GAS  /tmp/ccnHCUp1.s 			page 16
+
+
+ 762 0024 174A     		ldr	r2, .L33+12
+ 763 0026 1849     		ldr	r1, .L33+16
+ 764 0028 7868     		ldr	r0, [r7, #4]
+ 765 002a FFF7FEFF 		bl	RC_Server_Get_Args
+ 120:Src/server.c  ****                      &fsm_pos_pts.z,
+ 121:Src/server.c  ****                      &fsm_pos_pts.w,
+ 122:Src/server.c  ****                      &fsm_pos_pts.vc,
+ 123:Src/server.c  ****                      &fsm_pos_pts.vr,
+ 124:Src/server.c  ****                      &Kp,
+ 125:Src/server.c  ****                      &Ki,
+ 126:Src/server.c  ****                      &Kd,
+ 127:Src/server.c  ****                      &fsm_pos_pts.speed_percent_tolerance);
+ 128:Src/server.c  ****   RC_Server_Return(pserver);
+ 766              		.loc 1 128 0
+ 767 002e 7868     		ldr	r0, [r7, #4]
+ 768 0030 FFF7FEFF 		bl	RC_Server_Return
+ 129:Src/server.c  ****   fsm_pos_pts.pid_speed_l.Kp=Kp;
+ 769              		.loc 1 129 0
+ 770 0034 7A69     		ldr	r2, [r7, #20]	@ float
+ 771 0036 154B     		ldr	r3, .L33+20
+ 772 0038 03F61433 		addw	r3, r3, #2836
+ 773 003c 1A60     		str	r2, [r3]	@ float
+ 130:Src/server.c  ****   fsm_pos_pts.pid_speed_l.Ki=Ki;
+ 774              		.loc 1 130 0
+ 775 003e 3A69     		ldr	r2, [r7, #16]	@ float
+ 776 0040 124B     		ldr	r3, .L33+20
+ 777 0042 03F61833 		addw	r3, r3, #2840
+ 778 0046 1A60     		str	r2, [r3]	@ float
+ 131:Src/server.c  ****   fsm_pos_pts.pid_speed_l.Kd=Kd;
+ 779              		.loc 1 131 0
+ 780 0048 FA68     		ldr	r2, [r7, #12]	@ float
+ 781 004a 104B     		ldr	r3, .L33+20
+ 782 004c 03F61C33 		addw	r3, r3, #2844
+ 783 0050 1A60     		str	r2, [r3]	@ float
+ 132:Src/server.c  ****   fsm_pos_pts.pid_speed_r.Kp=Kp;
+ 784              		.loc 1 132 0
+ 785 0052 7A69     		ldr	r2, [r7, #20]	@ float
+ 786 0054 0D4B     		ldr	r3, .L33+20
+ 787 0056 03F62C33 		addw	r3, r3, #2860
+ 788 005a 1A60     		str	r2, [r3]	@ float
+ 133:Src/server.c  ****   fsm_pos_pts.pid_speed_r.Ki=Ki;
+ 789              		.loc 1 133 0
+ 790 005c 3A69     		ldr	r2, [r7, #16]	@ float
+ 791 005e 0B4B     		ldr	r3, .L33+20
+ 792 0060 03F53363 		add	r3, r3, #2864
+ 793 0064 1A60     		str	r2, [r3]	@ float
+ 134:Src/server.c  ****   fsm_pos_pts.pid_speed_r.Kd=Kd;
+ 794              		.loc 1 134 0
+ 795 0066 FA68     		ldr	r2, [r7, #12]	@ float
+ 796 0068 084B     		ldr	r3, .L33+20
+ 797 006a 03F63433 		addw	r3, r3, #2868
+ 798 006e 1A60     		str	r2, [r3]	@ float
+ 135:Src/server.c  **** }
+ 799              		.loc 1 135 0
+ 800 0070 00BF     		nop
+ 801 0072 1837     		adds	r7, r7, #24
+ 802              	.LCFI58:
+ARM GAS  /tmp/ccnHCUp1.s 			page 17
+
+
+ 803              		.cfi_def_cfa_offset 8
+ 804 0074 BD46     		mov	sp, r7
+ 805              	.LCFI59:
+ 806              		.cfi_def_cfa_register 13
+ 807              		@ sp needed
+ 808 0076 80BD     		pop	{r7, pc}
+ 809              	.L34:
+ 810              		.align	2
+ 811              	.L33:
+ 812 0078 440B0000 		.word	fsm_pos_pts+2884
+ 813 007c 100B0000 		.word	fsm_pos_pts+2832
+ 814 0080 0C0B0000 		.word	fsm_pos_pts+2828
+ 815 0084 040B0000 		.word	fsm_pos_pts+2820
+ 816 0088 080B0000 		.word	fsm_pos_pts+2824
+ 817 008c 00000000 		.word	fsm_pos_pts
+ 818              		.cfi_endproc
+ 819              	.LFE739:
+ 821              		.section	.text.brake,"ax",%progbits
+ 822              		.align	1
+ 823              		.global	brake
+ 824              		.syntax unified
+ 825              		.thumb
+ 826              		.thumb_func
+ 827              		.fpu fpv4-sp-d16
+ 829              	brake:
+ 830              	.LFB740:
+ 136:Src/server.c  **** 
+ 137:Src/server.c  **** 
+ 138:Src/server.c  **** void brake(RC_Server* pserver)
+ 139:Src/server.c  **** {
+ 831              		.loc 1 139 0
+ 832              		.cfi_startproc
+ 833              		@ args = 0, pretend = 0, frame = 8
+ 834              		@ frame_needed = 1, uses_anonymous_args = 0
+ 835 0000 80B5     		push	{r7, lr}
+ 836              	.LCFI60:
+ 837              		.cfi_def_cfa_offset 8
+ 838              		.cfi_offset 7, -8
+ 839              		.cfi_offset 14, -4
+ 840 0002 82B0     		sub	sp, sp, #8
+ 841              	.LCFI61:
+ 842              		.cfi_def_cfa_offset 16
+ 843 0004 00AF     		add	r7, sp, #0
+ 844              	.LCFI62:
+ 845              		.cfi_def_cfa_register 7
+ 846 0006 7860     		str	r0, [r7, #4]
+ 140:Src/server.c  ****   RC_Server_Get_Args(pserver);
+ 847              		.loc 1 140 0
+ 848 0008 7868     		ldr	r0, [r7, #4]
+ 849 000a FFF7FEFF 		bl	RC_Server_Get_Args
+ 141:Src/server.c  ****   fsm_pos_abs.instance.run=FSM_Pos_Wait;
+ 850              		.loc 1 141 0
+ 851 000e 0F4B     		ldr	r3, .L36
+ 852 0010 0F4A     		ldr	r2, .L36+4
+ 853 0012 1A60     		str	r2, [r3]
+ 142:Src/server.c  ****   fsm->status=FSM_RUNNING;
+ 854              		.loc 1 142 0
+ARM GAS  /tmp/ccnHCUp1.s 			page 18
+
+
+ 855 0014 0F4B     		ldr	r3, .L36+8
+ 856 0016 1B68     		ldr	r3, [r3]
+ 857 0018 0022     		movs	r2, #0
+ 858 001a 1A71     		strb	r2, [r3, #4]
+ 143:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
+ 859              		.loc 1 143 0
+ 860 001c 0D4B     		ldr	r3, .L36+8
+ 861 001e 0B4A     		ldr	r2, .L36
+ 862 0020 1A60     		str	r2, [r3]
+ 144:Src/server.c  ****   sum_goal=odometry.encoder_l.steps + odometry.encoder_r.steps;
+ 863              		.loc 1 144 0
+ 864 0022 0D4B     		ldr	r3, .L36+12
+ 865 0024 5A68     		ldr	r2, [r3, #4]
+ 866 0026 0C4B     		ldr	r3, .L36+12
+ 867 0028 1B69     		ldr	r3, [r3, #16]
+ 868 002a 1344     		add	r3, r3, r2
+ 869 002c 0B4A     		ldr	r2, .L36+16
+ 870 002e 1360     		str	r3, [r2]
+ 145:Src/server.c  ****   diff_goal=odometry.encoder_r.steps - odometry.encoder_l.steps;//to stay in place
+ 871              		.loc 1 145 0
+ 872 0030 094B     		ldr	r3, .L36+12
+ 873 0032 1A69     		ldr	r2, [r3, #16]
+ 874 0034 084B     		ldr	r3, .L36+12
+ 875 0036 5B68     		ldr	r3, [r3, #4]
+ 876 0038 D31A     		subs	r3, r2, r3
+ 877 003a 094A     		ldr	r2, .L36+20
+ 878 003c 1360     		str	r3, [r2]
+ 146:Src/server.c  ****   RC_Server_Return(pserver);
+ 879              		.loc 1 146 0
+ 880 003e 7868     		ldr	r0, [r7, #4]
+ 881 0040 FFF7FEFF 		bl	RC_Server_Return
+ 147:Src/server.c  **** }
+ 882              		.loc 1 147 0
+ 883 0044 00BF     		nop
+ 884 0046 0837     		adds	r7, r7, #8
+ 885              	.LCFI63:
+ 886              		.cfi_def_cfa_offset 8
+ 887 0048 BD46     		mov	sp, r7
+ 888              	.LCFI64:
+ 889              		.cfi_def_cfa_register 13
+ 890              		@ sp needed
+ 891 004a 80BD     		pop	{r7, pc}
+ 892              	.L37:
+ 893              		.align	2
+ 894              	.L36:
+ 895 004c 00000000 		.word	fsm_pos_abs
+ 896 0050 00000000 		.word	FSM_Pos_Wait
+ 897 0054 00000000 		.word	fsm
+ 898 0058 00000000 		.word	odometry
+ 899 005c 00000000 		.word	sum_goal
+ 900 0060 00000000 		.word	diff_goal
+ 901              		.cfi_endproc
+ 902              	.LFE740:
+ 904              		.section	.text.set_position_x_y,"ax",%progbits
+ 905              		.align	1
+ 906              		.global	set_position_x_y
+ 907              		.syntax unified
+ARM GAS  /tmp/ccnHCUp1.s 			page 19
+
+
+ 908              		.thumb
+ 909              		.thumb_func
+ 910              		.fpu fpv4-sp-d16
+ 912              	set_position_x_y:
+ 913              	.LFB741:
+ 148:Src/server.c  **** 
+ 149:Src/server.c  **** void set_position_x_y(RC_Server* pserver)
+ 150:Src/server.c  **** {
+ 914              		.loc 1 150 0
+ 915              		.cfi_startproc
+ 916              		@ args = 0, pretend = 0, frame = 16
+ 917              		@ frame_needed = 1, uses_anonymous_args = 0
+ 918 0000 80B5     		push	{r7, lr}
+ 919              	.LCFI65:
+ 920              		.cfi_def_cfa_offset 8
+ 921              		.cfi_offset 7, -8
+ 922              		.cfi_offset 14, -4
+ 923 0002 86B0     		sub	sp, sp, #24
+ 924              	.LCFI66:
+ 925              		.cfi_def_cfa_offset 32
+ 926 0004 02AF     		add	r7, sp, #8
+ 927              	.LCFI67:
+ 928              		.cfi_def_cfa 7, 24
+ 929 0006 7860     		str	r0, [r7, #4]
+ 151:Src/server.c  ****   uint16_t x_, y_;
+ 152:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 930              		.loc 1 152 0
+ 931 0008 07F10E02 		add	r2, r7, #14
+ 932 000c 07F10C03 		add	r3, r7, #12
+ 933 0010 0093     		str	r3, [sp]
+ 934 0012 1346     		mov	r3, r2
+ 935 0014 104A     		ldr	r2, .L39
+ 936 0016 1149     		ldr	r1, .L39+4
+ 937 0018 7868     		ldr	r0, [r7, #4]
+ 938 001a FFF7FEFF 		bl	RC_Server_Get_Args
+ 153:Src/server.c  ****                     &fsm_pos_abs.angular_speed,
+ 154:Src/server.c  ****                     &fsm_pos_abs.linear_speed,
+ 155:Src/server.c  ****                     &x_,
+ 156:Src/server.c  ****                     &y_);
+ 157:Src/server.c  ****   fsm_pos_abs.x = (float) x_;
+ 939              		.loc 1 157 0
+ 940 001e FB89     		ldrh	r3, [r7, #14]
+ 941 0020 07EE903A 		vmov	s15, r3	@ int
+ 942 0024 F8EE677A 		vcvt.f32.u32	s15, s15
+ 943 0028 0D4B     		ldr	r3, .L39+8
+ 944 002a C3ED077A 		vstr.32	s15, [r3, #28]
+ 158:Src/server.c  ****   fsm_pos_abs.y = (float) y_;
+ 945              		.loc 1 158 0
+ 946 002e BB89     		ldrh	r3, [r7, #12]
+ 947 0030 07EE903A 		vmov	s15, r3	@ int
+ 948 0034 F8EE677A 		vcvt.f32.u32	s15, s15
+ 949 0038 094B     		ldr	r3, .L39+8
+ 950 003a C3ED087A 		vstr.32	s15, [r3, #32]
+ 159:Src/server.c  ****   fsm_pos_abs.instance.run=FSM_X_Y_Init;
+ 951              		.loc 1 159 0
+ 952 003e 084B     		ldr	r3, .L39+8
+ 953 0040 084A     		ldr	r2, .L39+12
+ARM GAS  /tmp/ccnHCUp1.s 			page 20
+
+
+ 954 0042 1A60     		str	r2, [r3]
+ 160:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
+ 955              		.loc 1 160 0
+ 956 0044 084B     		ldr	r3, .L39+16
+ 957 0046 064A     		ldr	r2, .L39+8
+ 958 0048 1A60     		str	r2, [r3]
+ 161:Src/server.c  ****   RC_Server_Return(pserver);
+ 959              		.loc 1 161 0
+ 960 004a 7868     		ldr	r0, [r7, #4]
+ 961 004c FFF7FEFF 		bl	RC_Server_Return
+ 162:Src/server.c  **** }
+ 962              		.loc 1 162 0
+ 963 0050 00BF     		nop
+ 964 0052 1037     		adds	r7, r7, #16
+ 965              	.LCFI68:
+ 966              		.cfi_def_cfa_offset 8
+ 967 0054 BD46     		mov	sp, r7
+ 968              	.LCFI69:
+ 969              		.cfi_def_cfa_register 13
+ 970              		@ sp needed
+ 971 0056 80BD     		pop	{r7, pc}
+ 972              	.L40:
+ 973              		.align	2
+ 974              	.L39:
+ 975 0058 14000000 		.word	fsm_pos_abs+20
+ 976 005c 18000000 		.word	fsm_pos_abs+24
+ 977 0060 00000000 		.word	fsm_pos_abs
+ 978 0064 00000000 		.word	FSM_X_Y_Init
+ 979 0068 00000000 		.word	fsm
+ 980              		.cfi_endproc
+ 981              	.LFE741:
+ 983              		.text
+ 984              	.Letext0:
+ 985              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 986              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 987              		.file 4 "Inc/robotronik_protocol.h"
+ 988              		.file 5 "/usr/arm-none-eabi/include/sys/lock.h"
+ 989              		.file 6 "/usr/arm-none-eabi/include/sys/_types.h"
+ 990              		.file 7 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 991              		.file 8 "/usr/arm-none-eabi/include/sys/reent.h"
+ 992              		.file 9 "Inc/crc_16.h"
+ 993              		.file 10 "/usr/arm-none-eabi/include/stdlib.h"
+ 994              		.file 11 "Inc/remote_call.h"
+ 995              		.file 12 "Drivers/CMSIS/Include/core_cm4.h"
+ 996              		.file 13 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 997              		.file 14 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 998              		.file 15 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h"
+ 999              		.file 16 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma.h"
+ 1000              		.file 17 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h"
+ 1001              		.file 18 "Inc/Robotronik_corp_pid.h"
+ 1002              		.file 19 "Inc/fsm_master.h"
+ 1003              		.file 20 "/usr/arm-none-eabi/include/math.h"
+ 1004              		.file 21 "Inc/encoder.h"
+ 1005              		.file 22 "Inc/odometry.h"
+ 1006              		.file 23 "Inc/fsm_position_abs.h"
+ 1007              		.file 24 "Inc/interpol.h"
+ 1008              		.file 25 "Inc/fsm_position_pts.h"
+ARM GAS  /tmp/ccnHCUp1.s 			page 21
+
+
+ 1009              		.file 26 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ARM GAS  /tmp/ccnHCUp1.s 			page 22
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 server.c
+     /tmp/ccnHCUp1.s:18     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 $d
+     /tmp/ccnHCUp1.s:21     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 CHANNEL_OFFSET_TAB
+                            *COM*:0000000000000004 fsm
+                            *COM*:0000000000000b48 fsm_pos_pts
+                            *COM*:000000000000002c fsm_pos_abs
+     /tmp/ccnHCUp1.s:33     .text.get_state:0000000000000000 $t
+     /tmp/ccnHCUp1.s:40     .text.get_state:0000000000000000 get_state
+     /tmp/ccnHCUp1.s:79     .text.get_state:0000000000000020 $d
+     /tmp/ccnHCUp1.s:84     .text.reset:0000000000000000 $t
+     /tmp/ccnHCUp1.s:91     .text.reset:0000000000000000 reset
+     /tmp/ccnHCUp1.s:128    .text.set_asser_sum:0000000000000000 $t
+     /tmp/ccnHCUp1.s:135    .text.set_asser_sum:0000000000000000 set_asser_sum
+     /tmp/ccnHCUp1.s:179    .text.set_asser_sum:000000000000002c $d
+     /tmp/ccnHCUp1.s:188    .text.set_asser_diff:0000000000000000 $t
+     /tmp/ccnHCUp1.s:195    .text.set_asser_diff:0000000000000000 set_asser_diff
+     /tmp/ccnHCUp1.s:239    .text.set_asser_diff:000000000000002c $d
+     /tmp/ccnHCUp1.s:248    .text.balec:0000000000000000 $t
+     /tmp/ccnHCUp1.s:255    .text.balec:0000000000000000 balec
+     /tmp/ccnHCUp1.s:290    .text.set_odo:0000000000000000 $t
+     /tmp/ccnHCUp1.s:297    .text.set_odo:0000000000000000 set_odo
+     /tmp/ccnHCUp1.s:349    .text.set_odo:0000000000000048 $d
+     /tmp/ccnHCUp1.s:356    .text.get_odo:0000000000000000 $t
+     /tmp/ccnHCUp1.s:363    .text.get_odo:0000000000000000 get_odo
+     /tmp/ccnHCUp1.s:422    .text.get_odo:0000000000000050 $d
+     /tmp/ccnHCUp1.s:427    .text.go_forward:0000000000000000 $t
+     /tmp/ccnHCUp1.s:434    .text.go_forward:0000000000000000 go_forward
+     /tmp/ccnHCUp1.s:481    .text.go_forward:000000000000002c $d
+     /tmp/ccnHCUp1.s:490    .text.set_angle:0000000000000000 $t
+     /tmp/ccnHCUp1.s:497    .text.set_angle:0000000000000000 set_angle
+     /tmp/ccnHCUp1.s:544    .text.set_angle:000000000000002c $d
+     /tmp/ccnHCUp1.s:553    .text.set_n_points:0000000000000000 $t
+     /tmp/ccnHCUp1.s:560    .text.set_n_points:0000000000000000 set_n_points
+     /tmp/ccnHCUp1.s:602    .text.set_n_points:0000000000000028 $d
+     /tmp/ccnHCUp1.s:608    .text.get_n_points:0000000000000000 $t
+     /tmp/ccnHCUp1.s:615    .text.get_n_points:0000000000000000 get_n_points
+     /tmp/ccnHCUp1.s:715    .text.get_n_points:00000000000000a8 $d
+     /tmp/ccnHCUp1.s:725    .text.set_n_points_asser:0000000000000000 $t
+     /tmp/ccnHCUp1.s:732    .text.set_n_points_asser:0000000000000000 set_n_points_asser
+     /tmp/ccnHCUp1.s:812    .text.set_n_points_asser:0000000000000078 $d
+     /tmp/ccnHCUp1.s:822    .text.brake:0000000000000000 $t
+     /tmp/ccnHCUp1.s:829    .text.brake:0000000000000000 brake
+     /tmp/ccnHCUp1.s:895    .text.brake:000000000000004c $d
+     /tmp/ccnHCUp1.s:905    .text.set_position_x_y:0000000000000000 $t
+     /tmp/ccnHCUp1.s:912    .text.set_position_x_y:0000000000000000 set_position_x_y
+     /tmp/ccnHCUp1.s:975    .text.set_position_x_y:0000000000000058 $d
+
+UNDEFINED SYMBOLS
+RC_Server_Return
+HAL_NVIC_SystemReset
+RC_Server_Get_Args
+pid_sum
+pid_diff
+x0_
+y0_
+__aeabi_f2d
+ARM GAS  /tmp/ccnHCUp1.s 			page 23
+
+
+odometry
+FSM_Pos_Init
+FSM_Angle_Init
+interpol_calc
+pid_speed_init
+FSM_Pts_Run
+FSM_Pos_Wait
+sum_goal
+diff_goal
+FSM_X_Y_Init

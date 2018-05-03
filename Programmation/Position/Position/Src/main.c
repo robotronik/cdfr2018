@@ -153,19 +153,19 @@ int main(void)
 
 //all values are in cm, rad and seconds
 
-  RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "ff", "", RC_IMMEDIATE);//sets the odometry parameters ENCODER_DIST and ENCODER_STEP_DIST
-  RC_Server_Add_Function(&P_server, P_GET_ODO, get_odo, "", "fff", RC_IMMEDIATE);//returns the position x y angle
+  RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "BB", "", RC_IMMEDIATE);//sets the odometry parameters ENCODER_DIST and ENCODER_STEP_DIST
+  RC_Server_Add_Function(&P_server, P_GET_ODO, get_odo, "", "BBf", RC_IMMEDIATE);//returns the position x y angle
 
-  RC_Server_Add_Function(&P_server, P_SET_POS, set_pos, "ff", "", RC_IMMEDIATE);//speed distance in cm makes the robot go forard or backward
+  RC_Server_Add_Function(&P_server, P_GO_FORWARD, go_forward, "ff", "", RC_IMMEDIATE);//speed distance in mm makes the robot go forward or backward
   RC_Server_Add_Function(&P_server, P_SET_ANGLE, set_angle, "ff", "", RC_IMMEDIATE);
-  RC_Server_Add_Function(&P_server, P_SET_POSITION_X_Y, set_position_x_y, "ffff", "", RC_IMMEDIATE);//rotation speed, linear speed, x point in cm, y point in cm
+  RC_Server_Add_Function(&P_server, P_SET_POSITION_X_Y, set_position_x_y, "ffBB", "", RC_IMMEDIATE);//rotation speed, linear speed, x point in cm, y point in mm
 
   RC_Server_Add_Function(&P_server, P_SET_N_POINTS, set_n_points, "i", "", RC_IMMEDIATE);
-  RC_Server_Add_Function(&P_server, P_GET_N_POINTS, get_n_points, "ff", "", RC_IMMEDIATE);//reception of the points by packets of 1
+  RC_Server_Add_Function(&P_server, P_GET_N_POINTS, get_n_points, "BB", "", RC_IMMEDIATE);//reception of the points by packets of 1
 
   RC_Server_Add_Function(&P_server, P_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
 
-  RC_Server_Add_Function(&P_server, P_BALEC, balec, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_BALEC, balec, "", "", RC_IMMEDIATE);
 
 
   //added functions
@@ -263,12 +263,8 @@ int main(void)
     fsm->run(fsm);
 
     //Process PID
-
-    int i=0,max=100000;
     if(fsm->run!=FSM_Pts_Run)//simple mode
     {
-      i++;
-      i=i%max;
       cor_sum = pid(&pid_sum, sum_goal - 0.5 * (odometry.encoder_l.steps + odometry.encoder_r.steps));
       cor_diff = pid(&pid_diff, diff_goal - (odometry.encoder_r.steps - odometry.encoder_l.steps));
 
