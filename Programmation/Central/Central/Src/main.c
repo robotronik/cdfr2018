@@ -52,6 +52,7 @@
 #include <stdio.h>
 #include "strategy.h"
 #include "map.h"
+#include "position_client.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -153,6 +154,9 @@ int main(void)
 
   //Raspberry
   PI_Init();
+
+  //Position
+  Position_Init();
   
   //==================================================//
   //                 Wait Start                       //
@@ -161,7 +165,7 @@ int main(void)
   Team t = wait_start();
   PI_Start();
 
-  
+  /*
   Init_Strategy(GREEN_TEAM);
   Set_Construction_Plan(ORANGE, GREEN, BLUE);
   volatile uint32_t ticks = HAL_GetTick();
@@ -172,8 +176,12 @@ int main(void)
   Cell *end = Compute_Path(start, &map[y_goal][x_goal]);//11ms
   Compute_Building_Strategy();//110ms
   ticks = HAL_GetTick() - ticks;
+  HAL_Delay(ticks);*/
 
-  HAL_Delay(ticks);
+
+  Pos_Brake();
+  Pos_Go_Forward(10., 100.);
+  
   //volatile int jean_michel_segfault = *((int*)99999999999);
   //PI_Asser_Test();
 

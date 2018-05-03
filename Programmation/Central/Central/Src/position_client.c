@@ -1,5 +1,7 @@
 #include "position_client.h"
-
+#include "strategy.h"
+#include "remote_call.h"
+#include "usart.h"
 static RC_Client pos_client;
 
 typedef enum Pos_Client_Function_E{
@@ -9,7 +11,7 @@ typedef enum Pos_Client_Function_E{
   POS_SET_N_POINTS_ASSER,
   POS_SET_ODO,
   POS_GET_ODO,
-  POS_SET_POS,
+  POS_GO_FORWARD,
   POS_SET_ANGLE,
   POS_SET_POSITION_X_Y,
   POS_SET_N_POINTS,
@@ -26,14 +28,44 @@ int Position_Init(){
   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_SUM, "fffif", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_DIFF, "fffif", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_N_POINTS_ASSER, "ffffffff", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_SET_ODO, "ff", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_GET_ODO, "", "fff")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_SET_POS, "ff", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_SET_ODO, "BB", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_GET_ODO, "", "BBf")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_GO_FORWARD, "ff", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ANGLE, "ff", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_SET_POSITION_X_Y, "ffff", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_SET_POSITION_X_Y, "ffBB", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_N_POINTS, "i", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_GET_N_POINTS, "ff", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_GET_N_POINTS, "BB", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_GET_STATE, "", "b")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_BALEC, "", "b")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_BALEC, "", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_BRAKE, "", "")) return -1;
+
+  return 0;
+}
+
+int Pos_Reset(){
+  return RC_Call(&pos_client, 0);
+}
+
+int Pos_Config_Curve(float z, float w, float vc, float vr, float P, float I, float D, float speed_percent_tolerance){
+  return RC_Call(&pos_client, 0, z, w, vc, vr, P, I, D, speed_percent_tolerance);//z w vc vr P I D speed_percent_tolerance
+}
+
+int Pos_Init_Position(uint16_t x0, uint16_t y0){
+  return RC_Call(&pos_client, 0, x0, y0);
+}
+
+int Pos_Get_Position(){
+  return RC_Call(&pos_client, 0, &me.x, &me.y, &me.angle);
+}
+
+int Pos_Go_Forward(float speed, float distance){
+  return RC_Call(&pos_client, 0, speed, distance);
+}
+
+int Pos_Set_Angle(float speed, float angle){
+  return RC_Call(&pos_client, 0, speed, angle);
+}
+
+int Pos_Brake(){
+  return RC_Call(&pos_client, 0);
 }
