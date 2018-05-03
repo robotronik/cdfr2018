@@ -1,4 +1,12 @@
 #include "fsm_position_abs.h"
+#include "main.h"
+#include "stm32f3xx_hal.h"
+#include "dma.h"
+#include "i2c.h"
+#include "tim.h"
+#include "usart.h"
+#include "wwdg.h"
+#include "gpio.h"
 //http://manubatbat.free.fr/doc/positionning/node5.html
 
 extern PID_DATA pid_sum;
@@ -7,9 +15,9 @@ extern int sum_goal;
 extern int diff_goal;
 extern Odometry odometry;
 
-extern volatile int ENCODER_DIST;//distance between encoders
-extern volatile int ENCODER_STEP_DIST;//distance for 1 encoder step/2
-extern volatile int deltaL;
+extern volatile float ENCODER_DIST;//distance between encoders
+extern volatile float ENCODER_STEP_DIST;//distance for 1 encoder step/2
+extern volatile float deltaL;
 
 void FSM_Pos_Init(FSM_Instance *fsm)
 {
@@ -30,7 +38,9 @@ void FSM_Pos_Generator(FSM_Instance *fsm)
   }
   else*/
   if(1){
-    sum_goal=fsm_pos->initial_sum+fsm_pos->pos/ENCODER_STEP_DIST;
+    float a = 100./2.;
+    HAL_Delay(a);
+    sum_goal=fsm_pos->initial_sum+(double) fsm_pos->pos / (double)ENCODER_STEP_DIST;
     fsm->run=FSM_Pos_Wait;
   }
 }

@@ -235,6 +235,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  
   sum_goal=0;
   diff_goal=0;
 
