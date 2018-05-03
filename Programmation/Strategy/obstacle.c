@@ -195,8 +195,8 @@ void Print_Obstacles(void){
   }
 }
 
-int Is_Too_Close(Obstacle *obs, uint16_t margin){
-  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + margin + 1.415*SQUARE_SIZE));
+int Is_Too_Close(Obstacle *obs){
+  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + MARGIN_MIN + 1.415*SQUARE_SIZE));
 }
 
 int Materialize_Obstacle(Obstacle *obs, uint16_t margin){

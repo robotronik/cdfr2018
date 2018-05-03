@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
   me.x = AREA_WIDTH/2 - 400;
   me.y = AREA_HEIGHT/2;
   Update_Obstacles(&me, 1.415*SQUARE_SIZE+1, 0, 0, 0);
-  Materialize_Obstacle(&obstacle[0],400);
+  Materialize_Obstacle(&obstacle[0],150);
   Print_Obstacles();
 
   

@@ -8,8 +8,8 @@
 #include <math.h>
 
 static int Check_Path(Cell* current_path);
-static Cell* Update_Path(uint16_t x_goal, uint16_t y_goal, Cell *current_path);
-static Cell* Update_Path(uint16_t x_goal, uint16_t y_goal, Cell *current_path);
+static Cell* Make_Path(uint16_t x_goal, uint16_t y_goal);
+static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path);
 static inline Cell* Cell_From_Pos(uint16_t x, uint16_t y);
 static void Brake();
 static int Is_Blocked();
@@ -53,19 +53,36 @@ static Cell* Make_Path(uint16_t x_goal, uint16_t y_goal){
   return Compute_Path(start, goal);
 }
 
-static Cell* Update_Path(uint16_t x_goal, uint16_t y_goal, Cell *current_path){
+static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path){
   Refresh_Map();
   Materialize_Obstacles(MARGIN_MIN);
-  return (Check_Path(current_path) == 0)?(current_path):(Make_Path(x_goal, y_goal));
+  if(Check_Path(*current_path) == 0){
+    return 0;
+  }
+  
+  *current_path = Make_Path(x_goal, y_goal);
+  return 1;
 }
 
 static void Brake(){
   //Stop position
 }
 
-static int Is_Blocked(){
+static int Can_Rotate(){
+  int i;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    if(dist(me.x, me.y, obs->x, obs->y) <= ROBOT_RADIUS){
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+static int Is_Blocked(){//For curved movement
   Cell *pos = Cell_From_Pos(me.x, me.y);
-  if(pos == NULL || pos->obstacle){
+  if(pos == NULL){
     return 1;
   }
 
@@ -73,13 +90,13 @@ static int Is_Blocked(){
   for(i = 0; i < nb_obstacles; i++){
     Obstacle *const obs = &obstacle[i];
     //The obstacle is too close to generate a path
-    if(Is_Too_Close(obs, MARGIN_MIN)){
+    if(Is_Too_Close(obs)){
       return 1;
     }
-    //The obstacle is too close to rotate
-    if(dist(me.x, me.y, obs->x, obs->y) <= ROBOT_RADIUS){
-      return 1;
-    }
+  }
+
+  if(!Can_Rotate()){
+    return 1;
   }
   
   return 0;
@@ -102,28 +119,34 @@ static int Free_Blocks_Dir(float angle){
   return dist(0, 0, x_l, y_l);
 }
 
+static void Obstacle_Dist(uint16_t *obs_forward, uint16_t *obs_backward){
+  *obs_forward = 0;
+  *obs_backward = 0;
+  if(sensor_raw[FRONT_LEFT]){
+    *obs_forward = sensor_raw[FRONT_LEFT];
+    if(sensor_raw[FRONT_RIGHT]){
+      *obs_forward = min(*obs_forward, sensor_raw[FRONT_RIGHT]);
+    }
+  }else{
+    *obs_forward = sensor_raw[FRONT_RIGHT];
+  }
+  
+  if(sensor_raw[REAR_LEFT]){
+    *obs_backward = sensor_raw[REAR_LEFT];
+    if(sensor_raw[REAR_RIGHT]){
+      *obs_backward = min(*obs_backward, sensor_raw[REAR_RIGHT]);
+    }
+  }else{
+    *obs_backward = sensor_raw[REAR_RIGHT];
+  }
+}
+
 static void Unblock(){
   while(Is_Blocked()){
     uint16_t obs_forward = 0, obs_backward = 0;
     uint16_t free_forward, free_backward;
 
-    if(sensor_raw[FRONT_LEFT]){
-      obs_forward = sensor_raw[FRONT_LEFT];
-      if(sensor_raw[FRONT_RIGHT]){
-	obs_forward = min(obs_forward, sensor_raw[FRONT_RIGHT]);
-      }
-    }else{
-      obs_forward = sensor_raw[FRONT_RIGHT];
-    }
-
-    if(sensor_raw[REAR_LEFT]){
-      obs_backward = sensor_raw[REAR_LEFT];
-      if(sensor_raw[REAR_RIGHT]){
-	obs_backward = min(obs_backward, sensor_raw[REAR_RIGHT]);
-      }
-    }else{
-      obs_backward = sensor_raw[REAR_RIGHT];
-    }
+    Obstacle_Dist(&obs_forward, &obs_backward);
 
     free_forward = Free_Blocks_Dir(me.angle);
     if(obs_forward){
@@ -144,18 +167,55 @@ static void Unblock(){
     }else{
       Delay(1000);
     }
-
+    
     Refresh_Map();
   }
 }
 
+int Rotate(float angle){
+  int active = 0;
+  do{
+    if(!Can_Rotate()){
+      Brake();
+      active = 0;
+      Unblock();
+    }
+
+    if(!active){
+      //Control position
+      active = 1;
+    }else{
+      //If goal reached, return
+    }
+  }while(1);
+}
+
 int Go_Straight(uint16_t x, uint16_t y){
+  Rotate(angle(me.x, me.y, x, y));
+  uint16_t obs_fwd, obs_bwd;
+  Obstacle_Dist(&obs_fwd, &obs_bwd);
+
+  if(obs_fwd + MARGIN_MIN < dist(me.x, me.y, x, y)){
+    return -1;
+  }else{
+    //Control position
+  }
   
+  do{
+    Obstacle_Dist(&obs_fwd, &obs_bwd);
+    if(obs_fwd + MARGIN_MIN < dist(me.x, me.y, x, y)){
+      Brake();
+      return -1;
+    }
+
+    //If goal reached, return 0;
+  }while(1);
 }
     
 int GOGOGO(uint16_t x, uint16_t y){
   Cell *path_end = NULL;
   int success = 0;
+  int new_path = 0;
 
   do{
     Refresh_Map();
@@ -166,17 +226,29 @@ int GOGOGO(uint16_t x, uint16_t y){
       Brake();
       Unblock();
     }
+
+    //TODO : unblock if on obstacle
     
     //Update the path if necessary
-    path_end = Update_Path(x, y, path_end);
+    new_path = Update_Path(x, y, &path_end);
     if(path_end == NULL){
       success = 0;
       break;
     }
     
     //Control position board
-    
+    uint16_t obs_fwd, obs_bwd;
+    Obstacle_Dist(&obs_fwd, &obs_bwd);
+    float speed = min(1., max(((float) (obs_fwd-MARGIN_MIN) / 1000.), 0.));
 
+    //If goal reached, return 0
+
+    if(new_path){
+      //Send path
+    }else{
+      //Set speed
+    }
+    
   }while(1);
 
   //Stop position board

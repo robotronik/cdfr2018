@@ -57,7 +57,7 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin);
 
 int Materialize_Obstacles(uint16_t margin);
 
-int Is_Too_Close(Obstacle *obs, uint16_t margin);
+int Is_Too_Close(Obstacle *obs);
 
 int Is_In_Range(Obstacle *obs, const Robot *ref);
 /**
