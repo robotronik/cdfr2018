@@ -8,7 +8,7 @@
 typedef struct FSM_Position_Abs_S{
   FSM_Instance instance;
   float angle;//in rad
-  float pos;//in cm
+  float pos;//in mm
   float linear_speed;//in cm/s
   float angular_speed;//in rad/s
   float x;

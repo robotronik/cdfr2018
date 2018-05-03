@@ -57,7 +57,7 @@ void set_odo(RC_Server* pserver)
 		     &X0,
 		     &Y0);
   x0_ = (float) X0;
-  y0_ = (float) Y0;    
+  y0_ = (float) Y0;
   RC_Server_Return(pserver);
 }
 
@@ -68,9 +68,10 @@ void get_odo(RC_Server* pserver)
 
 void go_forward(RC_Server* pserver) //2 parameters
 {
+  float pos;
   RC_Server_Get_Args(pserver,
          &fsm_pos_abs.linear_speed,
-         &fsm_pos_abs.pos);
+         &pos);
   fsm_pos_abs.instance.run=FSM_Pos_Init;
   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
   RC_Server_Return(pserver);
