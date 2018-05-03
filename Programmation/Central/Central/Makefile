@@ -67,6 +67,7 @@ map.c \
 astar.c \
 obstacle.c \
 strategy.c \
+gas.c \
 Drivers/VL53L0X/API/vl53l0x_api.c \
 Drivers/VL53L0X/API/vl53l0x_api_calibration.c \
 Drivers/VL53L0X/API/vl53l0x_api_core.c \

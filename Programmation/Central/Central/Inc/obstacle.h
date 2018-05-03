@@ -7,10 +7,13 @@
 #define N_MAX_OBSTACLES 4
 #define OBSTACLE_LIFETIME 5000 //ticks
 
-#define SENSOR_DIST_TANGENT 40 //TO ADAPT
-#define SENSOR_DIST_PERP 60 //TO ADAPT
+#define SENSOR_DIST_TANGENT 110 //TO ADAPT
+#define SENSOR_DIST_PERP 110 //TO ADAPT
 #define OBS_RADIUS 150 //TO ADAPT
 #define OBS_NODETECT_COUNT 5
+
+#define MARGIN_MAX 150
+#define MARGIN_MIN 50
 
 //Sensors
 typedef enum Sensor_E{
@@ -36,6 +39,7 @@ typedef struct Obstacle_S{
 
 extern Obstacle obstacle[N_MAX_OBSTACLES];
 extern int nb_obstacles;
+extern uint16_t sensor_raw[4];
 
 void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t rl_d, uint16_t rr_d);
 /**
@@ -49,6 +53,16 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin);
  * Try to materialize an obstacle for integration in path
  * finding. Returns 0 on success. If it fails (ie. the obstacle is too
  * close), returns -1.
+ */
+
+int Materialize_Obstacles(uint16_t margin);
+
+int Is_Too_Close(Obstacle *obs);
+
+int Is_In_Range(Obstacle *obs, const Robot *ref);
+/**
+ * Returns 0 if the obstacle isn't in range, 1 if it's at the front,
+ * -1 if it's at the back.
  */
 
 #endif

@@ -3,7 +3,7 @@ PROJECT_DIR=Central
 PROJECT_NAME=Central
 DOC_DIR= /home/$(USER)/STM32Cube/
 BINPATH= /usr/bin
-CUSTOM_C_SOURCES=crc_16.c,robotronik_protocol.c,remote_call.c,tof.c,system.c,pi_client.c,heap.c,map.c,astar.c,obstacle.c,strategy.c
+CUSTOM_C_SOURCES=crc_16.c,robotronik_protocol.c,remote_call.c,tof.c,system.c,pi_client.c,heap.c,map.c,astar.c,obstacle.c,strategy.c,gas.c
 
 rouge = \033[0;31m
 vert = \033[0;32m

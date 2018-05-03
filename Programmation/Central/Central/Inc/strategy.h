@@ -47,6 +47,7 @@ void Init_Strategy(Team team);
 #define Get_Cell(x, y) (map[(y==AREA_HEIGHT)?MAP_HEIGHT-1:y/SQUARE_SIZE][(x==AREA_WIDTH)?MAP_WIDTH-1:x/SQUARE_SIZE])
 #define min(a, b) (((a)<(b))?(a):(b))
 #define max(a, b) (((a)>=(b))?(a):(b))
+#define angle(x_a, y_a, x_b, y_b) (atan2((y_b) - (y_a), (x_b) - (x_a)))
 
 //Building strategy
 void Set_Construction_Plan(Cube_Color bottom, Cube_Color middle, Cube_Color top);

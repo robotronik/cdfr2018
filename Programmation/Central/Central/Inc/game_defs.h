@@ -2,7 +2,6 @@
 #define CONSTANTS_H
 
 #include <stdint.h>
-#include "stm32f4xx_hal.h"
 
 //MAP
 #define SQUARE_SIZE 40//mm
@@ -57,8 +56,8 @@
 
 //Teams
 typedef enum Team_E{
-  GREEN_TEAM = GPIO_PIN_RESET,
-  ORANGE_TEAM = GPIO_PIN_SET
+  GREEN_TEAM,
+  ORANGE_TEAM,
 }Team;
 
 typedef enum FSM_Plan_State_E{

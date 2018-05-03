@@ -2,6 +2,7 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <math.h>
 #include "strategy.h"
 #include "map.h"
@@ -9,17 +10,17 @@
 
 Obstacle obstacle[N_MAX_OBSTACLES];
 int nb_obstacles = 0;
+uint16_t sensor_raw[4];
 
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel);
 
 void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t rl_d, uint16_t rr_d){
   Obstacle in_range[4];
   bool present[4];
-  uint16_t d[4] = {
-    [FRONT_LEFT] = fl_d,
-    [FRONT_RIGHT] = fr_d,
-    [REAR_LEFT] = rl_d,
-    [REAR_RIGHT] = rr_d};
+  sensor_raw[FRONT_LEFT] = fl_d;
+  sensor_raw[FRONT_RIGHT] = fr_d;
+  sensor_raw[REAR_LEFT] = rl_d;
+  sensor_raw[REAR_RIGHT] = rr_d;
   int16_t x_rel[4] = {
     [FRONT_LEFT] = SENSOR_DIST_TANGENT + fl_d,
     [FRONT_RIGHT] = SENSOR_DIST_TANGENT + fr_d,
@@ -35,7 +36,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   //Compute obstacles
   int i;
   for(i = 0; i < 4; i++){
-    present[i] = d[i] && !Compute_Obstacle(&in_range[i], ref, x_rel[i], y_rel[i]);
+    present[i] = sensor_raw[i] && !Compute_Obstacle(&in_range[i], ref, x_rel[i], y_rel[i]);
   }
 
   Obstacle updated[N_MAX_OBSTACLES];
@@ -76,9 +77,11 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     if(ticks - obs->last_detection > OBSTACLE_LIFETIME){
       continue;
     }
-    
-    obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
 
+    //Update distances
+    obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
+    obs->distance = dist(ref->x, ref->y, obs->x, obs->y);
+    
     //Is it a duplicate ?
     int j = 0;
     for(j = 0; j < n; j++){
@@ -128,6 +131,25 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   nb_obstacles = n;
 }
 
+int Is_In_Range(Obstacle *obs, const Robot *ref){
+  int16_t x_ro = obs->x_c - ref->x;
+  int16_t y_ro = obs->y_c - ref->y;
+      
+  //Rotate
+  x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
+  y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
+  
+  if(!(y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){
+    return 0;
+  }
+
+  if(x_ro > 0){
+    return 1;
+  }
+  
+  return -1;
+}
+
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel){
   //Get ticks at detection time
   obs->last_detection = Get_Ticks();
@@ -147,9 +169,8 @@ static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int1
   //Print("(%d, %d)\n", obs->x, obs->y);
   
   //Guess center of obstacle, assuming it's a robot
-  float coeff = 1. + (float) OBS_RADIUS / (float) obs->distance;
-  obs->x_c = ref->x + coeff * (float) x_ro;
-  obs->y_c = ref->y + coeff * (float) y_ro;
+  obs->x_c = obs->x + OBS_RADIUS * cos(ref->angle);
+  obs->y_c = obs->y + OBS_RADIUS * sin(ref->angle);
   obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
   //Print("(%d, %d)\n", obs->x_c, obs->y_c);
   
@@ -174,11 +195,15 @@ void Print_Obstacles(void){
   }
 }
 
+int Is_Too_Close(Obstacle *obs){
+  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + MARGIN_MIN + 1.415*SQUARE_SIZE));
+}
+
 int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   //Check if the obstacle will not overlay our robot
-  uint16_t r = OBS_RADIUS + ROBOT_RADIUS + margin;
+  uint16_t r_obs = OBS_RADIUS + ROBOT_RADIUS;
   //Print("Radius : %" PRIu16 "\n", r);
-  if(dist(me.x, me.y, obs->x_c, obs->y_c) <= (r + 1.415*SQUARE_SIZE)){
+  if(dist(me.x, me.y, obs->x_c, obs->y_c) <= (r_obs + 1.415*SQUARE_SIZE)){
     return -1;
   }
 
@@ -187,6 +212,7 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   uint16_t dx = obs->x_c%SQUARE_SIZE, dy = obs->y_c%SQUARE_SIZE;
 
   //Number of cubes
+  int r = r_obs + margin;
   int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
   //Print("N : %d\n", N);
   
@@ -197,19 +223,50 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
 
   //Draw the circle
   int X = 0;
-  int R = N*SQUARE_SIZE - SQUARE_SIZE/2;
+  float R = N*SQUARE_SIZE - (float) SQUARE_SIZE/2.;
   int DX = 0;
+
+  //Vector O->R
+  int X_OR = me.x/SQUARE_SIZE - X0, Y_OR = me.y/SQUARE_SIZE - Y0;
+  float N_OR = sqrt(X_OR*X_OR + Y_OR*Y_OR);
+  X_OR *= (1. - 1.415 / N_OR);
+  Y_OR *= (1. - 1.415 / N_OR);
+  N_OR -= 1.415;
+
+  int treshold = N_OR * N_OR - 1;
   for(X = 0; X < N; X++, DX += SQUARE_SIZE){
-    float DY = (sqrt(R*R - DX*DX) - SQUARE_SIZE/2);
-    int NB_Y = 1 + (DY-SQUARE_SIZE/2.)/SQUARE_SIZE;
+    float DY = sqrt(R*R - DX*DX);
+    int NB_Y = 1 + (DY-(float)SQUARE_SIZE/2.)/SQUARE_SIZE;
     int Y;
     for(Y = 0; Y < NB_Y; Y++){
-      map[Y0 + Y][X0 + X].obstacle = 1;
-      map[Y0 + Y][X0 - X].obstacle = 1;
-      map[Y0 - Y][X0 + X].obstacle = 1;
-      map[Y0 - Y][X0 - X].obstacle = 1;
+      int p_scal = X_OR*X + Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 + Y][X0 + X].obstacle = 1;
+
+      p_scal = -X_OR*X + Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 + Y][X0 - X].obstacle = 1;
+
+      p_scal = X_OR*X - Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 - Y][X0 + X].obstacle = 1;
+ 
+      p_scal = -X_OR*X - Y_OR*Y;
+      if(p_scal <= 0 || p_scal < treshold)
+	map[Y0 - Y][X0 - X].obstacle = 1;
     }
   }
   
   return 0;
+}
+
+int Materialize_Obstacles(uint16_t margin){
+  int i;
+  int status = 0;
+  for(i = 0; i < nb_obstacles; i++){
+    if(Materialize_Obstacle(&obstacle[i], margin) != 0){
+      status = -1;
+    }
+  }
+  return status;
 }
