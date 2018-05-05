@@ -44,6 +44,7 @@
 #include "tof.h"
 #include "obstacle.h"
 #include "strategy.h"
+#include "position_client.h"
 
 static int tim2 = 4+1;
 extern ToF_Handler tof[NB_TOF];
@@ -61,12 +62,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     for(i = 0; i < NB_TOF; i++){
       ToF_Poll_Measurement_Data(&tof[i]);
     }
+    Pos_Get_Position();
     Update_Obstacles(&me,
 		     ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]),
 		     ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]),
 		     ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]),
 		     ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
-    Pos_Get_Position();
   }
 }
 /* USER CODE END 0 */

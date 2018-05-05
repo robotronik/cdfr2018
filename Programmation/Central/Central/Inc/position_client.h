@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 typedef enum Position_State_E{
-  RUNNING, SUCCESS, ERROR
+  POS_RUNNING, POS_SUCCESS, POS_ERROR
 }Position_State;
 
 typedef enum Pos_Client_Function_E{

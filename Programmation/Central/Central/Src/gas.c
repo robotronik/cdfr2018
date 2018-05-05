@@ -3,6 +3,7 @@
 #include "strategy.h"
 #include "obstacle.h"
 #include "interface.h"
+#include "position_client.h"
 
 #include <stddef.h>
 #include <math.h>
@@ -11,10 +12,14 @@
 //               Rotation
 //==================================================
 
+typedef enum FSM_State_E{
+  FSM_RUNNING, FSM_SUCCESS, FSM_ERROR
+}FSM_State;
+
 typedef struct FSM_Rotation_S{
-  void (run*)(struct FSM_Rotation_S* fsm);
+  void (*run)(struct FSM_Rotation_S* fsm);
+  FSM_State state;
   int retry_count;
-  Position_State state;
   float goal;
 }FSM_Rotation;
 
@@ -28,17 +33,17 @@ int Rotate(float angle){
   FSM_Rotation fsm;
   fsm.goal = angle;
   fsm.retry_count = ROTATE_RETRY_COUNT;
-  fsm.state = RUNNING;
-  fsm.run = FSM_ROTATION_INIT();
+  fsm.state = FSM_RUNNING;
+  fsm.run = FSM_ROTATION_INIT;
   do{
     fsm.run(&fsm);
-  }while(fsm.state == RUNNING);
-  return (fsm.state == SUCCESS)?(0):(-1);
+  }while(fsm.state == FSM_RUNNING);
+  return (fsm.state == FSM_SUCCESS)?(0):(-1);
 }
 
 static void FSM_ROTATION_INIT(FSM_Rotation *fsm){
   if(fsm->retry_count <= 0){
-    fsm->state = ERROR;
+    fsm->state = FSM_ERROR;
     fsm->run = FSM_ROTATION_END;
     return;
   }
@@ -53,9 +58,9 @@ static void FSM_ROTATION_INIT(FSM_Rotation *fsm){
 }
 
 static void FSM_ROTATION_CMD(FSM_Rotation *fsm){
-  if(Pos_Set_Angle(ROATION_SPEED, me.angle - goal) != 0){
+  if(Pos_Set_Angle(ROTATION_SPEED, me.angle - fsm->goal) != 0){
     PI_Log("Pos_Set_Angle : pas de réponse.\n");
-    fsm->state = ERROR;
+    fsm->state = FSM_ERROR;
     fsm->run = FSM_ROTATION_END;
     return;
   }
@@ -67,18 +72,18 @@ static void FSM_ROTATION_WAIT(FSM_Rotation *fsm){
   Position_State pos_state;
   if(Pos_Get_State(&pos_state) != 0){
     PI_Log("Pos_Get_State : pas de réponse.\n");
-    fsm->state = ERROR;
+    fsm->state = FSM_ERROR;
     fsm->run = FSM_ROTATION_END;
     return;
   }
 
-  if(pos_state == SUCCESS){
-    fsm->state = SUCCESS;
+  if(pos_state == POS_SUCCESS){
+    fsm->state = FSM_SUCCESS;
     fsm->run = FSM_ROTATION_END;
     return;
   }
 
-  if(!Can_Rotate() || pos_state == ERROR){
+  if(!Can_Rotate() || pos_state == POS_ERROR){
     fsm->retry_count--;
     fsm->run = FSM_ROTATION_STOP;
     return;
@@ -103,7 +108,128 @@ static void FSM_ROTATION_END(FSM_Rotation *fsm){
 //==================================================
 //               Straight move
 //==================================================
+typedef struct FSM_Move_S{
+  void (*run)(struct FSM_Move_S* fsm);
+  FSM_State state;
+  int retry_count;
+  uint16_t x;
+  uint16_t y;
+  bool forward;
+  float speed_ratio;
+  float max_speed_ratio;
+  float g_dist;
+}FSM_Move;
 
+static void FSM_MOVE_INIT(FSM_Move *fsm);
+static void FSM_MOVE_CMD(FSM_Move *fsm);
+static void FSM_MOVE_WAIT(FSM_Move *fsm);
+static void FSM_MOVE_STOP(FSM_Move *fsm);
+static void FSM_MOVE_END(FSM_Move *fsm);
+
+int Go_Straight(uint16_t x, uint16_t y, bool forward, float speed_ratio){
+  //Compute angle and distance
+  float g_angle = angle(me.x, me.y, x, y);
+  if(!forward){
+    g_angle += M_PI;
+  }
+  if(g_angle > M_PI){
+    g_angle -= 2*M_PI;
+  }
+
+  //Rotate and cancel if it fails
+  if(Rotate(g_angle) != 0){
+    return -1;
+  }
+
+  FSM_Move fsm = {
+    .run = FSM_MOVE_INIT,
+    .state = FSM_RUNNING,
+    .retry_count = MOVE_RETRY_COUNT,
+    .x = x,
+    .y = y,
+    .forward = forward,
+    .speed_ratio = min(0., max(speed_ratio, 1.))
+  };
+  
+
+  do{
+    fsm.run(&fsm);
+  }while(fsm.state == FSM_RUNNING);
+  return (fsm.state == FSM_SUCCESS)?(0):(-1);
+}
+
+static void FSM_MOVE_INIT(FSM_Move *fsm){
+  if(fsm->retry_count <= 0){
+    fsm->state = FSM_ERROR;
+    fsm->run = FSM_MOVE_END;
+    return;
+  }
+
+  fsm->g_dist = dist(me.x, me.y, fsm->x, fsm->y);
+
+  if(Can_Move(fsm->g_dist, fsm->forward, &fsm->max_speed_ratio)){
+    fsm->run = FSM_MOVE_CMD;
+  }else{
+    fsm->retry_count--;
+    HAL_Delay(WAIT_TIME);
+    //Same state
+  }
+}
+
+static void FSM_MOVE_CMD(FSM_Move *fsm){
+  float speed = min(MAX_SPEED * fsm->speed_ratio,
+		    MIN_SPEED + (MAX_SPEED-MIN_SPEED)*fsm->max_speed_ratio);
+  float distance = ((fsm->forward)?(1):(-1)) * fsm->g_dist;
+  if(Pos_Go_Forward(speed, distance) != 0){
+    PI_Log("Pos_Go_Forward : pas de réponse.\n");
+    fsm->state = FSM_ERROR;
+    fsm->run = FSM_MOVE_END;
+    return;
+  }
+
+  fsm->run = FSM_MOVE_WAIT;
+}
+
+static void FSM_MOVE_WAIT(FSM_Move *fsm){
+  Position_State state;
+  if(Pos_Get_State(&state) != 0){
+    PI_Log("Pos_Get_State : pas de réponse.\n");
+    fsm->state = FSM_ERROR;
+    fsm->run = FSM_MOVE_END;
+    return;
+  }
+
+  //If the goal is reached
+  if(state == POS_SUCCESS){
+    fsm->state = FSM_SUCCESS;
+    fsm->run = FSM_MOVE_END;
+    return;
+  }
+
+  //If there is an obstacle
+  fsm->g_dist = dist(me.x, me.y, fsm->x, fsm->y);
+  if(!Can_Move(fsm->g_dist, fsm->forward, &fsm->max_speed_ratio) || state == POS_ERROR){
+    fsm->retry_count--;
+    fsm->run = FSM_MOVE_STOP;
+    return;
+  }
+
+  fsm->run = FSM_MOVE_CMD;
+  HAL_Delay(WAIT_TIME);
+}
+
+static void FSM_MOVE_STOP(FSM_Move *fsm){
+  while(Pos_Brake() != 0){
+    PI_Log("Pos_Brake : pas de réponse.\n");
+    HAL_Delay(10);
+  }
+  HAL_Delay(WAIT_TIME);
+  fsm->run = FSM_MOVE_INIT;
+}
+
+static void FSM_MOVE_END(FSM_Move *fsm){
+  //NOP NOP NOP
+}
 
 //==================================================
 //               Curved Path move
@@ -167,18 +293,6 @@ static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path){
 
 static void Brake(){
   //Stop position
-}
-
-static int Can_Rotate(){
-  int i;
-  for(i = 0; i < nb_obstacles; i++){
-    Obstacle *const obs = &obstacle[i];
-    if(dist(me.x, me.y, obs->x, obs->y) <= ROBOT_RADIUS){
-      return 0;
-    }
-  }
-
-  return 1;
 }
 
 static int Is_Blocked(){//For curved movement
@@ -273,46 +387,6 @@ static void Unblock(){
   }
 }
 
-int Rotate(float angle){
-  int active = 0;
-  do{
-    if(!Can_Rotate()){
-      Brake();
-      active = 0;
-      Unblock();
-    }
-
-    if(!active){
-      //Control position
-      active = 1;
-    }else{
-      //If goal reached, return
-    }
-  }while(1);
-}
-
-int Go_Straight(uint16_t x, uint16_t y){
-  Rotate(angle(me.x, me.y, x, y));
-  uint16_t obs_fwd, obs_bwd;
-  Obstacle_Dist(&obs_fwd, &obs_bwd);
-
-  if(obs_fwd + MARGIN_MIN < dist(me.x, me.y, x, y)){
-    return -1;
-  }else{
-    //Control position
-  }
-  
-  do{
-    Obstacle_Dist(&obs_fwd, &obs_bwd);
-    if(obs_fwd + MARGIN_MIN < dist(me.x, me.y, x, y)){
-      Brake();
-      return -1;
-    }
-
-    //If goal reached, return 0;
-  }while(1);
-}
-    
 int GOGOGO(uint16_t x, uint16_t y){
   Cell *path_end = NULL;
   int success = 0;

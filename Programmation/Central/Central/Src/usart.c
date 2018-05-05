@@ -44,6 +44,8 @@
 #include "dma.h"
 
 /* USER CODE BEGIN 0 */
+#include "system.h"
+
 RP_Interface pi_iface;
 RP_Interface pos_iface;
 RP_Interface z_iface;

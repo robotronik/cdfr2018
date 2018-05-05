@@ -167,9 +167,8 @@ int main(void)
   PI_Start();
   //TODO : init strategy, odometry, ...
   
-  /*
-  Init_Strategy(GREEN_TEAM);
-  Set_Construction_Plan(ORANGE, GREEN, BLUE);
+  Init_Strategy(t);
+  /*Set_Construction_Plan(ORANGE, GREEN, BLUE);
   volatile uint32_t ticks = HAL_GetTick();
   Refresh_Map();//8ms
   Cell *start = &Get_Cell(me.x, me.y);

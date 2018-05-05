@@ -76,7 +76,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     Obstacle *const obs = &obstacle[i];
 
     //Has it expired ?
-    if((GetTicks() - obs->last_detection) > OBSTACLE_LIFETIME){
+    if((ticks - obs->last_detection) > OBSTACLE_LIFETIME){
       continue;
     }
 
@@ -104,20 +104,25 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
       x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
       y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
 
-      if((y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)//In range
-	 && (
-	     (x_ro > 0
+      if((y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){//Should be in range
+	//Update range
+	obs->range = (x_ro > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
+	
+	if((x_ro > 0
 	     && (!fl_d || (x_ro + OBS_RADIUS < fl_d))//No detection at left
 	     && (!fr_d || (x_ro + OBS_RADIUS < fr_d))//No detection at right
-	     )
-	     ||
-	     (x_ro < 0
-	      && (!rl_d || (-x_ro + OBS_RADIUS < rl_d))
-	      && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
-	      )
-	     )
-	 ){
-	obs->no_detect++;
+	    )
+	   ||
+	   (x_ro < 0
+	    && (!rl_d || (-x_ro + OBS_RADIUS < rl_d))
+	    && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
+	    )){
+	  //Not in range but should be
+	  obs->no_detect++;
+	}
+      }else{
+	//Not in range
+	obs->range = OUT_OF_RANGE;
       }
     }
     
@@ -170,6 +175,7 @@ static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int1
      && (obs->x_c <= AREA_WIDTH - OBS_RADIUS)
      && (obs->y_c <= AREA_HEIGHT - OBS_RADIUS)){
     obs->no_detect = 0;
+    obs->range = (x_rel > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
     return 0;
   }else{
     return -1;
@@ -267,6 +273,30 @@ int Can_Rotate(){
   }
   
   return (i == nb_obstacles);
+}
+
+int Can_Move(float distance, bool forward, float *max_speed_ratio){
+  int i;
+  float dist_min = 10000.;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    float obs_dist = dist(me.x, me.y, obs->x, obs->y);
+
+    //If the obstacle is in direction range
+    if((forward && obs->range == IN_RANGE_FORWARD)
+       || (!forward && obs->range == IN_RANGE_BACKWARD)){
+      if(distance > obs_dist - (ROBOT_RADIUS + MARGIN_MIN)){
+        return 0;
+      }
+      if(obs_dist < dist_min){
+	dist_min = obs_dist;
+      }
+    }
+  }
+
+  *max_speed_ratio = min(max(0., (dist_min - (ROBOT_RADIUS + MARGIN_MIN))/1000.), 1.);
+
+  return 1;
 }
 
 /**

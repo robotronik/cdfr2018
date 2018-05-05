@@ -2,6 +2,7 @@
 #define OBSTACLE_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "game_defs.h"
 
 #define N_MAX_OBSTACLES 4
@@ -24,6 +25,12 @@ typedef enum Sensor_E{
 }Sensor;
 
 //Robots
+typedef enum Obstacle_Range_E{
+  IN_RANGE_FORWARD,
+  IN_RANGE_BACKWARD,
+  OUT_OF_RANGE,
+}Obstacle_Range;
+
 typedef struct Obstacle_S{
   //System ticks when the last detection occured
   uint32_t last_detection;
@@ -35,6 +42,7 @@ typedef struct Obstacle_S{
   int16_t x_c, y_c;
   uint16_t distance_c;
   uint8_t no_detect;
+  Obstacle_Range range;
 }Obstacle;
 
 extern Obstacle obstacle[N_MAX_OBSTACLES];
@@ -58,6 +66,14 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin);
 int Materialize_Obstacles(uint16_t margin);
 
 int Can_Rotate();
+int Can_Move(float distance, bool forward, float *max_speed_ratio);
+/**
+ * Return true or false wether or not the robot can move 'dist'
+ * forward or backward (depending on 'forward' value), assuming that
+ * the robot is already aligned in the right direction. If the answer
+ * is true, max_speed_ratio is adjusted to limit the speed of the
+ * robot, considering the distance of the closest obstacle in range.
+ */
 
 /**
 int Is_Too_Close(Obstacle *obs);

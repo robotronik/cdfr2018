@@ -761,6 +761,10 @@ static float Eval_Align_Stack(Target *t, Robot *robot){
     robot->y = t->c->y;
     angle = 0;
     break;
+  default:
+    //Should not happen
+    angle = 0;
+    break;
   }
   robot->on_target = 1;
   robot->last_target = *t;
