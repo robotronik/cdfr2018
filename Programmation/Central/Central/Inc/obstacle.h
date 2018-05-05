@@ -80,6 +80,7 @@ int Can_Move(float distance, bool forward, float *max_speed_ratio);
  * robot, considering the distance of the closest obstacle in range.
  */
 
+void Get_In_Range_Obstacle_Dist(float *fwd_dist, float *bwd_dist);
 void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist);
 
 #endif

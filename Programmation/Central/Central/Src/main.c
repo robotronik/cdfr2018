@@ -168,7 +168,7 @@ int main(void)
   //TODO : init strategy, odometry, ...
   
   Init_Strategy(t);
-  /*Set_Construction_Plan(ORANGE, GREEN, BLUE);
+  Set_Construction_Plan(ORANGE, GREEN, BLUE);
   volatile uint32_t ticks = HAL_GetTick();
   Refresh_Map();//8ms
   Cell *start = &Get_Cell(me.x, me.y);
@@ -177,7 +177,7 @@ int main(void)
   Cell *end = Compute_Path(start, &map[y_goal][x_goal]);//11ms
   Compute_Building_Strategy();//110ms
   ticks = HAL_GetTick() - ticks;
-  HAL_Delay(ticks);*/
+  HAL_Delay(ticks);
 
 
   Pos_Brake();

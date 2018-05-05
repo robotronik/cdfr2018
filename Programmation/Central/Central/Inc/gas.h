@@ -12,6 +12,7 @@
  * ROTATE_RETRY_COUNT times.
  */
 #define MOVE_RETRY_COUNT 50
+#define GO_RETRY_COUNT 50
 #define MAX_SPEED 200.
 #define MIN_SPEED 10.
 #define AVOIDANCE_SPEED_RATIO 0.5

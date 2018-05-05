@@ -300,7 +300,7 @@ int Can_Move(float distance, bool forward, float *max_speed_ratio){
   return 1;
 }
 
-void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist){
+void Get_In_Range_Obstacle_Dist(float *fwd_dist, float *bwd_dist){
   float min_fwd = 10000., min_bwd = 10000.;
 
   //We do not use robot's obstacles here
@@ -332,13 +332,20 @@ void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist){
   if(min_fwd < 0) min_fwd = 0;
   if(min_bwd < 0) min_bwd = 0;
 
+  *fwd_dist = min_fwd;
+  *bwd_dist = min_bwd;
+}
+
+void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist){
+  Get_In_Range_Obstacle_Dist(fwd_dist, bwd_dist);
+
   //Check distance to map objects
-  *fwd_dist = min(min_fwd, Free_Blocks_Dir(me.angle));
+  *fwd_dist = min(*fwd_dist, Free_Blocks_Dir(me.angle));
   float angle_bwd = me.angle + M_PI;
   if(me.angle > M_PI){
     me.angle -= 2*M_PI;
   }
-  *bwd_dist = min(min_bwd, Free_Blocks_Dir(angle_bwd));
+  *bwd_dist = min(*bwd_dist, Free_Blocks_Dir(angle_bwd));
 }
 
 static float Free_Blocks_Dir(float angle){

@@ -254,7 +254,7 @@ static void FSM_MOVE_END(FSM_Move *fsm){
 
 void Break_Free(){
   float fwd_dist, bwd_dist;
-  while(!Can_Rotate()){
+  do{
     Get_Avoidance_Flexibility(&fwd_dist, &bwd_dist);
     float fwd_goal = min(fwd_dist, max(0, MARGIN_MAX-bwd_dist));
     float bwd_goal = min(bwd_dist, max(0, MARGIN_MAX-fwd_dist));
@@ -282,15 +282,92 @@ void Break_Free(){
     }
 
     Go_Straight_Direct(x, y, fwd, AVOIDANCE_SPEED_RATIO);
-  }
+  }while(!Can_Rotate());
 }
 
 //==================================================
 //               Curved Path move
 //==================================================
+
+static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path);
 static int Check_Path(Cell* current_path);
 static Cell* Make_Path(uint16_t x_goal, uint16_t y_goal);
-static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path);
+
+
+int GOGOGO(uint16_t x, uint16_t y){
+  Cell *path_end = NULL;
+  int retry_count = GO_RETRY_COUNT;
+  
+  do{
+    //Avoid robots if needed
+    if(!Can_Rotate()){
+      Brake();
+      HAL_Delay(1000);
+      Break_Free();
+      path_end = NULL;//Reinit the process
+    }
+
+    if(retry_count == 0){
+      return -1;
+    }
+    
+    //Compute path
+    int new_path = Update_Path(x, y, &path_end);
+    if(path_end == NULL){
+      Brake();
+      HAL_Delay(WAIT_TIME);
+      retry_count--;
+      continue;
+    }
+
+    //Config curve
+    float fwd_dist, bwd_dist;
+    Get_In_Range_Obstacle_Dist(&fwd_dist, &bwd_dist);
+    float speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * min(1., max(0., (fwd_dist - (ROBOT_RADIUS + MARGIN_MAX)) / 1000.));
+    if(Pos_Config_Curve(POS_Z, POS_W, speed, ROTATION_SPEED, POS_P, POS_I, POS_D, POS_SPEED_PERCENT_TOLERANCE) == -1){
+      PI_Log("Pos_Config_Curve : pas de réponse\n");
+    }
+    
+    //If the path changed, send it
+    if(new_path && Pos_Send_Path(path_end, x, y) == -1){
+      //Check that this does not mess with UART
+      PI_Log("Pos_Send_Path : pas de réponse\n");
+      Brake();
+      retry_count--;
+      path_end = NULL;
+      HAL_Delay(WAIT_TIME);
+      continue;
+    }
+
+    //Check goal
+    Position_State state;
+    if(Pos_Get_State(&state) == -1){
+      PI_Log("Pos_Get_State : pas de réponse\n");
+    }else if(state == POS_SUCCESS){
+      return 0;
+    }else if(state == POS_ERROR){
+      PI_Log("Position path error\n");
+      Brake();
+      retry_count--;
+      path_end = NULL;
+      HAL_Delay(WAIT_TIME);
+      continue;
+    }
+
+    HAL_Delay(WAIT_TIME);
+  }while(1);
+}
+
+static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path){
+  Refresh_Map();
+  Materialize_Obstacles(MARGIN_MAX);
+  if(Check_Path(*current_path) == 0){
+    return 0;
+  }
+  
+  *current_path = Make_Path(x_goal, y_goal);
+  return 1;
+}
 
 static int Check_Path(Cell* current_path){
   if(current_path == NULL){
@@ -317,82 +394,4 @@ static Cell* Make_Path(uint16_t x_goal, uint16_t y_goal){
   }
 
   return Compute_Path(start, goal);
-}
-
-static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path){
-  Refresh_Map();
-  Materialize_Obstacles(MARGIN_MIN);
-  if(Check_Path(*current_path) == 0){
-    return 0;
-  }
-  
-  *current_path = Make_Path(x_goal, y_goal);
-  return 1;
-}
-
-static int Is_Blocked(){//For curved movement
-  Cell *pos = Cell_From_Pos(me.x, me.y);
-  if(pos == NULL){
-    return 1;
-  }
-
-  int i;
-  for(i = 0; i < nb_obstacles; i++){
-    Obstacle *const obs = &obstacle[i];
-    //The obstacle is too close to generate a path
-    if(Is_Too_Close(obs)){
-      return 1;
-    }
-  }
-
-  if(!Can_Rotate()){
-    return 1;
-  }
-  
-  return 0;
-}
-
-int GOGOGO(uint16_t x, uint16_t y){
-  Cell *path_end = NULL;
-  int success = 0;
-  int new_path = 0;
-
-  do{
-    Refresh_Map();
-    
-    //If the robot is blocked, unblock
-    if(Is_Blocked()){
-      path_end = NULL;
-      Brake();
-      Unblock();
-    }
-
-    //TODO : unblock if on obstacle
-    
-    //Update the path if necessary
-    new_path = Update_Path(x, y, &path_end);
-    if(path_end == NULL){
-      success = 0;
-      break;
-    }
-    
-    //Control position board
-    uint16_t obs_fwd, obs_bwd;
-    Obstacle_Dist(&obs_fwd, &obs_bwd);
-    float speed = min(1., max(((float) (obs_fwd-MARGIN_MIN) / 1000.), 0.));
-
-    //If goal reached, return 0
-
-    if(new_path){
-      //Send path
-    }else{
-      //Set speed
-    }
-    
-  }while(1);
-
-  //Stop position board
-  Brake();
-
-  return (success)?(0):(-1);
 }

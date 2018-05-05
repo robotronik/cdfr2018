@@ -10,18 +10,19 @@ int Position_Init(){
   if(RC_Client_Add_Function(&pos_client, POS_RESET, "", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_SUM, "fffif", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_DIFF, "fffif", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_SET_N_POINTS_ASSER, "ffffffff", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ODO, "BB", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_GET_ODO, "", "BBf")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_GO_FORWARD, "ff", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ANGLE, "ff", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_POSITION_X_Y, "ffBB", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_SET_N_POINTS, "i", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_GET_N_POINTS, "BB", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_GET_STATE, "", "b")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_BALEC, "", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_BRAKE, "", "")) return -1;
-
+  if(RC_Client_Add_Function(&pos_client, POS_INIT_PATH, "", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_ADD_POINT, "BB", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_FOLLOW_PATH, "", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_CONFIG_CURVE, "ffffffff", "")) return -1;
+  
   return 0;
 }
 
@@ -34,7 +35,35 @@ int Pos_Get_State(Position_State *state){
 }
 
 int Pos_Config_Curve(float z, float w, float vc, float vr, float P, float I, float D, float speed_percent_tolerance){
-  return RC_Call(&pos_client, POS_SET_N_POINTS_ASSER, z, w, vc, vr, P, I, D, speed_percent_tolerance);//z w vc vr P I D speed_percent_tolerance
+  return RC_Call(&pos_client, POS_CONFIG_CURVE, z, w, vc, vr, P, I, D, speed_percent_tolerance);//z w vc vr P I D speed_percent_tolerance
+}
+
+int Pos_Send_Path(Cell *path_end, uint16_t x_goal, uint16_t y_goal){
+  if(path_end == NULL){
+    return -1;
+  }
+  
+  if(RC_Call(&pos_client, POS_INIT_PATH) != 0){
+    return -1;
+  }
+
+  //Last point
+  if(RC_Call(&pos_client, POS_ADD_POINT, x_goal, y_goal) != 0){
+    return -1;
+  }
+
+  Cell *current_cell;
+  while((current_cell = path_end->pred) != NULL){
+    if(RC_Call(&pos_client, POS_ADD_POINT, current_cell->x, current_cell->y) != 0){
+      return -1;
+    }
+  }
+  
+  if(RC_Call(&pos_client, POS_FOLLOW_PATH) != 0){
+    return -1;
+  }
+
+  return 0;
 }
 
 int Pos_Init_Position(uint16_t x0, uint16_t y0){
