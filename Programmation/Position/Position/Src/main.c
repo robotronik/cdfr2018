@@ -149,24 +149,27 @@ int main(void)
   RC_Server_Add_Function(&P_server, P_RESET, reset, "", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&P_server, P_SET_ASSER_SUM, set_asser_sum, "fffif", "", RC_IMMEDIATE);//sets the pid parameters P I D steps tolerance and speed tolerance
   RC_Server_Add_Function(&P_server, P_SET_ASSER_DIFF, set_asser_diff, "fffif", "", RC_IMMEDIATE);
-  RC_Server_Add_Function(&P_server, P_SET_N_POINTS_ASSER, set_n_points_asser, "ffffffff", "", RC_IMMEDIATE);//z w vc vr P I D speed_percent_tolerance
 
-//all values are in cm, rad and seconds
+  //all values are in cm, rad and seconds
+  //sets the initial position
+  RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "BB", "", RC_IMMEDIATE);
 
-  RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "BB", "", RC_IMMEDIATE);//sets the odometry parameters ENCODER_DIST and ENCODER_STEP_DIST
-  RC_Server_Add_Function(&P_server, P_GET_ODO, get_odo, "", "BBf", RC_IMMEDIATE);//returns the position x y angle
+  //returns the position x y angle
+  RC_Server_Add_Function(&P_server, P_GET_ODO, get_odo, "", "BBf", RC_IMMEDIATE);
 
-  RC_Server_Add_Function(&P_server, P_GO_FORWARD, go_forward, "ff", "", RC_IMMEDIATE);//speed distance in mm makes the robot go forward or backward
+  //speed distance in mm makes the robot go forward or backward
+  RC_Server_Add_Function(&P_server, P_GO_FORWARD, go_forward, "ff", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&P_server, P_SET_ANGLE, set_angle, "ff", "", RC_IMMEDIATE);
-  RC_Server_Add_Function(&P_server, P_SET_POSITION_X_Y, set_position_x_y, "ffBB", "", RC_IMMEDIATE);//rotation speed, linear speed, x point in cm, y point in mm
 
-  RC_Server_Add_Function(&P_server, P_SET_N_POINTS, set_n_points, "i", "", RC_IMMEDIATE);
-  RC_Server_Add_Function(&P_server, P_GET_N_POINTS, get_n_points, "BB", "", RC_IMMEDIATE);//reception of the points by packets of 1
-
+  //rotation speed, linear speed, x point in cm, y point in mm
+  RC_Server_Add_Function(&P_server, P_SET_POSITION_X_Y, set_position_x_y, "ffBB", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&P_server, P_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
-
   RC_Server_Add_Function(&P_server, P_BALEC, balec, "", "", RC_IMMEDIATE);
 
+  RC_Server_Add_Function(&P_server, P_INIT_PATH, init_path, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_ADD_POINT, add_point, "BB", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_FOLLOW_PATH, follow_path, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_CONFIG_CURVE, config_curve, "ffffffff", "", RC_IMMEDIATE);//z w vc vr P I D speed_percent_tolerance
 
   //added functions
   RC_Server_Add_Function(&P_server, P_BRAKE, brake, "", "", RC_IMMEDIATE);

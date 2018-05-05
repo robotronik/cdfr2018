@@ -6,6 +6,35 @@ extern volatile int deltaL;
 
 extern Odometry odometry;
 
+void Init_Stack(Stack *stack){
+  stack->start = stack->size = 0;
+}
+
+int Stack_Point(uint16_t x, uint16_t y, Stack *stack){
+  if(stack->size == STACK_SIZE){
+    return -1;
+  }
+
+  stack->data[(stack->start + stack->size)%STACK_SIZE] = (Point) {.x = x, .y = y};
+  stack->size++;
+
+  return 0;
+}
+
+int Unstack_Point(uint16_t *x, uint16_t *y, Stack *stack){
+  if(stack->size == 0){
+    return -1;
+  }
+
+  Point *p = &stack->data[stack->start];
+  stack->size--;
+  stack->start = (stack->start + 1)%STACK_SIZE;
+  *x = p->x;
+  *y = p->y;
+  
+  return 0;
+}
+
 void interpol_calc(Interpol *data)
 {
   int i=0,j,n=data->n,n1=n-1;

@@ -11,8 +11,8 @@ from Pierre-François GIMENEZ pierre-francois.gimenez@irit.fr
 
 typedef struct FSM_Position_Pts_S{
   FSM_Instance instance;
+  Stack stack_r;
   Interpol points;
-  int reception;//number of recieved points
   float w;//pulsation
   float z;//amortissement
   float vc;//maximum speed

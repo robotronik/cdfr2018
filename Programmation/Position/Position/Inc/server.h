@@ -16,16 +16,18 @@ typedef enum P_Functions_E{
   P_RESET,
   P_SET_ASSER_SUM,
   P_SET_ASSER_DIFF,
-  P_SET_N_POINTS_ASSER,
   P_SET_ODO,
   P_GET_ODO,
   P_BALEC,
-  P_SET_N_POINTS,
-  P_GET_N_POINTS,
   P_GO_FORWARD,
   P_SET_ANGLE,
   P_BRAKE,
-  P_SET_POSITION_X_Y
+  P_SET_POSITION_X_Y,
+  
+  P_INIT_PATH,
+  P_ADD_POINT,
+  P_FOLLOW_PATH,
+  P_CONFIG_CURVE
 }P_Functions;
 
 typedef enum P_States_E{
@@ -46,9 +48,10 @@ void get_odo(RC_Server* pserver);
 void go_forward(RC_Server* pserver);
 void set_angle(RC_Server* pserver);
 
-void set_n_points(RC_Server* pserver);//use to idicate the number of interpolation points
-void get_n_points(RC_Server* pserver);
-void set_n_points_asser(RC_Server* pserver);
+void init_path(RC_Server *pserver);
+void add_point(RC_Server *pserver);
+void follow_path(RC_Server *pserver);
+void config_curve(RC_Server *pserver);
 
 void brake(RC_Server* pserver);
 void set_position_x_y(RC_Server* pserver);
