@@ -36,6 +36,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   //Compute obstacles
   int i;
   for(i = 0; i < 4; i++){
+    //If the sensor detect an obstacle, compute it
     present[i] = sensor_raw[i] && !Compute_Obstacle(&in_range[i], ref, x_rel[i], y_rel[i]);
   }
 
@@ -47,7 +48,8 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
      && (dist(in_range[FRONT_LEFT].x, in_range[FRONT_LEFT].y,
 	      in_range[FRONT_RIGHT].x, in_range[FRONT_RIGHT].y)
 	 < 2*OBS_RADIUS)){
-    Compute_Obstacle(&updated[n++], ref, SENSOR_DIST_TANGENT + (fl_d + fr_d)/2, 0);
+    //If the two sensors detect the same obstacle
+    Compute_Obstacle(&updated[n++], ref, SENSOR_DIST_TANGENT + min(fl_d, fr_d), 0);
   }else{
     if(present[FRONT_LEFT])
       updated[n++] = in_range[FRONT_LEFT];
@@ -60,7 +62,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
      && (dist(in_range[REAR_LEFT].x, in_range[REAR_LEFT].y,
 	      in_range[REAR_RIGHT].x, in_range[REAR_RIGHT].y)
 	 < 2*OBS_RADIUS)){
-    Compute_Obstacle(&updated[n++], ref, -(SENSOR_DIST_TANGENT + (rl_d + rr_d)/2), 0);
+    Compute_Obstacle(&updated[n++], ref, -(SENSOR_DIST_TANGENT + min(rl_d, rr_d)), 0);
   }else{
     if(present[REAR_LEFT])
       updated[n++] = in_range[FRONT_LEFT];
@@ -74,7 +76,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     Obstacle *const obs = &obstacle[i];
 
     //Has it expired ?
-    if(ticks - obs->last_detection > OBSTACLE_LIFETIME){
+    if((GetTicks() - obs->last_detection) > OBSTACLE_LIFETIME){
       continue;
     }
 
@@ -85,6 +87,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     //Is it a duplicate ?
     int j = 0;
     for(j = 0; j < n; j++){
+      //If it overlaps with another obstacle
       if(dist(obs->x_c, obs->y_c, updated[j].x_c, updated[j].y_c) < 2*OBS_RADIUS)
 	break;
     }
@@ -120,7 +123,13 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     
     if(obs->no_detect == OBS_NODETECT_COUNT)
       break;
-    
+
+    /*
+     * From this point, we know that this obstacle hasn't expired yet,
+     * does not overlap any other known obstacle, and it has not moved
+     * away. So we keep track of this obstacle with updated
+     * measurements.
+     */
     updated[n++] = *obs;
   }
 

@@ -156,16 +156,17 @@ int main(void)
   PI_Init();
 
   //Position
-  volatile int r = Position_Init();
-  r++;
+  Position_Init();
   
   //==================================================//
   //                 Wait Start                       //
   //==================================================//
 
   Team t = wait_start();
+  
   PI_Start();
-
+  //TODO : init strategy, odometry, ...
+  
   /*
   Init_Strategy(GREEN_TEAM);
   Set_Construction_Plan(ORANGE, GREEN, BLUE);
@@ -202,10 +203,10 @@ int main(void)
   while (1){
     //Test des capteurs
     HAL_Delay(250);
-    PI_Log("AvG : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]));
+    /*PI_Log("AvG : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]));
     PI_Log("AvD : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]));
     PI_Log("ArG : %d\t", ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]));
-    PI_Log("ArD : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
+    PI_Log("ArD : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));*/
 
     /* USER CODE END WHILE */
 

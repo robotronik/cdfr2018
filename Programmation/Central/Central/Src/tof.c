@@ -183,7 +183,7 @@ int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
 
 int ToF_Get_Last_Range(ToF_Handler *htof){
   __disable_irq();
-  int r = (htof->data.RangeStatus==0)?(htof->dev.LeakyRange):-1;
+  int r = (htof->data.RangeStatus==0)?(htof->dev.LeakyRange):0;
   __enable_irq();
   return r;
 }
