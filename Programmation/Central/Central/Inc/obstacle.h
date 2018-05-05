@@ -14,7 +14,12 @@
 #define OBS_NODETECT_COUNT 5
 
 #define MARGIN_MAX 150
-#define MARGIN_MIN 50
+#define MARGIN_MIN (1.415*SQUARE_SIZE)
+/**
+ * The MARGIN_MIN constant must be > sqrt(2)*SQUARE_SIZE to guarantee
+ * that as long as a rotation can be made safely in a zone that is not
+ * an obstacle, a path can be computed from this point.
+ */
 
 //Sensors
 typedef enum Sensor_E{
@@ -75,13 +80,6 @@ int Can_Move(float distance, bool forward, float *max_speed_ratio);
  * robot, considering the distance of the closest obstacle in range.
  */
 
-/**
-int Is_Too_Close(Obstacle *obs);
-
-int Is_In_Range(Obstacle *obs, const Robot *ref);*/
-/**
- * Returns 0 if the obstacle isn't in range, 1 if it's at the front,
- * -1 if it's at the back.
- */
+void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist);
 
 #endif

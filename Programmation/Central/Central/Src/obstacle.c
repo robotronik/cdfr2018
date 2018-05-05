@@ -13,6 +13,7 @@ int nb_obstacles = 0;
 uint16_t sensor_raw[4];
 
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel);
+static float Free_Blocks_Dir(float angle);
 
 void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t rl_d, uint16_t rr_d){
   Obstacle in_range[4];
@@ -280,7 +281,7 @@ int Can_Move(float distance, bool forward, float *max_speed_ratio){
   float dist_min = 10000.;
   for(i = 0; i < nb_obstacles; i++){
     Obstacle *const obs = &obstacle[i];
-    float obs_dist = dist(me.x, me.y, obs->x, obs->y);
+    float obs_dist = obs->distance;
 
     //If the obstacle is in direction range
     if((forward && obs->range == IN_RANGE_FORWARD)
@@ -299,26 +300,60 @@ int Can_Move(float distance, bool forward, float *max_speed_ratio){
   return 1;
 }
 
-/**
-int Is_Too_Close(Obstacle *obs){
-  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + MARGIN_MIN + 1.415*SQUARE_SIZE));
+void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist){
+  float min_fwd = 10000., min_bwd = 10000.;
+
+  //We do not use robot's obstacles here
+  Refresh_Map();
+  
+  //Check distances to robots
+  int i;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    switch(obs->range){
+    case IN_RANGE_FORWARD:
+      if(obs->distance < min_fwd){
+	min_fwd = obs->distance;
+      }
+      break;
+    case IN_RANGE_BACKWARD:
+      if(obs->distance < min_bwd){
+	min_bwd = obs->distance;
+      }
+      break;
+    case OUT_OF_RANGE:
+      //balec
+      break;
+    }
+  }
+
+  min_fwd -= OBS_RADIUS + MARGIN_MIN;
+  min_bwd -= OBS_RADIUS + MARGIN_MIN;
+  if(min_fwd < 0) min_fwd = 0;
+  if(min_bwd < 0) min_bwd = 0;
+
+  //Check distance to map objects
+  *fwd_dist = min(min_fwd, Free_Blocks_Dir(me.angle));
+  float angle_bwd = me.angle + M_PI;
+  if(me.angle > M_PI){
+    me.angle -= 2*M_PI;
+  }
+  *bwd_dist = min(min_bwd, Free_Blocks_Dir(angle_bwd));
 }
 
-int Is_In_Range(Obstacle *obs, const Robot *ref){
-  int16_t x_ro = obs->x_c - ref->x;
-  int16_t y_ro = obs->y_c - ref->y;
-      
-  //Rotate
-  x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
-  y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
-  
-  if(!(y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){
-    return 0;
-  }
+static float Free_Blocks_Dir(float angle){
+  float dx = 10*cos(angle);
+  float dy = 10*sin(angle);
 
-  if(x_ro > 0){
-    return 1;
+  float x_l = 0, y_l = 0;
+  float pos_x = me.x, pos_y = me.y;
+  Cell *current_cell;
+  while((current_cell = Cell_From_Pos(pos_x+dx+(SQUARE_SIZE*1.415), pos_y+dy+(SQUARE_SIZE*1.415))) != NULL && !current_cell->obstacle){
+    pos_x += dx;
+    pos_y += dy;
   }
-  
-  return -1;
-  }*/
+  x_l = pos_x - me.x;
+  y_l = pos_y - me.y;
+
+  return dist(0, 0, x_l, y_l);
+}

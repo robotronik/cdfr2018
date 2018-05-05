@@ -14,6 +14,9 @@
 #define MOVE_RETRY_COUNT 50
 #define MAX_SPEED 200.
 #define MIN_SPEED 10.
+#define AVOIDANCE_SPEED_RATIO 0.5
+
+void Brake();
 
 int Rotate(float angle);
 /**
@@ -21,11 +24,13 @@ int Rotate(float angle);
  * if there is an obstacle that prevents rotation.
  */
 
+int Go_Straight(uint16_t x, uint16_t y, bool forward, float speed_ratio);
+
+void Break_Free();
+
 int GOGOGO(uint16_t x, uint16_t y);
 /**
  * Go to the positon (x, y) (mm). Returns 0 on success, -1 on error.
  */
-
-int Go_Straight(uint16_t x, uint16_t y, bool forward, float speed_ratio);
 
 #endif

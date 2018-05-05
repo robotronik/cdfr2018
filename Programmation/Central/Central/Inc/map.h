@@ -33,6 +33,8 @@ Cell* A_Star(Cell *start, Cell *goal);
  * start and goal must NOT be on any edges of the map.
  */
 
+Cell* Cell_From_Pos(uint16_t x, uint16_t y);
+
 extern Cell map[MAP_HEIGHT][MAP_WIDTH];
 
 #endif

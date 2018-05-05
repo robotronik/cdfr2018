@@ -18,6 +18,17 @@ Cell map[MAP_HEIGHT][MAP_WIDTH];
     }							\
   }
 
+Cell* Cell_From_Pos(uint16_t x, uint16_t y){
+  int const i = y / SQUARE_SIZE;
+  int const j = x / SQUARE_SIZE;
+
+  if(i < 0 || i >= MAP_HEIGHT || j < 0 || j >= MAP_WIDTH){
+    return NULL;
+  }
+
+  return &map[i][j];
+}
+
 static void square_limit(uint32_t real_x, uint32_t real_y, uint32_t width, uint32_t height){
   ADD_PADDING(real_x, width, AREA_WIDTH);
   ADD_PADDING(real_y, height, AREA_HEIGHT);

@@ -9,6 +9,16 @@
 #include <math.h>
 
 //==================================================
+//               Brake
+//==================================================
+void Brake(){
+  while(Pos_Brake() != 0){
+    PI_Log("Pos_Brake : pas de réponse.\n");
+    HAL_Delay(10);
+  }
+}
+
+//==================================================
 //               Rotation
 //==================================================
 
@@ -93,10 +103,7 @@ static void FSM_ROTATION_WAIT(FSM_Rotation *fsm){
 }
 
 static void FSM_ROTATION_STOP(FSM_Rotation *fsm){
-  while(Pos_Brake() != 0){
-    PI_Log("Pos_Brake : pas de réponse.\n");
-    HAL_Delay(10);
-  }
+  Brake();
   HAL_Delay(WAIT_TIME);
   fsm->run = FSM_ROTATION_INIT;
 }
@@ -126,6 +133,15 @@ static void FSM_MOVE_WAIT(FSM_Move *fsm);
 static void FSM_MOVE_STOP(FSM_Move *fsm);
 static void FSM_MOVE_END(FSM_Move *fsm);
 
+static int Go_Straight_Direct(uint16_t x, uint16_t y, bool forward, float speed_ratio);
+/**
+ * WARNING : this function assumes the robot already performed a
+ * rotation to get in the right angle. If not, this will lead to
+ * undefined behavior. The reason it takes (x, y) and not just a
+ * distance is that it uses the effective position of the robot and
+ * the goal to determine whether or not the move is safe.
+ */
+
 int Go_Straight(uint16_t x, uint16_t y, bool forward, float speed_ratio){
   //Compute angle and distance
   float g_angle = angle(me.x, me.y, x, y);
@@ -141,7 +157,11 @@ int Go_Straight(uint16_t x, uint16_t y, bool forward, float speed_ratio){
     return -1;
   }
 
-  FSM_Move fsm = {
+  return Go_Straight_Direct(x, y, forward, speed_ratio);
+}
+
+static int Go_Straight_Direct(uint16_t x, uint16_t y, bool forward, float speed_ratio){
+    FSM_Move fsm = {
     .run = FSM_MOVE_INIT,
     .state = FSM_RUNNING,
     .retry_count = MOVE_RETRY_COUNT,
@@ -219,10 +239,7 @@ static void FSM_MOVE_WAIT(FSM_Move *fsm){
 }
 
 static void FSM_MOVE_STOP(FSM_Move *fsm){
-  while(Pos_Brake() != 0){
-    PI_Log("Pos_Brake : pas de réponse.\n");
-    HAL_Delay(10);
-  }
+  Brake();
   HAL_Delay(WAIT_TIME);
   fsm->run = FSM_MOVE_INIT;
 }
@@ -232,26 +249,48 @@ static void FSM_MOVE_END(FSM_Move *fsm){
 }
 
 //==================================================
+//               Escape strategy
+//==================================================
+
+void Break_Free(){
+  float fwd_dist, bwd_dist;
+  while(!Can_Rotate()){
+    Get_Avoidance_Flexibility(&fwd_dist, &bwd_dist);
+    float fwd_goal = min(fwd_dist, max(0, MARGIN_MAX-bwd_dist));
+    float bwd_goal = min(bwd_dist, max(0, MARGIN_MAX-fwd_dist));
+    if(fwd_goal < 1 && bwd_goal < 1){
+      HAL_Delay(WAIT_TIME);
+      continue;
+    }
+
+    uint16_t x, y;
+    uint8_t fwd;
+    if(fwd_goal < 1){
+      x = me.x - bwd_goal*cos(me.angle);
+      y = me.y - bwd_goal*sin(me.angle);
+      fwd = 0;
+    }
+    else if(bwd_goal < 1){
+      x = me.x + bwd_goal*cos(me.angle);
+      y = me.y + bwd_goal*sin(me.angle);
+      fwd = 1;
+    }else{
+      float goal = (fwd_goal - bwd_goal)/2.;
+      x = me.x + goal*cos(me.angle);
+      y = me.y + goal*sin(me.angle);
+      fwd = (goal > 0)?1:0;
+    }
+
+    Go_Straight_Direct(x, y, fwd, AVOIDANCE_SPEED_RATIO);
+  }
+}
+
+//==================================================
 //               Curved Path move
 //==================================================
 static int Check_Path(Cell* current_path);
 static Cell* Make_Path(uint16_t x_goal, uint16_t y_goal);
 static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path);
-static inline Cell* Cell_From_Pos(uint16_t x, uint16_t y);
-static void Brake();
-static int Is_Blocked();
-static void Unblock();
-
-static inline Cell* Cell_From_Pos(uint16_t x, uint16_t y){
-  int const i = y / SQUARE_SIZE;
-  int const j = x / SQUARE_SIZE;
-
-  if(i < 0 || i >= MAP_HEIGHT || j < 0 || j >= MAP_WIDTH){
-    return NULL;
-  }
-
-  return &map[i][j];
-}
 
 static int Check_Path(Cell* current_path){
   if(current_path == NULL){
@@ -291,10 +330,6 @@ static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path){
   return 1;
 }
 
-static void Brake(){
-  //Stop position
-}
-
 static int Is_Blocked(){//For curved movement
   Cell *pos = Cell_From_Pos(me.x, me.y);
   if(pos == NULL){
@@ -315,76 +350,6 @@ static int Is_Blocked(){//For curved movement
   }
   
   return 0;
-}
-
-static int Free_Blocks_Dir(float angle){
-  float dx = 10*cos(angle);
-  float dy = 10*sin(angle);
-
-  float x_l = 0, y_l = 0;
-  float pos_x = me.x, pos_y = me.y;
-  Cell *current_cell;
-  while((current_cell = Cell_From_Pos(pos_x+dx, pos_y+dy)) != NULL && !current_cell->obstacle){
-    pos_x += dx;
-    pos_y += dy;
-  }
-  x_l = pos_x - me.x;
-  y_l = pos_y - me.y;
-
-  return dist(0, 0, x_l, y_l);
-}
-
-static void Obstacle_Dist(uint16_t *obs_forward, uint16_t *obs_backward){
-  *obs_forward = 0;
-  *obs_backward = 0;
-  if(sensor_raw[FRONT_LEFT]){
-    *obs_forward = sensor_raw[FRONT_LEFT];
-    if(sensor_raw[FRONT_RIGHT]){
-      *obs_forward = min(*obs_forward, sensor_raw[FRONT_RIGHT]);
-    }
-  }else{
-    *obs_forward = sensor_raw[FRONT_RIGHT];
-  }
-  
-  if(sensor_raw[REAR_LEFT]){
-    *obs_backward = sensor_raw[REAR_LEFT];
-    if(sensor_raw[REAR_RIGHT]){
-      *obs_backward = min(*obs_backward, sensor_raw[REAR_RIGHT]);
-    }
-  }else{
-    *obs_backward = sensor_raw[REAR_RIGHT];
-  }
-}
-
-static void Unblock(){
-  while(Is_Blocked()){
-    uint16_t obs_forward = 0, obs_backward = 0;
-    uint16_t free_forward, free_backward;
-
-    Obstacle_Dist(&obs_forward, &obs_backward);
-
-    free_forward = Free_Blocks_Dir(me.angle);
-    if(obs_forward){
-      free_forward = min(free_forward, obs_forward);
-    }
-    free_backward = Free_Blocks_Dir(me.angle+3.141592);
-    if(obs_backward){
-      free_backward = min(free_backward, obs_backward);
-    }
-
-    uint16_t go_backward = min(free_backward, max(0, MARGIN_MAX-free_forward));
-    uint16_t go_forward = min(free_forward, max(0, MARGIN_MAX-free_backward));
-
-    if(go_forward && go_forward > go_backward){
-      Go_Straight(me.x + cos(me.angle)*go_forward, me.y + sin(me.angle)*go_forward);
-    }else if(go_backward){
-      Go_Straight(me.x - cos(me.angle)*go_backward, me.y - sin(me.angle)*go_backward);
-    }else{
-      Delay(1000);
-    }
-    
-    Refresh_Map();
-  }
 }
 
 int GOGOGO(uint16_t x, uint16_t y){
