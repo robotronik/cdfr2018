@@ -140,25 +140,6 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   nb_obstacles = n;
 }
 
-int Is_In_Range(Obstacle *obs, const Robot *ref){
-  int16_t x_ro = obs->x_c - ref->x;
-  int16_t y_ro = obs->y_c - ref->y;
-      
-  //Rotate
-  x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
-  y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
-  
-  if(!(y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){
-    return 0;
-  }
-
-  if(x_ro > 0){
-    return 1;
-  }
-  
-  return -1;
-}
-
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel){
   //Get ticks at detection time
   obs->last_detection = Get_Ticks();
@@ -204,9 +185,6 @@ void Print_Obstacles(void){
   }
 }
 
-int Is_Too_Close(Obstacle *obs){
-  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + MARGIN_MIN + 1.415*SQUARE_SIZE));
-}
 
 int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   //Check if the obstacle will not overlay our robot
@@ -216,7 +194,6 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
     return -1;
   }
 
-  
   uint16_t X0 = obs->x_c/SQUARE_SIZE, Y0 = obs->y_c/SQUARE_SIZE;
   uint16_t dx = obs->x_c%SQUARE_SIZE, dy = obs->y_c%SQUARE_SIZE;
 
@@ -279,3 +256,39 @@ int Materialize_Obstacles(uint16_t margin){
   }
   return status;
 }
+
+int Can_Rotate(){
+  int i;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    if(dist(me.x, me.y, obs->x, obs->y) < ROBOT_RADIUS + MARGIN_MIN){
+      break;
+    }
+  }
+  
+  return (i == nb_obstacles);
+}
+
+/**
+int Is_Too_Close(Obstacle *obs){
+  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + MARGIN_MIN + 1.415*SQUARE_SIZE));
+}
+
+int Is_In_Range(Obstacle *obs, const Robot *ref){
+  int16_t x_ro = obs->x_c - ref->x;
+  int16_t y_ro = obs->y_c - ref->y;
+      
+  //Rotate
+  x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
+  y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
+  
+  if(!(y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){
+    return 0;
+  }
+
+  if(x_ro > 0){
+    return 1;
+  }
+  
+  return -1;
+  }*/

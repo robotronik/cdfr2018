@@ -7,6 +7,107 @@
 #include <stddef.h>
 #include <math.h>
 
+//==================================================
+//               Rotation
+//==================================================
+
+typedef struct FSM_Rotation_S{
+  void (run*)(struct FSM_Rotation_S* fsm);
+  int retry_count;
+  Position_State state;
+  float goal;
+}FSM_Rotation;
+
+static void FSM_ROTATION_INIT(FSM_Rotation *fsm);
+static void FSM_ROTATION_CMD(FSM_Rotation *fsm);
+static void FSM_ROTATION_WAIT(FSM_Rotation *fsm);
+static void FSM_ROTATION_STOP(FSM_Rotation *fsm);
+static void FSM_ROTATION_END(FSM_Rotation *fsm);
+
+int Rotate(float angle){
+  FSM_Rotation fsm;
+  fsm.goal = angle;
+  fsm.retry_count = ROTATE_RETRY_COUNT;
+  fsm.state = RUNNING;
+  fsm.run = FSM_ROTATION_INIT();
+  do{
+    fsm.run(&fsm);
+  }while(fsm.state == RUNNING);
+  return (fsm.state == SUCCESS)?(0):(-1);
+}
+
+static void FSM_ROTATION_INIT(FSM_Rotation *fsm){
+  if(fsm->retry_count <= 0){
+    fsm->state = ERROR;
+    fsm->run = FSM_ROTATION_END;
+    return;
+  }
+  
+  if(Can_Rotate()){
+    fsm->run = FSM_ROTATION_CMD;
+  }else{
+    fsm->retry_count--;
+    HAL_Delay(WAIT_TIME);
+    //Same state
+  }
+}
+
+static void FSM_ROTATION_CMD(FSM_Rotation *fsm){
+  if(Pos_Set_Angle(ROATION_SPEED, me.angle - goal) != 0){
+    PI_Log("Pos_Set_Angle : pas de réponse.\n");
+    fsm->state = ERROR;
+    fsm->run = FSM_ROTATION_END;
+    return;
+  }
+  
+  fsm->run = FSM_ROTATION_WAIT;
+}
+
+static void FSM_ROTATION_WAIT(FSM_Rotation *fsm){
+  Position_State pos_state;
+  if(Pos_Get_State(&pos_state) != 0){
+    PI_Log("Pos_Get_State : pas de réponse.\n");
+    fsm->state = ERROR;
+    fsm->run = FSM_ROTATION_END;
+    return;
+  }
+
+  if(pos_state == SUCCESS){
+    fsm->state = SUCCESS;
+    fsm->run = FSM_ROTATION_END;
+    return;
+  }
+
+  if(!Can_Rotate() || pos_state == ERROR){
+    fsm->retry_count--;
+    fsm->run = FSM_ROTATION_STOP;
+    return;
+  }
+
+  HAL_Delay(WAIT_TIME);
+}
+
+static void FSM_ROTATION_STOP(FSM_Rotation *fsm){
+  while(Pos_Brake() != 0){
+    PI_Log("Pos_Brake : pas de réponse.\n");
+    HAL_Delay(10);
+  }
+  HAL_Delay(WAIT_TIME);
+  fsm->run = FSM_ROTATION_INIT;
+}
+
+static void FSM_ROTATION_END(FSM_Rotation *fsm){
+  //NOP NOP NOP
+}
+
+//==================================================
+//               Straight move
+//==================================================
+
+
+//==================================================
+//               Curved Path move
+//==================================================
 static int Check_Path(Cell* current_path);
 static Cell* Make_Path(uint16_t x_goal, uint16_t y_goal);
 static int Update_Path(uint16_t x_goal, uint16_t y_goal, Cell **current_path);

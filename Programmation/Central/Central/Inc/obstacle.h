@@ -57,9 +57,12 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin);
 
 int Materialize_Obstacles(uint16_t margin);
 
+int Can_Rotate();
+
+/**
 int Is_Too_Close(Obstacle *obs);
 
-int Is_In_Range(Obstacle *obs, const Robot *ref);
+int Is_In_Range(Obstacle *obs, const Robot *ref);*/
 /**
  * Returns 0 if the obstacle isn't in range, 1 if it's at the front,
  * -1 if it's at the back.
