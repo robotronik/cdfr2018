@@ -46,15 +46,17 @@ void balec(RC_Server* pserver)
   RC_Server_Return(pserver);
 }
 
-extern volatile float x0_, y0_;
 void set_odo(RC_Server* pserver)
 {
   uint16_t X0, Y0;
+  float Theta0;
   RC_Server_Get_Args(pserver,
 		     &X0,
-		     &Y0);
-  x0_ = (float) X0;
-  y0_ = (float) Y0;
+		     &Y0,
+         &Theta0);
+  odometry.x=(float)X0;
+  odometry.y=(float)Y0;
+  odometry.theta=Theta0;
   RC_Server_Return(pserver);
 }
 
@@ -128,9 +130,9 @@ void follow_path(RC_Server *pserver){
   int i;
   for(i = 0; i < TAB_POINT_LENGTH && Unstack_Point(&x, &y, &fsm_pos_pts.stack_r) != -1; i++){
     fsm_pos_pts.points.x[i] = (float) x;
-    fsm_pos_pts.points.y[i] = (float) y;    
+    fsm_pos_pts.points.y[i] = (float) y;
   }
-  
+
   RC_Server_Return(pserver);
 
   interpol_calc(&fsm_pos_pts.points);

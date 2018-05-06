@@ -152,7 +152,7 @@ int main(void)
 
   //all values are in cm, rad and seconds
   //sets the initial position
-  RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "BB", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&P_server, P_SET_ODO, set_odo, "BBf", "", RC_IMMEDIATE);//x_ y_ theta_
 
   //returns the position x y angle
   RC_Server_Add_Function(&P_server, P_GET_ODO, get_odo, "", "BBf", RC_IMMEDIATE);
@@ -238,7 +238,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-  
+
   sum_goal=0;
   diff_goal=0;
 
