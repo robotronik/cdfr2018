@@ -74,9 +74,9 @@ PID_DATA pid_diff;
 extern FSM_Instance *volatile fsm;
 extern FSM_Position_Pts fsm_pos_pts;
 extern FSM_Position_Pts fsm_pos_abs;
-extern volatile int ENCODER_DIST;//distance between encoders
-extern volatile int ENCODER_STEP_DIST;//distance for 1 encoder step/2
-extern volatile int deltaL;
+extern volatile float ENCODER_DIST;//distance between encoders
+extern volatile float ENCODER_STEP_DIST;//distance for 1 encoder step/2
+extern volatile float deltaL;
 
 /* USER CODE END PV */
 

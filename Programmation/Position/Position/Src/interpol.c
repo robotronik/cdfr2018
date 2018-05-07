@@ -1,8 +1,8 @@
 #include "interpol.h"
 
-extern volatile int ENCODER_DIST;//distance between encoders
-extern volatile int ENCODER_STEP_DIST;//distance for 1 encoder step/2
-extern volatile int deltaL;
+extern volatile float ENCODER_DIST;//distance between encoders
+extern volatile float ENCODER_STEP_DIST;//distance for 1 encoder step/2
+extern volatile float deltaL;
 
 extern Odometry odometry;
 
@@ -31,7 +31,7 @@ int Unstack_Point(uint16_t *x, uint16_t *y, Stack *stack){
   stack->start = (stack->start + 1)%STACK_SIZE;
   *x = p->x;
   *y = p->y;
-  
+
   return 0;
 }
 
