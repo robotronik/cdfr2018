@@ -252,8 +252,9 @@ uint8_t XL_Reboot(XL *servo);
 //======================================
 /***************************************************
  * REMARQUE GENERALE :
- * Torque Enable doit être à 0
- * pour configurer les champs EEPROM.
+ * Torque Enable doit être à 0 pour configurer les champs EEPROM.  Il
+ * faut donc utiliser XL_Power_Off avant d'utiliser les fonctions
+ * commençant par XL_Configure_.
  ***************************************************/
 
 uint8_t XL_Configure_ID(XL *servo, uint8_t id);
