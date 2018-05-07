@@ -23,7 +23,7 @@ void FSM_Pos_Init(FSM_Instance *fsm)
 void FSM_Pos_Generator(FSM_Instance *fsm)
 {
   FSM_Position_Abs *fsm_pos=(FSM_Position_Abs *) fsm;
-  if(fsm_pos->pos/fsm_pos->linear_speed >fsm_pos->n*pid_sum.Te)
+  if(fabsf(fsm_pos->pos/fsm_pos->linear_speed) >fsm_pos->n*pid_sum.Te)
   {
     sum_goal=fsm_pos->initial_sum+fsm_pos->n*fsm_pos->linear_speed*pid_sum.Te/ENCODER_STEP_DIST;
     fsm_pos->n++;
@@ -57,7 +57,7 @@ void FSM_Angle_Init(FSM_Instance *fsm)
 void FSM_Angle_Generator(FSM_Instance *fsm)
 {
   FSM_Position_Abs *fsm_pos=(FSM_Position_Abs *) fsm;
-  if(fsm_pos->angle/fsm_pos->angular_speed >fsm_pos->n*pid_diff.Te)
+  if(fabsf(fsm_pos->angle/fsm_pos->angular_speed) >fsm_pos->n*pid_diff.Te)
   {
     diff_goal=fsm_pos->n*fsm_pos->angular_speed*pid_diff.Te*ENCODER_DIST/ENCODER_STEP_DIST;
     fsm_pos->n++;
@@ -103,7 +103,7 @@ void FSM_Angle_Init_X_Y(FSM_Instance *fsm)
 void FSM_Angle_Generator_X_Y(FSM_Instance *fsm)
 {
   FSM_Position_Abs *fsm_pos=(FSM_Position_Abs *) fsm;
-  if(fsm_pos->angle/fsm_pos->angular_speed >fsm_pos->n*pid_diff.Te)
+  if(fabsf(fsm_pos->angle/fsm_pos->angular_speed) >fsm_pos->n*pid_diff.Te)
   {
     diff_goal=fsm_pos->n*fsm_pos->angular_speed*pid_diff.Te*ENCODER_DIST/ENCODER_STEP_DIST;
     fsm_pos->n++;
@@ -132,7 +132,7 @@ void FSM_Pos_Init_X_Y(FSM_Instance *fsm)
 void FSM_Pos_Generator_X_Y(FSM_Instance *fsm)
 {
   FSM_Position_Abs *fsm_pos=(FSM_Position_Abs *) fsm;
-  if(fsm_pos->pos/fsm_pos->linear_speed >fsm_pos->n*pid_sum.Te)
+  if(fabsf(fsm_pos->pos/fsm_pos->linear_speed) >fsm_pos->n*pid_sum.Te)
   {
     sum_goal=fsm_pos->initial_sum+fsm_pos->n*fsm_pos->linear_speed*pid_sum.Te/ENCODER_STEP_DIST;
     fsm_pos->n++;

@@ -3,7 +3,6 @@
 volatile float ENCODER_DIST=199.66;//distance between encoders
 volatile float ENCODER_STEP_DIST=20.65*2*M_PI/1440.0;//distance for 1 encoder step
 volatile float deltaL=(20.65*2*M_PI/1440.0)/199.66;//ENCODER_STEP_DIST/ENCODER_DIST
-volatile float x0_ = 0, y0_ = 0;
 
 void update_odometry(Odometry *odometry){
   int dl_l = update_encoder(&odometry->encoder_l);
