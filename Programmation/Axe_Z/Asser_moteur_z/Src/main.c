@@ -137,15 +137,15 @@ int main(void)
 
   RC_Server_Add_Function(&Z_server, Z_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
 
-  RC_Server_Add_Function(&Z_server, Z_BALEC, balec, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_IN, arm_in, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_OUT, arm_out, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_BALEC, balec, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_IN, arm_in, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_OUT, arm_out, "", "", RC_IMMEDIATE);
   //RC_Server_Add_Function(&Z_server, Z_STACK_FIRST, stack_first, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK, stack, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last, "", "b",RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK, stack, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last, "", "",RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "", "", RC_IMMEDIATE);
 
   //==================================================
   //                  AX-12A
