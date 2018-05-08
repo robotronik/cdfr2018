@@ -78,7 +78,7 @@ void so_points_much_score(RC_Server *server){
 void read_this_damn_plan_morris(RC_Server *server){
   char colors[4];
 
-  int r = Read_Plan(colors);
+  uint8_t r = Read_Plan(colors);
   
   RC_Server_Return(server, r, colors);
 }
