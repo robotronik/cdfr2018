@@ -12,6 +12,7 @@
 #define NB_SETS 6
 #define NB_CUBES (5*NB_SETS)
 #define CUBE_SIZE 58
+#define CUBE_OBS (CUBE_SIZE*1.4/2.+50)
 #define ROBOT_RADIUS (110 + 0)
 #define CENTER_COLOR YELLOW
 
@@ -111,7 +112,6 @@ typedef struct Target_S{
   Cube *c;
   Direction d;
   uint16_t approach_x, approach_y;
-  struct Target_S *suiv;
 }Target;
 
 typedef struct Robot_S{

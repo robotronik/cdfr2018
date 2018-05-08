@@ -20,8 +20,13 @@ int PI_Init();
 int PI_Start();
 int PI_Stop();
 int PI_Error();
+int PI_Score(uint16_t score);
+int PI_Plan();
+/**
+ * Returns -1 on error, 0 if no plan was found, 1 if the plan was set.
+ */
 int PI_Log(const char *fmt, ...);
 
-int PI_Asser_Test();
+//int PI_Asser_Test();
 
 #endif

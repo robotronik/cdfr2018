@@ -12,16 +12,12 @@
 Team team;
 Robot me;
 
-uint8_t built_buildings;
-uint16_t score;
+uint16_t score = 0;
 
 static Cube_Color construction_plan[3];
 static uint8_t valid_plan = 0;
 static int score_per_size[6] = {0, 1, 1+2, 1+2+3, 1+2+3+4, 1+2+3+4+5};
-
-Construction current_construction;
-Target target_list[5];
-int nb_targets = 0;
+Builder_Context build_ctx = {.on_set = false, .set_number = 0, .align_dir = 0, .nb_built = 0};
 
 char color_str[5][16] = {
     [GREEN] = "GREEN",
@@ -125,6 +121,7 @@ void Init_Strategy(Team _team){
   me.y = (team == GREEN_TEAM)?ROBOT_Y0:(AREA_WIDTH-ROBOT_Y0);
   me.angle = (team == GREEN_TEAM)?ROBOT_A0:PI;
   me.on_target = 0;
+  score = 0;
 
   //Initializing objects availability
   int k;
@@ -141,8 +138,8 @@ void Init_Strategy(Team _team){
   Refresh_Map();
 
   //Construction init
-  Init_Construction(&current_construction);
-  
+  Init_Construction(&build_ctx.construction);
+
   Init_Cube_Sort();
 }
 
@@ -222,12 +219,18 @@ int Update_Construction(Cube *c, Construction *construction){
   return 0;
 }
 
+uint16_t Get_Construction_Score(Construction *construction){
+  return score_per_size[construction->size]
+    + (construction->plan_state == FSM_PLAN_COMPLETE)?30:0;
+}
+
 //==================================================//
 //               Building Strategy                  //
 //==================================================//
 Building_Strategy strat;
 
 void Compute_Building_Strategy(){
+  strat.nb_targets = 0;
   strat.nb_materials = Select_Building_Materials(strat.materials);
   //printf("Nb materials : %d\n", strat.nb_materials);
   John_The_Builder();
@@ -293,7 +296,7 @@ static Cube* Find_Cube(Cube_Color color, uint8_t no_pattern){
 
 int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
   //Checking current construction
-  //printf("Plan state : %d\n", current_construction.plan_state);
+  //printf("Plan state : %d\n", build_ctx.construction.plan_state);
 
   Cube_Set *best_set = &set[0];
   float best_distance = dist(0, 0, AREA_WIDTH, AREA_HEIGHT);
@@ -320,19 +323,19 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
     uint8_t nb_cubes_set = Get_Nb_Cubes_Set(k);
 
     uint8_t pattern_compatible = 0;
-    if(valid_plan && current_construction.plan_state != FSM_PLAN_COMPLETE){
+    if(valid_plan && build_ctx.construction.plan_state != FSM_PLAN_COMPLETE){
       uint8_t mcbp;//max cube before pattern
-      if(current_construction.plan_state != FSM_PLAN_NONE){
+      if(build_ctx.construction.plan_state != FSM_PLAN_NONE){
 	mcbp = 0;
       }else{
-	mcbp = max(0, 2-current_construction.size);
+	mcbp = max(0, 2-build_ctx.construction.size);
       }
 
       //Searching for cubes to complete the pattern
       Cube *top, *middle, *bottom;
-      switch(current_construction.plan_state){
+      switch(build_ctx.construction.plan_state){
       case FSM_PLAN_NONE:
-	if(current_construction.size > 2) break;
+	if(build_ctx.construction.size > 2) break;
         top = CHECK_ACCESSIBILITY(k, PLAN_TOP, nb_cubes_set, mcbp + 2, stack_set);
 	middle = CHECK_ACCESSIBILITY(k, PLAN_MIDDLE, nb_cubes_set, mcbp + 1, stack_set);
 	bottom = CHECK_ACCESSIBILITY(k, PLAN_BOTTOM, nb_cubes_set, mcbp + 2, stack_set);
@@ -344,7 +347,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
 	}
 	break;
       case FSM_PLAN_T:
-	if(current_construction.size > 3) break;
+	if(build_ctx.construction.size > 3) break;
 	bottom = CHECK_ACCESSIBILITY(k, PLAN_BOTTOM, nb_cubes_set, 1, stack_set);
 	middle = CHECK_ACCESSIBILITY(k, PLAN_MIDDLE, nb_cubes_set, 0, stack_set);
 	if(bottom != NULL && middle != NULL){
@@ -354,7 +357,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
 	}
 	break;
       case FSM_PLAN_B:
-	if(current_construction.size > 3) break;
+	if(build_ctx.construction.size > 3) break;
 	middle = CHECK_ACCESSIBILITY(k, PLAN_MIDDLE, nb_cubes_set, 0, stack_set);
 	top = CHECK_ACCESSIBILITY(k, PLAN_TOP, nb_cubes_set, 1, stack_set);
 	if(middle != NULL && top != NULL){
@@ -364,7 +367,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
 	}
 	break;
       case FSM_PLAN_BM:
-	if(current_construction.size > 4) break;
+	if(build_ctx.construction.size > 4) break;
 	top = CHECK_ACCESSIBILITY(k, PLAN_TOP, nb_cubes_set, 0, stack_set);
 	if(top != NULL){
 	  found_cubes[nb_found++] = top;
@@ -372,7 +375,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
 	}
 	break;
       case FSM_PLAN_TM:
-	if(current_construction.size > 4) break;
+	if(build_ctx.construction.size > 4) break;
 	bottom = CHECK_ACCESSIBILITY(k, PLAN_BOTTOM, nb_cubes_set, 0, stack_set);
 	if(bottom != NULL){
 	  found_cubes[nb_found++] = bottom;
@@ -393,7 +396,7 @@ int Select_Building_Materials(Cube* materials[CUBES_PER_SET]){
     }
 
     //Completing set
-    Find_Cubes(0, 1, found_cubes, &nb_found, CUBES_PER_SET - current_construction.size - nb_found);
+    Find_Cubes(0, 1, found_cubes, &nb_found, CUBES_PER_SET - build_ctx.construction.size - nb_found);
 
     //Evaluating distances empirically
     
@@ -641,10 +644,10 @@ static float Eval_Target(Target *t, Robot *robot){
 
 static void Eval_Permutation(Cube* comb[], int size, float *best_rank){  
   //Temporary data
-  Construction f_const = current_construction;
+  Construction f_const = build_ctx.construction;
   Robot f_robot = me;
   
-  int score = 0;
+  int score_ = 0;
   int best_d = -1;
   
   Probability prob_backup[5];
@@ -719,22 +722,19 @@ static void Eval_Permutation(Cube* comb[], int size, float *best_rank){
       //printf("%s\t", color_str[comb[i]->color]);
     }
   }
-  
-  if(f_const.plan_state == FSM_PLAN_COMPLETE){
-    score += 30;
-  }
-  score += score_per_size[f_const.size];
+
+  score_ = Get_Construction_Score(&f_const);
   
   if(best_d != -1){
-    float rank = (float) score / cost_accum;
+    float rank = (float) score_ / cost_accum;
     if(rank > *best_rank){
       *best_rank = rank;
-      nb_targets = size;
-      for(i = 0; i < nb_targets; i++){
-	target_list[i] = target_list_tmp[i];
+      strat.nb_targets = size;
+      for(i = 0; i < strat.nb_targets; i++){
+        strat.steps_tab[i] = target_list_tmp[i];
       }
     }
-    //printf("Rank : %f (%d)\n", (float)score/cost_accum, score);
+    //printf("Rank : %f (%d)\n", (float)score_/cost_accum, score_);
   }
 }
 

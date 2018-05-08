@@ -47,26 +47,35 @@ static void square_limit(uint32_t real_x, uint32_t real_y, uint32_t width, uint3
 }
 
 static void circle_limit(uint32_t real_x, uint32_t real_y, uint32_t radius){
-  radius = radius + ROBOT_RADIUS;
-  
-  int r = (((float) radius / (float) SQUARE_SIZE) + .5);
+  int r = radius + ROBOT_RADIUS;
 
-  int x0 = real_x / SQUARE_SIZE;
-  int y0 = real_y / SQUARE_SIZE;
-  int x, y;
-  for(x = 0; x < r; x++){
-    float alpha = acos((float) x / (float) r);
-    int y_max = ((float) r) * sin(alpha) + .5;
-    for(y = 0; y < y_max; y++){
-      if(x0+x < MAP_WIDTH && x0-x >= 0 && y0+y < MAP_HEIGHT && y0-y >= 0){
-	map[y0+y][x0+x].obstacle = 1;
-	map[y0-y][x0+x].obstacle = 1;
-	map[y0+y][x0-x].obstacle = 1;
-	map[y0-y][x0-x].obstacle = 1;
-      }
+  uint16_t X0 = real_x / SQUARE_SIZE, Y0 = real_y / SQUARE_SIZE;
+  uint16_t dx = real_x % SQUARE_SIZE, dy = real_y % SQUARE_SIZE;
+
+  //Number of cubes
+  int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
+
+  //Check if this circle can be drawn
+  if((X0 < N-1) || (X0 > MAP_WIDTH - N) || (Y0 < N-1) || (Y0 > MAP_HEIGHT - N)){
+    return;
+  }
+  
+  //Draw the circle
+  int X = 0;
+  float R = N*SQUARE_SIZE - (float) SQUARE_SIZE/2.;
+  int DX = 0;
+
+  for(X = 0; X < N; X++, DX += SQUARE_SIZE){
+    float DY = sqrt(R*R - DX*DX);
+    int NB_Y = 1 + (DY-(float)SQUARE_SIZE/2.)/SQUARE_SIZE;
+    int Y;
+    for(Y = 0; Y < NB_Y; Y++){
+	map[Y0 + Y][X0 + X].obstacle = 1;
+	map[Y0 + Y][X0 - X].obstacle = 1;
+	map[Y0 - Y][X0 + X].obstacle = 1;
+	map[Y0 - Y][X0 - X].obstacle = 1;
     }
   }
-
 }
 
 void Init_Map(void){
@@ -108,7 +117,7 @@ void Refresh_Map(){
   int n;
   for(n = 0; n < NB_CUBES; n++){
     if(cube[n].availability > ZERO_PROBABILITY)
-      circle_limit(cube[n].x, cube[n].y, (CUBE_SIZE*1.4)/2);
+      circle_limit(cube[n].x, cube[n].y, CUBE_OBS);
   }
   
   //Construction zones

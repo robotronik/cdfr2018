@@ -22,7 +22,6 @@ Team wait_start(){
   return team;
 }
 
-
 void remote_stop(){
   int i = JACK_FILTER;
   while(--i){

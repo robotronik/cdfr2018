@@ -53,6 +53,7 @@
 #include "strategy.h"
 #include "map.h"
 #include "position_client.h"
+#include "z_client.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -151,12 +152,9 @@ int main(void)
   //==================================================//
   //           Remote Call Client Init                //
   //==================================================//
-
-  //Raspberry
   PI_Init();
-
-  //Position
   Position_Init();
+  Z_Init();
   
   //==================================================//
   //                 Wait Start                       //
@@ -165,9 +163,11 @@ int main(void)
   Team t = wait_start();
   
   PI_Start();
+  Init_Strategy(t);
+  
   //TODO : init strategy, odometry, ...
   
-  Init_Strategy(t);
+  /*
   Set_Construction_Plan(ORANGE, GREEN, BLUE);
   volatile uint32_t ticks = HAL_GetTick();
   Refresh_Map();//8ms
@@ -178,20 +178,7 @@ int main(void)
   Compute_Building_Strategy();//110ms
   ticks = HAL_GetTick() - ticks;
   HAL_Delay(ticks);
-
-
-  Pos_Brake();
-
-  //while(1){
-  float speed = -10.;
-  float distance = 100.;
-  Pos_Go_Forward(speed, distance);
-    //HAL_Delay(5000);
-    //}
-  
-  
-  //volatile int jean_michel_segfault = *((int*)99999999999);
-  //PI_Asser_Test();
+  */
 
   /* USER CODE END 2 */
 
@@ -200,13 +187,7 @@ int main(void)
   
   
   while (1){
-    //Test des capteurs
-    HAL_Delay(250);
-    /*PI_Log("AvG : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]));
-    PI_Log("AvD : %d\t", ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]));
-    PI_Log("ArG : %d\t", ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]));
-    PI_Log("ArD : %d\n", ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));*/
-
+    
     /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

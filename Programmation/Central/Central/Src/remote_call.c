@@ -435,13 +435,13 @@ int RC_Call(RC_Client *client, int id, ...){
   }
 
   //Extract return informations
-  int r = RC_Unpack_Vars(client->functions[id].return_fmt,
+  RC_Unpack_Vars(client->functions[id].return_fmt,
 			 &r_packet->data[1],
 			 r_packet->len - 1,
 			 &args);
   va_end(args);
 
-  return r;
+  return 0;
 }
 
 

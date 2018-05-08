@@ -2,8 +2,16 @@
 #define STRATEGY_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "game_defs.h"
+
+/**
+ * Usage :
+ * Call Init_Strategy once, at the beginning of the match.
+ * Call Set_Construction_Plan to set the plan.
+ * Call Compute_Building_Strategy
+ */
 
 typedef struct Construction_S{
   Cube* c[CUBES_PER_SET];
@@ -15,10 +23,19 @@ typedef struct Building_Strategy_S{
   Target steps_tab[CUBES_PER_SET];
   Cube* materials[CUBES_PER_SET];
   int nb_materials;
+  int nb_targets;
   float rank;
   float time_cost;
   int score;
 }Building_Strategy;
+
+typedef struct Builder_Context_S{
+  bool on_set;
+  uint8_t set_number;
+  Direction align_dir;
+  Construction construction;
+  uint8_t nb_built;
+}Builder_Context;
 
 //Global variables
 extern Team team;
@@ -26,13 +43,9 @@ extern Robot me;
 extern Cube cube[NB_CUBES];
 extern Cube_Set set[NB_SETS];
 
-extern uint8_t built_buildings;
 extern uint16_t score;
-extern Construction current_construction;
 extern Building_Strategy strat;
-
-extern Target target_list[5];
-extern int nb_targets;
+extern Builder_Context build_ctx;
 extern char color_str[5][16];
 
 //Global defines
@@ -40,6 +53,7 @@ extern char color_str[5][16];
 
 void Init_Construction(Construction *construction);
 int Update_Construction(Cube *c, Construction *construction);
+uint16_t Get_Construction_Score(Construction *construction);
 
 //Init
 void Init_Strategy(Team team);
@@ -79,5 +93,8 @@ uint32_t Remaining_Time(void);
 /**
  * Returns the remaining time, in ms.
  */
+
+
+
 
 #endif
