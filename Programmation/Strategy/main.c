@@ -88,10 +88,10 @@ int main(int argc, char *argv[]){
     printf("%s %d\n", color_str[strat.steps_tab[i].c->color], strat.steps_tab[i].d);
   }
 
-  //me.x = AREA_WIDTH/2 - 400;
-  //me.y = AREA_HEIGHT/2;
+  me.x = AREA_WIDTH/2 + 400;
+  me.y = AREA_HEIGHT/2;
   //me.angle += 3.14/4;
-  //Update_Obstacles(&me, 1.415*SQUARE_SIZE+1, 1.415*SQUARE_SIZE+1, 0, 0);
+  Update_Obstacles(&me, 2*1.415*SQUARE_SIZE+1, 0, 0, 0);
   Materialize_Obstacle(&obstacle[0],150);
   Print_Obstacles();
 
