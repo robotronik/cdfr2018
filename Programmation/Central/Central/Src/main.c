@@ -187,59 +187,6 @@ int main(void)
   //Rotate(me.angle + 3.14/4);
   //Go_Straight(me.x + 25,  me.y, true, 0.1);
 
-  /*int i;
-  switch(team){
-  case GREEN_TEAM:
-    Pos_Go_Forward(100, 300);
-    for(i = 0; i < 100; i++){
-      HAL_Delay(100);
-      if(!Can_Rotate()){
-	Brake();
-      }
-    }
-    Rotate(-3.14/2);
-    Pos_Go_Forward(100, 300);
-    for(i = 0; i < 100; i++){
-      HAL_Delay(100);
-      if(!Can_Rotate()){
-	Brake();
-      }
-    }
-    Pos_Go_Forward(100, -300);
-    for(i = 0; i < 100; i++){
-      HAL_Delay(100);
-      if(!Can_Rotate()){
-	Brake();
-      }
-    }
-    break;
-  case ORANGE_TEAM:
-    Pos_Go_Forward(100, 300);
-    for(i = 0; i < 100; i++){
-      HAL_Delay(100);
-      if(!Can_Rotate()){
-	Brake();
-      }
-    }
-    Rotate(3.14/2);
-    Pos_Go_Forward(100, 300);
-    for(i = 0; i < 100; i++){
-      HAL_Delay(100);
-      if(!Can_Rotate()){
-	Brake();
-      }
-    }
-    Pos_Go_Forward(100, -300);
-    for(i = 0; i < 100; i++){
-      HAL_Delay(100);
-      if(!Can_Rotate()){
-	Brake();
-      }
-    }
-    break;
-  }
-  */
-    
   Z_Arm_In();
   HAL_Delay(1000);
   Z_Arm_Out();

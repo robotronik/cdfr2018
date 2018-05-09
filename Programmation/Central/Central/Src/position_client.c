@@ -27,19 +27,52 @@ int Position_Init(){
 }
 
 int Position_Init_Odometry(){
-  return RC_Call(&pos_client, POS_SET_ODO, me.x, me.y, me.angle);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_SET_ODO, me.x, me.y, me.angle);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Reset(){
-  return RC_Call(&pos_client, POS_RESET);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_RESET);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Get_State(Position_State *state){
-  return RC_Call(&pos_client, POS_GET_STATE, state);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_GET_STATE, state);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Config_Curve(float z, float w, float vc, float vr, float P, float I, float D, float speed_percent_tolerance){
-  return RC_Call(&pos_client, POS_CONFIG_CURVE, z, w, vc, vr, P, I, D, speed_percent_tolerance);//z w vc vr P I D speed_percent_tolerance
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_CONFIG_CURVE, z, w, vc, vr, P, I, D, speed_percent_tolerance);//z w vc vr P I D speed_percent_tolerance
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
+}
+
+int Pos_Init_Path(){
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_INIT_PATH);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
+}
+
+int Pos_Add_Point(uint16_t x_goal, uint16_t y_goal){
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_ADD_POINT, x_goal, y_goal);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
+}
+
+int Pos_Follow_Path(){
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_FOLLOW_PATH);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Send_Path(Cell *path_end, uint16_t x_goal, uint16_t y_goal){
@@ -47,23 +80,23 @@ int Pos_Send_Path(Cell *path_end, uint16_t x_goal, uint16_t y_goal){
     return -1;
   }
   
-  if(RC_Call(&pos_client, POS_INIT_PATH) != 0){
+  if(Pos_Init_Path() != 0){
     return -1;
   }
 
   //Last point
-  if(RC_Call(&pos_client, POS_ADD_POINT, x_goal, y_goal) != 0){
+  if(Pos_Add_Point(x_goal, y_goal) != 0){
     return -1;
   }
 
   Cell *current_cell;
   while((current_cell = path_end->pred) != NULL){
-    if(RC_Call(&pos_client, POS_ADD_POINT, current_cell->x, current_cell->y) != 0){
+    if(Pos_Add_Point(current_cell->x, current_cell->y) != 0){
       return -1;
     }
   }
   
-  if(RC_Call(&pos_client, POS_FOLLOW_PATH) != 0){
+  if(Pos_Follow_Path() != 0){
     return -1;
   }
 
@@ -71,21 +104,36 @@ int Pos_Send_Path(Cell *path_end, uint16_t x_goal, uint16_t y_goal){
 }
 
 int Pos_Init_Position(uint16_t x0, uint16_t y0){
-  return RC_Call(&pos_client, POS_SET_ODO, x0, y0);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_SET_ODO, x0, y0);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Get_Position(){
-  return RC_Call(&pos_client, POS_GET_ODO, &me.x, &me.y, &me.angle);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_GET_ODO, &me.x, &me.y, &me.angle);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Go_Forward(float speed, float distance){
-  return RC_Call(&pos_client, POS_GO_FORWARD, speed, distance);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_GO_FORWARD, speed, distance);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Set_Angle(float speed, float angle){
-  return RC_Call(&pos_client, POS_SET_ANGLE, speed, angle);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_SET_ANGLE, speed, angle);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
 
 int Pos_Brake(){
-  return RC_Call(&pos_client, POS_BRAKE);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_BRAKE);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
 }
