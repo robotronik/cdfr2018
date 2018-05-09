@@ -181,9 +181,65 @@ int main(void)
   Init_Strategy(team);
   Position_Init_Odometry();
 
-  Pos_Go_Forward(0.1, me.x + 10);
-  
-  
+  //Pos_Go_Forward(100, 25);
+  //Rotate(me.angle -3.14/4);
+  //HAL_Delay(5000);
+  //Rotate(me.angle + 3.14/4);
+  //Go_Straight(me.x + 25,  me.y, true, 0.1);
+
+  int i;
+  switch(team){
+  case GREEN_TEAM:
+    Pos_Go_Forward(100, 300);
+    for(i = 0; i < 100; i++){
+      HAL_Delay(100);
+      if(!Can_Rotate()){
+	Brake();
+      }
+    }
+    Rotate(-3.14/2);
+    Pos_Go_Forward(100, 300);
+    for(i = 0; i < 100; i++){
+      HAL_Delay(100);
+      if(!Can_Rotate()){
+	Brake();
+      }
+    }
+    Pos_Go_Forward(100, -300);
+    for(i = 0; i < 100; i++){
+      HAL_Delay(100);
+      if(!Can_Rotate()){
+	Brake();
+      }
+    }
+    break;
+  case ORANGE_TEAM:
+    Pos_Go_Forward(100, 300);
+    for(i = 0; i < 100; i++){
+      HAL_Delay(100);
+      if(!Can_Rotate()){
+	Brake();
+      }
+    }
+    Rotate(3.14/2);
+    Pos_Go_Forward(100, 300);
+    for(i = 0; i < 100; i++){
+      HAL_Delay(100);
+      if(!Can_Rotate()){
+	Brake();
+      }
+    }
+    Pos_Go_Forward(100, -300);
+    for(i = 0; i < 100; i++){
+      HAL_Delay(100);
+      if(!Can_Rotate()){
+	Brake();
+      }
+    }
+    break;
+  }
+    
+    
   Z_Arm_In();
   HAL_Delay(1000);
   Z_Arm_Out();
@@ -248,7 +304,7 @@ int main(void)
     //Print_ToF();
     PI_Log("%u %u %f\n", me.x, me.y, me.angle);
     HAL_Delay(500);
-    /* USER CODE END WHILE */
+  /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
     
