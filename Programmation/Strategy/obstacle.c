@@ -7,12 +7,14 @@
 #include "strategy.h"
 #include "map.h"
 #include "interface.h"
+#define M_PI 3.141592
 
 Obstacle obstacle[N_MAX_OBSTACLES];
 int nb_obstacles = 0;
 uint16_t sensor_raw[4];
 
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel);
+static float Free_Blocks_Dir(float angle);
 
 void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t rl_d, uint16_t rr_d){
   Obstacle in_range[4];
@@ -36,6 +38,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
   //Compute obstacles
   int i;
   for(i = 0; i < 4; i++){
+    //If the sensor detect an obstacle, compute it
     present[i] = sensor_raw[i] && !Compute_Obstacle(&in_range[i], ref, x_rel[i], y_rel[i]);
   }
 
@@ -47,7 +50,8 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
      && (dist(in_range[FRONT_LEFT].x, in_range[FRONT_LEFT].y,
 	      in_range[FRONT_RIGHT].x, in_range[FRONT_RIGHT].y)
 	 < 2*OBS_RADIUS)){
-    Compute_Obstacle(&updated[n++], ref, SENSOR_DIST_TANGENT + (fl_d + fr_d)/2, 0);
+    //If the two sensors detect the same obstacle
+    Compute_Obstacle(&updated[n++], ref, SENSOR_DIST_TANGENT + min(fl_d, fr_d), 0);
   }else{
     if(present[FRONT_LEFT])
       updated[n++] = in_range[FRONT_LEFT];
@@ -60,7 +64,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
      && (dist(in_range[REAR_LEFT].x, in_range[REAR_LEFT].y,
 	      in_range[REAR_RIGHT].x, in_range[REAR_RIGHT].y)
 	 < 2*OBS_RADIUS)){
-    Compute_Obstacle(&updated[n++], ref, -(SENSOR_DIST_TANGENT + (rl_d + rr_d)/2), 0);
+    Compute_Obstacle(&updated[n++], ref, -(SENSOR_DIST_TANGENT + min(rl_d, rr_d)), 0);
   }else{
     if(present[REAR_LEFT])
       updated[n++] = in_range[FRONT_LEFT];
@@ -74,7 +78,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     Obstacle *const obs = &obstacle[i];
 
     //Has it expired ?
-    if(ticks - obs->last_detection > OBSTACLE_LIFETIME){
+    if((ticks - obs->last_detection) > OBSTACLE_LIFETIME){
       continue;
     }
 
@@ -85,6 +89,7 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     //Is it a duplicate ?
     int j = 0;
     for(j = 0; j < n; j++){
+      //If it overlaps with another obstacle
       if(dist(obs->x_c, obs->y_c, updated[j].x_c, updated[j].y_c) < 2*OBS_RADIUS)
 	break;
     }
@@ -101,26 +106,37 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
       x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
       y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
 
-      if((y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)//In range
-	 && (
-	     (x_ro > 0
+      if((y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){//Should be in range
+	//Update range
+	obs->range = (x_ro > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
+	
+	if((x_ro > 0
 	     && (!fl_d || (x_ro + OBS_RADIUS < fl_d))//No detection at left
 	     && (!fr_d || (x_ro + OBS_RADIUS < fr_d))//No detection at right
-	     )
-	     ||
-	     (x_ro < 0
-	      && (!rl_d || (-x_ro + OBS_RADIUS < rl_d))
-	      && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
-	      )
-	     )
-	 ){
-	obs->no_detect++;
+	    )
+	   ||
+	   (x_ro < 0
+	    && (!rl_d || (-x_ro + OBS_RADIUS < rl_d))
+	    && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
+	    )){
+	  //Not in range but should be
+	  obs->no_detect++;
+	}
+      }else{
+	//Not in range
+	obs->range = OUT_OF_RANGE;
       }
     }
     
     if(obs->no_detect == OBS_NODETECT_COUNT)
       break;
-    
+
+    /*
+     * From this point, we know that this obstacle hasn't expired yet,
+     * does not overlap any other known obstacle, and it has not moved
+     * away. So we keep track of this obstacle with updated
+     * measurements.
+     */
     updated[n++] = *obs;
   }
 
@@ -129,25 +145,6 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     obstacle[i] = updated[i];
   }
   nb_obstacles = n;
-}
-
-int Is_In_Range(Obstacle *obs, const Robot *ref){
-  int16_t x_ro = obs->x_c - ref->x;
-  int16_t y_ro = obs->y_c - ref->y;
-      
-  //Rotate
-  x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
-  y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
-  
-  if(!(y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){
-    return 0;
-  }
-
-  if(x_ro > 0){
-    return 1;
-  }
-  
-  return -1;
 }
 
 static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel){
@@ -180,6 +177,7 @@ static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int1
      && (obs->x_c <= AREA_WIDTH - OBS_RADIUS)
      && (obs->y_c <= AREA_HEIGHT - OBS_RADIUS)){
     obs->no_detect = 0;
+    obs->range = (x_rel > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
     return 0;
   }else{
     return -1;
@@ -195,9 +193,6 @@ void Print_Obstacles(void){
   }
 }
 
-int Is_Too_Close(Obstacle *obs){
-  return (dist(me.x, me.y, obs->x_c, obs->y_c) <= (OBS_RADIUS + ROBOT_RADIUS + MARGIN_MIN + 1.415*SQUARE_SIZE));
-}
 
 int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
   //Check if the obstacle will not overlay our robot
@@ -207,7 +202,6 @@ int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
     return -1;
   }
 
-  
   uint16_t X0 = obs->x_c/SQUARE_SIZE, Y0 = obs->y_c/SQUARE_SIZE;
   uint16_t dx = obs->x_c%SQUARE_SIZE, dy = obs->y_c%SQUARE_SIZE;
 
@@ -269,4 +263,105 @@ int Materialize_Obstacles(uint16_t margin){
     }
   }
   return status;
+}
+
+int Can_Rotate(){
+  int i;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    if(dist(me.x, me.y, obs->x, obs->y) < ROBOT_RADIUS + MARGIN_MIN){
+      break;
+    }
+  }
+  
+  return (i == nb_obstacles);
+}
+
+int Can_Move(float distance, bool forward, float *max_speed_ratio){
+  int i;
+  float dist_min = 10000.;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    float obs_dist = obs->distance;
+
+    //If the obstacle is in direction range
+    if((forward && obs->range == IN_RANGE_FORWARD)
+       || (!forward && obs->range == IN_RANGE_BACKWARD)){
+      if(distance > obs_dist - (ROBOT_RADIUS + MARGIN_MIN)){
+        return 0;
+      }
+      if(obs_dist < dist_min){
+	dist_min = obs_dist;
+      }
+    }
+  }
+
+  *max_speed_ratio = min(max(0., (dist_min - (ROBOT_RADIUS + MARGIN_MIN))/1000.), 1.);
+
+  return 1;
+}
+
+void Get_In_Range_Obstacle_Dist(float *fwd_dist, float *bwd_dist){
+  float min_fwd = 10000., min_bwd = 10000.;
+
+  //We do not use robot's obstacles here
+  Refresh_Map();
+  
+  //Check distances to robots
+  int i;
+  for(i = 0; i < nb_obstacles; i++){
+    Obstacle *const obs = &obstacle[i];
+    switch(obs->range){
+    case IN_RANGE_FORWARD:
+      if(obs->distance < min_fwd){
+	min_fwd = obs->distance;
+      }
+      break;
+    case IN_RANGE_BACKWARD:
+      if(obs->distance < min_bwd){
+	min_bwd = obs->distance;
+      }
+      break;
+    case OUT_OF_RANGE:
+      //balec
+      break;
+    }
+  }
+
+  min_fwd -= OBS_RADIUS + MARGIN_MIN;
+  min_bwd -= OBS_RADIUS + MARGIN_MIN;
+  if(min_fwd < 0) min_fwd = 0;
+  if(min_bwd < 0) min_bwd = 0;
+
+  *fwd_dist = min_fwd;
+  *bwd_dist = min_bwd;
+}
+
+void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist){
+  Get_In_Range_Obstacle_Dist(fwd_dist, bwd_dist);
+
+  //Check distance to map objects
+  *fwd_dist = min(*fwd_dist, Free_Blocks_Dir(me.angle));
+  float angle_bwd = me.angle + M_PI;
+  if(me.angle > M_PI){
+    me.angle -= 2*M_PI;
+  }
+  *bwd_dist = min(*bwd_dist, Free_Blocks_Dir(angle_bwd));
+}
+
+static float Free_Blocks_Dir(float angle){
+  float dx = 10*cos(angle);
+  float dy = 10*sin(angle);
+
+  float x_l = 0, y_l = 0;
+  float pos_x = me.x, pos_y = me.y;
+  Cell *current_cell;
+  while((current_cell = Cell_From_Pos(pos_x+dx+(SQUARE_SIZE*1.415), pos_y+dy+(SQUARE_SIZE*1.415))) != NULL && !current_cell->obstacle){
+    pos_x += dx;
+    pos_y += dy;
+  }
+  x_l = pos_x - me.x;
+  y_l = pos_y - me.y;
+
+  return dist(0, 0, x_l, y_l);
 }

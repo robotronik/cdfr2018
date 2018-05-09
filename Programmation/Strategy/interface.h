@@ -5,6 +5,5 @@
 
 #define Get_Ticks() 1
 #define Print(fmt, ...) (printf(fmt, __VA_ARGS__))
-#define Delay(ms) 
 
 #endif

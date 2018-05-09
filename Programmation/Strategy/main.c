@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
   SDL_FreeSurface(bg_surface);
 
   //STRATEGY
-  Init_Strategy(GREEN_TEAM);
+  Init_Strategy(ORANGE_TEAM);
   
   Set_Construction_Plan(ORANGE, GREEN, BLUE);
   //Set_Construction_Plan(GREEN, YELLOW, BLUE);
@@ -84,13 +84,14 @@ int main(int argc, char *argv[]){
   Compute_Building_Strategy();
 
   int i;
-  for(i = 0; i < nb_targets; i++){
-    printf("%s %d\n", color_str[target_list[i].c->color], target_list[i].d);
+  for(i = 0; i < strat.nb_targets; i++){
+    printf("%s %d\n", color_str[strat.steps_tab[i].c->color], strat.steps_tab[i].d);
   }
 
-  me.x = AREA_WIDTH/2 - 400;
-  me.y = AREA_HEIGHT/2;
-  Update_Obstacles(&me, 1.415*SQUARE_SIZE+1, 0, 0, 0);
+  //me.x = AREA_WIDTH/2 - 400;
+  //me.y = AREA_HEIGHT/2;
+  //me.angle += 3.14/4;
+  //Update_Obstacles(&me, 1.415*SQUARE_SIZE+1, 1.415*SQUARE_SIZE+1, 0, 0);
   Materialize_Obstacle(&obstacle[0],150);
   Print_Obstacles();
 
