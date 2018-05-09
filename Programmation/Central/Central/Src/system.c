@@ -22,12 +22,13 @@ void wait_start(){
     HAL_Delay(1);
   }
 
-  PI_Log("GAS !");
-  
   //Enable timer for end of match
   HAL_TIM_Base_Start_IT(&htim2);
   //Enable the polling timer for ToF
   HAL_TIM_Base_Start_IT(&htim3);
+  
+  PI_Log("GAS !");
+ 
 }
 
 void remote_stop(){

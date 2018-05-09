@@ -153,12 +153,15 @@ int main(void)
   //           Remote Call Client Init                //
   //==================================================//
   PI_Init();
-
   Position_Init();
+  
   Pos_Reset();
   Brake();
+
   Z_Init();
   Z_Reset();
+
+  HAL_Delay(1000);
 
   
   //==================================================//
@@ -178,7 +181,14 @@ int main(void)
   Init_Strategy(team);
   Position_Init_Odometry();
 
+  Pos_Go_Forward(0.1, me.x + 10);
+  
+  
+  Z_Arm_In();
+  HAL_Delay(1000);
   Z_Arm_Out();
+  HAL_Delay(1000);
+  Z_Place();
   Z_State state;
   if(Z_Wait_State(&state) == -1){
     PI_Log("Z State error\n");
@@ -192,6 +202,13 @@ int main(void)
     break;
   }
   PI_Log("Z End\n");
+  
+  if(Pos_Get_Position() == -1){
+    PI_Log("Pos get : pas de réponse.\n");
+  }else{
+    PI_Log("%u %u %f\n", me.x, me.y, me.angle);
+  }
+
   
   
   //<homologation>
@@ -223,11 +240,13 @@ int main(void)
   me.x = AREA_WIDTH/2;
   me.y = AREA_HEIGHT/2;
   while (1){
+    Pos_Get_Position();
     /*__disable_irq();
     Print_Obstacles();
     PI_Log("\n\n");
     __enable_irq();*/
     //Print_ToF();
+    PI_Log("%u %u %f\n", me.x, me.y, me.angle);
     HAL_Delay(500);
     /* USER CODE END WHILE */
 

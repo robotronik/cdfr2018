@@ -57,9 +57,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     }
   }
   else if(htim->Instance == htim3.Instance){
-
-    //Pos_Get_Position();
-
+    
     __disable_irq();
     //ToF polling timer
     int i;
