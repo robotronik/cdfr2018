@@ -65,13 +65,14 @@ int main(){
     log_error("Error while adding function");
   }
 
+  /*
   if(RC_Server_Add_Function(&server, GET_ASSER_DATA, get_asser_data, "b", "bfffii", RC_IMMEDIATE) == -1){
     log_error("Error while adding function");
   }
 
   if(load_pid_data()){
     log_error("Failed to load asser data");
-  }
+    }*/
 
   //Mode boombox
   Start_Player(SONGS_PATH);
