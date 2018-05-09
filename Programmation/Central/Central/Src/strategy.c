@@ -118,7 +118,7 @@ static void Cube_Sort(uint16_t from_x_, uint16_t from_y_){
 void Init_Strategy(Team _team){
   team = _team;
   me.x = (team == GREEN_TEAM)?ROBOT_X0:(AREA_WIDTH-ROBOT_X0);
-  me.y = (team == GREEN_TEAM)?ROBOT_Y0:(AREA_WIDTH-ROBOT_Y0);
+  me.y = ROBOT_Y0;
   me.angle = (team == GREEN_TEAM)?ROBOT_A0:PI;
   me.on_target = 0;
   score = 0;

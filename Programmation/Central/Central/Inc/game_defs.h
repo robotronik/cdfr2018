@@ -23,8 +23,8 @@
 #define PATTERN_SIZE 3
 
 //ROBOT
-#define ROBOT_X0 200
-#define ROBOT_Y0 450
+#define ROBOT_X0 (178+70)
+#define ROBOT_Y0 (438+105)
 #define ROBOT_A0 0
 
 //Cubes sets
@@ -33,18 +33,18 @@
 
 //OBSTACLES
 //Construction Zone
-#define CZ_W 540 
-#define CZ_H 150
-#define CZ_X 400
+#define CZ_W 570 //ok
+#define CZ_H (180-50) //ok
+#define CZ_X 400 //ok
 //Water Dispenser
-#define WD_R 50 
-#define WD_SIDE_Y 840
-#define WD_BOTTOM_X 610
+#define WD_R 100 //ok
+#define WD_SIDE_Y 840 //ok
+#define WD_BOTTOM_X 610 //ok
 //Treatment Plants
-#define TP_W 1200
-#define TP_H 175
-#define TP_X 894
-#define TP_Y 2000-TP_H
+#define TP_W 1200 //ok
+#define TP_H 250 //ok
+#define TP_X 894 //ok
+#define TP_Y 2000-TP_H //ok
 
 //Costs evaluation
 #define ALIGN_COST 1.0
