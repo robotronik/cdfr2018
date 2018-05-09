@@ -1,0 +1,415 @@
+ARM GAS  /tmp/ccDpnI4C.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"fsm_start.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.rodata.CHANNEL_OFFSET_TAB,"a",%progbits
+  18              		.align	2
+  21              	CHANNEL_OFFSET_TAB:
+  22 0000 08       		.byte	8
+  23 0001 1C       		.byte	28
+  24 0002 30       		.byte	48
+  25 0003 44       		.byte	68
+  26 0004 58       		.byte	88
+  27 0005 6C       		.byte	108
+  28 0006 80       		.byte	-128
+  29              		.comm	fsm,4,4
+  30              		.section	.text.FSM_Start_Init,"ax",%progbits
+  31              		.align	1
+  32              		.global	FSM_Start_Init
+  33              		.syntax unified
+  34              		.thumb
+  35              		.thumb_func
+  36              		.fpu fpv4-sp-d16
+  38              	FSM_Start_Init:
+  39              	.LFB695:
+  40              		.file 1 "Src/fsm_start.c"
+   1:Src/fsm_start.c **** #include "fsm_start.h"
+   2:Src/fsm_start.c **** 
+   3:Src/fsm_start.c **** void FSM_Start_Init(FSM_Instance *fsm){
+  41              		.loc 1 3 0
+  42              		.cfi_startproc
+  43              		@ args = 0, pretend = 0, frame = 8
+  44              		@ frame_needed = 1, uses_anonymous_args = 0
+  45 0000 80B5     		push	{r7, lr}
+  46              	.LCFI0:
+  47              		.cfi_def_cfa_offset 8
+  48              		.cfi_offset 7, -8
+  49              		.cfi_offset 14, -4
+  50 0002 82B0     		sub	sp, sp, #8
+  51              	.LCFI1:
+  52              		.cfi_def_cfa_offset 16
+  53 0004 00AF     		add	r7, sp, #0
+  54              	.LCFI2:
+  55              		.cfi_def_cfa_register 7
+  56 0006 7860     		str	r0, [r7, #4]
+   4:Src/fsm_start.c ****   fsm->run = FSM_START_WAIT_AX;
+ARM GAS  /tmp/ccDpnI4C.s 			page 2
+
+
+  57              		.loc 1 4 0
+  58 0008 7B68     		ldr	r3, [r7, #4]
+  59 000a 084A     		ldr	r2, .L2
+  60 000c 1A60     		str	r2, [r3]
+   5:Src/fsm_start.c ****   fsm->status = FSM_RUNNING;
+  61              		.loc 1 5 0
+  62 000e 7B68     		ldr	r3, [r7, #4]
+  63 0010 0022     		movs	r2, #0
+  64 0012 1A71     		strb	r2, [r3, #4]
+   6:Src/fsm_start.c ****   FSM_SET_TIME_BUDGET(fsm, 500);
+  65              		.loc 1 6 0
+  66 0014 FFF7FEFF 		bl	HAL_GetTick
+  67 0018 0346     		mov	r3, r0
+  68 001a 03F5FA72 		add	r2, r3, #500
+  69 001e 7B68     		ldr	r3, [r7, #4]
+  70 0020 9A60     		str	r2, [r3, #8]
+   7:Src/fsm_start.c **** }
+  71              		.loc 1 7 0
+  72 0022 00BF     		nop
+  73 0024 0837     		adds	r7, r7, #8
+  74              	.LCFI3:
+  75              		.cfi_def_cfa_offset 8
+  76 0026 BD46     		mov	sp, r7
+  77              	.LCFI4:
+  78              		.cfi_def_cfa_register 13
+  79              		@ sp needed
+  80 0028 80BD     		pop	{r7, pc}
+  81              	.L3:
+  82 002a 00BF     		.align	2
+  83              	.L2:
+  84 002c 00000000 		.word	FSM_START_WAIT_AX
+  85              		.cfi_endproc
+  86              	.LFE695:
+  88              		.section	.text.FSM_START_WAIT_AX,"ax",%progbits
+  89              		.align	1
+  90              		.global	FSM_START_WAIT_AX
+  91              		.syntax unified
+  92              		.thumb
+  93              		.thumb_func
+  94              		.fpu fpv4-sp-d16
+  96              	FSM_START_WAIT_AX:
+  97              	.LFB696:
+   8:Src/fsm_start.c **** 
+   9:Src/fsm_start.c **** void FSM_START_WAIT_AX(FSM_Instance *fsm){
+  98              		.loc 1 9 0
+  99              		.cfi_startproc
+ 100              		@ args = 0, pretend = 0, frame = 8
+ 101              		@ frame_needed = 1, uses_anonymous_args = 0
+ 102 0000 80B5     		push	{r7, lr}
+ 103              	.LCFI5:
+ 104              		.cfi_def_cfa_offset 8
+ 105              		.cfi_offset 7, -8
+ 106              		.cfi_offset 14, -4
+ 107 0002 82B0     		sub	sp, sp, #8
+ 108              	.LCFI6:
+ 109              		.cfi_def_cfa_offset 16
+ 110 0004 00AF     		add	r7, sp, #0
+ARM GAS  /tmp/ccDpnI4C.s 			page 3
+
+
+ 111              	.LCFI7:
+ 112              		.cfi_def_cfa_register 7
+ 113 0006 7860     		str	r0, [r7, #4]
+  10:Src/fsm_start.c ****   if(FSM_TIMEOUT_REACHED(fsm)){
+ 114              		.loc 1 10 0
+ 115 0008 FFF7FEFF 		bl	HAL_GetTick
+ 116 000c 0246     		mov	r2, r0
+ 117 000e 7B68     		ldr	r3, [r7, #4]
+ 118 0010 9B68     		ldr	r3, [r3, #8]
+ 119 0012 9A42     		cmp	r2, r3
+ 120 0014 08D9     		bls	.L5
+  11:Src/fsm_start.c ****     err = ERR_AX_LINK;
+ 121              		.loc 1 11 0
+ 122 0016 0E4B     		ldr	r3, .L8
+ 123 0018 0022     		movs	r2, #0
+ 124 001a 1A60     		str	r2, [r3]
+  12:Src/fsm_start.c ****     fsm->status = FSM_ERROR;
+ 125              		.loc 1 12 0
+ 126 001c 7B68     		ldr	r3, [r7, #4]
+ 127 001e 0222     		movs	r2, #2
+ 128 0020 1A71     		strb	r2, [r3, #4]
+  13:Src/fsm_start.c ****     fsm->run = FSM_NOP;
+ 129              		.loc 1 13 0
+ 130 0022 7B68     		ldr	r3, [r7, #4]
+ 131 0024 0B4A     		ldr	r2, .L8+4
+ 132 0026 1A60     		str	r2, [r3]
+ 133              	.L5:
+  14:Src/fsm_start.c ****   }
+  15:Src/fsm_start.c **** 
+  16:Src/fsm_start.c ****   if(Z_Check_AX() == 0){
+ 134              		.loc 1 16 0
+ 135 0028 FFF7FEFF 		bl	Z_Check_AX
+ 136 002c 0346     		mov	r3, r0
+ 137 002e 002B     		cmp	r3, #0
+ 138 0030 09D1     		bne	.L7
+  17:Src/fsm_start.c ****     FSM_NEXT(fsm, FSM_START_ACTIVATE, 50);
+ 139              		.loc 1 17 0
+ 140 0032 7B68     		ldr	r3, [r7, #4]
+ 141 0034 084A     		ldr	r2, .L8+8
+ 142 0036 1A60     		str	r2, [r3]
+ 143 0038 FFF7FEFF 		bl	HAL_GetTick
+ 144 003c 0346     		mov	r3, r0
+ 145 003e 03F13202 		add	r2, r3, #50
+ 146 0042 7B68     		ldr	r3, [r7, #4]
+ 147 0044 9A60     		str	r2, [r3, #8]
+ 148              	.L7:
+  18:Src/fsm_start.c ****   }
+  19:Src/fsm_start.c **** }
+ 149              		.loc 1 19 0
+ 150 0046 00BF     		nop
+ 151 0048 0837     		adds	r7, r7, #8
+ 152              	.LCFI8:
+ 153              		.cfi_def_cfa_offset 8
+ 154 004a BD46     		mov	sp, r7
+ 155              	.LCFI9:
+ 156              		.cfi_def_cfa_register 13
+ 157              		@ sp needed
+ARM GAS  /tmp/ccDpnI4C.s 			page 4
+
+
+ 158 004c 80BD     		pop	{r7, pc}
+ 159              	.L9:
+ 160 004e 00BF     		.align	2
+ 161              	.L8:
+ 162 0050 00000000 		.word	err
+ 163 0054 00000000 		.word	FSM_NOP
+ 164 0058 00000000 		.word	FSM_START_ACTIVATE
+ 165              		.cfi_endproc
+ 166              	.LFE696:
+ 168              		.section	.text.FSM_START_ACTIVATE,"ax",%progbits
+ 169              		.align	1
+ 170              		.global	FSM_START_ACTIVATE
+ 171              		.syntax unified
+ 172              		.thumb
+ 173              		.thumb_func
+ 174              		.fpu fpv4-sp-d16
+ 176              	FSM_START_ACTIVATE:
+ 177              	.LFB697:
+  20:Src/fsm_start.c **** 
+  21:Src/fsm_start.c **** void FSM_START_ACTIVATE(FSM_Instance *fsm){
+ 178              		.loc 1 21 0
+ 179              		.cfi_startproc
+ 180              		@ args = 0, pretend = 0, frame = 8
+ 181              		@ frame_needed = 1, uses_anonymous_args = 0
+ 182 0000 80B5     		push	{r7, lr}
+ 183              	.LCFI10:
+ 184              		.cfi_def_cfa_offset 8
+ 185              		.cfi_offset 7, -8
+ 186              		.cfi_offset 14, -4
+ 187 0002 82B0     		sub	sp, sp, #8
+ 188              	.LCFI11:
+ 189              		.cfi_def_cfa_offset 16
+ 190 0004 00AF     		add	r7, sp, #0
+ 191              	.LCFI12:
+ 192              		.cfi_def_cfa_register 7
+ 193 0006 7860     		str	r0, [r7, #4]
+  22:Src/fsm_start.c ****   Z_Enable_AX(true);
+ 194              		.loc 1 22 0
+ 195 0008 0120     		movs	r0, #1
+ 196 000a FFF7FEFF 		bl	Z_Enable_AX
+  23:Src/fsm_start.c ****   Z_Close();
+ 197              		.loc 1 23 0
+ 198 000e FFF7FEFF 		bl	Z_Close
+  24:Src/fsm_start.c ****   AX_Set_Goal_Position(&servo_ar, AX_ARM_START, AX_NOW);
+ 199              		.loc 1 24 0
+ 200 0012 0122     		movs	r2, #1
+ 201 0014 4FF48771 		mov	r1, #270
+ 202 0018 0A48     		ldr	r0, .L11
+ 203 001a FFF7FEFF 		bl	AX_Set_Goal_Position
+  25:Src/fsm_start.c ****   Z_Set_Goal(P0);
+ 204              		.loc 1 25 0
+ 205 001e 4FF4FA40 		mov	r0, #32000
+ 206 0022 FFF7FEFF 		bl	Z_Set_Goal
+  26:Src/fsm_start.c ****   FSM_NEXT(fsm, FSM_START_ACTIVATE, 1000);
+ 207              		.loc 1 26 0
+ 208 0026 7B68     		ldr	r3, [r7, #4]
+ 209 0028 074A     		ldr	r2, .L11+4
+ARM GAS  /tmp/ccDpnI4C.s 			page 5
+
+
+ 210 002a 1A60     		str	r2, [r3]
+ 211 002c FFF7FEFF 		bl	HAL_GetTick
+ 212 0030 0346     		mov	r3, r0
+ 213 0032 03F57A72 		add	r2, r3, #1000
+ 214 0036 7B68     		ldr	r3, [r7, #4]
+ 215 0038 9A60     		str	r2, [r3, #8]
+  27:Src/fsm_start.c **** }
+ 216              		.loc 1 27 0
+ 217 003a 00BF     		nop
+ 218 003c 0837     		adds	r7, r7, #8
+ 219              	.LCFI13:
+ 220              		.cfi_def_cfa_offset 8
+ 221 003e BD46     		mov	sp, r7
+ 222              	.LCFI14:
+ 223              		.cfi_def_cfa_register 13
+ 224              		@ sp needed
+ 225 0040 80BD     		pop	{r7, pc}
+ 226              	.L12:
+ 227 0042 00BF     		.align	2
+ 228              	.L11:
+ 229 0044 00000000 		.word	servo_ar
+ 230 0048 00000000 		.word	FSM_START_ACTIVATE
+ 231              		.cfi_endproc
+ 232              	.LFE697:
+ 234              		.section	.text.FSM_START_WAIT_GOAL,"ax",%progbits
+ 235              		.align	1
+ 236              		.global	FSM_START_WAIT_GOAL
+ 237              		.syntax unified
+ 238              		.thumb
+ 239              		.thumb_func
+ 240              		.fpu fpv4-sp-d16
+ 242              	FSM_START_WAIT_GOAL:
+ 243              	.LFB698:
+  28:Src/fsm_start.c **** 
+  29:Src/fsm_start.c **** void FSM_START_WAIT_GOAL(FSM_Instance *fsm){
+ 244              		.loc 1 29 0
+ 245              		.cfi_startproc
+ 246              		@ args = 0, pretend = 0, frame = 8
+ 247              		@ frame_needed = 1, uses_anonymous_args = 0
+ 248 0000 80B5     		push	{r7, lr}
+ 249              	.LCFI15:
+ 250              		.cfi_def_cfa_offset 8
+ 251              		.cfi_offset 7, -8
+ 252              		.cfi_offset 14, -4
+ 253 0002 82B0     		sub	sp, sp, #8
+ 254              	.LCFI16:
+ 255              		.cfi_def_cfa_offset 16
+ 256 0004 00AF     		add	r7, sp, #0
+ 257              	.LCFI17:
+ 258              		.cfi_def_cfa_register 7
+ 259 0006 7860     		str	r0, [r7, #4]
+  30:Src/fsm_start.c ****   if(FSM_TIMEOUT_REACHED(fsm)){
+ 260              		.loc 1 30 0
+ 261 0008 FFF7FEFF 		bl	HAL_GetTick
+ 262 000c 0246     		mov	r2, r0
+ 263 000e 7B68     		ldr	r3, [r7, #4]
+ 264 0010 9B68     		ldr	r3, [r3, #8]
+ARM GAS  /tmp/ccDpnI4C.s 			page 6
+
+
+ 265 0012 9A42     		cmp	r2, r3
+ 266 0014 08D9     		bls	.L14
+  31:Src/fsm_start.c ****     err = ERR_Z_GOAL;
+ 267              		.loc 1 31 0
+ 268 0016 0C4B     		ldr	r3, .L17
+ 269 0018 0122     		movs	r2, #1
+ 270 001a 1A60     		str	r2, [r3]
+  32:Src/fsm_start.c ****     fsm->status = FSM_ERROR;
+ 271              		.loc 1 32 0
+ 272 001c 7B68     		ldr	r3, [r7, #4]
+ 273 001e 0222     		movs	r2, #2
+ 274 0020 1A71     		strb	r2, [r3, #4]
+  33:Src/fsm_start.c ****     fsm->run = FSM_NOP;
+ 275              		.loc 1 33 0
+ 276 0022 7B68     		ldr	r3, [r7, #4]
+ 277 0024 094A     		ldr	r2, .L17+4
+ 278 0026 1A60     		str	r2, [r3]
+ 279              	.L14:
+  34:Src/fsm_start.c ****   }
+  35:Src/fsm_start.c **** 
+  36:Src/fsm_start.c ****   if(Z_Goal_Reached()){
+ 280              		.loc 1 36 0
+ 281 0028 FFF7FEFF 		bl	Z_Goal_Reached
+ 282 002c 0346     		mov	r3, r0
+ 283 002e 002B     		cmp	r3, #0
+ 284 0030 05D0     		beq	.L16
+  37:Src/fsm_start.c ****     fsm->status = FSM_SUCCESS;
+ 285              		.loc 1 37 0
+ 286 0032 7B68     		ldr	r3, [r7, #4]
+ 287 0034 0122     		movs	r2, #1
+ 288 0036 1A71     		strb	r2, [r3, #4]
+  38:Src/fsm_start.c ****     fsm->run = FSM_NOP;
+ 289              		.loc 1 38 0
+ 290 0038 7B68     		ldr	r3, [r7, #4]
+ 291 003a 044A     		ldr	r2, .L17+4
+ 292 003c 1A60     		str	r2, [r3]
+ 293              	.L16:
+  39:Src/fsm_start.c ****   }
+  40:Src/fsm_start.c **** }
+ 294              		.loc 1 40 0
+ 295 003e 00BF     		nop
+ 296 0040 0837     		adds	r7, r7, #8
+ 297              	.LCFI18:
+ 298              		.cfi_def_cfa_offset 8
+ 299 0042 BD46     		mov	sp, r7
+ 300              	.LCFI19:
+ 301              		.cfi_def_cfa_register 13
+ 302              		@ sp needed
+ 303 0044 80BD     		pop	{r7, pc}
+ 304              	.L18:
+ 305 0046 00BF     		.align	2
+ 306              	.L17:
+ 307 0048 00000000 		.word	err
+ 308 004c 00000000 		.word	FSM_NOP
+ 309              		.cfi_endproc
+ 310              	.LFE698:
+ 312              		.text
+ARM GAS  /tmp/ccDpnI4C.s 			page 7
+
+
+ 313              	.Letext0:
+ 314              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 315              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 316              		.file 4 "Drivers/CMSIS/Include/core_cm4.h"
+ 317              		.file 5 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 318              		.file 6 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 319              		.file 7 "Inc/ax_12a.h"
+ 320              		.file 8 "/usr/arm-none-eabi/include/sys/lock.h"
+ 321              		.file 9 "/usr/arm-none-eabi/include/sys/_types.h"
+ 322              		.file 10 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 323              		.file 11 "/usr/arm-none-eabi/include/sys/reent.h"
+ 324              		.file 12 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h"
+ 325              		.file 13 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma.h"
+ 326              		.file 14 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h"
+ 327              		.file 15 "Inc/fsm_master.h"
+ 328              		.file 16 "/usr/arm-none-eabi/include/stdlib.h"
+ 329              		.file 17 "Inc/Robotronik_corp_pid.h"
+ 330              		.file 18 "Inc/encoder.h"
+ 331              		.file 19 "Inc/Z_axis.h"
+ 332              		.file 20 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ARM GAS  /tmp/ccDpnI4C.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 fsm_start.c
+     /tmp/ccDpnI4C.s:18     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 $d
+     /tmp/ccDpnI4C.s:21     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 CHANNEL_OFFSET_TAB
+                            *COM*:0000000000000004 fsm
+     /tmp/ccDpnI4C.s:31     .text.FSM_Start_Init:0000000000000000 $t
+     /tmp/ccDpnI4C.s:38     .text.FSM_Start_Init:0000000000000000 FSM_Start_Init
+     /tmp/ccDpnI4C.s:84     .text.FSM_Start_Init:000000000000002c $d
+     /tmp/ccDpnI4C.s:96     .text.FSM_START_WAIT_AX:0000000000000000 FSM_START_WAIT_AX
+     /tmp/ccDpnI4C.s:89     .text.FSM_START_WAIT_AX:0000000000000000 $t
+     /tmp/ccDpnI4C.s:162    .text.FSM_START_WAIT_AX:0000000000000050 $d
+     /tmp/ccDpnI4C.s:176    .text.FSM_START_ACTIVATE:0000000000000000 FSM_START_ACTIVATE
+     /tmp/ccDpnI4C.s:169    .text.FSM_START_ACTIVATE:0000000000000000 $t
+     /tmp/ccDpnI4C.s:229    .text.FSM_START_ACTIVATE:0000000000000044 $d
+     /tmp/ccDpnI4C.s:235    .text.FSM_START_WAIT_GOAL:0000000000000000 $t
+     /tmp/ccDpnI4C.s:242    .text.FSM_START_WAIT_GOAL:0000000000000000 FSM_START_WAIT_GOAL
+     /tmp/ccDpnI4C.s:307    .text.FSM_START_WAIT_GOAL:0000000000000048 $d
+
+UNDEFINED SYMBOLS
+HAL_GetTick
+Z_Check_AX
+err
+FSM_NOP
+Z_Enable_AX
+Z_Close
+AX_Set_Goal_Position
+Z_Set_Goal
+servo_ar
+Z_Goal_Reached

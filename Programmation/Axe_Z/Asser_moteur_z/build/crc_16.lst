@@ -1,0 +1,306 @@
+ARM GAS  /tmp/cctTU3Pi.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"crc_16.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	crc_table
+  18              		.section	.data.crc_table,"aw",%progbits
+  19              		.align	2
+  22              	crc_table:
+  23 0000 0000     		.short	0
+  24 0002 0580     		.short	-32763
+  25 0004 0F80     		.short	-32753
+  26 0006 0A00     		.short	10
+  27 0008 1B80     		.short	-32741
+  28 000a 1E00     		.short	30
+  29 000c 1400     		.short	20
+  30 000e 1180     		.short	-32751
+  31 0010 3380     		.short	-32717
+  32 0012 3600     		.short	54
+  33 0014 3C00     		.short	60
+  34 0016 3980     		.short	-32711
+  35 0018 2800     		.short	40
+  36 001a 2D80     		.short	-32723
+  37 001c 2780     		.short	-32729
+  38 001e 2200     		.short	34
+  39 0020 6380     		.short	-32669
+  40 0022 6600     		.short	102
+  41 0024 6C00     		.short	108
+  42 0026 6980     		.short	-32663
+  43 0028 7800     		.short	120
+  44 002a 7D80     		.short	-32643
+  45 002c 7780     		.short	-32649
+  46 002e 7200     		.short	114
+  47 0030 5000     		.short	80
+  48 0032 5580     		.short	-32683
+  49 0034 5F80     		.short	-32673
+  50 0036 5A00     		.short	90
+  51 0038 4B80     		.short	-32693
+  52 003a 4E00     		.short	78
+  53 003c 4400     		.short	68
+  54 003e 4180     		.short	-32703
+  55 0040 C380     		.short	-32573
+  56 0042 C600     		.short	198
+  57 0044 CC00     		.short	204
+  58 0046 C980     		.short	-32567
+  59 0048 D800     		.short	216
+ARM GAS  /tmp/cctTU3Pi.s 			page 2
+
+
+  60 004a DD80     		.short	-32547
+  61 004c D780     		.short	-32553
+  62 004e D200     		.short	210
+  63 0050 F000     		.short	240
+  64 0052 F580     		.short	-32523
+  65 0054 FF80     		.short	-32513
+  66 0056 FA00     		.short	250
+  67 0058 EB80     		.short	-32533
+  68 005a EE00     		.short	238
+  69 005c E400     		.short	228
+  70 005e E180     		.short	-32543
+  71 0060 A000     		.short	160
+  72 0062 A580     		.short	-32603
+  73 0064 AF80     		.short	-32593
+  74 0066 AA00     		.short	170
+  75 0068 BB80     		.short	-32581
+  76 006a BE00     		.short	190
+  77 006c B400     		.short	180
+  78 006e B180     		.short	-32591
+  79 0070 9380     		.short	-32621
+  80 0072 9600     		.short	150
+  81 0074 9C00     		.short	156
+  82 0076 9980     		.short	-32615
+  83 0078 8800     		.short	136
+  84 007a 8D80     		.short	-32627
+  85 007c 8780     		.short	-32633
+  86 007e 8200     		.short	130
+  87 0080 8381     		.short	-32381
+  88 0082 8601     		.short	390
+  89 0084 8C01     		.short	396
+  90 0086 8981     		.short	-32375
+  91 0088 9801     		.short	408
+  92 008a 9D81     		.short	-32355
+  93 008c 9781     		.short	-32361
+  94 008e 9201     		.short	402
+  95 0090 B001     		.short	432
+  96 0092 B581     		.short	-32331
+  97 0094 BF81     		.short	-32321
+  98 0096 BA01     		.short	442
+  99 0098 AB81     		.short	-32341
+ 100 009a AE01     		.short	430
+ 101 009c A401     		.short	420
+ 102 009e A181     		.short	-32351
+ 103 00a0 E001     		.short	480
+ 104 00a2 E581     		.short	-32283
+ 105 00a4 EF81     		.short	-32273
+ 106 00a6 EA01     		.short	490
+ 107 00a8 FB81     		.short	-32261
+ 108 00aa FE01     		.short	510
+ 109 00ac F401     		.short	500
+ 110 00ae F181     		.short	-32271
+ 111 00b0 D381     		.short	-32301
+ 112 00b2 D601     		.short	470
+ 113 00b4 DC01     		.short	476
+ 114 00b6 D981     		.short	-32295
+ 115 00b8 C801     		.short	456
+ 116 00ba CD81     		.short	-32307
+ARM GAS  /tmp/cctTU3Pi.s 			page 3
+
+
+ 117 00bc C781     		.short	-32313
+ 118 00be C201     		.short	450
+ 119 00c0 4001     		.short	320
+ 120 00c2 4581     		.short	-32443
+ 121 00c4 4F81     		.short	-32433
+ 122 00c6 4A01     		.short	330
+ 123 00c8 5B81     		.short	-32421
+ 124 00ca 5E01     		.short	350
+ 125 00cc 5401     		.short	340
+ 126 00ce 5181     		.short	-32431
+ 127 00d0 7381     		.short	-32397
+ 128 00d2 7601     		.short	374
+ 129 00d4 7C01     		.short	380
+ 130 00d6 7981     		.short	-32391
+ 131 00d8 6801     		.short	360
+ 132 00da 6D81     		.short	-32403
+ 133 00dc 6781     		.short	-32409
+ 134 00de 6201     		.short	354
+ 135 00e0 2381     		.short	-32477
+ 136 00e2 2601     		.short	294
+ 137 00e4 2C01     		.short	300
+ 138 00e6 2981     		.short	-32471
+ 139 00e8 3801     		.short	312
+ 140 00ea 3D81     		.short	-32451
+ 141 00ec 3781     		.short	-32457
+ 142 00ee 3201     		.short	306
+ 143 00f0 1001     		.short	272
+ 144 00f2 1581     		.short	-32491
+ 145 00f4 1F81     		.short	-32481
+ 146 00f6 1A01     		.short	282
+ 147 00f8 0B81     		.short	-32501
+ 148 00fa 0E01     		.short	270
+ 149 00fc 0401     		.short	260
+ 150 00fe 0181     		.short	-32511
+ 151 0100 0383     		.short	-31997
+ 152 0102 0603     		.short	774
+ 153 0104 0C03     		.short	780
+ 154 0106 0983     		.short	-31991
+ 155 0108 1803     		.short	792
+ 156 010a 1D83     		.short	-31971
+ 157 010c 1783     		.short	-31977
+ 158 010e 1203     		.short	786
+ 159 0110 3003     		.short	816
+ 160 0112 3583     		.short	-31947
+ 161 0114 3F83     		.short	-31937
+ 162 0116 3A03     		.short	826
+ 163 0118 2B83     		.short	-31957
+ 164 011a 2E03     		.short	814
+ 165 011c 2403     		.short	804
+ 166 011e 2183     		.short	-31967
+ 167 0120 6003     		.short	864
+ 168 0122 6583     		.short	-31899
+ 169 0124 6F83     		.short	-31889
+ 170 0126 6A03     		.short	874
+ 171 0128 7B83     		.short	-31877
+ 172 012a 7E03     		.short	894
+ 173 012c 7403     		.short	884
+ARM GAS  /tmp/cctTU3Pi.s 			page 4
+
+
+ 174 012e 7183     		.short	-31887
+ 175 0130 5383     		.short	-31917
+ 176 0132 5603     		.short	854
+ 177 0134 5C03     		.short	860
+ 178 0136 5983     		.short	-31911
+ 179 0138 4803     		.short	840
+ 180 013a 4D83     		.short	-31923
+ 181 013c 4783     		.short	-31929
+ 182 013e 4203     		.short	834
+ 183 0140 C003     		.short	960
+ 184 0142 C583     		.short	-31803
+ 185 0144 CF83     		.short	-31793
+ 186 0146 CA03     		.short	970
+ 187 0148 DB83     		.short	-31781
+ 188 014a DE03     		.short	990
+ 189 014c D403     		.short	980
+ 190 014e D183     		.short	-31791
+ 191 0150 F383     		.short	-31757
+ 192 0152 F603     		.short	1014
+ 193 0154 FC03     		.short	1020
+ 194 0156 F983     		.short	-31751
+ 195 0158 E803     		.short	1000
+ 196 015a ED83     		.short	-31763
+ 197 015c E783     		.short	-31769
+ 198 015e E203     		.short	994
+ 199 0160 A383     		.short	-31837
+ 200 0162 A603     		.short	934
+ 201 0164 AC03     		.short	940
+ 202 0166 A983     		.short	-31831
+ 203 0168 B803     		.short	952
+ 204 016a BD83     		.short	-31811
+ 205 016c B783     		.short	-31817
+ 206 016e B203     		.short	946
+ 207 0170 9003     		.short	912
+ 208 0172 9583     		.short	-31851
+ 209 0174 9F83     		.short	-31841
+ 210 0176 9A03     		.short	922
+ 211 0178 8B83     		.short	-31861
+ 212 017a 8E03     		.short	910
+ 213 017c 8403     		.short	900
+ 214 017e 8183     		.short	-31871
+ 215 0180 8002     		.short	640
+ 216 0182 8582     		.short	-32123
+ 217 0184 8F82     		.short	-32113
+ 218 0186 8A02     		.short	650
+ 219 0188 9B82     		.short	-32101
+ 220 018a 9E02     		.short	670
+ 221 018c 9402     		.short	660
+ 222 018e 9182     		.short	-32111
+ 223 0190 B382     		.short	-32077
+ 224 0192 B602     		.short	694
+ 225 0194 BC02     		.short	700
+ 226 0196 B982     		.short	-32071
+ 227 0198 A802     		.short	680
+ 228 019a AD82     		.short	-32083
+ 229 019c A782     		.short	-32089
+ 230 019e A202     		.short	674
+ARM GAS  /tmp/cctTU3Pi.s 			page 5
+
+
+ 231 01a0 E382     		.short	-32029
+ 232 01a2 E602     		.short	742
+ 233 01a4 EC02     		.short	748
+ 234 01a6 E982     		.short	-32023
+ 235 01a8 F802     		.short	760
+ 236 01aa FD82     		.short	-32003
+ 237 01ac F782     		.short	-32009
+ 238 01ae F202     		.short	754
+ 239 01b0 D002     		.short	720
+ 240 01b2 D582     		.short	-32043
+ 241 01b4 DF82     		.short	-32033
+ 242 01b6 DA02     		.short	730
+ 243 01b8 CB82     		.short	-32053
+ 244 01ba CE02     		.short	718
+ 245 01bc C402     		.short	708
+ 246 01be C182     		.short	-32063
+ 247 01c0 4382     		.short	-32189
+ 248 01c2 4602     		.short	582
+ 249 01c4 4C02     		.short	588
+ 250 01c6 4982     		.short	-32183
+ 251 01c8 5802     		.short	600
+ 252 01ca 5D82     		.short	-32163
+ 253 01cc 5782     		.short	-32169
+ 254 01ce 5202     		.short	594
+ 255 01d0 7002     		.short	624
+ 256 01d2 7582     		.short	-32139
+ 257 01d4 7F82     		.short	-32129
+ 258 01d6 7A02     		.short	634
+ 259 01d8 6B82     		.short	-32149
+ 260 01da 6E02     		.short	622
+ 261 01dc 6402     		.short	612
+ 262 01de 6182     		.short	-32159
+ 263 01e0 2002     		.short	544
+ 264 01e2 2582     		.short	-32219
+ 265 01e4 2F82     		.short	-32209
+ 266 01e6 2A02     		.short	554
+ 267 01e8 3B82     		.short	-32197
+ 268 01ea 3E02     		.short	574
+ 269 01ec 3402     		.short	564
+ 270 01ee 3182     		.short	-32207
+ 271 01f0 1382     		.short	-32237
+ 272 01f2 1602     		.short	534
+ 273 01f4 1C02     		.short	540
+ 274 01f6 1982     		.short	-32231
+ 275 01f8 0802     		.short	520
+ 276 01fa 0D82     		.short	-32243
+ 277 01fc 0782     		.short	-32249
+ 278 01fe 0202     		.short	514
+ 279              		.text
+ 280              	.Letext0:
+ 281              		.file 1 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 282              		.file 2 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 283              		.file 3 "Inc/crc_16.h"
+ 284              		.file 4 "Src/crc_16.c"
+ARM GAS  /tmp/cctTU3Pi.s 			page 6
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 crc_16.c
+     /tmp/cctTU3Pi.s:22     .data.crc_table:0000000000000000 crc_table
+     /tmp/cctTU3Pi.s:19     .data.crc_table:0000000000000000 $d
+
+NO UNDEFINED SYMBOLS

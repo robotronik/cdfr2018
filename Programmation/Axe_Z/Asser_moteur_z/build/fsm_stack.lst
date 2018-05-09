@@ -1,0 +1,1399 @@
+ARM GAS  /tmp/ccgpeJHD.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"fsm_stack.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.rodata.CHANNEL_OFFSET_TAB,"a",%progbits
+  18              		.align	2
+  21              	CHANNEL_OFFSET_TAB:
+  22 0000 08       		.byte	8
+  23 0001 1C       		.byte	28
+  24 0002 30       		.byte	48
+  25 0003 44       		.byte	68
+  26 0004 58       		.byte	88
+  27 0005 6C       		.byte	108
+  28 0006 80       		.byte	-128
+  29              		.comm	fsm,4,4
+  30              		.section	.text.FSM_Stack_Init,"ax",%progbits
+  31              		.align	1
+  32              		.global	FSM_Stack_Init
+  33              		.syntax unified
+  34              		.thumb
+  35              		.thumb_func
+  36              		.fpu fpv4-sp-d16
+  38              	FSM_Stack_Init:
+  39              	.LFB695:
+  40              		.file 1 "Src/fsm_stack.c"
+   1:Src/fsm_stack.c **** #include "fsm_stack.h"
+   2:Src/fsm_stack.c **** 
+   3:Src/fsm_stack.c **** void FSM_Stack_Init(FSM_Instance *fsm){
+  41              		.loc 1 3 0
+  42              		.cfi_startproc
+  43              		@ args = 0, pretend = 0, frame = 16
+  44              		@ frame_needed = 1, uses_anonymous_args = 0
+  45              		@ link register save eliminated.
+  46 0000 80B4     		push	{r7}
+  47              	.LCFI0:
+  48              		.cfi_def_cfa_offset 4
+  49              		.cfi_offset 7, -4
+  50 0002 85B0     		sub	sp, sp, #20
+  51              	.LCFI1:
+  52              		.cfi_def_cfa_offset 24
+  53 0004 00AF     		add	r7, sp, #0
+  54              	.LCFI2:
+  55              		.cfi_def_cfa_register 7
+  56 0006 7860     		str	r0, [r7, #4]
+   4:Src/fsm_stack.c ****   fsm->status=FSM_RUNNING;
+ARM GAS  /tmp/ccgpeJHD.s 			page 2
+
+
+  57              		.loc 1 4 0
+  58 0008 7B68     		ldr	r3, [r7, #4]
+  59 000a 0022     		movs	r2, #0
+  60 000c 1A71     		strb	r2, [r3, #4]
+   5:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+  61              		.loc 1 5 0
+  62 000e 7B68     		ldr	r3, [r7, #4]
+  63 0010 FB60     		str	r3, [r7, #12]
+   6:Src/fsm_stack.c ****   fsm_stack->n = 0;
+  64              		.loc 1 6 0
+  65 0012 FB68     		ldr	r3, [r7, #12]
+  66 0014 0022     		movs	r2, #0
+  67 0016 5A61     		str	r2, [r3, #20]
+   7:Src/fsm_stack.c ****   fsm->status=FSM_RUNNING;
+  68              		.loc 1 7 0
+  69 0018 7B68     		ldr	r3, [r7, #4]
+  70 001a 0022     		movs	r2, #0
+  71 001c 1A71     		strb	r2, [r3, #4]
+   8:Src/fsm_stack.c ****   pid_z.integral = 0;
+  72              		.loc 1 8 0
+  73 001e 0A4B     		ldr	r3, .L2
+  74 0020 4FF00002 		mov	r2, #0
+  75 0024 1A61     		str	r2, [r3, #16]	@ float
+   9:Src/fsm_stack.c ****   fsm->run=FSM_Pos_3;
+  76              		.loc 1 9 0
+  77 0026 7B68     		ldr	r3, [r7, #4]
+  78 0028 084A     		ldr	r2, .L2+4
+  79 002a 1A60     		str	r2, [r3]
+  10:Src/fsm_stack.c **** 
+  11:Src/fsm_stack.c ****   fsm_stack->nramp=0;//ramp ramp_generator initialisation
+  80              		.loc 1 11 0
+  81 002c FB68     		ldr	r3, [r7, #12]
+  82 002e 0022     		movs	r2, #0
+  83 0030 1A61     		str	r2, [r3, #16]
+  12:Src/fsm_stack.c ****   fsm_stack->imp_start=encoder.steps;
+  84              		.loc 1 12 0
+  85 0032 074B     		ldr	r3, .L2+8
+  86 0034 5A68     		ldr	r2, [r3, #4]
+  87 0036 FB68     		ldr	r3, [r7, #12]
+  88 0038 DA60     		str	r2, [r3, #12]
+  13:Src/fsm_stack.c **** }
+  89              		.loc 1 13 0
+  90 003a 00BF     		nop
+  91 003c 1437     		adds	r7, r7, #20
+  92              	.LCFI3:
+  93              		.cfi_def_cfa_offset 4
+  94 003e BD46     		mov	sp, r7
+  95              	.LCFI4:
+  96              		.cfi_def_cfa_register 13
+  97              		@ sp needed
+  98 0040 5DF8047B 		ldr	r7, [sp], #4
+  99              	.LCFI5:
+ 100              		.cfi_restore 7
+ 101              		.cfi_def_cfa_offset 0
+ 102 0044 7047     		bx	lr
+ 103              	.L3:
+ 104 0046 00BF     		.align	2
+ARM GAS  /tmp/ccgpeJHD.s 			page 3
+
+
+ 105              	.L2:
+ 106 0048 00000000 		.word	pid_z
+ 107 004c 00000000 		.word	FSM_Pos_3
+ 108 0050 00000000 		.word	encoder
+ 109              		.cfi_endproc
+ 110              	.LFE695:
+ 112              		.section	.text.FSM_Err,"ax",%progbits
+ 113              		.align	1
+ 114              		.global	FSM_Err
+ 115              		.syntax unified
+ 116              		.thumb
+ 117              		.thumb_func
+ 118              		.fpu fpv4-sp-d16
+ 120              	FSM_Err:
+ 121              	.LFB696:
+  14:Src/fsm_stack.c **** 
+  15:Src/fsm_stack.c **** void FSM_Err(FSM_Instance *fsm)
+  16:Src/fsm_stack.c **** {
+ 122              		.loc 1 16 0
+ 123              		.cfi_startproc
+ 124              		@ args = 0, pretend = 0, frame = 8
+ 125              		@ frame_needed = 1, uses_anonymous_args = 0
+ 126              		@ link register save eliminated.
+ 127 0000 80B4     		push	{r7}
+ 128              	.LCFI6:
+ 129              		.cfi_def_cfa_offset 4
+ 130              		.cfi_offset 7, -4
+ 131 0002 83B0     		sub	sp, sp, #12
+ 132              	.LCFI7:
+ 133              		.cfi_def_cfa_offset 16
+ 134 0004 00AF     		add	r7, sp, #0
+ 135              	.LCFI8:
+ 136              		.cfi_def_cfa_register 7
+ 137 0006 7860     		str	r0, [r7, #4]
+  17:Src/fsm_stack.c ****   fsm->status=FSM_ERROR;
+ 138              		.loc 1 17 0
+ 139 0008 7B68     		ldr	r3, [r7, #4]
+ 140 000a 0222     		movs	r2, #2
+ 141 000c 1A71     		strb	r2, [r3, #4]
+  18:Src/fsm_stack.c **** }
+ 142              		.loc 1 18 0
+ 143 000e 00BF     		nop
+ 144 0010 0C37     		adds	r7, r7, #12
+ 145              	.LCFI9:
+ 146              		.cfi_def_cfa_offset 4
+ 147 0012 BD46     		mov	sp, r7
+ 148              	.LCFI10:
+ 149              		.cfi_def_cfa_register 13
+ 150              		@ sp needed
+ 151 0014 5DF8047B 		ldr	r7, [sp], #4
+ 152              	.LCFI11:
+ 153              		.cfi_restore 7
+ 154              		.cfi_def_cfa_offset 0
+ 155 0018 7047     		bx	lr
+ 156              		.cfi_endproc
+ 157              	.LFE696:
+ 159              		.section	.text.FSM_Pos_3,"ax",%progbits
+ARM GAS  /tmp/ccgpeJHD.s 			page 4
+
+
+ 160              		.align	1
+ 161              		.global	FSM_Pos_3
+ 162              		.syntax unified
+ 163              		.thumb
+ 164              		.thumb_func
+ 165              		.fpu fpv4-sp-d16
+ 167              	FSM_Pos_3:
+ 168              	.LFB697:
+  19:Src/fsm_stack.c **** 
+  20:Src/fsm_stack.c **** void FSM_Pos_3(FSM_Instance *fsm)
+  21:Src/fsm_stack.c **** {
+ 169              		.loc 1 21 0
+ 170              		.cfi_startproc
+ 171              		@ args = 0, pretend = 0, frame = 16
+ 172              		@ frame_needed = 1, uses_anonymous_args = 0
+ 173 0000 80B5     		push	{r7, lr}
+ 174              	.LCFI12:
+ 175              		.cfi_def_cfa_offset 8
+ 176              		.cfi_offset 7, -8
+ 177              		.cfi_offset 14, -4
+ 178 0002 84B0     		sub	sp, sp, #16
+ 179              	.LCFI13:
+ 180              		.cfi_def_cfa_offset 24
+ 181 0004 00AF     		add	r7, sp, #0
+ 182              	.LCFI14:
+ 183              		.cfi_def_cfa_register 7
+ 184 0006 7860     		str	r0, [r7, #4]
+  22:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+ 185              		.loc 1 22 0
+ 186 0008 7B68     		ldr	r3, [r7, #4]
+ 187 000a FB60     		str	r3, [r7, #12]
+  23:Src/fsm_stack.c ****   //imp_goal=P3;
+  24:Src/fsm_stack.c ****   imp_goal=ramp_generator(P3,fsm_stack->imp_start,&(fsm_stack->nramp),NCYCLEBIG);
+ 188              		.loc 1 24 0
+ 189 000c FB68     		ldr	r3, [r7, #12]
+ 190 000e D968     		ldr	r1, [r3, #12]
+ 191 0010 FB68     		ldr	r3, [r7, #12]
+ 192 0012 03F11002 		add	r2, r3, #16
+ 193 0016 1423     		movs	r3, #20
+ 194 0018 4FF4E160 		mov	r0, #1800
+ 195 001c FFF7FEFF 		bl	ramp_generator
+ 196 0020 0246     		mov	r2, r0
+ 197 0022 0C4B     		ldr	r3, .L8
+ 198 0024 1A60     		str	r2, [r3]
+  25:Src/fsm_stack.c ****   if(reached(&pid_z,P3-encoder.steps))
+ 199              		.loc 1 25 0
+ 200 0026 0C4B     		ldr	r3, .L8+4
+ 201 0028 5B68     		ldr	r3, [r3, #4]
+ 202 002a C3F5E163 		rsb	r3, r3, #1800
+ 203 002e 1946     		mov	r1, r3
+ 204 0030 0A48     		ldr	r0, .L8+8
+ 205 0032 FFF7FEFF 		bl	reached
+ 206 0036 0346     		mov	r3, r0
+ 207 0038 002B     		cmp	r3, #0
+ 208 003a 06D0     		beq	.L7
+  26:Src/fsm_stack.c ****   {
+  27:Src/fsm_stack.c ****     pid_z.integral = 0;
+ARM GAS  /tmp/ccgpeJHD.s 			page 5
+
+
+ 209              		.loc 1 27 0
+ 210 003c 074B     		ldr	r3, .L8+8
+ 211 003e 4FF00002 		mov	r2, #0
+ 212 0042 1A61     		str	r2, [r3, #16]	@ float
+  28:Src/fsm_stack.c ****     fsm->run=FSM_Detect_Cube;
+ 213              		.loc 1 28 0
+ 214 0044 7B68     		ldr	r3, [r7, #4]
+ 215 0046 064A     		ldr	r2, .L8+12
+ 216 0048 1A60     		str	r2, [r3]
+ 217              	.L7:
+  29:Src/fsm_stack.c ****   }
+  30:Src/fsm_stack.c **** }
+ 218              		.loc 1 30 0
+ 219 004a 00BF     		nop
+ 220 004c 1037     		adds	r7, r7, #16
+ 221              	.LCFI15:
+ 222              		.cfi_def_cfa_offset 8
+ 223 004e BD46     		mov	sp, r7
+ 224              	.LCFI16:
+ 225              		.cfi_def_cfa_register 13
+ 226              		@ sp needed
+ 227 0050 80BD     		pop	{r7, pc}
+ 228              	.L9:
+ 229 0052 00BF     		.align	2
+ 230              	.L8:
+ 231 0054 00000000 		.word	imp_goal
+ 232 0058 00000000 		.word	encoder
+ 233 005c 00000000 		.word	pid_z
+ 234 0060 00000000 		.word	FSM_Detect_Cube
+ 235              		.cfi_endproc
+ 236              	.LFE697:
+ 238              		.section	.text.FSM_Detect_Cube,"ax",%progbits
+ 239              		.align	1
+ 240              		.global	FSM_Detect_Cube
+ 241              		.syntax unified
+ 242              		.thumb
+ 243              		.thumb_func
+ 244              		.fpu fpv4-sp-d16
+ 246              	FSM_Detect_Cube:
+ 247              	.LFB698:
+  31:Src/fsm_stack.c **** 
+  32:Src/fsm_stack.c **** void FSM_Detect_Cube(FSM_Instance *fsm)
+  33:Src/fsm_stack.c **** {
+ 248              		.loc 1 33 0
+ 249              		.cfi_startproc
+ 250              		@ args = 0, pretend = 0, frame = 16
+ 251              		@ frame_needed = 1, uses_anonymous_args = 0
+ 252              		@ link register save eliminated.
+ 253 0000 80B4     		push	{r7}
+ 254              	.LCFI17:
+ 255              		.cfi_def_cfa_offset 4
+ 256              		.cfi_offset 7, -4
+ 257 0002 85B0     		sub	sp, sp, #20
+ 258              	.LCFI18:
+ 259              		.cfi_def_cfa_offset 24
+ 260 0004 00AF     		add	r7, sp, #0
+ 261              	.LCFI19:
+ARM GAS  /tmp/ccgpeJHD.s 			page 6
+
+
+ 262              		.cfi_def_cfa_register 7
+ 263 0006 7860     		str	r0, [r7, #4]
+  34:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+ 264              		.loc 1 34 0
+ 265 0008 7B68     		ldr	r3, [r7, #4]
+ 266 000a FB60     		str	r3, [r7, #12]
+  35:Src/fsm_stack.c ****   imp_goal=Ppresence;
+ 267              		.loc 1 35 0
+ 268 000c 164B     		ldr	r3, .L15
+ 269 000e 40F69802 		movw	r2, #2200
+ 270 0012 1A60     		str	r2, [r3]
+  36:Src/fsm_stack.c ****   fsm_stack->n++;
+ 271              		.loc 1 36 0
+ 272 0014 FB68     		ldr	r3, [r7, #12]
+ 273 0016 5B69     		ldr	r3, [r3, #20]
+ 274 0018 5A1C     		adds	r2, r3, #1
+ 275 001a FB68     		ldr	r3, [r7, #12]
+ 276 001c 5A61     		str	r2, [r3, #20]
+  37:Src/fsm_stack.c ****   if(fsm_stack->n>MAX_PERIOD_DETECT_CUBE)
+ 277              		.loc 1 37 0
+ 278 001e FB68     		ldr	r3, [r7, #12]
+ 279 0020 5B69     		ldr	r3, [r3, #20]
+ 280 0022 192B     		cmp	r3, #25
+ 281 0024 1ADD     		ble	.L14
+  38:Src/fsm_stack.c ****   {
+  39:Src/fsm_stack.c ****     fsm_stack->nramp=0;//ramp ramp_generator initialisation
+ 282              		.loc 1 39 0
+ 283 0026 FB68     		ldr	r3, [r7, #12]
+ 284 0028 0022     		movs	r2, #0
+ 285 002a 1A61     		str	r2, [r3, #16]
+  40:Src/fsm_stack.c ****     fsm_stack->imp_start=encoder.steps;
+ 286              		.loc 1 40 0
+ 287 002c 0F4B     		ldr	r3, .L15+4
+ 288 002e 5A68     		ldr	r2, [r3, #4]
+ 289 0030 FB68     		ldr	r3, [r7, #12]
+ 290 0032 DA60     		str	r2, [r3, #12]
+  41:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 291              		.loc 1 41 0
+ 292 0034 0E4B     		ldr	r3, .L15+8
+ 293 0036 4FF00002 		mov	r2, #0
+ 294 003a 1A61     		str	r2, [r3, #16]	@ float
+  42:Src/fsm_stack.c ****     if(encoder.steps<PpresenceLim) fsm->run=FSM_Err_Pos_3;//pas de cube
+ 295              		.loc 1 42 0
+ 296 003c 0B4B     		ldr	r3, .L15+4
+ 297 003e 5B68     		ldr	r3, [r3, #4]
+ 298 0040 40F63302 		movw	r2, #2099
+ 299 0044 9342     		cmp	r3, r2
+ 300 0046 03DC     		bgt	.L12
+ 301              		.loc 1 42 0 is_stmt 0 discriminator 1
+ 302 0048 7B68     		ldr	r3, [r7, #4]
+ 303 004a 0A4A     		ldr	r2, .L15+12
+ 304 004c 1A60     		str	r2, [r3]
+ 305 004e 02E0     		b	.L13
+ 306              	.L12:
+  43:Src/fsm_stack.c ****     else fsm->run=FSM_Pos_2;
+ 307              		.loc 1 43 0 is_stmt 1
+ 308 0050 7B68     		ldr	r3, [r7, #4]
+ARM GAS  /tmp/ccgpeJHD.s 			page 7
+
+
+ 309 0052 094A     		ldr	r2, .L15+16
+ 310 0054 1A60     		str	r2, [r3]
+ 311              	.L13:
+  44:Src/fsm_stack.c ****     fsm_stack->n=0;
+ 312              		.loc 1 44 0
+ 313 0056 FB68     		ldr	r3, [r7, #12]
+ 314 0058 0022     		movs	r2, #0
+ 315 005a 5A61     		str	r2, [r3, #20]
+ 316              	.L14:
+  45:Src/fsm_stack.c ****   }
+  46:Src/fsm_stack.c **** }
+ 317              		.loc 1 46 0
+ 318 005c 00BF     		nop
+ 319 005e 1437     		adds	r7, r7, #20
+ 320              	.LCFI20:
+ 321              		.cfi_def_cfa_offset 4
+ 322 0060 BD46     		mov	sp, r7
+ 323              	.LCFI21:
+ 324              		.cfi_def_cfa_register 13
+ 325              		@ sp needed
+ 326 0062 5DF8047B 		ldr	r7, [sp], #4
+ 327              	.LCFI22:
+ 328              		.cfi_restore 7
+ 329              		.cfi_def_cfa_offset 0
+ 330 0066 7047     		bx	lr
+ 331              	.L16:
+ 332              		.align	2
+ 333              	.L15:
+ 334 0068 00000000 		.word	imp_goal
+ 335 006c 00000000 		.word	encoder
+ 336 0070 00000000 		.word	pid_z
+ 337 0074 00000000 		.word	FSM_Err_Pos_3
+ 338 0078 00000000 		.word	FSM_Pos_2
+ 339              		.cfi_endproc
+ 340              	.LFE698:
+ 342              		.section	.text.FSM_Pos_2,"ax",%progbits
+ 343              		.align	1
+ 344              		.global	FSM_Pos_2
+ 345              		.syntax unified
+ 346              		.thumb
+ 347              		.thumb_func
+ 348              		.fpu fpv4-sp-d16
+ 350              	FSM_Pos_2:
+ 351              	.LFB699:
+  47:Src/fsm_stack.c **** 
+  48:Src/fsm_stack.c **** void FSM_Pos_2(FSM_Instance *fsm)
+  49:Src/fsm_stack.c **** {
+ 352              		.loc 1 49 0
+ 353              		.cfi_startproc
+ 354              		@ args = 0, pretend = 0, frame = 16
+ 355              		@ frame_needed = 1, uses_anonymous_args = 0
+ 356 0000 80B5     		push	{r7, lr}
+ 357              	.LCFI23:
+ 358              		.cfi_def_cfa_offset 8
+ 359              		.cfi_offset 7, -8
+ 360              		.cfi_offset 14, -4
+ 361 0002 84B0     		sub	sp, sp, #16
+ARM GAS  /tmp/ccgpeJHD.s 			page 8
+
+
+ 362              	.LCFI24:
+ 363              		.cfi_def_cfa_offset 24
+ 364 0004 00AF     		add	r7, sp, #0
+ 365              	.LCFI25:
+ 366              		.cfi_def_cfa_register 7
+ 367 0006 7860     		str	r0, [r7, #4]
+  50:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+ 368              		.loc 1 50 0
+ 369 0008 7B68     		ldr	r3, [r7, #4]
+ 370 000a FB60     		str	r3, [r7, #12]
+  51:Src/fsm_stack.c ****   //imp_goal=P2;
+  52:Src/fsm_stack.c ****   imp_goal=ramp_generator(P2,fsm_stack->imp_start,&(fsm_stack->nramp),NCYCLELITTLE);
+ 371              		.loc 1 52 0
+ 372 000c FB68     		ldr	r3, [r7, #12]
+ 373 000e D968     		ldr	r1, [r3, #12]
+ 374 0010 FB68     		ldr	r3, [r7, #12]
+ 375 0012 03F11002 		add	r2, r3, #16
+ 376 0016 0A23     		movs	r3, #10
+ 377 0018 4FF4FA60 		mov	r0, #2000
+ 378 001c FFF7FEFF 		bl	ramp_generator
+ 379 0020 0246     		mov	r2, r0
+ 380 0022 0C4B     		ldr	r3, .L20
+ 381 0024 1A60     		str	r2, [r3]
+  53:Src/fsm_stack.c ****   if(reached(&pid_z,P2-encoder.steps))
+ 382              		.loc 1 53 0
+ 383 0026 0C4B     		ldr	r3, .L20+4
+ 384 0028 5B68     		ldr	r3, [r3, #4]
+ 385 002a C3F5FA63 		rsb	r3, r3, #2000
+ 386 002e 1946     		mov	r1, r3
+ 387 0030 0A48     		ldr	r0, .L20+8
+ 388 0032 FFF7FEFF 		bl	reached
+ 389 0036 0346     		mov	r3, r0
+ 390 0038 002B     		cmp	r3, #0
+ 391 003a 06D0     		beq	.L19
+  54:Src/fsm_stack.c ****   {
+  55:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 392              		.loc 1 55 0
+ 393 003c 074B     		ldr	r3, .L20+8
+ 394 003e 4FF00002 		mov	r2, #0
+ 395 0042 1A61     		str	r2, [r3, #16]	@ float
+  56:Src/fsm_stack.c ****     fsm->run=FSM_Open;
+ 396              		.loc 1 56 0
+ 397 0044 7B68     		ldr	r3, [r7, #4]
+ 398 0046 064A     		ldr	r2, .L20+12
+ 399 0048 1A60     		str	r2, [r3]
+ 400              	.L19:
+  57:Src/fsm_stack.c ****   }
+  58:Src/fsm_stack.c **** }
+ 401              		.loc 1 58 0
+ 402 004a 00BF     		nop
+ 403 004c 1037     		adds	r7, r7, #16
+ 404              	.LCFI26:
+ 405              		.cfi_def_cfa_offset 8
+ 406 004e BD46     		mov	sp, r7
+ 407              	.LCFI27:
+ 408              		.cfi_def_cfa_register 13
+ 409              		@ sp needed
+ARM GAS  /tmp/ccgpeJHD.s 			page 9
+
+
+ 410 0050 80BD     		pop	{r7, pc}
+ 411              	.L21:
+ 412 0052 00BF     		.align	2
+ 413              	.L20:
+ 414 0054 00000000 		.word	imp_goal
+ 415 0058 00000000 		.word	encoder
+ 416 005c 00000000 		.word	pid_z
+ 417 0060 00000000 		.word	FSM_Open
+ 418              		.cfi_endproc
+ 419              	.LFE699:
+ 421              		.section	.text.FSM_Open,"ax",%progbits
+ 422              		.align	1
+ 423              		.global	FSM_Open
+ 424              		.syntax unified
+ 425              		.thumb
+ 426              		.thumb_func
+ 427              		.fpu fpv4-sp-d16
+ 429              	FSM_Open:
+ 430              	.LFB700:
+  59:Src/fsm_stack.c **** 
+  60:Src/fsm_stack.c **** void FSM_Open(FSM_Instance *fsm)
+  61:Src/fsm_stack.c **** {
+ 431              		.loc 1 61 0
+ 432              		.cfi_startproc
+ 433              		@ args = 0, pretend = 0, frame = 16
+ 434              		@ frame_needed = 1, uses_anonymous_args = 0
+ 435 0000 80B5     		push	{r7, lr}
+ 436              	.LCFI28:
+ 437              		.cfi_def_cfa_offset 8
+ 438              		.cfi_offset 7, -8
+ 439              		.cfi_offset 14, -4
+ 440 0002 84B0     		sub	sp, sp, #16
+ 441              	.LCFI29:
+ 442              		.cfi_def_cfa_offset 24
+ 443 0004 00AF     		add	r7, sp, #0
+ 444              	.LCFI30:
+ 445              		.cfi_def_cfa_register 7
+ 446 0006 7860     		str	r0, [r7, #4]
+  62:Src/fsm_stack.c ****   Z_Open_Small();
+ 447              		.loc 1 62 0
+ 448 0008 FFF7FEFF 		bl	Z_Open_Small
+  63:Src/fsm_stack.c **** 
+  64:Src/fsm_stack.c ****   if(Z_Is_Open_Small()){
+ 449              		.loc 1 64 0
+ 450 000c FFF7FEFF 		bl	Z_Is_Open_Small
+ 451 0010 0346     		mov	r3, r0
+ 452 0012 002B     		cmp	r3, #0
+ 453 0014 16D0     		beq	.L24
+ 454              	.LBB2:
+  65:Src/fsm_stack.c ****     FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+ 455              		.loc 1 65 0
+ 456 0016 7B68     		ldr	r3, [r7, #4]
+ 457 0018 FB60     		str	r3, [r7, #12]
+  66:Src/fsm_stack.c ****     fsm_stack->nramp=0;//ramp ramp_generator initialisation
+ 458              		.loc 1 66 0
+ 459 001a FB68     		ldr	r3, [r7, #12]
+ 460 001c 0022     		movs	r2, #0
+ARM GAS  /tmp/ccgpeJHD.s 			page 10
+
+
+ 461 001e 1A61     		str	r2, [r3, #16]
+  67:Src/fsm_stack.c ****     fsm_stack->imp_start=encoder.steps;
+ 462              		.loc 1 67 0
+ 463 0020 0A4B     		ldr	r3, .L25
+ 464 0022 5A68     		ldr	r2, [r3, #4]
+ 465 0024 FB68     		ldr	r3, [r7, #12]
+ 466 0026 DA60     		str	r2, [r3, #12]
+  68:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 467              		.loc 1 68 0
+ 468 0028 094B     		ldr	r3, .L25+4
+ 469 002a 4FF00002 		mov	r2, #0
+ 470 002e 1A61     		str	r2, [r3, #16]	@ float
+  69:Src/fsm_stack.c ****     FSM_NEXT(fsm, FSM_Go_Down, 1000);
+ 471              		.loc 1 69 0
+ 472 0030 7B68     		ldr	r3, [r7, #4]
+ 473 0032 084A     		ldr	r2, .L25+8
+ 474 0034 1A60     		str	r2, [r3]
+ 475 0036 FFF7FEFF 		bl	HAL_GetTick
+ 476 003a 0346     		mov	r3, r0
+ 477 003c 03F57A72 		add	r2, r3, #1000
+ 478 0040 7B68     		ldr	r3, [r7, #4]
+ 479 0042 9A60     		str	r2, [r3, #8]
+ 480              	.L24:
+ 481              	.LBE2:
+  70:Src/fsm_stack.c ****   }
+  71:Src/fsm_stack.c **** }
+ 482              		.loc 1 71 0
+ 483 0044 00BF     		nop
+ 484 0046 1037     		adds	r7, r7, #16
+ 485              	.LCFI31:
+ 486              		.cfi_def_cfa_offset 8
+ 487 0048 BD46     		mov	sp, r7
+ 488              	.LCFI32:
+ 489              		.cfi_def_cfa_register 13
+ 490              		@ sp needed
+ 491 004a 80BD     		pop	{r7, pc}
+ 492              	.L26:
+ 493              		.align	2
+ 494              	.L25:
+ 495 004c 00000000 		.word	encoder
+ 496 0050 00000000 		.word	pid_z
+ 497 0054 00000000 		.word	FSM_Go_Down
+ 498              		.cfi_endproc
+ 499              	.LFE700:
+ 501              		.section	.text.FSM_Go_Down,"ax",%progbits
+ 502              		.align	1
+ 503              		.global	FSM_Go_Down
+ 504              		.syntax unified
+ 505              		.thumb
+ 506              		.thumb_func
+ 507              		.fpu fpv4-sp-d16
+ 509              	FSM_Go_Down:
+ 510              	.LFB701:
+  72:Src/fsm_stack.c **** 
+  73:Src/fsm_stack.c **** void FSM_Go_Down(FSM_Instance *fsm)
+  74:Src/fsm_stack.c **** {
+ 511              		.loc 1 74 0
+ARM GAS  /tmp/ccgpeJHD.s 			page 11
+
+
+ 512              		.cfi_startproc
+ 513              		@ args = 0, pretend = 0, frame = 16
+ 514              		@ frame_needed = 1, uses_anonymous_args = 0
+ 515 0000 80B5     		push	{r7, lr}
+ 516              	.LCFI33:
+ 517              		.cfi_def_cfa_offset 8
+ 518              		.cfi_offset 7, -8
+ 519              		.cfi_offset 14, -4
+ 520 0002 84B0     		sub	sp, sp, #16
+ 521              	.LCFI34:
+ 522              		.cfi_def_cfa_offset 24
+ 523 0004 00AF     		add	r7, sp, #0
+ 524              	.LCFI35:
+ 525              		.cfi_def_cfa_register 7
+ 526 0006 7860     		str	r0, [r7, #4]
+  75:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+ 527              		.loc 1 75 0
+ 528 0008 7B68     		ldr	r3, [r7, #4]
+ 529 000a FB60     		str	r3, [r7, #12]
+  76:Src/fsm_stack.c ****   if(FSM_TIMEOUT_REACHED(fsm))
+ 530              		.loc 1 76 0
+ 531 000c FFF7FEFF 		bl	HAL_GetTick
+ 532 0010 0246     		mov	r2, r0
+ 533 0012 7B68     		ldr	r3, [r7, #4]
+ 534 0014 9B68     		ldr	r3, [r3, #8]
+ 535 0016 9A42     		cmp	r2, r3
+ 536 0018 09D9     		bls	.L28
+  77:Src/fsm_stack.c ****   {
+  78:Src/fsm_stack.c ****     fsm->run=FSM_Err_Pos_3;
+ 537              		.loc 1 78 0
+ 538 001a 7B68     		ldr	r3, [r7, #4]
+ 539 001c 194A     		ldr	r2, .L31
+ 540 001e 1A60     		str	r2, [r3]
+  79:Src/fsm_stack.c ****     fsm_stack->nramp=0;//ramp ramp_generator initialisation
+ 541              		.loc 1 79 0
+ 542 0020 FB68     		ldr	r3, [r7, #12]
+ 543 0022 0022     		movs	r2, #0
+ 544 0024 1A61     		str	r2, [r3, #16]
+  80:Src/fsm_stack.c ****     fsm_stack->imp_start=encoder.steps;
+ 545              		.loc 1 80 0
+ 546 0026 184B     		ldr	r3, .L31+4
+ 547 0028 5A68     		ldr	r2, [r3, #4]
+ 548 002a FB68     		ldr	r3, [r7, #12]
+ 549 002c DA60     		str	r2, [r3, #12]
+ 550              	.L28:
+  81:Src/fsm_stack.c ****   }
+  82:Src/fsm_stack.c ****   //imp_goal=P0;
+  83:Src/fsm_stack.c ****   imp_goal=ramp_generator(P0,fsm_stack->imp_start,&(fsm_stack->nramp),NCYCLEBIG);
+ 551              		.loc 1 83 0
+ 552 002e FB68     		ldr	r3, [r7, #12]
+ 553 0030 D968     		ldr	r1, [r3, #12]
+ 554 0032 FB68     		ldr	r3, [r7, #12]
+ 555 0034 03F11002 		add	r2, r3, #16
+ 556 0038 1423     		movs	r3, #20
+ 557 003a 4FF4FA40 		mov	r0, #32000
+ 558 003e FFF7FEFF 		bl	ramp_generator
+ 559 0042 0246     		mov	r2, r0
+ARM GAS  /tmp/ccgpeJHD.s 			page 12
+
+
+ 560 0044 114B     		ldr	r3, .L31+8
+ 561 0046 1A60     		str	r2, [r3]
+  84:Src/fsm_stack.c ****   if(reached(&pid_z,P0-encoder.steps))
+ 562              		.loc 1 84 0
+ 563 0048 0F4B     		ldr	r3, .L31+4
+ 564 004a 5B68     		ldr	r3, [r3, #4]
+ 565 004c C3F5FA43 		rsb	r3, r3, #32000
+ 566 0050 1946     		mov	r1, r3
+ 567 0052 0F48     		ldr	r0, .L31+12
+ 568 0054 FFF7FEFF 		bl	reached
+ 569 0058 0346     		mov	r3, r0
+ 570 005a 002B     		cmp	r3, #0
+ 571 005c 0DD0     		beq	.L30
+  85:Src/fsm_stack.c ****   {
+  86:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 572              		.loc 1 86 0
+ 573 005e 0C4B     		ldr	r3, .L31+12
+ 574 0060 4FF00002 		mov	r2, #0
+ 575 0064 1A61     		str	r2, [r3, #16]	@ float
+  87:Src/fsm_stack.c ****     FSM_NEXT(fsm, FSM_Close, 500);
+ 576              		.loc 1 87 0
+ 577 0066 7B68     		ldr	r3, [r7, #4]
+ 578 0068 0A4A     		ldr	r2, .L31+16
+ 579 006a 1A60     		str	r2, [r3]
+ 580 006c FFF7FEFF 		bl	HAL_GetTick
+ 581 0070 0346     		mov	r3, r0
+ 582 0072 03F5FA72 		add	r2, r3, #500
+ 583 0076 7B68     		ldr	r3, [r7, #4]
+ 584 0078 9A60     		str	r2, [r3, #8]
+ 585              	.L30:
+  88:Src/fsm_stack.c ****   }
+  89:Src/fsm_stack.c **** }
+ 586              		.loc 1 89 0
+ 587 007a 00BF     		nop
+ 588 007c 1037     		adds	r7, r7, #16
+ 589              	.LCFI36:
+ 590              		.cfi_def_cfa_offset 8
+ 591 007e BD46     		mov	sp, r7
+ 592              	.LCFI37:
+ 593              		.cfi_def_cfa_register 13
+ 594              		@ sp needed
+ 595 0080 80BD     		pop	{r7, pc}
+ 596              	.L32:
+ 597 0082 00BF     		.align	2
+ 598              	.L31:
+ 599 0084 00000000 		.word	FSM_Err_Pos_3
+ 600 0088 00000000 		.word	encoder
+ 601 008c 00000000 		.word	imp_goal
+ 602 0090 00000000 		.word	pid_z
+ 603 0094 00000000 		.word	FSM_Close
+ 604              		.cfi_endproc
+ 605              	.LFE701:
+ 607              		.section	.text.FSM_Close,"ax",%progbits
+ 608              		.align	1
+ 609              		.global	FSM_Close
+ 610              		.syntax unified
+ 611              		.thumb
+ARM GAS  /tmp/ccgpeJHD.s 			page 13
+
+
+ 612              		.thumb_func
+ 613              		.fpu fpv4-sp-d16
+ 615              	FSM_Close:
+ 616              	.LFB702:
+  90:Src/fsm_stack.c **** 
+  91:Src/fsm_stack.c **** void FSM_Close(FSM_Instance *fsm)
+  92:Src/fsm_stack.c **** {
+ 617              		.loc 1 92 0
+ 618              		.cfi_startproc
+ 619              		@ args = 0, pretend = 0, frame = 24
+ 620              		@ frame_needed = 1, uses_anonymous_args = 0
+ 621 0000 80B5     		push	{r7, lr}
+ 622              	.LCFI38:
+ 623              		.cfi_def_cfa_offset 8
+ 624              		.cfi_offset 7, -8
+ 625              		.cfi_offset 14, -4
+ 626 0002 86B0     		sub	sp, sp, #24
+ 627              	.LCFI39:
+ 628              		.cfi_def_cfa_offset 32
+ 629 0004 00AF     		add	r7, sp, #0
+ 630              	.LCFI40:
+ 631              		.cfi_def_cfa_register 7
+ 632 0006 7860     		str	r0, [r7, #4]
+  93:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+ 633              		.loc 1 93 0
+ 634 0008 7B68     		ldr	r3, [r7, #4]
+ 635 000a 7B61     		str	r3, [r7, #20]
+  94:Src/fsm_stack.c ****   uint16_t load_d,load_g;
+  95:Src/fsm_stack.c ****   AX_Wheel_Direction d;
+  96:Src/fsm_stack.c ****   if(FSM_TIMEOUT_REACHED(fsm)){
+ 636              		.loc 1 96 0
+ 637 000c FFF7FEFF 		bl	HAL_GetTick
+ 638 0010 0246     		mov	r2, r0
+ 639 0012 7B68     		ldr	r3, [r7, #4]
+ 640 0014 9B68     		ldr	r3, [r3, #8]
+ 641 0016 9A42     		cmp	r2, r3
+ 642 0018 0DD9     		bls	.L34
+  97:Src/fsm_stack.c ****     fsm->run=FSM_Err_Close;
+ 643              		.loc 1 97 0
+ 644 001a 7B68     		ldr	r3, [r7, #4]
+ 645 001c 1D4A     		ldr	r2, .L37
+ 646 001e 1A60     		str	r2, [r3]
+  98:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 647              		.loc 1 98 0
+ 648 0020 1D4B     		ldr	r3, .L37+4
+ 649 0022 4FF00002 		mov	r2, #0
+ 650 0026 1A61     		str	r2, [r3, #16]	@ float
+  99:Src/fsm_stack.c ****     fsm_stack->nramp=0;//ramp ramp_generator initialisation
+ 651              		.loc 1 99 0
+ 652 0028 7B69     		ldr	r3, [r7, #20]
+ 653 002a 0022     		movs	r2, #0
+ 654 002c 1A61     		str	r2, [r3, #16]
+ 100:Src/fsm_stack.c ****     fsm_stack->imp_start=encoder.steps;
+ 655              		.loc 1 100 0
+ 656 002e 1B4B     		ldr	r3, .L37+8
+ 657 0030 5A68     		ldr	r2, [r3, #4]
+ 658 0032 7B69     		ldr	r3, [r7, #20]
+ARM GAS  /tmp/ccgpeJHD.s 			page 14
+
+
+ 659 0034 DA60     		str	r2, [r3, #12]
+ 660              	.L34:
+ 101:Src/fsm_stack.c ****   }
+ 102:Src/fsm_stack.c ****   Z_Close();
+ 661              		.loc 1 102 0
+ 662 0036 FFF7FEFF 		bl	Z_Close
+ 103:Src/fsm_stack.c ****   AX_Get_Current_Load(&servo_g, &d, &load_g);
+ 663              		.loc 1 103 0
+ 664 003a 07F11002 		add	r2, r7, #16
+ 665 003e 07F10F03 		add	r3, r7, #15
+ 666 0042 1946     		mov	r1, r3
+ 667 0044 1648     		ldr	r0, .L37+12
+ 668 0046 FFF7FEFF 		bl	AX_Get_Current_Load
+ 104:Src/fsm_stack.c ****   AX_Get_Current_Load(&servo_d, &d, &load_d);
+ 669              		.loc 1 104 0
+ 670 004a 07F11202 		add	r2, r7, #18
+ 671 004e 07F10F03 		add	r3, r7, #15
+ 672 0052 1946     		mov	r1, r3
+ 673 0054 1348     		ldr	r0, .L37+16
+ 674 0056 FFF7FEFF 		bl	AX_Get_Current_Load
+ 105:Src/fsm_stack.c ****   if(load_d>AX_CLOSE_LOAD && load_g>AX_CLOSE_LOAD && Z_Is_Closed_Cube()){
+ 675              		.loc 1 105 0
+ 676 005a 7B8A     		ldrh	r3, [r7, #18]
+ 677 005c 642B     		cmp	r3, #100
+ 678 005e 15D9     		bls	.L36
+ 679              		.loc 1 105 0 is_stmt 0 discriminator 1
+ 680 0060 3B8A     		ldrh	r3, [r7, #16]
+ 681 0062 642B     		cmp	r3, #100
+ 682 0064 12D9     		bls	.L36
+ 683              		.loc 1 105 0 discriminator 2
+ 684 0066 FFF7FEFF 		bl	Z_Is_Closed_Cube
+ 685 006a 0346     		mov	r3, r0
+ 686 006c 002B     		cmp	r3, #0
+ 687 006e 0DD0     		beq	.L36
+ 106:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 688              		.loc 1 106 0 is_stmt 1
+ 689 0070 094B     		ldr	r3, .L37+4
+ 690 0072 4FF00002 		mov	r2, #0
+ 691 0076 1A61     		str	r2, [r3, #16]	@ float
+ 107:Src/fsm_stack.c ****     fsm_stack->nramp=0;//ramp ramp_generator initialisation
+ 692              		.loc 1 107 0
+ 693 0078 7B69     		ldr	r3, [r7, #20]
+ 694 007a 0022     		movs	r2, #0
+ 695 007c 1A61     		str	r2, [r3, #16]
+ 108:Src/fsm_stack.c ****     fsm_stack->imp_start=encoder.steps;
+ 696              		.loc 1 108 0
+ 697 007e 074B     		ldr	r3, .L37+8
+ 698 0080 5A68     		ldr	r2, [r3, #4]
+ 699 0082 7B69     		ldr	r3, [r7, #20]
+ 700 0084 DA60     		str	r2, [r3, #12]
+ 109:Src/fsm_stack.c ****     fsm->run = FSM_Stack_Lift;
+ 701              		.loc 1 109 0
+ 702 0086 7B68     		ldr	r3, [r7, #4]
+ 703 0088 074A     		ldr	r2, .L37+20
+ 704 008a 1A60     		str	r2, [r3]
+ 705              	.L36:
+ 110:Src/fsm_stack.c ****   }
+ARM GAS  /tmp/ccgpeJHD.s 			page 15
+
+
+ 111:Src/fsm_stack.c **** }
+ 706              		.loc 1 111 0
+ 707 008c 00BF     		nop
+ 708 008e 1837     		adds	r7, r7, #24
+ 709              	.LCFI41:
+ 710              		.cfi_def_cfa_offset 8
+ 711 0090 BD46     		mov	sp, r7
+ 712              	.LCFI42:
+ 713              		.cfi_def_cfa_register 13
+ 714              		@ sp needed
+ 715 0092 80BD     		pop	{r7, pc}
+ 716              	.L38:
+ 717              		.align	2
+ 718              	.L37:
+ 719 0094 00000000 		.word	FSM_Err_Close
+ 720 0098 00000000 		.word	pid_z
+ 721 009c 00000000 		.word	encoder
+ 722 00a0 00000000 		.word	servo_g
+ 723 00a4 00000000 		.word	servo_d
+ 724 00a8 00000000 		.word	FSM_Stack_Lift
+ 725              		.cfi_endproc
+ 726              	.LFE702:
+ 728              		.section	.text.FSM_Stack_Lift,"ax",%progbits
+ 729              		.align	1
+ 730              		.global	FSM_Stack_Lift
+ 731              		.syntax unified
+ 732              		.thumb
+ 733              		.thumb_func
+ 734              		.fpu fpv4-sp-d16
+ 736              	FSM_Stack_Lift:
+ 737              	.LFB703:
+ 112:Src/fsm_stack.c **** 
+ 113:Src/fsm_stack.c **** void FSM_Stack_Lift(FSM_Instance *fsm)
+ 114:Src/fsm_stack.c **** {
+ 738              		.loc 1 114 0
+ 739              		.cfi_startproc
+ 740              		@ args = 0, pretend = 0, frame = 16
+ 741              		@ frame_needed = 1, uses_anonymous_args = 0
+ 742 0000 80B5     		push	{r7, lr}
+ 743              	.LCFI43:
+ 744              		.cfi_def_cfa_offset 8
+ 745              		.cfi_offset 7, -8
+ 746              		.cfi_offset 14, -4
+ 747 0002 84B0     		sub	sp, sp, #16
+ 748              	.LCFI44:
+ 749              		.cfi_def_cfa_offset 24
+ 750 0004 00AF     		add	r7, sp, #0
+ 751              	.LCFI45:
+ 752              		.cfi_def_cfa_register 7
+ 753 0006 7860     		str	r0, [r7, #4]
+ 115:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;//TODO modif here
+ 754              		.loc 1 115 0
+ 755 0008 7B68     		ldr	r3, [r7, #4]
+ 756 000a FB60     		str	r3, [r7, #12]
+ 116:Src/fsm_stack.c ****   if(fsm_stack->last)
+ 757              		.loc 1 116 0
+ 758 000c FB68     		ldr	r3, [r7, #12]
+ARM GAS  /tmp/ccgpeJHD.s 			page 16
+
+
+ 759 000e 9B69     		ldr	r3, [r3, #24]
+ 760 0010 002B     		cmp	r3, #0
+ 761 0012 1CD0     		beq	.L40
+ 117:Src/fsm_stack.c ****   {
+ 118:Src/fsm_stack.c ****      imp_goal=ramp_generator(P1,fsm_stack->imp_start,&(fsm_stack->nramp),NCYCLELITTLE);
+ 762              		.loc 1 118 0
+ 763 0014 FB68     		ldr	r3, [r7, #12]
+ 764 0016 D968     		ldr	r1, [r3, #12]
+ 765 0018 FB68     		ldr	r3, [r7, #12]
+ 766 001a 03F11002 		add	r2, r3, #16
+ 767 001e 0A23     		movs	r3, #10
+ 768 0020 46F66050 		movw	r0, #28000
+ 769 0024 FFF7FEFF 		bl	ramp_generator
+ 770 0028 0246     		mov	r2, r0
+ 771 002a 184B     		ldr	r3, .L44
+ 772 002c 1A60     		str	r2, [r3]
+ 119:Src/fsm_stack.c ****      if(reached(&pid_z,P1-encoder.steps))
+ 773              		.loc 1 119 0
+ 774 002e 184B     		ldr	r3, .L44+4
+ 775 0030 5B68     		ldr	r3, [r3, #4]
+ 776 0032 C3F5DA43 		rsb	r3, r3, #27904
+ 777 0036 6033     		adds	r3, r3, #96
+ 778 0038 1946     		mov	r1, r3
+ 779 003a 1648     		ldr	r0, .L44+8
+ 780 003c FFF7FEFF 		bl	reached
+ 781 0040 0346     		mov	r3, r0
+ 782 0042 002B     		cmp	r3, #0
+ 783 0044 1ED0     		beq	.L43
+ 120:Src/fsm_stack.c ****      {
+ 121:Src/fsm_stack.c ****        fsm->run=FSM_End;
+ 784              		.loc 1 121 0
+ 785 0046 7B68     		ldr	r3, [r7, #4]
+ 786 0048 134A     		ldr	r2, .L44+12
+ 787 004a 1A60     		str	r2, [r3]
+ 122:Src/fsm_stack.c ****      }
+ 123:Src/fsm_stack.c ****   }
+ 124:Src/fsm_stack.c ****   else
+ 125:Src/fsm_stack.c ****   {
+ 126:Src/fsm_stack.c ****     imp_goal=ramp_generator(P3,fsm_stack->imp_start,&(fsm_stack->nramp),NCYCLEBIG);
+ 127:Src/fsm_stack.c ****     if(reached(&pid_z,P3-encoder.steps))
+ 128:Src/fsm_stack.c ****     {
+ 129:Src/fsm_stack.c ****       fsm->run=FSM_End;
+ 130:Src/fsm_stack.c ****     }
+ 131:Src/fsm_stack.c ****   }
+ 132:Src/fsm_stack.c **** }
+ 788              		.loc 1 132 0
+ 789 004c 1AE0     		b	.L43
+ 790              	.L40:
+ 126:Src/fsm_stack.c ****     if(reached(&pid_z,P3-encoder.steps))
+ 791              		.loc 1 126 0
+ 792 004e FB68     		ldr	r3, [r7, #12]
+ 793 0050 D968     		ldr	r1, [r3, #12]
+ 794 0052 FB68     		ldr	r3, [r7, #12]
+ 795 0054 03F11002 		add	r2, r3, #16
+ 796 0058 1423     		movs	r3, #20
+ 797 005a 4FF4E160 		mov	r0, #1800
+ 798 005e FFF7FEFF 		bl	ramp_generator
+ARM GAS  /tmp/ccgpeJHD.s 			page 17
+
+
+ 799 0062 0246     		mov	r2, r0
+ 800 0064 094B     		ldr	r3, .L44
+ 801 0066 1A60     		str	r2, [r3]
+ 127:Src/fsm_stack.c ****     {
+ 802              		.loc 1 127 0
+ 803 0068 094B     		ldr	r3, .L44+4
+ 804 006a 5B68     		ldr	r3, [r3, #4]
+ 805 006c C3F5E163 		rsb	r3, r3, #1800
+ 806 0070 1946     		mov	r1, r3
+ 807 0072 0848     		ldr	r0, .L44+8
+ 808 0074 FFF7FEFF 		bl	reached
+ 809 0078 0346     		mov	r3, r0
+ 810 007a 002B     		cmp	r3, #0
+ 811 007c 02D0     		beq	.L43
+ 129:Src/fsm_stack.c ****     }
+ 812              		.loc 1 129 0
+ 813 007e 7B68     		ldr	r3, [r7, #4]
+ 814 0080 054A     		ldr	r2, .L44+12
+ 815 0082 1A60     		str	r2, [r3]
+ 816              	.L43:
+ 817              		.loc 1 132 0
+ 818 0084 00BF     		nop
+ 819 0086 1037     		adds	r7, r7, #16
+ 820              	.LCFI46:
+ 821              		.cfi_def_cfa_offset 8
+ 822 0088 BD46     		mov	sp, r7
+ 823              	.LCFI47:
+ 824              		.cfi_def_cfa_register 13
+ 825              		@ sp needed
+ 826 008a 80BD     		pop	{r7, pc}
+ 827              	.L45:
+ 828              		.align	2
+ 829              	.L44:
+ 830 008c 00000000 		.word	imp_goal
+ 831 0090 00000000 		.word	encoder
+ 832 0094 00000000 		.word	pid_z
+ 833 0098 00000000 		.word	FSM_End
+ 834              		.cfi_endproc
+ 835              	.LFE703:
+ 837              		.section	.text.FSM_Err_Open,"ax",%progbits
+ 838              		.align	1
+ 839              		.global	FSM_Err_Open
+ 840              		.syntax unified
+ 841              		.thumb
+ 842              		.thumb_func
+ 843              		.fpu fpv4-sp-d16
+ 845              	FSM_Err_Open:
+ 846              	.LFB704:
+ 133:Src/fsm_stack.c **** 
+ 134:Src/fsm_stack.c **** void FSM_Err_Open(FSM_Instance *fsm)
+ 135:Src/fsm_stack.c **** {
+ 847              		.loc 1 135 0
+ 848              		.cfi_startproc
+ 849              		@ args = 0, pretend = 0, frame = 8
+ 850              		@ frame_needed = 1, uses_anonymous_args = 0
+ 851 0000 80B5     		push	{r7, lr}
+ 852              	.LCFI48:
+ARM GAS  /tmp/ccgpeJHD.s 			page 18
+
+
+ 853              		.cfi_def_cfa_offset 8
+ 854              		.cfi_offset 7, -8
+ 855              		.cfi_offset 14, -4
+ 856 0002 82B0     		sub	sp, sp, #8
+ 857              	.LCFI49:
+ 858              		.cfi_def_cfa_offset 16
+ 859 0004 00AF     		add	r7, sp, #0
+ 860              	.LCFI50:
+ 861              		.cfi_def_cfa_register 7
+ 862 0006 7860     		str	r0, [r7, #4]
+ 136:Src/fsm_stack.c ****   Z_Open_Small();
+ 863              		.loc 1 136 0
+ 864 0008 FFF7FEFF 		bl	Z_Open_Small
+ 137:Src/fsm_stack.c ****   if(Z_Is_Open_Small()){
+ 865              		.loc 1 137 0
+ 866 000c FFF7FEFF 		bl	Z_Is_Open_Small
+ 867 0010 0346     		mov	r3, r0
+ 868 0012 002B     		cmp	r3, #0
+ 869 0014 06D0     		beq	.L48
+ 138:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 870              		.loc 1 138 0
+ 871 0016 054B     		ldr	r3, .L49
+ 872 0018 4FF00002 		mov	r2, #0
+ 873 001c 1A61     		str	r2, [r3, #16]	@ float
+ 139:Src/fsm_stack.c ****     fsm->run = FSM_Err_Pos_3;
+ 874              		.loc 1 139 0
+ 875 001e 7B68     		ldr	r3, [r7, #4]
+ 876 0020 034A     		ldr	r2, .L49+4
+ 877 0022 1A60     		str	r2, [r3]
+ 878              	.L48:
+ 140:Src/fsm_stack.c ****   }
+ 141:Src/fsm_stack.c **** }
+ 879              		.loc 1 141 0
+ 880 0024 00BF     		nop
+ 881 0026 0837     		adds	r7, r7, #8
+ 882              	.LCFI51:
+ 883              		.cfi_def_cfa_offset 8
+ 884 0028 BD46     		mov	sp, r7
+ 885              	.LCFI52:
+ 886              		.cfi_def_cfa_register 13
+ 887              		@ sp needed
+ 888 002a 80BD     		pop	{r7, pc}
+ 889              	.L50:
+ 890              		.align	2
+ 891              	.L49:
+ 892 002c 00000000 		.word	pid_z
+ 893 0030 00000000 		.word	FSM_Err_Pos_3
+ 894              		.cfi_endproc
+ 895              	.LFE704:
+ 897              		.section	.text.FSM_Err_Pos_3,"ax",%progbits
+ 898              		.align	1
+ 899              		.global	FSM_Err_Pos_3
+ 900              		.syntax unified
+ 901              		.thumb
+ 902              		.thumb_func
+ 903              		.fpu fpv4-sp-d16
+ 905              	FSM_Err_Pos_3:
+ARM GAS  /tmp/ccgpeJHD.s 			page 19
+
+
+ 906              	.LFB705:
+ 142:Src/fsm_stack.c **** 
+ 143:Src/fsm_stack.c **** void FSM_Err_Pos_3(FSM_Instance *fsm)
+ 144:Src/fsm_stack.c **** {
+ 907              		.loc 1 144 0
+ 908              		.cfi_startproc
+ 909              		@ args = 0, pretend = 0, frame = 16
+ 910              		@ frame_needed = 1, uses_anonymous_args = 0
+ 911 0000 80B5     		push	{r7, lr}
+ 912              	.LCFI53:
+ 913              		.cfi_def_cfa_offset 8
+ 914              		.cfi_offset 7, -8
+ 915              		.cfi_offset 14, -4
+ 916 0002 84B0     		sub	sp, sp, #16
+ 917              	.LCFI54:
+ 918              		.cfi_def_cfa_offset 24
+ 919 0004 00AF     		add	r7, sp, #0
+ 920              	.LCFI55:
+ 921              		.cfi_def_cfa_register 7
+ 922 0006 7860     		str	r0, [r7, #4]
+ 145:Src/fsm_stack.c ****   FSM_Stack *fsm_stack=(FSM_Stack *) fsm;
+ 923              		.loc 1 145 0
+ 924 0008 7B68     		ldr	r3, [r7, #4]
+ 925 000a FB60     		str	r3, [r7, #12]
+ 146:Src/fsm_stack.c ****   //imp_goal=P3;
+ 147:Src/fsm_stack.c ****   imp_goal=ramp_generator(P3,fsm_stack->imp_start,&(fsm_stack->nramp),NCYCLEBIG);
+ 926              		.loc 1 147 0
+ 927 000c FB68     		ldr	r3, [r7, #12]
+ 928 000e D968     		ldr	r1, [r3, #12]
+ 929 0010 FB68     		ldr	r3, [r7, #12]
+ 930 0012 03F11002 		add	r2, r3, #16
+ 931 0016 1423     		movs	r3, #20
+ 932 0018 4FF4E160 		mov	r0, #1800
+ 933 001c FFF7FEFF 		bl	ramp_generator
+ 934 0020 0246     		mov	r2, r0
+ 935 0022 0C4B     		ldr	r3, .L54
+ 936 0024 1A60     		str	r2, [r3]
+ 148:Src/fsm_stack.c ****   if(reached(&pid_z,P3-encoder.steps))
+ 937              		.loc 1 148 0
+ 938 0026 0C4B     		ldr	r3, .L54+4
+ 939 0028 5B68     		ldr	r3, [r3, #4]
+ 940 002a C3F5E163 		rsb	r3, r3, #1800
+ 941 002e 1946     		mov	r1, r3
+ 942 0030 0A48     		ldr	r0, .L54+8
+ 943 0032 FFF7FEFF 		bl	reached
+ 944 0036 0346     		mov	r3, r0
+ 945 0038 002B     		cmp	r3, #0
+ 946 003a 06D0     		beq	.L53
+ 149:Src/fsm_stack.c ****   {
+ 150:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 947              		.loc 1 150 0
+ 948 003c 074B     		ldr	r3, .L54+8
+ 949 003e 4FF00002 		mov	r2, #0
+ 950 0042 1A61     		str	r2, [r3, #16]	@ float
+ 151:Src/fsm_stack.c ****     fsm->run=FSM_Err_Close;
+ 951              		.loc 1 151 0
+ 952 0044 7B68     		ldr	r3, [r7, #4]
+ARM GAS  /tmp/ccgpeJHD.s 			page 20
+
+
+ 953 0046 064A     		ldr	r2, .L54+12
+ 954 0048 1A60     		str	r2, [r3]
+ 955              	.L53:
+ 152:Src/fsm_stack.c ****   }
+ 153:Src/fsm_stack.c **** }
+ 956              		.loc 1 153 0
+ 957 004a 00BF     		nop
+ 958 004c 1037     		adds	r7, r7, #16
+ 959              	.LCFI56:
+ 960              		.cfi_def_cfa_offset 8
+ 961 004e BD46     		mov	sp, r7
+ 962              	.LCFI57:
+ 963              		.cfi_def_cfa_register 13
+ 964              		@ sp needed
+ 965 0050 80BD     		pop	{r7, pc}
+ 966              	.L55:
+ 967 0052 00BF     		.align	2
+ 968              	.L54:
+ 969 0054 00000000 		.word	imp_goal
+ 970 0058 00000000 		.word	encoder
+ 971 005c 00000000 		.word	pid_z
+ 972 0060 00000000 		.word	FSM_Err_Close
+ 973              		.cfi_endproc
+ 974              	.LFE705:
+ 976              		.section	.text.FSM_Err_Close,"ax",%progbits
+ 977              		.align	1
+ 978              		.global	FSM_Err_Close
+ 979              		.syntax unified
+ 980              		.thumb
+ 981              		.thumb_func
+ 982              		.fpu fpv4-sp-d16
+ 984              	FSM_Err_Close:
+ 985              	.LFB706:
+ 154:Src/fsm_stack.c **** 
+ 155:Src/fsm_stack.c **** void FSM_Err_Close(FSM_Instance *fsm)
+ 156:Src/fsm_stack.c **** {
+ 986              		.loc 1 156 0
+ 987              		.cfi_startproc
+ 988              		@ args = 0, pretend = 0, frame = 16
+ 989              		@ frame_needed = 1, uses_anonymous_args = 0
+ 990 0000 80B5     		push	{r7, lr}
+ 991              	.LCFI58:
+ 992              		.cfi_def_cfa_offset 8
+ 993              		.cfi_offset 7, -8
+ 994              		.cfi_offset 14, -4
+ 995 0002 84B0     		sub	sp, sp, #16
+ 996              	.LCFI59:
+ 997              		.cfi_def_cfa_offset 24
+ 998 0004 00AF     		add	r7, sp, #0
+ 999              	.LCFI60:
+ 1000              		.cfi_def_cfa_register 7
+ 1001 0006 7860     		str	r0, [r7, #4]
+ 157:Src/fsm_stack.c ****   uint16_t load_d,load_g;
+ 158:Src/fsm_stack.c ****   AX_Wheel_Direction d;
+ 159:Src/fsm_stack.c ****   Z_Close();
+ 1002              		.loc 1 159 0
+ 1003 0008 FFF7FEFF 		bl	Z_Close
+ARM GAS  /tmp/ccgpeJHD.s 			page 21
+
+
+ 160:Src/fsm_stack.c ****   AX_Get_Current_Load(&servo_g, &d, &load_g);
+ 1004              		.loc 1 160 0
+ 1005 000c 07F10C02 		add	r2, r7, #12
+ 1006 0010 07F10B03 		add	r3, r7, #11
+ 1007 0014 1946     		mov	r1, r3
+ 1008 0016 0E48     		ldr	r0, .L59
+ 1009 0018 FFF7FEFF 		bl	AX_Get_Current_Load
+ 161:Src/fsm_stack.c ****   AX_Get_Current_Load(&servo_d, &d, &load_d);
+ 1010              		.loc 1 161 0
+ 1011 001c 07F10E02 		add	r2, r7, #14
+ 1012 0020 07F10B03 		add	r3, r7, #11
+ 1013 0024 1946     		mov	r1, r3
+ 1014 0026 0B48     		ldr	r0, .L59+4
+ 1015 0028 FFF7FEFF 		bl	AX_Get_Current_Load
+ 162:Src/fsm_stack.c ****   if(load_d>AX_CLOSE_LOAD && load_g>AX_CLOSE_LOAD){
+ 1016              		.loc 1 162 0
+ 1017 002c FB89     		ldrh	r3, [r7, #14]
+ 1018 002e 642B     		cmp	r3, #100
+ 1019 0030 09D9     		bls	.L58
+ 1020              		.loc 1 162 0 is_stmt 0 discriminator 1
+ 1021 0032 BB89     		ldrh	r3, [r7, #12]
+ 1022 0034 642B     		cmp	r3, #100
+ 1023 0036 06D9     		bls	.L58
+ 163:Src/fsm_stack.c ****     pid_z.integral = 0;
+ 1024              		.loc 1 163 0 is_stmt 1
+ 1025 0038 074B     		ldr	r3, .L59+8
+ 1026 003a 4FF00002 		mov	r2, #0
+ 1027 003e 1A61     		str	r2, [r3, #16]	@ float
+ 164:Src/fsm_stack.c ****     fsm->run=FSM_Err;
+ 1028              		.loc 1 164 0
+ 1029 0040 7B68     		ldr	r3, [r7, #4]
+ 1030 0042 064A     		ldr	r2, .L59+12
+ 1031 0044 1A60     		str	r2, [r3]
+ 1032              	.L58:
+ 165:Src/fsm_stack.c ****   }
+ 166:Src/fsm_stack.c **** }
+ 1033              		.loc 1 166 0
+ 1034 0046 00BF     		nop
+ 1035 0048 1037     		adds	r7, r7, #16
+ 1036              	.LCFI61:
+ 1037              		.cfi_def_cfa_offset 8
+ 1038 004a BD46     		mov	sp, r7
+ 1039              	.LCFI62:
+ 1040              		.cfi_def_cfa_register 13
+ 1041              		@ sp needed
+ 1042 004c 80BD     		pop	{r7, pc}
+ 1043              	.L60:
+ 1044 004e 00BF     		.align	2
+ 1045              	.L59:
+ 1046 0050 00000000 		.word	servo_g
+ 1047 0054 00000000 		.word	servo_d
+ 1048 0058 00000000 		.word	pid_z
+ 1049 005c 00000000 		.word	FSM_Err
+ 1050              		.cfi_endproc
+ 1051              	.LFE706:
+ 1053              		.section	.text.FSM_End,"ax",%progbits
+ 1054              		.align	1
+ARM GAS  /tmp/ccgpeJHD.s 			page 22
+
+
+ 1055              		.global	FSM_End
+ 1056              		.syntax unified
+ 1057              		.thumb
+ 1058              		.thumb_func
+ 1059              		.fpu fpv4-sp-d16
+ 1061              	FSM_End:
+ 1062              	.LFB707:
+ 167:Src/fsm_stack.c **** 
+ 168:Src/fsm_stack.c **** void FSM_End(FSM_Instance *fsm)
+ 169:Src/fsm_stack.c **** {
+ 1063              		.loc 1 169 0
+ 1064              		.cfi_startproc
+ 1065              		@ args = 0, pretend = 0, frame = 8
+ 1066              		@ frame_needed = 1, uses_anonymous_args = 0
+ 1067              		@ link register save eliminated.
+ 1068 0000 80B4     		push	{r7}
+ 1069              	.LCFI63:
+ 1070              		.cfi_def_cfa_offset 4
+ 1071              		.cfi_offset 7, -4
+ 1072 0002 83B0     		sub	sp, sp, #12
+ 1073              	.LCFI64:
+ 1074              		.cfi_def_cfa_offset 16
+ 1075 0004 00AF     		add	r7, sp, #0
+ 1076              	.LCFI65:
+ 1077              		.cfi_def_cfa_register 7
+ 1078 0006 7860     		str	r0, [r7, #4]
+ 170:Src/fsm_stack.c ****   fsm->status=FSM_SUCCESS;
+ 1079              		.loc 1 170 0
+ 1080 0008 7B68     		ldr	r3, [r7, #4]
+ 1081 000a 0122     		movs	r2, #1
+ 1082 000c 1A71     		strb	r2, [r3, #4]
+ 171:Src/fsm_stack.c **** }
+ 1083              		.loc 1 171 0
+ 1084 000e 00BF     		nop
+ 1085 0010 0C37     		adds	r7, r7, #12
+ 1086              	.LCFI66:
+ 1087              		.cfi_def_cfa_offset 4
+ 1088 0012 BD46     		mov	sp, r7
+ 1089              	.LCFI67:
+ 1090              		.cfi_def_cfa_register 13
+ 1091              		@ sp needed
+ 1092 0014 5DF8047B 		ldr	r7, [sp], #4
+ 1093              	.LCFI68:
+ 1094              		.cfi_restore 7
+ 1095              		.cfi_def_cfa_offset 0
+ 1096 0018 7047     		bx	lr
+ 1097              		.cfi_endproc
+ 1098              	.LFE707:
+ 1100              		.text
+ 1101              	.Letext0:
+ 1102              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 1103              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 1104              		.file 4 "Drivers/CMSIS/Include/core_cm4.h"
+ 1105              		.file 5 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 1106              		.file 6 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 1107              		.file 7 "Inc/ax_12a.h"
+ 1108              		.file 8 "/usr/arm-none-eabi/include/sys/lock.h"
+ARM GAS  /tmp/ccgpeJHD.s 			page 23
+
+
+ 1109              		.file 9 "/usr/arm-none-eabi/include/sys/_types.h"
+ 1110              		.file 10 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 1111              		.file 11 "/usr/arm-none-eabi/include/sys/reent.h"
+ 1112              		.file 12 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h"
+ 1113              		.file 13 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma.h"
+ 1114              		.file 14 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h"
+ 1115              		.file 15 "Inc/fsm_master.h"
+ 1116              		.file 16 "/usr/arm-none-eabi/include/stdlib.h"
+ 1117              		.file 17 "Inc/Robotronik_corp_pid.h"
+ 1118              		.file 18 "Inc/encoder.h"
+ 1119              		.file 19 "Inc/Z_axis.h"
+ 1120              		.file 20 "Inc/fsm_stack.h"
+ 1121              		.file 21 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ARM GAS  /tmp/ccgpeJHD.s 			page 24
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 fsm_stack.c
+     /tmp/ccgpeJHD.s:18     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 $d
+     /tmp/ccgpeJHD.s:21     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 CHANNEL_OFFSET_TAB
+                            *COM*:0000000000000004 fsm
+     /tmp/ccgpeJHD.s:31     .text.FSM_Stack_Init:0000000000000000 $t
+     /tmp/ccgpeJHD.s:38     .text.FSM_Stack_Init:0000000000000000 FSM_Stack_Init
+     /tmp/ccgpeJHD.s:106    .text.FSM_Stack_Init:0000000000000048 $d
+     /tmp/ccgpeJHD.s:167    .text.FSM_Pos_3:0000000000000000 FSM_Pos_3
+     /tmp/ccgpeJHD.s:113    .text.FSM_Err:0000000000000000 $t
+     /tmp/ccgpeJHD.s:120    .text.FSM_Err:0000000000000000 FSM_Err
+     /tmp/ccgpeJHD.s:160    .text.FSM_Pos_3:0000000000000000 $t
+     /tmp/ccgpeJHD.s:231    .text.FSM_Pos_3:0000000000000054 $d
+     /tmp/ccgpeJHD.s:246    .text.FSM_Detect_Cube:0000000000000000 FSM_Detect_Cube
+     /tmp/ccgpeJHD.s:239    .text.FSM_Detect_Cube:0000000000000000 $t
+     /tmp/ccgpeJHD.s:334    .text.FSM_Detect_Cube:0000000000000068 $d
+     /tmp/ccgpeJHD.s:905    .text.FSM_Err_Pos_3:0000000000000000 FSM_Err_Pos_3
+     /tmp/ccgpeJHD.s:350    .text.FSM_Pos_2:0000000000000000 FSM_Pos_2
+     /tmp/ccgpeJHD.s:343    .text.FSM_Pos_2:0000000000000000 $t
+     /tmp/ccgpeJHD.s:414    .text.FSM_Pos_2:0000000000000054 $d
+     /tmp/ccgpeJHD.s:429    .text.FSM_Open:0000000000000000 FSM_Open
+     /tmp/ccgpeJHD.s:422    .text.FSM_Open:0000000000000000 $t
+     /tmp/ccgpeJHD.s:495    .text.FSM_Open:000000000000004c $d
+     /tmp/ccgpeJHD.s:509    .text.FSM_Go_Down:0000000000000000 FSM_Go_Down
+     /tmp/ccgpeJHD.s:502    .text.FSM_Go_Down:0000000000000000 $t
+     /tmp/ccgpeJHD.s:599    .text.FSM_Go_Down:0000000000000084 $d
+     /tmp/ccgpeJHD.s:615    .text.FSM_Close:0000000000000000 FSM_Close
+     /tmp/ccgpeJHD.s:608    .text.FSM_Close:0000000000000000 $t
+     /tmp/ccgpeJHD.s:719    .text.FSM_Close:0000000000000094 $d
+     /tmp/ccgpeJHD.s:984    .text.FSM_Err_Close:0000000000000000 FSM_Err_Close
+     /tmp/ccgpeJHD.s:736    .text.FSM_Stack_Lift:0000000000000000 FSM_Stack_Lift
+     /tmp/ccgpeJHD.s:729    .text.FSM_Stack_Lift:0000000000000000 $t
+     /tmp/ccgpeJHD.s:830    .text.FSM_Stack_Lift:000000000000008c $d
+     /tmp/ccgpeJHD.s:1061   .text.FSM_End:0000000000000000 FSM_End
+     /tmp/ccgpeJHD.s:838    .text.FSM_Err_Open:0000000000000000 $t
+     /tmp/ccgpeJHD.s:845    .text.FSM_Err_Open:0000000000000000 FSM_Err_Open
+     /tmp/ccgpeJHD.s:892    .text.FSM_Err_Open:000000000000002c $d
+     /tmp/ccgpeJHD.s:898    .text.FSM_Err_Pos_3:0000000000000000 $t
+     /tmp/ccgpeJHD.s:969    .text.FSM_Err_Pos_3:0000000000000054 $d
+     /tmp/ccgpeJHD.s:977    .text.FSM_Err_Close:0000000000000000 $t
+     /tmp/ccgpeJHD.s:1046   .text.FSM_Err_Close:0000000000000050 $d
+     /tmp/ccgpeJHD.s:1054   .text.FSM_End:0000000000000000 $t
+
+UNDEFINED SYMBOLS
+pid_z
+encoder
+ramp_generator
+reached
+imp_goal
+Z_Open_Small
+Z_Is_Open_Small
+HAL_GetTick
+Z_Close
+AX_Get_Current_Load
+Z_Is_Closed_Cube
+servo_g
+servo_d
+ARM GAS  /tmp/ccgpeJHD.s 			page 25
+
+

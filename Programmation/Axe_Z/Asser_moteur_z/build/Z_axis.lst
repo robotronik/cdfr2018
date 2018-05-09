@@ -1,0 +1,1061 @@
+ARM GAS  /tmp/ccgteErE.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"Z_axis.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.rodata.CHANNEL_OFFSET_TAB,"a",%progbits
+  18              		.align	2
+  21              	CHANNEL_OFFSET_TAB:
+  22 0000 08       		.byte	8
+  23 0001 1C       		.byte	28
+  24 0002 30       		.byte	48
+  25 0003 44       		.byte	68
+  26 0004 58       		.byte	88
+  27 0005 6C       		.byte	108
+  28 0006 80       		.byte	-128
+  29              		.comm	fsm,4,4
+  30              		.comm	encoder,16,4
+  31              		.section	.bss.ax_iface,"aw",%nobits
+  32              		.align	2
+  35              	ax_iface:
+  36 0000 00000000 		.space	104
+  36      00000000 
+  36      00000000 
+  36      00000000 
+  36      00000000 
+  37              		.comm	servo_ar,8,4
+  38              		.comm	servo_g,8,4
+  39              		.comm	servo_d,8,4
+  40              		.comm	imp_goal,4,4
+  41              		.comm	pid_z,32,4
+  42              		.comm	err,4,4
+  43              		.comm	fsm_stack,28,4
+  44              		.comm	fsm_arm,12,4
+  45              		.comm	fsm_unstack,20,4
+  46              		.comm	fsm_place,12,4
+  47              		.section	.text.Z_Init_AX,"ax",%progbits
+  48              		.align	1
+  49              		.global	Z_Init_AX
+  50              		.syntax unified
+  51              		.thumb
+  52              		.thumb_func
+  53              		.fpu fpv4-sp-d16
+  55              	Z_Init_AX:
+  56              	.LFB695:
+  57              		.file 1 "Src/Z_axis.c"
+   1:Src/Z_axis.c  **** #include "Z_axis.h"
+ARM GAS  /tmp/ccgteErE.s 			page 2
+
+
+   2:Src/Z_axis.c  **** 
+   3:Src/Z_axis.c  **** Encoder encoder;
+   4:Src/Z_axis.c  **** 
+   5:Src/Z_axis.c  **** static AX_Interface ax_iface;
+   6:Src/Z_axis.c  **** AX servo_ar, servo_g, servo_d;
+   7:Src/Z_axis.c  **** 
+   8:Src/Z_axis.c  **** volatile int imp_goal;
+   9:Src/Z_axis.c  **** volatile PID_DATA pid_z;
+  10:Src/Z_axis.c  **** FSM_Instance *volatile fsm;
+  11:Src/Z_axis.c  **** int err;
+  12:Src/Z_axis.c  **** 
+  13:Src/Z_axis.c  **** FSM_Stack fsm_stack;
+  14:Src/Z_axis.c  **** FSM_Arm fsm_arm;
+  15:Src/Z_axis.c  **** FSM_Unstack fsm_unstack;
+  16:Src/Z_axis.c  **** FSM_Place fsm_place;
+  17:Src/Z_axis.c  **** 
+  18:Src/Z_axis.c  **** 
+  19:Src/Z_axis.c  **** void Z_Init_AX(){
+  58              		.loc 1 19 0
+  59              		.cfi_startproc
+  60              		@ args = 0, pretend = 0, frame = 0
+  61              		@ frame_needed = 1, uses_anonymous_args = 0
+  62              		@ link register save eliminated.
+  63 0000 80B4     		push	{r7}
+  64              	.LCFI0:
+  65              		.cfi_def_cfa_offset 4
+  66              		.cfi_offset 7, -4
+  67 0002 00AF     		add	r7, sp, #0
+  68              	.LCFI1:
+  69              		.cfi_def_cfa_register 7
+  20:Src/Z_axis.c  ****   ax_iface.receive = AX_Receive_HAL;
+  70              		.loc 1 20 0
+  71 0004 114B     		ldr	r3, .L2
+  72 0006 124A     		ldr	r2, .L2+4
+  73 0008 5A60     		str	r2, [r3, #4]
+  21:Src/Z_axis.c  ****   ax_iface.send = AX_Send_HAL;
+  74              		.loc 1 21 0
+  75 000a 104B     		ldr	r3, .L2
+  76 000c 114A     		ldr	r2, .L2+8
+  77 000e 1A60     		str	r2, [r3]
+  22:Src/Z_axis.c  ****   ax_iface.set_direction = AX_Set_Direction_HAL;
+  78              		.loc 1 22 0
+  79 0010 0E4B     		ldr	r3, .L2
+  80 0012 114A     		ldr	r2, .L2+12
+  81 0014 9A60     		str	r2, [r3, #8]
+  23:Src/Z_axis.c  ****   ax_iface.delay = HAL_Delay;
+  82              		.loc 1 23 0
+  83 0016 0D4B     		ldr	r3, .L2
+  84 0018 104A     		ldr	r2, .L2+16
+  85 001a DA60     		str	r2, [r3, #12]
+  24:Src/Z_axis.c  **** 
+  25:Src/Z_axis.c  ****   servo_ar.id = AX_ARM_ID;
+  86              		.loc 1 25 0
+  87 001c 104B     		ldr	r3, .L2+20
+  88 001e 0122     		movs	r2, #1
+  89 0020 1A70     		strb	r2, [r3]
+  26:Src/Z_axis.c  ****   servo_ar.interface = &ax_iface;
+ARM GAS  /tmp/ccgteErE.s 			page 3
+
+
+  90              		.loc 1 26 0
+  91 0022 0F4B     		ldr	r3, .L2+20
+  92 0024 094A     		ldr	r2, .L2
+  93 0026 5A60     		str	r2, [r3, #4]
+  27:Src/Z_axis.c  **** 
+  28:Src/Z_axis.c  ****   servo_g.id = AX_LEFT_ID;
+  94              		.loc 1 28 0
+  95 0028 0E4B     		ldr	r3, .L2+24
+  96 002a 0222     		movs	r2, #2
+  97 002c 1A70     		strb	r2, [r3]
+  29:Src/Z_axis.c  ****   servo_g.interface = &ax_iface;
+  98              		.loc 1 29 0
+  99 002e 0D4B     		ldr	r3, .L2+24
+ 100 0030 064A     		ldr	r2, .L2
+ 101 0032 5A60     		str	r2, [r3, #4]
+  30:Src/Z_axis.c  **** 
+  31:Src/Z_axis.c  ****   servo_d.id = AX_RIGHT_ID;
+ 102              		.loc 1 31 0
+ 103 0034 0C4B     		ldr	r3, .L2+28
+ 104 0036 0322     		movs	r2, #3
+ 105 0038 1A70     		strb	r2, [r3]
+  32:Src/Z_axis.c  ****   servo_d.interface = &ax_iface;
+ 106              		.loc 1 32 0
+ 107 003a 0B4B     		ldr	r3, .L2+28
+ 108 003c 034A     		ldr	r2, .L2
+ 109 003e 5A60     		str	r2, [r3, #4]
+  33:Src/Z_axis.c  **** }
+ 110              		.loc 1 33 0
+ 111 0040 00BF     		nop
+ 112 0042 BD46     		mov	sp, r7
+ 113              	.LCFI2:
+ 114              		.cfi_def_cfa_register 13
+ 115              		@ sp needed
+ 116 0044 5DF8047B 		ldr	r7, [sp], #4
+ 117              	.LCFI3:
+ 118              		.cfi_restore 7
+ 119              		.cfi_def_cfa_offset 0
+ 120 0048 7047     		bx	lr
+ 121              	.L3:
+ 122 004a 00BF     		.align	2
+ 123              	.L2:
+ 124 004c 00000000 		.word	ax_iface
+ 125 0050 00000000 		.word	AX_Receive_HAL
+ 126 0054 00000000 		.word	AX_Send_HAL
+ 127 0058 00000000 		.word	AX_Set_Direction_HAL
+ 128 005c 00000000 		.word	HAL_Delay
+ 129 0060 00000000 		.word	servo_ar
+ 130 0064 00000000 		.word	servo_g
+ 131 0068 00000000 		.word	servo_d
+ 132              		.cfi_endproc
+ 133              	.LFE695:
+ 135              		.section	.text.Z_Check_AX,"ax",%progbits
+ 136              		.align	1
+ 137              		.global	Z_Check_AX
+ 138              		.syntax unified
+ 139              		.thumb
+ 140              		.thumb_func
+ARM GAS  /tmp/ccgteErE.s 			page 4
+
+
+ 141              		.fpu fpv4-sp-d16
+ 143              	Z_Check_AX:
+ 144              	.LFB696:
+  34:Src/Z_axis.c  **** 
+  35:Src/Z_axis.c  **** int Z_Check_AX(){
+ 145              		.loc 1 35 0
+ 146              		.cfi_startproc
+ 147              		@ args = 0, pretend = 0, frame = 0
+ 148              		@ frame_needed = 1, uses_anonymous_args = 0
+ 149 0000 80B5     		push	{r7, lr}
+ 150              	.LCFI4:
+ 151              		.cfi_def_cfa_offset 8
+ 152              		.cfi_offset 7, -8
+ 153              		.cfi_offset 14, -4
+ 154 0002 00AF     		add	r7, sp, #0
+ 155              	.LCFI5:
+ 156              		.cfi_def_cfa_register 7
+  36:Src/Z_axis.c  ****   if(AX_Ping(&servo_ar) != 0) return -1;
+ 157              		.loc 1 36 0
+ 158 0004 0E48     		ldr	r0, .L9
+ 159 0006 FFF7FEFF 		bl	AX_Ping
+ 160 000a 0346     		mov	r3, r0
+ 161 000c 002B     		cmp	r3, #0
+ 162 000e 02D0     		beq	.L5
+ 163              		.loc 1 36 0 is_stmt 0 discriminator 1
+ 164 0010 4FF0FF33 		mov	r3, #-1
+ 165 0014 12E0     		b	.L6
+ 166              	.L5:
+  37:Src/Z_axis.c  ****   if(AX_Ping(&servo_g) != 0) return -1;
+ 167              		.loc 1 37 0 is_stmt 1
+ 168 0016 0B48     		ldr	r0, .L9+4
+ 169 0018 FFF7FEFF 		bl	AX_Ping
+ 170 001c 0346     		mov	r3, r0
+ 171 001e 002B     		cmp	r3, #0
+ 172 0020 02D0     		beq	.L7
+ 173              		.loc 1 37 0 is_stmt 0 discriminator 1
+ 174 0022 4FF0FF33 		mov	r3, #-1
+ 175 0026 09E0     		b	.L6
+ 176              	.L7:
+  38:Src/Z_axis.c  ****   if(AX_Ping(&servo_d) != 0) return -1;
+ 177              		.loc 1 38 0 is_stmt 1
+ 178 0028 0748     		ldr	r0, .L9+8
+ 179 002a FFF7FEFF 		bl	AX_Ping
+ 180 002e 0346     		mov	r3, r0
+ 181 0030 002B     		cmp	r3, #0
+ 182 0032 02D0     		beq	.L8
+ 183              		.loc 1 38 0 is_stmt 0 discriminator 1
+ 184 0034 4FF0FF33 		mov	r3, #-1
+ 185 0038 00E0     		b	.L6
+ 186              	.L8:
+  39:Src/Z_axis.c  ****   return 0;
+ 187              		.loc 1 39 0 is_stmt 1
+ 188 003a 0023     		movs	r3, #0
+ 189              	.L6:
+  40:Src/Z_axis.c  **** }
+ 190              		.loc 1 40 0
+ 191 003c 1846     		mov	r0, r3
+ARM GAS  /tmp/ccgteErE.s 			page 5
+
+
+ 192 003e 80BD     		pop	{r7, pc}
+ 193              	.L10:
+ 194              		.align	2
+ 195              	.L9:
+ 196 0040 00000000 		.word	servo_ar
+ 197 0044 00000000 		.word	servo_g
+ 198 0048 00000000 		.word	servo_d
+ 199              		.cfi_endproc
+ 200              	.LFE696:
+ 202              		.section	.text.Z_Enable_AX,"ax",%progbits
+ 203              		.align	1
+ 204              		.global	Z_Enable_AX
+ 205              		.syntax unified
+ 206              		.thumb
+ 207              		.thumb_func
+ 208              		.fpu fpv4-sp-d16
+ 210              	Z_Enable_AX:
+ 211              	.LFB697:
+  41:Src/Z_axis.c  **** 
+  42:Src/Z_axis.c  **** void Z_Enable_AX(bool enable){
+ 212              		.loc 1 42 0
+ 213              		.cfi_startproc
+ 214              		@ args = 0, pretend = 0, frame = 8
+ 215              		@ frame_needed = 1, uses_anonymous_args = 0
+ 216 0000 80B5     		push	{r7, lr}
+ 217              	.LCFI6:
+ 218              		.cfi_def_cfa_offset 8
+ 219              		.cfi_offset 7, -8
+ 220              		.cfi_offset 14, -4
+ 221 0002 82B0     		sub	sp, sp, #8
+ 222              	.LCFI7:
+ 223              		.cfi_def_cfa_offset 16
+ 224 0004 00AF     		add	r7, sp, #0
+ 225              	.LCFI8:
+ 226              		.cfi_def_cfa_register 7
+ 227 0006 0346     		mov	r3, r0
+ 228 0008 FB71     		strb	r3, [r7, #7]
+  43:Src/Z_axis.c  ****   if(enable){
+ 229              		.loc 1 43 0
+ 230 000a FB79     		ldrb	r3, [r7, #7]	@ zero_extendqisi2
+ 231 000c 002B     		cmp	r3, #0
+ 232 000e 0CD0     		beq	.L12
+  44:Src/Z_axis.c  ****     AX_Power_On(&servo_ar, AX_NOW);
+ 233              		.loc 1 44 0
+ 234 0010 0121     		movs	r1, #1
+ 235 0012 0E48     		ldr	r0, .L15
+ 236 0014 FFF7FEFF 		bl	AX_Power_On
+  45:Src/Z_axis.c  ****     AX_Power_On(&servo_g, AX_NOW);
+ 237              		.loc 1 45 0
+ 238 0018 0121     		movs	r1, #1
+ 239 001a 0D48     		ldr	r0, .L15+4
+ 240 001c FFF7FEFF 		bl	AX_Power_On
+  46:Src/Z_axis.c  ****     AX_Power_On(&servo_d, AX_NOW);
+ 241              		.loc 1 46 0
+ 242 0020 0121     		movs	r1, #1
+ 243 0022 0C48     		ldr	r0, .L15+8
+ 244 0024 FFF7FEFF 		bl	AX_Power_On
+ARM GAS  /tmp/ccgteErE.s 			page 6
+
+
+  47:Src/Z_axis.c  ****   }else{
+  48:Src/Z_axis.c  ****     AX_Power_Off(&servo_ar, AX_NOW);
+  49:Src/Z_axis.c  ****     AX_Power_Off(&servo_g, AX_NOW);
+  50:Src/Z_axis.c  ****     AX_Power_Off(&servo_d, AX_NOW);
+  51:Src/Z_axis.c  ****   }
+  52:Src/Z_axis.c  **** }
+ 245              		.loc 1 52 0
+ 246 0028 0BE0     		b	.L14
+ 247              	.L12:
+  48:Src/Z_axis.c  ****     AX_Power_Off(&servo_g, AX_NOW);
+ 248              		.loc 1 48 0
+ 249 002a 0121     		movs	r1, #1
+ 250 002c 0748     		ldr	r0, .L15
+ 251 002e FFF7FEFF 		bl	AX_Power_Off
+  49:Src/Z_axis.c  ****     AX_Power_Off(&servo_d, AX_NOW);
+ 252              		.loc 1 49 0
+ 253 0032 0121     		movs	r1, #1
+ 254 0034 0648     		ldr	r0, .L15+4
+ 255 0036 FFF7FEFF 		bl	AX_Power_Off
+  50:Src/Z_axis.c  ****   }
+ 256              		.loc 1 50 0
+ 257 003a 0121     		movs	r1, #1
+ 258 003c 0548     		ldr	r0, .L15+8
+ 259 003e FFF7FEFF 		bl	AX_Power_Off
+ 260              	.L14:
+ 261              		.loc 1 52 0
+ 262 0042 00BF     		nop
+ 263 0044 0837     		adds	r7, r7, #8
+ 264              	.LCFI9:
+ 265              		.cfi_def_cfa_offset 8
+ 266 0046 BD46     		mov	sp, r7
+ 267              	.LCFI10:
+ 268              		.cfi_def_cfa_register 13
+ 269              		@ sp needed
+ 270 0048 80BD     		pop	{r7, pc}
+ 271              	.L16:
+ 272 004a 00BF     		.align	2
+ 273              	.L15:
+ 274 004c 00000000 		.word	servo_ar
+ 275 0050 00000000 		.word	servo_g
+ 276 0054 00000000 		.word	servo_d
+ 277              		.cfi_endproc
+ 278              	.LFE697:
+ 280              		.section	.text.Z_Open,"ax",%progbits
+ 281              		.align	1
+ 282              		.global	Z_Open
+ 283              		.syntax unified
+ 284              		.thumb
+ 285              		.thumb_func
+ 286              		.fpu fpv4-sp-d16
+ 288              	Z_Open:
+ 289              	.LFB698:
+  53:Src/Z_axis.c  **** 
+  54:Src/Z_axis.c  **** void Z_Open(){
+ 290              		.loc 1 54 0
+ 291              		.cfi_startproc
+ 292              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccgteErE.s 			page 7
+
+
+ 293              		@ frame_needed = 1, uses_anonymous_args = 0
+ 294 0000 80B5     		push	{r7, lr}
+ 295              	.LCFI11:
+ 296              		.cfi_def_cfa_offset 8
+ 297              		.cfi_offset 7, -8
+ 298              		.cfi_offset 14, -4
+ 299 0002 00AF     		add	r7, sp, #0
+ 300              	.LCFI12:
+ 301              		.cfi_def_cfa_register 7
+  55:Src/Z_axis.c  ****   AX_Set_Goal_Position(&servo_g, AX_LEFT_OPEN, AX_NOW);
+ 302              		.loc 1 55 0
+ 303 0004 0122     		movs	r2, #1
+ 304 0006 4FF4D771 		mov	r1, #430
+ 305 000a 0548     		ldr	r0, .L18
+ 306 000c FFF7FEFF 		bl	AX_Set_Goal_Position
+  56:Src/Z_axis.c  ****   AX_Set_Goal_Position(&servo_d, AX_RIGHT_OPEN, AX_NOW);
+ 307              		.loc 1 56 0
+ 308 0010 0122     		movs	r2, #1
+ 309 0012 40F24E21 		movw	r1, #590
+ 310 0016 0348     		ldr	r0, .L18+4
+ 311 0018 FFF7FEFF 		bl	AX_Set_Goal_Position
+  57:Src/Z_axis.c  **** }
+ 312              		.loc 1 57 0
+ 313 001c 00BF     		nop
+ 314 001e 80BD     		pop	{r7, pc}
+ 315              	.L19:
+ 316              		.align	2
+ 317              	.L18:
+ 318 0020 00000000 		.word	servo_g
+ 319 0024 00000000 		.word	servo_d
+ 320              		.cfi_endproc
+ 321              	.LFE698:
+ 323              		.section	.text.Z_Open_Small,"ax",%progbits
+ 324              		.align	1
+ 325              		.global	Z_Open_Small
+ 326              		.syntax unified
+ 327              		.thumb
+ 328              		.thumb_func
+ 329              		.fpu fpv4-sp-d16
+ 331              	Z_Open_Small:
+ 332              	.LFB699:
+  58:Src/Z_axis.c  **** 
+  59:Src/Z_axis.c  **** void Z_Open_Small(){
+ 333              		.loc 1 59 0
+ 334              		.cfi_startproc
+ 335              		@ args = 0, pretend = 0, frame = 0
+ 336              		@ frame_needed = 1, uses_anonymous_args = 0
+ 337 0000 80B5     		push	{r7, lr}
+ 338              	.LCFI13:
+ 339              		.cfi_def_cfa_offset 8
+ 340              		.cfi_offset 7, -8
+ 341              		.cfi_offset 14, -4
+ 342 0002 00AF     		add	r7, sp, #0
+ 343              	.LCFI14:
+ 344              		.cfi_def_cfa_register 7
+  60:Src/Z_axis.c  ****   AX_Set_Goal_Position(&servo_g, AX_LEFT_OPEN_SMALL, AX_NOW);
+ 345              		.loc 1 60 0
+ARM GAS  /tmp/ccgteErE.s 			page 8
+
+
+ 346 0004 0122     		movs	r2, #1
+ 347 0006 4FF4FA71 		mov	r1, #500
+ 348 000a 0548     		ldr	r0, .L21
+ 349 000c FFF7FEFF 		bl	AX_Set_Goal_Position
+  61:Src/Z_axis.c  ****   AX_Set_Goal_Position(&servo_d, AX_RIGHT_OPEN_SMALL, AX_NOW);
+ 350              		.loc 1 61 0
+ 351 0010 0122     		movs	r2, #1
+ 352 0012 4FF40271 		mov	r1, #520
+ 353 0016 0348     		ldr	r0, .L21+4
+ 354 0018 FFF7FEFF 		bl	AX_Set_Goal_Position
+  62:Src/Z_axis.c  **** }
+ 355              		.loc 1 62 0
+ 356 001c 00BF     		nop
+ 357 001e 80BD     		pop	{r7, pc}
+ 358              	.L22:
+ 359              		.align	2
+ 360              	.L21:
+ 361 0020 00000000 		.word	servo_g
+ 362 0024 00000000 		.word	servo_d
+ 363              		.cfi_endproc
+ 364              	.LFE699:
+ 366              		.section	.text.Z_Close,"ax",%progbits
+ 367              		.align	1
+ 368              		.global	Z_Close
+ 369              		.syntax unified
+ 370              		.thumb
+ 371              		.thumb_func
+ 372              		.fpu fpv4-sp-d16
+ 374              	Z_Close:
+ 375              	.LFB700:
+  63:Src/Z_axis.c  **** 
+  64:Src/Z_axis.c  **** void Z_Close(){
+ 376              		.loc 1 64 0
+ 377              		.cfi_startproc
+ 378              		@ args = 0, pretend = 0, frame = 0
+ 379              		@ frame_needed = 1, uses_anonymous_args = 0
+ 380 0000 80B5     		push	{r7, lr}
+ 381              	.LCFI15:
+ 382              		.cfi_def_cfa_offset 8
+ 383              		.cfi_offset 7, -8
+ 384              		.cfi_offset 14, -4
+ 385 0002 00AF     		add	r7, sp, #0
+ 386              	.LCFI16:
+ 387              		.cfi_def_cfa_register 7
+  65:Src/Z_axis.c  ****   AX_Set_Goal_Position(&servo_g, AX_LEFT_CLOSE, AX_NOW);
+ 388              		.loc 1 65 0
+ 389 0004 0122     		movs	r2, #1
+ 390 0006 4FF40771 		mov	r1, #540
+ 391 000a 0548     		ldr	r0, .L24
+ 392 000c FFF7FEFF 		bl	AX_Set_Goal_Position
+  66:Src/Z_axis.c  ****   AX_Set_Goal_Position(&servo_d, AX_RIGHT_CLOSE, AX_NOW);
+ 393              		.loc 1 66 0
+ 394 0010 0122     		movs	r2, #1
+ 395 0012 4FF4F071 		mov	r1, #480
+ 396 0016 0348     		ldr	r0, .L24+4
+ 397 0018 FFF7FEFF 		bl	AX_Set_Goal_Position
+  67:Src/Z_axis.c  **** }
+ARM GAS  /tmp/ccgteErE.s 			page 9
+
+
+ 398              		.loc 1 67 0
+ 399 001c 00BF     		nop
+ 400 001e 80BD     		pop	{r7, pc}
+ 401              	.L25:
+ 402              		.align	2
+ 403              	.L24:
+ 404 0020 00000000 		.word	servo_g
+ 405 0024 00000000 		.word	servo_d
+ 406              		.cfi_endproc
+ 407              	.LFE700:
+ 409              		.section	.text.Z_Check_AX_Goal,"ax",%progbits
+ 410              		.align	1
+ 411              		.syntax unified
+ 412              		.thumb
+ 413              		.thumb_func
+ 414              		.fpu fpv4-sp-d16
+ 416              	Z_Check_AX_Goal:
+ 417              	.LFB701:
+  68:Src/Z_axis.c  **** 
+  69:Src/Z_axis.c  **** #define AX_GOAL_REACHED(pos, goal) (abs(pos-goal) < AX_EPSILON)
+  70:Src/Z_axis.c  **** 
+  71:Src/Z_axis.c  **** static int Z_Check_AX_Goal(uint16_t goal_left, uint16_t goal_right){
+ 418              		.loc 1 71 0
+ 419              		.cfi_startproc
+ 420              		@ args = 0, pretend = 0, frame = 16
+ 421              		@ frame_needed = 1, uses_anonymous_args = 0
+ 422 0000 80B5     		push	{r7, lr}
+ 423              	.LCFI17:
+ 424              		.cfi_def_cfa_offset 8
+ 425              		.cfi_offset 7, -8
+ 426              		.cfi_offset 14, -4
+ 427 0002 84B0     		sub	sp, sp, #16
+ 428              	.LCFI18:
+ 429              		.cfi_def_cfa_offset 24
+ 430 0004 00AF     		add	r7, sp, #0
+ 431              	.LCFI19:
+ 432              		.cfi_def_cfa_register 7
+ 433 0006 0346     		mov	r3, r0
+ 434 0008 0A46     		mov	r2, r1
+ 435 000a FB80     		strh	r3, [r7, #6]	@ movhi
+ 436 000c 1346     		mov	r3, r2	@ movhi
+ 437 000e BB80     		strh	r3, [r7, #4]	@ movhi
+  72:Src/Z_axis.c  ****   uint16_t pos_g, pos_d;
+  73:Src/Z_axis.c  **** 
+  74:Src/Z_axis.c  ****   if(AX_Get_Current_Position(&servo_g, &pos_g) != 0){
+ 438              		.loc 1 74 0
+ 439 0010 07F10E03 		add	r3, r7, #14
+ 440 0014 1946     		mov	r1, r3
+ 441 0016 1B48     		ldr	r0, .L33
+ 442 0018 FFF7FEFF 		bl	AX_Get_Current_Position
+ 443 001c 0346     		mov	r3, r0
+ 444 001e 002B     		cmp	r3, #0
+ 445 0020 02D0     		beq	.L27
+  75:Src/Z_axis.c  ****     return -1;
+ 446              		.loc 1 75 0
+ 447 0022 4FF0FF33 		mov	r3, #-1
+ 448 0026 28E0     		b	.L32
+ARM GAS  /tmp/ccgteErE.s 			page 10
+
+
+ 449              	.L27:
+  76:Src/Z_axis.c  ****   }
+  77:Src/Z_axis.c  **** 
+  78:Src/Z_axis.c  ****   if(AX_Get_Current_Position(&servo_d, &pos_d) != 0){
+ 450              		.loc 1 78 0
+ 451 0028 07F10C03 		add	r3, r7, #12
+ 452 002c 1946     		mov	r1, r3
+ 453 002e 1648     		ldr	r0, .L33+4
+ 454 0030 FFF7FEFF 		bl	AX_Get_Current_Position
+ 455 0034 0346     		mov	r3, r0
+ 456 0036 002B     		cmp	r3, #0
+ 457 0038 02D0     		beq	.L29
+  79:Src/Z_axis.c  ****     return -1;
+ 458              		.loc 1 79 0
+ 459 003a 4FF0FF33 		mov	r3, #-1
+ 460 003e 1CE0     		b	.L32
+ 461              	.L29:
+  80:Src/Z_axis.c  ****   }
+  81:Src/Z_axis.c  **** 
+  82:Src/Z_axis.c  ****   return AX_GOAL_REACHED(pos_g, goal_left) && AX_GOAL_REACHED(pos_d, goal_right);
+ 462              		.loc 1 82 0
+ 463 0040 FB89     		ldrh	r3, [r7, #14]
+ 464 0042 1A46     		mov	r2, r3
+ 465 0044 FB88     		ldrh	r3, [r7, #6]
+ 466 0046 D31A     		subs	r3, r2, r3
+ 467 0048 13F1090F 		cmn	r3, #9
+ 468 004c 14DB     		blt	.L30
+ 469              		.loc 1 82 0 is_stmt 0 discriminator 1
+ 470 004e FB89     		ldrh	r3, [r7, #14]
+ 471 0050 1A46     		mov	r2, r3
+ 472 0052 FB88     		ldrh	r3, [r7, #6]
+ 473 0054 D31A     		subs	r3, r2, r3
+ 474 0056 092B     		cmp	r3, #9
+ 475 0058 0EDC     		bgt	.L30
+ 476              		.loc 1 82 0 discriminator 3
+ 477 005a BB89     		ldrh	r3, [r7, #12]
+ 478 005c 1A46     		mov	r2, r3
+ 479 005e BB88     		ldrh	r3, [r7, #4]
+ 480 0060 D31A     		subs	r3, r2, r3
+ 481 0062 13F1090F 		cmn	r3, #9
+ 482 0066 07DB     		blt	.L30
+ 483              		.loc 1 82 0 discriminator 5
+ 484 0068 BB89     		ldrh	r3, [r7, #12]
+ 485 006a 1A46     		mov	r2, r3
+ 486 006c BB88     		ldrh	r3, [r7, #4]
+ 487 006e D31A     		subs	r3, r2, r3
+ 488 0070 092B     		cmp	r3, #9
+ 489 0072 01DC     		bgt	.L30
+ 490              		.loc 1 82 0 discriminator 7
+ 491 0074 0123     		movs	r3, #1
+ 492 0076 00E0     		b	.L32
+ 493              	.L30:
+ 494              		.loc 1 82 0 discriminator 8
+ 495 0078 0023     		movs	r3, #0
+ 496              	.L32:
+  83:Src/Z_axis.c  **** }
+ 497              		.loc 1 83 0 is_stmt 1 discriminator 1
+ARM GAS  /tmp/ccgteErE.s 			page 11
+
+
+ 498 007a 1846     		mov	r0, r3
+ 499 007c 1037     		adds	r7, r7, #16
+ 500              	.LCFI20:
+ 501              		.cfi_def_cfa_offset 8
+ 502 007e BD46     		mov	sp, r7
+ 503              	.LCFI21:
+ 504              		.cfi_def_cfa_register 13
+ 505              		@ sp needed
+ 506 0080 80BD     		pop	{r7, pc}
+ 507              	.L34:
+ 508 0082 00BF     		.align	2
+ 509              	.L33:
+ 510 0084 00000000 		.word	servo_g
+ 511 0088 00000000 		.word	servo_d
+ 512              		.cfi_endproc
+ 513              	.LFE701:
+ 515              		.section	.text.Z_Is_Open,"ax",%progbits
+ 516              		.align	1
+ 517              		.global	Z_Is_Open
+ 518              		.syntax unified
+ 519              		.thumb
+ 520              		.thumb_func
+ 521              		.fpu fpv4-sp-d16
+ 523              	Z_Is_Open:
+ 524              	.LFB702:
+  84:Src/Z_axis.c  **** 
+  85:Src/Z_axis.c  **** inline int Z_Is_Open(){
+ 525              		.loc 1 85 0
+ 526              		.cfi_startproc
+ 527              		@ args = 0, pretend = 0, frame = 0
+ 528              		@ frame_needed = 1, uses_anonymous_args = 0
+ 529 0000 80B5     		push	{r7, lr}
+ 530              	.LCFI22:
+ 531              		.cfi_def_cfa_offset 8
+ 532              		.cfi_offset 7, -8
+ 533              		.cfi_offset 14, -4
+ 534 0002 00AF     		add	r7, sp, #0
+ 535              	.LCFI23:
+ 536              		.cfi_def_cfa_register 7
+  86:Src/Z_axis.c  ****   return Z_Check_AX_Goal(AX_LEFT_OPEN, AX_RIGHT_OPEN);
+ 537              		.loc 1 86 0
+ 538 0004 40F24E21 		movw	r1, #590
+ 539 0008 4FF4D770 		mov	r0, #430
+ 540 000c FFF7FEFF 		bl	Z_Check_AX_Goal
+ 541 0010 0346     		mov	r3, r0
+  87:Src/Z_axis.c  **** }
+ 542              		.loc 1 87 0
+ 543 0012 1846     		mov	r0, r3
+ 544 0014 80BD     		pop	{r7, pc}
+ 545              		.cfi_endproc
+ 546              	.LFE702:
+ 548              		.section	.text.Z_Is_Open_Small,"ax",%progbits
+ 549              		.align	1
+ 550              		.global	Z_Is_Open_Small
+ 551              		.syntax unified
+ 552              		.thumb
+ 553              		.thumb_func
+ARM GAS  /tmp/ccgteErE.s 			page 12
+
+
+ 554              		.fpu fpv4-sp-d16
+ 556              	Z_Is_Open_Small:
+ 557              	.LFB703:
+  88:Src/Z_axis.c  **** 
+  89:Src/Z_axis.c  **** inline int Z_Is_Open_Small(){
+ 558              		.loc 1 89 0
+ 559              		.cfi_startproc
+ 560              		@ args = 0, pretend = 0, frame = 0
+ 561              		@ frame_needed = 1, uses_anonymous_args = 0
+ 562 0000 80B5     		push	{r7, lr}
+ 563              	.LCFI24:
+ 564              		.cfi_def_cfa_offset 8
+ 565              		.cfi_offset 7, -8
+ 566              		.cfi_offset 14, -4
+ 567 0002 00AF     		add	r7, sp, #0
+ 568              	.LCFI25:
+ 569              		.cfi_def_cfa_register 7
+  90:Src/Z_axis.c  ****   return Z_Check_AX_Goal(AX_LEFT_OPEN_SMALL, AX_RIGHT_OPEN_SMALL);
+ 570              		.loc 1 90 0
+ 571 0004 4FF40271 		mov	r1, #520
+ 572 0008 4FF4FA70 		mov	r0, #500
+ 573 000c FFF7FEFF 		bl	Z_Check_AX_Goal
+ 574 0010 0346     		mov	r3, r0
+  91:Src/Z_axis.c  **** }
+ 575              		.loc 1 91 0
+ 576 0012 1846     		mov	r0, r3
+ 577 0014 80BD     		pop	{r7, pc}
+ 578              		.cfi_endproc
+ 579              	.LFE703:
+ 581              		.section	.text.Z_Is_Closed,"ax",%progbits
+ 582              		.align	1
+ 583              		.global	Z_Is_Closed
+ 584              		.syntax unified
+ 585              		.thumb
+ 586              		.thumb_func
+ 587              		.fpu fpv4-sp-d16
+ 589              	Z_Is_Closed:
+ 590              	.LFB704:
+  92:Src/Z_axis.c  **** 
+  93:Src/Z_axis.c  **** inline int Z_Is_Closed(){
+ 591              		.loc 1 93 0
+ 592              		.cfi_startproc
+ 593              		@ args = 0, pretend = 0, frame = 0
+ 594              		@ frame_needed = 1, uses_anonymous_args = 0
+ 595 0000 80B5     		push	{r7, lr}
+ 596              	.LCFI26:
+ 597              		.cfi_def_cfa_offset 8
+ 598              		.cfi_offset 7, -8
+ 599              		.cfi_offset 14, -4
+ 600 0002 00AF     		add	r7, sp, #0
+ 601              	.LCFI27:
+ 602              		.cfi_def_cfa_register 7
+  94:Src/Z_axis.c  ****   return Z_Check_AX_Goal(AX_LEFT_CLOSE, AX_RIGHT_CLOSE);
+ 603              		.loc 1 94 0
+ 604 0004 4FF4F071 		mov	r1, #480
+ 605 0008 4FF40770 		mov	r0, #540
+ 606 000c FFF7FEFF 		bl	Z_Check_AX_Goal
+ARM GAS  /tmp/ccgteErE.s 			page 13
+
+
+ 607 0010 0346     		mov	r3, r0
+  95:Src/Z_axis.c  **** }
+ 608              		.loc 1 95 0
+ 609 0012 1846     		mov	r0, r3
+ 610 0014 80BD     		pop	{r7, pc}
+ 611              		.cfi_endproc
+ 612              	.LFE704:
+ 614              		.section	.text.Z_Is_Closed_Cube,"ax",%progbits
+ 615              		.align	1
+ 616              		.global	Z_Is_Closed_Cube
+ 617              		.syntax unified
+ 618              		.thumb
+ 619              		.thumb_func
+ 620              		.fpu fpv4-sp-d16
+ 622              	Z_Is_Closed_Cube:
+ 623              	.LFB705:
+  96:Src/Z_axis.c  **** 
+  97:Src/Z_axis.c  **** inline int Z_Is_Closed_Cube(){
+ 624              		.loc 1 97 0
+ 625              		.cfi_startproc
+ 626              		@ args = 0, pretend = 0, frame = 0
+ 627              		@ frame_needed = 1, uses_anonymous_args = 0
+ 628 0000 80B5     		push	{r7, lr}
+ 629              	.LCFI28:
+ 630              		.cfi_def_cfa_offset 8
+ 631              		.cfi_offset 7, -8
+ 632              		.cfi_offset 14, -4
+ 633 0002 00AF     		add	r7, sp, #0
+ 634              	.LCFI29:
+ 635              		.cfi_def_cfa_register 7
+  98:Src/Z_axis.c  ****   return Z_Check_AX_Goal(AX_LEFT_CLOSE-20, AX_RIGHT_CLOSE+20);
+ 636              		.loc 1 98 0
+ 637 0004 4FF4FA71 		mov	r1, #500
+ 638 0008 4FF40270 		mov	r0, #520
+ 639 000c FFF7FEFF 		bl	Z_Check_AX_Goal
+ 640 0010 0346     		mov	r3, r0
+  99:Src/Z_axis.c  **** }
+ 641              		.loc 1 99 0
+ 642 0012 1846     		mov	r0, r3
+ 643 0014 80BD     		pop	{r7, pc}
+ 644              		.cfi_endproc
+ 645              	.LFE705:
+ 647              		.section	.text.Z_Set_Goal,"ax",%progbits
+ 648              		.align	1
+ 649              		.global	Z_Set_Goal
+ 650              		.syntax unified
+ 651              		.thumb
+ 652              		.thumb_func
+ 653              		.fpu fpv4-sp-d16
+ 655              	Z_Set_Goal:
+ 656              	.LFB706:
+ 100:Src/Z_axis.c  **** 
+ 101:Src/Z_axis.c  **** void Z_Set_Goal(int goal){
+ 657              		.loc 1 101 0
+ 658              		.cfi_startproc
+ 659              		@ args = 0, pretend = 0, frame = 8
+ 660              		@ frame_needed = 1, uses_anonymous_args = 0
+ARM GAS  /tmp/ccgteErE.s 			page 14
+
+
+ 661              		@ link register save eliminated.
+ 662 0000 80B4     		push	{r7}
+ 663              	.LCFI30:
+ 664              		.cfi_def_cfa_offset 4
+ 665              		.cfi_offset 7, -4
+ 666 0002 83B0     		sub	sp, sp, #12
+ 667              	.LCFI31:
+ 668              		.cfi_def_cfa_offset 16
+ 669 0004 00AF     		add	r7, sp, #0
+ 670              	.LCFI32:
+ 671              		.cfi_def_cfa_register 7
+ 672 0006 7860     		str	r0, [r7, #4]
+ 102:Src/Z_axis.c  ****   imp_goal = goal;
+ 673              		.loc 1 102 0
+ 674 0008 044A     		ldr	r2, .L44
+ 675 000a 7B68     		ldr	r3, [r7, #4]
+ 676 000c 1360     		str	r3, [r2]
+ 103:Src/Z_axis.c  **** }
+ 677              		.loc 1 103 0
+ 678 000e 00BF     		nop
+ 679 0010 0C37     		adds	r7, r7, #12
+ 680              	.LCFI33:
+ 681              		.cfi_def_cfa_offset 4
+ 682 0012 BD46     		mov	sp, r7
+ 683              	.LCFI34:
+ 684              		.cfi_def_cfa_register 13
+ 685              		@ sp needed
+ 686 0014 5DF8047B 		ldr	r7, [sp], #4
+ 687              	.LCFI35:
+ 688              		.cfi_restore 7
+ 689              		.cfi_def_cfa_offset 0
+ 690 0018 7047     		bx	lr
+ 691              	.L45:
+ 692 001a 00BF     		.align	2
+ 693              	.L44:
+ 694 001c 00000000 		.word	imp_goal
+ 695              		.cfi_endproc
+ 696              	.LFE706:
+ 698              		.section	.text.Z_Goal_Reached,"ax",%progbits
+ 699              		.align	1
+ 700              		.global	Z_Goal_Reached
+ 701              		.syntax unified
+ 702              		.thumb
+ 703              		.thumb_func
+ 704              		.fpu fpv4-sp-d16
+ 706              	Z_Goal_Reached:
+ 707              	.LFB707:
+ 104:Src/Z_axis.c  **** 
+ 105:Src/Z_axis.c  **** inline int Z_Goal_Reached(){
+ 708              		.loc 1 105 0
+ 709              		.cfi_startproc
+ 710              		@ args = 0, pretend = 0, frame = 0
+ 711              		@ frame_needed = 1, uses_anonymous_args = 0
+ 712 0000 80B5     		push	{r7, lr}
+ 713              	.LCFI36:
+ 714              		.cfi_def_cfa_offset 8
+ 715              		.cfi_offset 7, -8
+ARM GAS  /tmp/ccgteErE.s 			page 15
+
+
+ 716              		.cfi_offset 14, -4
+ 717 0002 00AF     		add	r7, sp, #0
+ 718              	.LCFI37:
+ 719              		.cfi_def_cfa_register 7
+ 106:Src/Z_axis.c  ****   return reached(&pid_z, imp_goal-encoder.steps);
+ 720              		.loc 1 106 0
+ 721 0004 054B     		ldr	r3, .L48
+ 722 0006 1A68     		ldr	r2, [r3]
+ 723 0008 054B     		ldr	r3, .L48+4
+ 724 000a 5B68     		ldr	r3, [r3, #4]
+ 725 000c D31A     		subs	r3, r2, r3
+ 726 000e 1946     		mov	r1, r3
+ 727 0010 0448     		ldr	r0, .L48+8
+ 728 0012 FFF7FEFF 		bl	reached
+ 729 0016 0346     		mov	r3, r0
+ 107:Src/Z_axis.c  **** }
+ 730              		.loc 1 107 0
+ 731 0018 1846     		mov	r0, r3
+ 732 001a 80BD     		pop	{r7, pc}
+ 733              	.L49:
+ 734              		.align	2
+ 735              	.L48:
+ 736 001c 00000000 		.word	imp_goal
+ 737 0020 00000000 		.word	encoder
+ 738 0024 00000000 		.word	pid_z
+ 739              		.cfi_endproc
+ 740              	.LFE707:
+ 742              		.section	.text.ramp_generator,"ax",%progbits
+ 743              		.align	1
+ 744              		.global	ramp_generator
+ 745              		.syntax unified
+ 746              		.thumb
+ 747              		.thumb_func
+ 748              		.fpu fpv4-sp-d16
+ 750              	ramp_generator:
+ 751              	.LFB708:
+ 108:Src/Z_axis.c  **** 
+ 109:Src/Z_axis.c  **** int ramp_generator(int goal, int start, int *nactual,int ntime)
+ 110:Src/Z_axis.c  **** {
+ 752              		.loc 1 110 0
+ 753              		.cfi_startproc
+ 754              		@ args = 0, pretend = 0, frame = 16
+ 755              		@ frame_needed = 1, uses_anonymous_args = 0
+ 756              		@ link register save eliminated.
+ 757 0000 80B4     		push	{r7}
+ 758              	.LCFI38:
+ 759              		.cfi_def_cfa_offset 4
+ 760              		.cfi_offset 7, -4
+ 761 0002 85B0     		sub	sp, sp, #20
+ 762              	.LCFI39:
+ 763              		.cfi_def_cfa_offset 24
+ 764 0004 00AF     		add	r7, sp, #0
+ 765              	.LCFI40:
+ 766              		.cfi_def_cfa_register 7
+ 767 0006 F860     		str	r0, [r7, #12]
+ 768 0008 B960     		str	r1, [r7, #8]
+ 769 000a 7A60     		str	r2, [r7, #4]
+ARM GAS  /tmp/ccgteErE.s 			page 16
+
+
+ 770 000c 3B60     		str	r3, [r7]
+ 111:Src/Z_axis.c  ****   if(*nactual<ntime)
+ 771              		.loc 1 111 0
+ 772 000e 7B68     		ldr	r3, [r7, #4]
+ 773 0010 1B68     		ldr	r3, [r3]
+ 774 0012 3A68     		ldr	r2, [r7]
+ 775 0014 9A42     		cmp	r2, r3
+ 776 0016 04DD     		ble	.L51
+ 112:Src/Z_axis.c  ****   {
+ 113:Src/Z_axis.c  ****     (*nactual)++;
+ 777              		.loc 1 113 0
+ 778 0018 7B68     		ldr	r3, [r7, #4]
+ 779 001a 1B68     		ldr	r3, [r3]
+ 780 001c 5A1C     		adds	r2, r3, #1
+ 781 001e 7B68     		ldr	r3, [r7, #4]
+ 782 0020 1A60     		str	r2, [r3]
+ 783              	.L51:
+ 114:Src/Z_axis.c  ****   }
+ 115:Src/Z_axis.c  ****   return start+((float)(*nactual)/ntime)*(goal-start);
+ 784              		.loc 1 115 0
+ 785 0022 BB68     		ldr	r3, [r7, #8]
+ 786 0024 07EE903A 		vmov	s15, r3	@ int
+ 787 0028 B8EEE77A 		vcvt.f32.s32	s14, s15
+ 788 002c 7B68     		ldr	r3, [r7, #4]
+ 789 002e 1B68     		ldr	r3, [r3]
+ 790 0030 07EE903A 		vmov	s15, r3	@ int
+ 791 0034 B8EEE76A 		vcvt.f32.s32	s12, s15
+ 792 0038 3B68     		ldr	r3, [r7]
+ 793 003a 07EE903A 		vmov	s15, r3	@ int
+ 794 003e F8EEE77A 		vcvt.f32.s32	s15, s15
+ 795 0042 C6EE276A 		vdiv.f32	s13, s12, s15
+ 796 0046 FA68     		ldr	r2, [r7, #12]
+ 797 0048 BB68     		ldr	r3, [r7, #8]
+ 798 004a D31A     		subs	r3, r2, r3
+ 799 004c 07EE903A 		vmov	s15, r3	@ int
+ 800 0050 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 801 0054 66EEA77A 		vmul.f32	s15, s13, s15
+ 802 0058 77EE277A 		vadd.f32	s15, s14, s15
+ 803 005c FDEEE77A 		vcvt.s32.f32	s15, s15
+ 804 0060 17EE903A 		vmov	r3, s15	@ int
+ 116:Src/Z_axis.c  **** }
+ 805              		.loc 1 116 0
+ 806 0064 1846     		mov	r0, r3
+ 807 0066 1437     		adds	r7, r7, #20
+ 808              	.LCFI41:
+ 809              		.cfi_def_cfa_offset 4
+ 810 0068 BD46     		mov	sp, r7
+ 811              	.LCFI42:
+ 812              		.cfi_def_cfa_register 13
+ 813              		@ sp needed
+ 814 006a 5DF8047B 		ldr	r7, [sp], #4
+ 815              	.LCFI43:
+ 816              		.cfi_restore 7
+ 817              		.cfi_def_cfa_offset 0
+ 818 006e 7047     		bx	lr
+ 819              		.cfi_endproc
+ 820              	.LFE708:
+ARM GAS  /tmp/ccgteErE.s 			page 17
+
+
+ 822              		.text
+ 823              	.Letext0:
+ 824              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 825              		.file 3 "/usr/arm-none-eabi/include/sys/lock.h"
+ 826              		.file 4 "/usr/arm-none-eabi/include/sys/_types.h"
+ 827              		.file 5 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 828              		.file 6 "/usr/arm-none-eabi/include/sys/reent.h"
+ 829              		.file 7 "/usr/arm-none-eabi/include/stdlib.h"
+ 830              		.file 8 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 831              		.file 9 "Drivers/CMSIS/Include/core_cm4.h"
+ 832              		.file 10 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 833              		.file 11 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 834              		.file 12 "Inc/ax_12a.h"
+ 835              		.file 13 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h"
+ 836              		.file 14 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma.h"
+ 837              		.file 15 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h"
+ 838              		.file 16 "Inc/Robotronik_corp_pid.h"
+ 839              		.file 17 "Inc/fsm_master.h"
+ 840              		.file 18 "Inc/encoder.h"
+ 841              		.file 19 "Inc/fsm_stack.h"
+ 842              		.file 20 "Inc/fsm_arm.h"
+ 843              		.file 21 "Inc/fsm_unstack.h"
+ 844              		.file 22 "Inc/fsm_place.h"
+ 845              		.file 23 "Inc/Z_axis.h"
+ 846              		.file 24 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ARM GAS  /tmp/ccgteErE.s 			page 18
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 Z_axis.c
+     /tmp/ccgteErE.s:18     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 $d
+     /tmp/ccgteErE.s:21     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 CHANNEL_OFFSET_TAB
+                            *COM*:0000000000000004 fsm
+                            *COM*:0000000000000010 encoder
+     /tmp/ccgteErE.s:32     .bss.ax_iface:0000000000000000 $d
+     /tmp/ccgteErE.s:35     .bss.ax_iface:0000000000000000 ax_iface
+                            *COM*:0000000000000008 servo_ar
+                            *COM*:0000000000000008 servo_g
+                            *COM*:0000000000000008 servo_d
+                            *COM*:0000000000000004 imp_goal
+                            *COM*:0000000000000020 pid_z
+                            *COM*:0000000000000004 err
+                            *COM*:000000000000001c fsm_stack
+                            *COM*:000000000000000c fsm_arm
+                            *COM*:0000000000000014 fsm_unstack
+                            *COM*:000000000000000c fsm_place
+     /tmp/ccgteErE.s:48     .text.Z_Init_AX:0000000000000000 $t
+     /tmp/ccgteErE.s:55     .text.Z_Init_AX:0000000000000000 Z_Init_AX
+     /tmp/ccgteErE.s:124    .text.Z_Init_AX:000000000000004c $d
+     /tmp/ccgteErE.s:136    .text.Z_Check_AX:0000000000000000 $t
+     /tmp/ccgteErE.s:143    .text.Z_Check_AX:0000000000000000 Z_Check_AX
+     /tmp/ccgteErE.s:196    .text.Z_Check_AX:0000000000000040 $d
+     /tmp/ccgteErE.s:203    .text.Z_Enable_AX:0000000000000000 $t
+     /tmp/ccgteErE.s:210    .text.Z_Enable_AX:0000000000000000 Z_Enable_AX
+     /tmp/ccgteErE.s:274    .text.Z_Enable_AX:000000000000004c $d
+     /tmp/ccgteErE.s:281    .text.Z_Open:0000000000000000 $t
+     /tmp/ccgteErE.s:288    .text.Z_Open:0000000000000000 Z_Open
+     /tmp/ccgteErE.s:318    .text.Z_Open:0000000000000020 $d
+     /tmp/ccgteErE.s:324    .text.Z_Open_Small:0000000000000000 $t
+     /tmp/ccgteErE.s:331    .text.Z_Open_Small:0000000000000000 Z_Open_Small
+     /tmp/ccgteErE.s:361    .text.Z_Open_Small:0000000000000020 $d
+     /tmp/ccgteErE.s:367    .text.Z_Close:0000000000000000 $t
+     /tmp/ccgteErE.s:374    .text.Z_Close:0000000000000000 Z_Close
+     /tmp/ccgteErE.s:404    .text.Z_Close:0000000000000020 $d
+     /tmp/ccgteErE.s:410    .text.Z_Check_AX_Goal:0000000000000000 $t
+     /tmp/ccgteErE.s:416    .text.Z_Check_AX_Goal:0000000000000000 Z_Check_AX_Goal
+     /tmp/ccgteErE.s:510    .text.Z_Check_AX_Goal:0000000000000084 $d
+     /tmp/ccgteErE.s:516    .text.Z_Is_Open:0000000000000000 $t
+     /tmp/ccgteErE.s:523    .text.Z_Is_Open:0000000000000000 Z_Is_Open
+     /tmp/ccgteErE.s:549    .text.Z_Is_Open_Small:0000000000000000 $t
+     /tmp/ccgteErE.s:556    .text.Z_Is_Open_Small:0000000000000000 Z_Is_Open_Small
+     /tmp/ccgteErE.s:582    .text.Z_Is_Closed:0000000000000000 $t
+     /tmp/ccgteErE.s:589    .text.Z_Is_Closed:0000000000000000 Z_Is_Closed
+     /tmp/ccgteErE.s:615    .text.Z_Is_Closed_Cube:0000000000000000 $t
+     /tmp/ccgteErE.s:622    .text.Z_Is_Closed_Cube:0000000000000000 Z_Is_Closed_Cube
+     /tmp/ccgteErE.s:648    .text.Z_Set_Goal:0000000000000000 $t
+     /tmp/ccgteErE.s:655    .text.Z_Set_Goal:0000000000000000 Z_Set_Goal
+     /tmp/ccgteErE.s:694    .text.Z_Set_Goal:000000000000001c $d
+     /tmp/ccgteErE.s:699    .text.Z_Goal_Reached:0000000000000000 $t
+     /tmp/ccgteErE.s:706    .text.Z_Goal_Reached:0000000000000000 Z_Goal_Reached
+     /tmp/ccgteErE.s:736    .text.Z_Goal_Reached:000000000000001c $d
+     /tmp/ccgteErE.s:743    .text.ramp_generator:0000000000000000 $t
+     /tmp/ccgteErE.s:750    .text.ramp_generator:0000000000000000 ramp_generator
+
+UNDEFINED SYMBOLS
+ARM GAS  /tmp/ccgteErE.s 			page 19
+
+
+AX_Receive_HAL
+AX_Send_HAL
+AX_Set_Direction_HAL
+HAL_Delay
+AX_Ping
+AX_Power_On
+AX_Power_Off
+AX_Set_Goal_Position
+AX_Get_Current_Position
+reached

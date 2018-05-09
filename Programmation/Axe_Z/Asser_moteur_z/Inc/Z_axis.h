@@ -112,8 +112,8 @@ int ramp_generator(int goal, int start, int *nactual, int ntime);
 #define NCYCLEBIG 20
 #define NCYCLELITTLE 10
 
-#define PWM_MAX 50//max 255
-#define VOLTAGE_FC 3
+#define PWM_MAX 70//max 255
+#define VOLTAGE_FC 6
 
 int cube_present();
 

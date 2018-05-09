@@ -1,0 +1,923 @@
+ARM GAS  /tmp/cc7sGDdh.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"server.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.rodata.CHANNEL_OFFSET_TAB,"a",%progbits
+  18              		.align	2
+  21              	CHANNEL_OFFSET_TAB:
+  22 0000 08       		.byte	8
+  23 0001 1C       		.byte	28
+  24 0002 30       		.byte	48
+  25 0003 44       		.byte	68
+  26 0004 58       		.byte	88
+  27 0005 6C       		.byte	108
+  28 0006 80       		.byte	-128
+  29              		.comm	fsm,4,4
+  30              		.section	.text.get_state,"ax",%progbits
+  31              		.align	1
+  32              		.global	get_state
+  33              		.syntax unified
+  34              		.thumb
+  35              		.thumb_func
+  36              		.fpu fpv4-sp-d16
+  38              	get_state:
+  39              	.LFB695:
+  40              		.file 1 "Src/server.c"
+   1:Src/server.c  **** #include "server.h"
+   2:Src/server.c  **** 
+   3:Src/server.c  **** extern FSM_Stack fsm_stack;
+   4:Src/server.c  **** extern FSM_Arm fsm_arm;
+   5:Src/server.c  **** extern FSM_Unstack fsm_unstack;
+   6:Src/server.c  **** extern FSM_Place fsm_place;
+   7:Src/server.c  **** 
+   8:Src/server.c  **** void get_state(RC_Server* pserver)
+   9:Src/server.c  **** {
+  41              		.loc 1 9 0
+  42              		.cfi_startproc
+  43              		@ args = 0, pretend = 0, frame = 8
+  44              		@ frame_needed = 1, uses_anonymous_args = 0
+  45 0000 80B5     		push	{r7, lr}
+  46              	.LCFI0:
+  47              		.cfi_def_cfa_offset 8
+  48              		.cfi_offset 7, -8
+  49              		.cfi_offset 14, -4
+  50 0002 82B0     		sub	sp, sp, #8
+  51              	.LCFI1:
+ARM GAS  /tmp/cc7sGDdh.s 			page 2
+
+
+  52              		.cfi_def_cfa_offset 16
+  53 0004 00AF     		add	r7, sp, #0
+  54              	.LCFI2:
+  55              		.cfi_def_cfa_register 7
+  56 0006 7860     		str	r0, [r7, #4]
+  10:Src/server.c  ****   RC_Server_Return(pserver,fsm->status);
+  57              		.loc 1 10 0
+  58 0008 054B     		ldr	r3, .L2
+  59 000a 1B68     		ldr	r3, [r3]
+  60 000c 1B79     		ldrb	r3, [r3, #4]	@ zero_extendqisi2
+  61 000e 1946     		mov	r1, r3
+  62 0010 7868     		ldr	r0, [r7, #4]
+  63 0012 FFF7FEFF 		bl	RC_Server_Return
+  11:Src/server.c  **** }
+  64              		.loc 1 11 0
+  65 0016 00BF     		nop
+  66 0018 0837     		adds	r7, r7, #8
+  67              	.LCFI3:
+  68              		.cfi_def_cfa_offset 8
+  69 001a BD46     		mov	sp, r7
+  70              	.LCFI4:
+  71              		.cfi_def_cfa_register 13
+  72              		@ sp needed
+  73 001c 80BD     		pop	{r7, pc}
+  74              	.L3:
+  75 001e 00BF     		.align	2
+  76              	.L2:
+  77 0020 00000000 		.word	fsm
+  78              		.cfi_endproc
+  79              	.LFE695:
+  81              		.section	.text.reset,"ax",%progbits
+  82              		.align	1
+  83              		.global	reset
+  84              		.syntax unified
+  85              		.thumb
+  86              		.thumb_func
+  87              		.fpu fpv4-sp-d16
+  89              	reset:
+  90              	.LFB696:
+  12:Src/server.c  **** 
+  13:Src/server.c  **** void reset(RC_Server* pserver)
+  14:Src/server.c  **** {
+  91              		.loc 1 14 0
+  92              		.cfi_startproc
+  93              		@ args = 0, pretend = 0, frame = 8
+  94              		@ frame_needed = 1, uses_anonymous_args = 0
+  95 0000 80B5     		push	{r7, lr}
+  96              	.LCFI5:
+  97              		.cfi_def_cfa_offset 8
+  98              		.cfi_offset 7, -8
+  99              		.cfi_offset 14, -4
+ 100 0002 82B0     		sub	sp, sp, #8
+ 101              	.LCFI6:
+ 102              		.cfi_def_cfa_offset 16
+ 103 0004 00AF     		add	r7, sp, #0
+ 104              	.LCFI7:
+ 105              		.cfi_def_cfa_register 7
+ARM GAS  /tmp/cc7sGDdh.s 			page 3
+
+
+ 106 0006 7860     		str	r0, [r7, #4]
+  15:Src/server.c  ****   RC_Server_Return(pserver);
+ 107              		.loc 1 15 0
+ 108 0008 7868     		ldr	r0, [r7, #4]
+ 109 000a FFF7FEFF 		bl	RC_Server_Return
+  16:Src/server.c  ****   HAL_NVIC_SystemReset();
+ 110              		.loc 1 16 0
+ 111 000e FFF7FEFF 		bl	HAL_NVIC_SystemReset
+  17:Src/server.c  **** }
+ 112              		.loc 1 17 0
+ 113 0012 00BF     		nop
+ 114 0014 0837     		adds	r7, r7, #8
+ 115              	.LCFI8:
+ 116              		.cfi_def_cfa_offset 8
+ 117 0016 BD46     		mov	sp, r7
+ 118              	.LCFI9:
+ 119              		.cfi_def_cfa_register 13
+ 120              		@ sp needed
+ 121 0018 80BD     		pop	{r7, pc}
+ 122              		.cfi_endproc
+ 123              	.LFE696:
+ 125              		.section	.text.set_asser,"ax",%progbits
+ 126              		.align	1
+ 127              		.global	set_asser
+ 128              		.syntax unified
+ 129              		.thumb
+ 130              		.thumb_func
+ 131              		.fpu fpv4-sp-d16
+ 133              	set_asser:
+ 134              	.LFB697:
+  18:Src/server.c  **** 
+  19:Src/server.c  **** void set_asser(RC_Server* pserver)
+  20:Src/server.c  **** {
+ 135              		.loc 1 20 0
+ 136              		.cfi_startproc
+ 137              		@ args = 0, pretend = 0, frame = 8
+ 138              		@ frame_needed = 1, uses_anonymous_args = 0
+ 139 0000 80B5     		push	{r7, lr}
+ 140              	.LCFI10:
+ 141              		.cfi_def_cfa_offset 8
+ 142              		.cfi_offset 7, -8
+ 143              		.cfi_offset 14, -4
+ 144 0002 84B0     		sub	sp, sp, #16
+ 145              	.LCFI11:
+ 146              		.cfi_def_cfa_offset 24
+ 147 0004 02AF     		add	r7, sp, #8
+ 148              	.LCFI12:
+ 149              		.cfi_def_cfa 7, 16
+ 150 0006 7860     		str	r0, [r7, #4]
+  21:Src/server.c  ****   RC_Server_Get_Args(pserver,
+ 151              		.loc 1 21 0
+ 152 0008 084B     		ldr	r3, .L6
+ 153 000a 0193     		str	r3, [sp, #4]
+ 154 000c 084B     		ldr	r3, .L6+4
+ 155 000e 0093     		str	r3, [sp]
+ 156 0010 084B     		ldr	r3, .L6+8
+ 157 0012 094A     		ldr	r2, .L6+12
+ARM GAS  /tmp/cc7sGDdh.s 			page 4
+
+
+ 158 0014 0949     		ldr	r1, .L6+16
+ 159 0016 7868     		ldr	r0, [r7, #4]
+ 160 0018 FFF7FEFF 		bl	RC_Server_Get_Args
+  22:Src/server.c  **** 		     &pid_z.Kp,
+  23:Src/server.c  **** 		     &pid_z.Ki,
+  24:Src/server.c  **** 		     &pid_z.Kd,
+  25:Src/server.c  **** 		     &pid_z.position_tolerance,
+  26:Src/server.c  **** 		     &pid_z.speed_tolerance);
+  27:Src/server.c  ****   RC_Server_Return(pserver);
+ 161              		.loc 1 27 0
+ 162 001c 7868     		ldr	r0, [r7, #4]
+ 163 001e FFF7FEFF 		bl	RC_Server_Return
+  28:Src/server.c  **** }
+ 164              		.loc 1 28 0
+ 165 0022 00BF     		nop
+ 166 0024 0837     		adds	r7, r7, #8
+ 167              	.LCFI13:
+ 168              		.cfi_def_cfa_offset 8
+ 169 0026 BD46     		mov	sp, r7
+ 170              	.LCFI14:
+ 171              		.cfi_def_cfa_register 13
+ 172              		@ sp needed
+ 173 0028 80BD     		pop	{r7, pc}
+ 174              	.L7:
+ 175 002a 00BF     		.align	2
+ 176              	.L6:
+ 177 002c 1C000000 		.word	pid_z+28
+ 178 0030 18000000 		.word	pid_z+24
+ 179 0034 08000000 		.word	pid_z+8
+ 180 0038 04000000 		.word	pid_z+4
+ 181 003c 00000000 		.word	pid_z
+ 182              		.cfi_endproc
+ 183              	.LFE697:
+ 185              		.section	.text.balec,"ax",%progbits
+ 186              		.align	1
+ 187              		.global	balec
+ 188              		.syntax unified
+ 189              		.thumb
+ 190              		.thumb_func
+ 191              		.fpu fpv4-sp-d16
+ 193              	balec:
+ 194              	.LFB698:
+  29:Src/server.c  **** 
+  30:Src/server.c  **** void balec(RC_Server* pserver)
+  31:Src/server.c  **** {
+ 195              		.loc 1 31 0
+ 196              		.cfi_startproc
+ 197              		@ args = 0, pretend = 0, frame = 8
+ 198              		@ frame_needed = 1, uses_anonymous_args = 0
+ 199 0000 80B5     		push	{r7, lr}
+ 200              	.LCFI15:
+ 201              		.cfi_def_cfa_offset 8
+ 202              		.cfi_offset 7, -8
+ 203              		.cfi_offset 14, -4
+ 204 0002 82B0     		sub	sp, sp, #8
+ 205              	.LCFI16:
+ 206              		.cfi_def_cfa_offset 16
+ARM GAS  /tmp/cc7sGDdh.s 			page 5
+
+
+ 207 0004 00AF     		add	r7, sp, #0
+ 208              	.LCFI17:
+ 209              		.cfi_def_cfa_register 7
+ 210 0006 7860     		str	r0, [r7, #4]
+  32:Src/server.c  ****   RC_Server_Return(pserver);
+ 211              		.loc 1 32 0
+ 212 0008 7868     		ldr	r0, [r7, #4]
+ 213 000a FFF7FEFF 		bl	RC_Server_Return
+  33:Src/server.c  **** }
+ 214              		.loc 1 33 0
+ 215 000e 00BF     		nop
+ 216 0010 0837     		adds	r7, r7, #8
+ 217              	.LCFI18:
+ 218              		.cfi_def_cfa_offset 8
+ 219 0012 BD46     		mov	sp, r7
+ 220              	.LCFI19:
+ 221              		.cfi_def_cfa_register 13
+ 222              		@ sp needed
+ 223 0014 80BD     		pop	{r7, pc}
+ 224              		.cfi_endproc
+ 225              	.LFE698:
+ 227              		.section	.text.punch_bee,"ax",%progbits
+ 228              		.align	1
+ 229              		.global	punch_bee
+ 230              		.syntax unified
+ 231              		.thumb
+ 232              		.thumb_func
+ 233              		.fpu fpv4-sp-d16
+ 235              	punch_bee:
+ 236              	.LFB699:
+  34:Src/server.c  **** 
+  35:Src/server.c  **** void punch_bee(RC_Server* pserver){
+ 237              		.loc 1 35 0
+ 238              		.cfi_startproc
+ 239              		@ args = 0, pretend = 0, frame = 8
+ 240              		@ frame_needed = 1, uses_anonymous_args = 0
+ 241 0000 80B5     		push	{r7, lr}
+ 242              	.LCFI20:
+ 243              		.cfi_def_cfa_offset 8
+ 244              		.cfi_offset 7, -8
+ 245              		.cfi_offset 14, -4
+ 246 0002 82B0     		sub	sp, sp, #8
+ 247              	.LCFI21:
+ 248              		.cfi_def_cfa_offset 16
+ 249 0004 00AF     		add	r7, sp, #0
+ 250              	.LCFI22:
+ 251              		.cfi_def_cfa_register 7
+ 252 0006 7860     		str	r0, [r7, #4]
+  36:Src/server.c  ****   fsm_arm.instance.run=FSM_ARM_OUT;
+ 253              		.loc 1 36 0
+ 254 0008 064B     		ldr	r3, .L10
+ 255 000a 074A     		ldr	r2, .L10+4
+ 256 000c 1A60     		str	r2, [r3]
+  37:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_arm;
+ 257              		.loc 1 37 0
+ 258 000e 074B     		ldr	r3, .L10+8
+ 259 0010 044A     		ldr	r2, .L10
+ARM GAS  /tmp/cc7sGDdh.s 			page 6
+
+
+ 260 0012 1A60     		str	r2, [r3]
+  38:Src/server.c  ****   RC_Server_Return(pserver);
+ 261              		.loc 1 38 0
+ 262 0014 7868     		ldr	r0, [r7, #4]
+ 263 0016 FFF7FEFF 		bl	RC_Server_Return
+  39:Src/server.c  **** }
+ 264              		.loc 1 39 0
+ 265 001a 00BF     		nop
+ 266 001c 0837     		adds	r7, r7, #8
+ 267              	.LCFI23:
+ 268              		.cfi_def_cfa_offset 8
+ 269 001e BD46     		mov	sp, r7
+ 270              	.LCFI24:
+ 271              		.cfi_def_cfa_register 13
+ 272              		@ sp needed
+ 273 0020 80BD     		pop	{r7, pc}
+ 274              	.L11:
+ 275 0022 00BF     		.align	2
+ 276              	.L10:
+ 277 0024 00000000 		.word	fsm_arm
+ 278 0028 00000000 		.word	FSM_ARM_OUT
+ 279 002c 00000000 		.word	fsm
+ 280              		.cfi_endproc
+ 281              	.LFE699:
+ 283              		.section	.text.arm_in,"ax",%progbits
+ 284              		.align	1
+ 285              		.global	arm_in
+ 286              		.syntax unified
+ 287              		.thumb
+ 288              		.thumb_func
+ 289              		.fpu fpv4-sp-d16
+ 291              	arm_in:
+ 292              	.LFB700:
+  40:Src/server.c  **** 
+  41:Src/server.c  **** void arm_in(RC_Server* pserver)
+  42:Src/server.c  **** {
+ 293              		.loc 1 42 0
+ 294              		.cfi_startproc
+ 295              		@ args = 0, pretend = 0, frame = 8
+ 296              		@ frame_needed = 1, uses_anonymous_args = 0
+ 297 0000 80B5     		push	{r7, lr}
+ 298              	.LCFI25:
+ 299              		.cfi_def_cfa_offset 8
+ 300              		.cfi_offset 7, -8
+ 301              		.cfi_offset 14, -4
+ 302 0002 82B0     		sub	sp, sp, #8
+ 303              	.LCFI26:
+ 304              		.cfi_def_cfa_offset 16
+ 305 0004 00AF     		add	r7, sp, #0
+ 306              	.LCFI27:
+ 307              		.cfi_def_cfa_register 7
+ 308 0006 7860     		str	r0, [r7, #4]
+ 309              	.LBB10:
+ 310              	.LBB11:
+ 311              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+ARM GAS  /tmp/cc7sGDdh.s 			page 7
+
+
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V4.30
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****    All rights reserved.
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****      specific prior written permission.
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****    *
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:Drivers/CMSIS/Include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:Drivers/CMSIS/Include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:Drivers/CMSIS/Include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:Drivers/CMSIS/Include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:Drivers/CMSIS/Include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  47:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+  51:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  53:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  54:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ARM GAS  /tmp/cc7sGDdh.s 			page 8
+
+
+  60:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+  62:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:Drivers/CMSIS/Include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+ 312              		.loc 2 71 0
+ 313              		.syntax unified
+ 314              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 315 0008 72B6     		cpsid i
+ 316              	@ 0 "" 2
+ 317              		.thumb
+ 318              		.syntax unified
+ 319              	.LBE11:
+ 320              	.LBE10:
+  43:Src/server.c  ****   __disable_irq();
+  44:Src/server.c  ****   RC_Server_Return(pserver);
+ 321              		.loc 1 44 0
+ 322 000a 7868     		ldr	r0, [r7, #4]
+ 323 000c FFF7FEFF 		bl	RC_Server_Return
+  45:Src/server.c  ****   AX_Set_Goal_Position(&servo_ar, AX_ARM_START, AX_NOW);
+ 324              		.loc 1 45 0
+ 325 0010 0122     		movs	r2, #1
+ 326 0012 4FF48771 		mov	r1, #270
+ 327 0016 0448     		ldr	r0, .L13
+ 328 0018 FFF7FEFF 		bl	AX_Set_Goal_Position
+ 329              	.LBB12:
+ 330              	.LBB13:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 331              		.loc 2 60 0
+ 332              		.syntax unified
+ 333              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 334 001c 62B6     		cpsie i
+ 335              	@ 0 "" 2
+ 336              		.thumb
+ 337              		.syntax unified
+ 338              	.LBE13:
+ 339              	.LBE12:
+  46:Src/server.c  ****   __enable_irq();
+  47:Src/server.c  **** }
+ 340              		.loc 1 47 0
+ 341 001e 00BF     		nop
+ 342 0020 0837     		adds	r7, r7, #8
+ 343              	.LCFI28:
+ 344              		.cfi_def_cfa_offset 8
+ 345 0022 BD46     		mov	sp, r7
+ 346              	.LCFI29:
+ 347              		.cfi_def_cfa_register 13
+ 348              		@ sp needed
+ 349 0024 80BD     		pop	{r7, pc}
+ 350              	.L14:
+ARM GAS  /tmp/cc7sGDdh.s 			page 9
+
+
+ 351 0026 00BF     		.align	2
+ 352              	.L13:
+ 353 0028 00000000 		.word	servo_ar
+ 354              		.cfi_endproc
+ 355              	.LFE700:
+ 357              		.section	.text.arm_out,"ax",%progbits
+ 358              		.align	1
+ 359              		.global	arm_out
+ 360              		.syntax unified
+ 361              		.thumb
+ 362              		.thumb_func
+ 363              		.fpu fpv4-sp-d16
+ 365              	arm_out:
+ 366              	.LFB701:
+  48:Src/server.c  **** 
+  49:Src/server.c  **** void arm_out(RC_Server* pserver)
+  50:Src/server.c  **** {
+ 367              		.loc 1 50 0
+ 368              		.cfi_startproc
+ 369              		@ args = 0, pretend = 0, frame = 8
+ 370              		@ frame_needed = 1, uses_anonymous_args = 0
+ 371 0000 80B5     		push	{r7, lr}
+ 372              	.LCFI30:
+ 373              		.cfi_def_cfa_offset 8
+ 374              		.cfi_offset 7, -8
+ 375              		.cfi_offset 14, -4
+ 376 0002 82B0     		sub	sp, sp, #8
+ 377              	.LCFI31:
+ 378              		.cfi_def_cfa_offset 16
+ 379 0004 00AF     		add	r7, sp, #0
+ 380              	.LCFI32:
+ 381              		.cfi_def_cfa_register 7
+ 382 0006 7860     		str	r0, [r7, #4]
+ 383              	.LBB14:
+ 384              	.LBB15:
+ 385              		.loc 2 71 0
+ 386              		.syntax unified
+ 387              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 388 0008 72B6     		cpsid i
+ 389              	@ 0 "" 2
+ 390              		.thumb
+ 391              		.syntax unified
+ 392              	.LBE15:
+ 393              	.LBE14:
+  51:Src/server.c  ****   __disable_irq();
+  52:Src/server.c  ****   RC_Server_Return(pserver);
+ 394              		.loc 1 52 0
+ 395 000a 7868     		ldr	r0, [r7, #4]
+ 396 000c FFF7FEFF 		bl	RC_Server_Return
+  53:Src/server.c  ****   AX_Set_Goal_Position(&servo_ar, AX_ARM_DEPLOY, AX_NOW);
+ 397              		.loc 1 53 0
+ 398 0010 0122     		movs	r2, #1
+ 399 0012 40F20D21 		movw	r1, #525
+ 400 0016 0448     		ldr	r0, .L16
+ 401 0018 FFF7FEFF 		bl	AX_Set_Goal_Position
+ 402              	.LBB16:
+ 403              	.LBB17:
+ARM GAS  /tmp/cc7sGDdh.s 			page 10
+
+
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 404              		.loc 2 60 0
+ 405              		.syntax unified
+ 406              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 407 001c 62B6     		cpsie i
+ 408              	@ 0 "" 2
+ 409              		.thumb
+ 410              		.syntax unified
+ 411              	.LBE17:
+ 412              	.LBE16:
+  54:Src/server.c  ****   __enable_irq();
+  55:Src/server.c  **** }
+ 413              		.loc 1 55 0
+ 414 001e 00BF     		nop
+ 415 0020 0837     		adds	r7, r7, #8
+ 416              	.LCFI33:
+ 417              		.cfi_def_cfa_offset 8
+ 418 0022 BD46     		mov	sp, r7
+ 419              	.LCFI34:
+ 420              		.cfi_def_cfa_register 13
+ 421              		@ sp needed
+ 422 0024 80BD     		pop	{r7, pc}
+ 423              	.L17:
+ 424 0026 00BF     		.align	2
+ 425              	.L16:
+ 426 0028 00000000 		.word	servo_ar
+ 427              		.cfi_endproc
+ 428              	.LFE701:
+ 430              		.section	.text.stack,"ax",%progbits
+ 431              		.align	1
+ 432              		.global	stack
+ 433              		.syntax unified
+ 434              		.thumb
+ 435              		.thumb_func
+ 436              		.fpu fpv4-sp-d16
+ 438              	stack:
+ 439              	.LFB702:
+  56:Src/server.c  **** 
+  57:Src/server.c  **** void stack(RC_Server* pserver)
+  58:Src/server.c  **** {
+ 440              		.loc 1 58 0
+ 441              		.cfi_startproc
+ 442              		@ args = 0, pretend = 0, frame = 8
+ 443              		@ frame_needed = 1, uses_anonymous_args = 0
+ 444 0000 80B5     		push	{r7, lr}
+ 445              	.LCFI35:
+ 446              		.cfi_def_cfa_offset 8
+ 447              		.cfi_offset 7, -8
+ 448              		.cfi_offset 14, -4
+ 449 0002 82B0     		sub	sp, sp, #8
+ 450              	.LCFI36:
+ 451              		.cfi_def_cfa_offset 16
+ 452 0004 00AF     		add	r7, sp, #0
+ 453              	.LCFI37:
+ 454              		.cfi_def_cfa_register 7
+ 455 0006 7860     		str	r0, [r7, #4]
+  59:Src/server.c  ****   fsm_stack.instance.run=FSM_Stack_Init;
+ARM GAS  /tmp/cc7sGDdh.s 			page 11
+
+
+ 456              		.loc 1 59 0
+ 457 0008 074B     		ldr	r3, .L19
+ 458 000a 084A     		ldr	r2, .L19+4
+ 459 000c 1A60     		str	r2, [r3]
+  60:Src/server.c  ****   fsm_stack.last=0;
+ 460              		.loc 1 60 0
+ 461 000e 064B     		ldr	r3, .L19
+ 462 0010 0022     		movs	r2, #0
+ 463 0012 9A61     		str	r2, [r3, #24]
+  61:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_stack;
+ 464              		.loc 1 61 0
+ 465 0014 064B     		ldr	r3, .L19+8
+ 466 0016 044A     		ldr	r2, .L19
+ 467 0018 1A60     		str	r2, [r3]
+  62:Src/server.c  ****   RC_Server_Return(pserver);
+ 468              		.loc 1 62 0
+ 469 001a 7868     		ldr	r0, [r7, #4]
+ 470 001c FFF7FEFF 		bl	RC_Server_Return
+  63:Src/server.c  **** }
+ 471              		.loc 1 63 0
+ 472 0020 00BF     		nop
+ 473 0022 0837     		adds	r7, r7, #8
+ 474              	.LCFI38:
+ 475              		.cfi_def_cfa_offset 8
+ 476 0024 BD46     		mov	sp, r7
+ 477              	.LCFI39:
+ 478              		.cfi_def_cfa_register 13
+ 479              		@ sp needed
+ 480 0026 80BD     		pop	{r7, pc}
+ 481              	.L20:
+ 482              		.align	2
+ 483              	.L19:
+ 484 0028 00000000 		.word	fsm_stack
+ 485 002c 00000000 		.word	FSM_Stack_Init
+ 486 0030 00000000 		.word	fsm
+ 487              		.cfi_endproc
+ 488              	.LFE702:
+ 490              		.section	.text.stack_last,"ax",%progbits
+ 491              		.align	1
+ 492              		.global	stack_last
+ 493              		.syntax unified
+ 494              		.thumb
+ 495              		.thumb_func
+ 496              		.fpu fpv4-sp-d16
+ 498              	stack_last:
+ 499              	.LFB703:
+  64:Src/server.c  **** 
+  65:Src/server.c  **** void stack_last(RC_Server* pserver)
+  66:Src/server.c  **** {
+ 500              		.loc 1 66 0
+ 501              		.cfi_startproc
+ 502              		@ args = 0, pretend = 0, frame = 8
+ 503              		@ frame_needed = 1, uses_anonymous_args = 0
+ 504 0000 80B5     		push	{r7, lr}
+ 505              	.LCFI40:
+ 506              		.cfi_def_cfa_offset 8
+ 507              		.cfi_offset 7, -8
+ARM GAS  /tmp/cc7sGDdh.s 			page 12
+
+
+ 508              		.cfi_offset 14, -4
+ 509 0002 82B0     		sub	sp, sp, #8
+ 510              	.LCFI41:
+ 511              		.cfi_def_cfa_offset 16
+ 512 0004 00AF     		add	r7, sp, #0
+ 513              	.LCFI42:
+ 514              		.cfi_def_cfa_register 7
+ 515 0006 7860     		str	r0, [r7, #4]
+  67:Src/server.c  ****   fsm_stack.instance.run=FSM_Stack_Init;
+ 516              		.loc 1 67 0
+ 517 0008 074B     		ldr	r3, .L22
+ 518 000a 084A     		ldr	r2, .L22+4
+ 519 000c 1A60     		str	r2, [r3]
+  68:Src/server.c  ****   fsm_stack.last=1;
+ 520              		.loc 1 68 0
+ 521 000e 064B     		ldr	r3, .L22
+ 522 0010 0122     		movs	r2, #1
+ 523 0012 9A61     		str	r2, [r3, #24]
+  69:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_stack;
+ 524              		.loc 1 69 0
+ 525 0014 064B     		ldr	r3, .L22+8
+ 526 0016 044A     		ldr	r2, .L22
+ 527 0018 1A60     		str	r2, [r3]
+  70:Src/server.c  ****   RC_Server_Return(pserver);
+ 528              		.loc 1 70 0
+ 529 001a 7868     		ldr	r0, [r7, #4]
+ 530 001c FFF7FEFF 		bl	RC_Server_Return
+  71:Src/server.c  **** }
+ 531              		.loc 1 71 0
+ 532 0020 00BF     		nop
+ 533 0022 0837     		adds	r7, r7, #8
+ 534              	.LCFI43:
+ 535              		.cfi_def_cfa_offset 8
+ 536 0024 BD46     		mov	sp, r7
+ 537              	.LCFI44:
+ 538              		.cfi_def_cfa_register 13
+ 539              		@ sp needed
+ 540 0026 80BD     		pop	{r7, pc}
+ 541              	.L23:
+ 542              		.align	2
+ 543              	.L22:
+ 544 0028 00000000 		.word	fsm_stack
+ 545 002c 00000000 		.word	FSM_Stack_Init
+ 546 0030 00000000 		.word	fsm
+ 547              		.cfi_endproc
+ 548              	.LFE703:
+ 550              		.section	.text.unstack,"ax",%progbits
+ 551              		.align	1
+ 552              		.global	unstack
+ 553              		.syntax unified
+ 554              		.thumb
+ 555              		.thumb_func
+ 556              		.fpu fpv4-sp-d16
+ 558              	unstack:
+ 559              	.LFB704:
+  72:Src/server.c  **** 
+  73:Src/server.c  **** void unstack(RC_Server* pserver)
+ARM GAS  /tmp/cc7sGDdh.s 			page 13
+
+
+  74:Src/server.c  **** {
+ 560              		.loc 1 74 0
+ 561              		.cfi_startproc
+ 562              		@ args = 0, pretend = 0, frame = 8
+ 563              		@ frame_needed = 1, uses_anonymous_args = 0
+ 564 0000 80B5     		push	{r7, lr}
+ 565              	.LCFI45:
+ 566              		.cfi_def_cfa_offset 8
+ 567              		.cfi_offset 7, -8
+ 568              		.cfi_offset 14, -4
+ 569 0002 82B0     		sub	sp, sp, #8
+ 570              	.LCFI46:
+ 571              		.cfi_def_cfa_offset 16
+ 572 0004 00AF     		add	r7, sp, #0
+ 573              	.LCFI47:
+ 574              		.cfi_def_cfa_register 7
+ 575 0006 7860     		str	r0, [r7, #4]
+  75:Src/server.c  ****   fsm_unstack.instance.run=FSM_Unstack_Init;
+ 576              		.loc 1 75 0
+ 577 0008 064B     		ldr	r3, .L25
+ 578 000a 074A     		ldr	r2, .L25+4
+ 579 000c 1A60     		str	r2, [r3]
+  76:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_unstack;
+ 580              		.loc 1 76 0
+ 581 000e 074B     		ldr	r3, .L25+8
+ 582 0010 044A     		ldr	r2, .L25
+ 583 0012 1A60     		str	r2, [r3]
+  77:Src/server.c  ****   RC_Server_Return(pserver);
+ 584              		.loc 1 77 0
+ 585 0014 7868     		ldr	r0, [r7, #4]
+ 586 0016 FFF7FEFF 		bl	RC_Server_Return
+  78:Src/server.c  **** }
+ 587              		.loc 1 78 0
+ 588 001a 00BF     		nop
+ 589 001c 0837     		adds	r7, r7, #8
+ 590              	.LCFI48:
+ 591              		.cfi_def_cfa_offset 8
+ 592 001e BD46     		mov	sp, r7
+ 593              	.LCFI49:
+ 594              		.cfi_def_cfa_register 13
+ 595              		@ sp needed
+ 596 0020 80BD     		pop	{r7, pc}
+ 597              	.L26:
+ 598 0022 00BF     		.align	2
+ 599              	.L25:
+ 600 0024 00000000 		.word	fsm_unstack
+ 601 0028 00000000 		.word	FSM_Unstack_Init
+ 602 002c 00000000 		.word	fsm
+ 603              		.cfi_endproc
+ 604              	.LFE704:
+ 606              		.section	.text.place,"ax",%progbits
+ 607              		.align	1
+ 608              		.global	place
+ 609              		.syntax unified
+ 610              		.thumb
+ 611              		.thumb_func
+ 612              		.fpu fpv4-sp-d16
+ARM GAS  /tmp/cc7sGDdh.s 			page 14
+
+
+ 614              	place:
+ 615              	.LFB705:
+  79:Src/server.c  **** 
+  80:Src/server.c  **** void place(RC_Server* pserver)
+  81:Src/server.c  **** {
+ 616              		.loc 1 81 0
+ 617              		.cfi_startproc
+ 618              		@ args = 0, pretend = 0, frame = 8
+ 619              		@ frame_needed = 1, uses_anonymous_args = 0
+ 620 0000 80B5     		push	{r7, lr}
+ 621              	.LCFI50:
+ 622              		.cfi_def_cfa_offset 8
+ 623              		.cfi_offset 7, -8
+ 624              		.cfi_offset 14, -4
+ 625 0002 82B0     		sub	sp, sp, #8
+ 626              	.LCFI51:
+ 627              		.cfi_def_cfa_offset 16
+ 628 0004 00AF     		add	r7, sp, #0
+ 629              	.LCFI52:
+ 630              		.cfi_def_cfa_register 7
+ 631 0006 7860     		str	r0, [r7, #4]
+  82:Src/server.c  ****   fsm_place.instance.run=FSM_Place_Init;
+ 632              		.loc 1 82 0
+ 633 0008 064B     		ldr	r3, .L28
+ 634 000a 074A     		ldr	r2, .L28+4
+ 635 000c 1A60     		str	r2, [r3]
+  83:Src/server.c  ****   fsm = (FSM_Instance*volatile) &fsm_place;
+ 636              		.loc 1 83 0
+ 637 000e 074B     		ldr	r3, .L28+8
+ 638 0010 044A     		ldr	r2, .L28
+ 639 0012 1A60     		str	r2, [r3]
+  84:Src/server.c  ****   RC_Server_Return(pserver);
+ 640              		.loc 1 84 0
+ 641 0014 7868     		ldr	r0, [r7, #4]
+ 642 0016 FFF7FEFF 		bl	RC_Server_Return
+  85:Src/server.c  **** }
+ 643              		.loc 1 85 0
+ 644 001a 00BF     		nop
+ 645 001c 0837     		adds	r7, r7, #8
+ 646              	.LCFI53:
+ 647              		.cfi_def_cfa_offset 8
+ 648 001e BD46     		mov	sp, r7
+ 649              	.LCFI54:
+ 650              		.cfi_def_cfa_register 13
+ 651              		@ sp needed
+ 652 0020 80BD     		pop	{r7, pc}
+ 653              	.L29:
+ 654 0022 00BF     		.align	2
+ 655              	.L28:
+ 656 0024 00000000 		.word	fsm_place
+ 657 0028 00000000 		.word	FSM_Place_Init
+ 658 002c 00000000 		.word	fsm
+ 659              		.cfi_endproc
+ 660              	.LFE705:
+ 662              		.text
+ 663              	.Letext0:
+ 664              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ARM GAS  /tmp/cc7sGDdh.s 			page 15
+
+
+ 665              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 666              		.file 5 "Inc/robotronik_protocol.h"
+ 667              		.file 6 "/usr/arm-none-eabi/include/sys/lock.h"
+ 668              		.file 7 "/usr/arm-none-eabi/include/sys/_types.h"
+ 669              		.file 8 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 670              		.file 9 "/usr/arm-none-eabi/include/sys/reent.h"
+ 671              		.file 10 "Inc/crc_16.h"
+ 672              		.file 11 "/usr/arm-none-eabi/include/stdlib.h"
+ 673              		.file 12 "Inc/remote_call.h"
+ 674              		.file 13 "Drivers/CMSIS/Include/core_cm4.h"
+ 675              		.file 14 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 676              		.file 15 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 677              		.file 16 "Inc/ax_12a.h"
+ 678              		.file 17 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h"
+ 679              		.file 18 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma.h"
+ 680              		.file 19 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h"
+ 681              		.file 20 "Inc/Robotronik_corp_pid.h"
+ 682              		.file 21 "Inc/fsm_master.h"
+ 683              		.file 22 "Inc/encoder.h"
+ 684              		.file 23 "Inc/fsm_stack.h"
+ 685              		.file 24 "Inc/fsm_arm.h"
+ 686              		.file 25 "Inc/fsm_unstack.h"
+ 687              		.file 26 "Inc/fsm_place.h"
+ 688              		.file 27 "Inc/Z_axis.h"
+ 689              		.file 28 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ARM GAS  /tmp/cc7sGDdh.s 			page 16
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 server.c
+     /tmp/cc7sGDdh.s:18     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 $d
+     /tmp/cc7sGDdh.s:21     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 CHANNEL_OFFSET_TAB
+                            *COM*:0000000000000004 fsm
+     /tmp/cc7sGDdh.s:31     .text.get_state:0000000000000000 $t
+     /tmp/cc7sGDdh.s:38     .text.get_state:0000000000000000 get_state
+     /tmp/cc7sGDdh.s:77     .text.get_state:0000000000000020 $d
+     /tmp/cc7sGDdh.s:82     .text.reset:0000000000000000 $t
+     /tmp/cc7sGDdh.s:89     .text.reset:0000000000000000 reset
+     /tmp/cc7sGDdh.s:126    .text.set_asser:0000000000000000 $t
+     /tmp/cc7sGDdh.s:133    .text.set_asser:0000000000000000 set_asser
+     /tmp/cc7sGDdh.s:177    .text.set_asser:000000000000002c $d
+     /tmp/cc7sGDdh.s:186    .text.balec:0000000000000000 $t
+     /tmp/cc7sGDdh.s:193    .text.balec:0000000000000000 balec
+     /tmp/cc7sGDdh.s:228    .text.punch_bee:0000000000000000 $t
+     /tmp/cc7sGDdh.s:235    .text.punch_bee:0000000000000000 punch_bee
+     /tmp/cc7sGDdh.s:277    .text.punch_bee:0000000000000024 $d
+     /tmp/cc7sGDdh.s:284    .text.arm_in:0000000000000000 $t
+     /tmp/cc7sGDdh.s:291    .text.arm_in:0000000000000000 arm_in
+     /tmp/cc7sGDdh.s:353    .text.arm_in:0000000000000028 $d
+     /tmp/cc7sGDdh.s:358    .text.arm_out:0000000000000000 $t
+     /tmp/cc7sGDdh.s:365    .text.arm_out:0000000000000000 arm_out
+     /tmp/cc7sGDdh.s:426    .text.arm_out:0000000000000028 $d
+     /tmp/cc7sGDdh.s:431    .text.stack:0000000000000000 $t
+     /tmp/cc7sGDdh.s:438    .text.stack:0000000000000000 stack
+     /tmp/cc7sGDdh.s:484    .text.stack:0000000000000028 $d
+     /tmp/cc7sGDdh.s:491    .text.stack_last:0000000000000000 $t
+     /tmp/cc7sGDdh.s:498    .text.stack_last:0000000000000000 stack_last
+     /tmp/cc7sGDdh.s:544    .text.stack_last:0000000000000028 $d
+     /tmp/cc7sGDdh.s:551    .text.unstack:0000000000000000 $t
+     /tmp/cc7sGDdh.s:558    .text.unstack:0000000000000000 unstack
+     /tmp/cc7sGDdh.s:600    .text.unstack:0000000000000024 $d
+     /tmp/cc7sGDdh.s:607    .text.place:0000000000000000 $t
+     /tmp/cc7sGDdh.s:614    .text.place:0000000000000000 place
+     /tmp/cc7sGDdh.s:656    .text.place:0000000000000024 $d
+
+UNDEFINED SYMBOLS
+RC_Server_Return
+HAL_NVIC_SystemReset
+RC_Server_Get_Args
+pid_z
+fsm_arm
+FSM_ARM_OUT
+AX_Set_Goal_Position
+servo_ar
+fsm_stack
+FSM_Stack_Init
+fsm_unstack
+FSM_Unstack_Init
+fsm_place
+FSM_Place_Init

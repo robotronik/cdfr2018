@@ -1,0 +1,299 @@
+ARM GAS  /tmp/cc07JOAh.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"encoder.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.rodata.CHANNEL_OFFSET_TAB,"a",%progbits
+  18              		.align	2
+  21              	CHANNEL_OFFSET_TAB:
+  22 0000 08       		.byte	8
+  23 0001 1C       		.byte	28
+  24 0002 30       		.byte	48
+  25 0003 44       		.byte	68
+  26 0004 58       		.byte	88
+  27 0005 6C       		.byte	108
+  28 0006 80       		.byte	-128
+  29              		.section	.text.init_encoder,"ax",%progbits
+  30              		.align	1
+  31              		.global	init_encoder
+  32              		.syntax unified
+  33              		.thumb
+  34              		.thumb_func
+  35              		.fpu fpv4-sp-d16
+  37              	init_encoder:
+  38              	.LFB695:
+  39              		.file 1 "Src/encoder.c"
+   1:Src/encoder.c **** #include "encoder.h"
+   2:Src/encoder.c **** 
+   3:Src/encoder.c **** #if TEST_ENCODER != 0
+   4:Src/encoder.c **** uint8_t led_level;
+   5:Src/encoder.c **** #endif
+   6:Src/encoder.c **** 
+   7:Src/encoder.c **** void init_encoder(volatile Encoder *encoder, TIM_HandleTypeDef *htim, TIM_HandleTypeDef *htim2){
+  40              		.loc 1 7 0
+  41              		.cfi_startproc
+  42              		@ args = 0, pretend = 0, frame = 16
+  43              		@ frame_needed = 1, uses_anonymous_args = 0
+  44              		@ link register save eliminated.
+  45 0000 80B4     		push	{r7}
+  46              	.LCFI0:
+  47              		.cfi_def_cfa_offset 4
+  48              		.cfi_offset 7, -4
+  49 0002 85B0     		sub	sp, sp, #20
+  50              	.LCFI1:
+  51              		.cfi_def_cfa_offset 24
+  52 0004 00AF     		add	r7, sp, #0
+  53              	.LCFI2:
+ARM GAS  /tmp/cc07JOAh.s 			page 2
+
+
+  54              		.cfi_def_cfa_register 7
+  55 0006 F860     		str	r0, [r7, #12]
+  56 0008 B960     		str	r1, [r7, #8]
+  57 000a 7A60     		str	r2, [r7, #4]
+   8:Src/encoder.c ****   encoder->last_pos = encoder->steps = 0;
+  58              		.loc 1 8 0
+  59 000c 0023     		movs	r3, #0
+  60 000e FA68     		ldr	r2, [r7, #12]
+  61 0010 5360     		str	r3, [r2, #4]
+  62 0012 FA68     		ldr	r2, [r7, #12]
+  63 0014 1360     		str	r3, [r2]
+   9:Src/encoder.c ****   encoder->htim = htim;
+  64              		.loc 1 9 0
+  65 0016 FB68     		ldr	r3, [r7, #12]
+  66 0018 BA68     		ldr	r2, [r7, #8]
+  67 001a 9A60     		str	r2, [r3, #8]
+  10:Src/encoder.c ****   encoder->htim2 = htim2;
+  68              		.loc 1 10 0
+  69 001c FB68     		ldr	r3, [r7, #12]
+  70 001e 7A68     		ldr	r2, [r7, #4]
+  71 0020 DA60     		str	r2, [r3, #12]
+  11:Src/encoder.c **** }
+  72              		.loc 1 11 0
+  73 0022 00BF     		nop
+  74 0024 1437     		adds	r7, r7, #20
+  75              	.LCFI3:
+  76              		.cfi_def_cfa_offset 4
+  77 0026 BD46     		mov	sp, r7
+  78              	.LCFI4:
+  79              		.cfi_def_cfa_register 13
+  80              		@ sp needed
+  81 0028 5DF8047B 		ldr	r7, [sp], #4
+  82              	.LCFI5:
+  83              		.cfi_restore 7
+  84              		.cfi_def_cfa_offset 0
+  85 002c 7047     		bx	lr
+  86              		.cfi_endproc
+  87              	.LFE695:
+  89              		.section	.text.update_encoder,"ax",%progbits
+  90              		.align	1
+  91              		.global	update_encoder
+  92              		.syntax unified
+  93              		.thumb
+  94              		.thumb_func
+  95              		.fpu fpv4-sp-d16
+  97              	update_encoder:
+  98              	.LFB696:
+  12:Src/encoder.c **** 
+  13:Src/encoder.c **** int update_encoder(volatile Encoder *encoder){
+  99              		.loc 1 13 0
+ 100              		.cfi_startproc
+ 101              		@ args = 0, pretend = 0, frame = 16
+ 102              		@ frame_needed = 1, uses_anonymous_args = 0
+ 103              		@ link register save eliminated.
+ 104 0000 80B4     		push	{r7}
+ 105              	.LCFI6:
+ 106              		.cfi_def_cfa_offset 4
+ARM GAS  /tmp/cc07JOAh.s 			page 3
+
+
+ 107              		.cfi_offset 7, -4
+ 108 0002 85B0     		sub	sp, sp, #20
+ 109              	.LCFI7:
+ 110              		.cfi_def_cfa_offset 24
+ 111 0004 00AF     		add	r7, sp, #0
+ 112              	.LCFI8:
+ 113              		.cfi_def_cfa_register 7
+ 114 0006 7860     		str	r0, [r7, #4]
+  14:Src/encoder.c ****   const int cnt = encoder->htim->Instance->CNT;
+ 115              		.loc 1 14 0
+ 116 0008 7B68     		ldr	r3, [r7, #4]
+ 117 000a 9B68     		ldr	r3, [r3, #8]
+ 118 000c 1B68     		ldr	r3, [r3]
+ 119 000e 5B6A     		ldr	r3, [r3, #36]
+ 120 0010 BB60     		str	r3, [r7, #8]
+  15:Src/encoder.c **** 
+  16:Src/encoder.c ****   int dl = cnt - encoder->last_pos;
+ 121              		.loc 1 16 0
+ 122 0012 7B68     		ldr	r3, [r7, #4]
+ 123 0014 1B68     		ldr	r3, [r3]
+ 124 0016 BA68     		ldr	r2, [r7, #8]
+ 125 0018 D31A     		subs	r3, r2, r3
+ 126 001a FB60     		str	r3, [r7, #12]
+  17:Src/encoder.c ****   encoder->last_pos = cnt;
+ 127              		.loc 1 17 0
+ 128 001c 7B68     		ldr	r3, [r7, #4]
+ 129 001e BA68     		ldr	r2, [r7, #8]
+ 130 0020 1A60     		str	r2, [r3]
+  18:Src/encoder.c ****   if(dl>ENCODER_MAX/2)
+ 131              		.loc 1 18 0
+ 132 0022 FB68     		ldr	r3, [r7, #12]
+ 133 0024 B3F5E15F 		cmp	r3, #7200
+ 134 0028 04DD     		ble	.L3
+  19:Src/encoder.c ****   {
+  20:Src/encoder.c ****     dl=dl-ENCODER_MAX;
+ 135              		.loc 1 20 0
+ 136 002a FB68     		ldr	r3, [r7, #12]
+ 137 002c A3F56153 		sub	r3, r3, #14400
+ 138 0030 FB60     		str	r3, [r7, #12]
+ 139 0032 07E0     		b	.L4
+ 140              	.L3:
+  21:Src/encoder.c ****   }
+  22:Src/encoder.c ****   else if(dl<-ENCODER_MAX/2)
+ 141              		.loc 1 22 0
+ 142 0034 FB68     		ldr	r3, [r7, #12]
+ 143 0036 13F5E15F 		cmn	r3, #7200
+ 144 003a 03DA     		bge	.L4
+  23:Src/encoder.c ****   {
+  24:Src/encoder.c ****     dl=ENCODER_MAX+dl;
+ 145              		.loc 1 24 0
+ 146 003c FB68     		ldr	r3, [r7, #12]
+ 147 003e 03F56153 		add	r3, r3, #14400
+ 148 0042 FB60     		str	r3, [r7, #12]
+ 149              	.L4:
+  25:Src/encoder.c ****   }
+  26:Src/encoder.c **** 
+  27:Src/encoder.c ****   encoder->steps += dl;
+ARM GAS  /tmp/cc07JOAh.s 			page 4
+
+
+ 150              		.loc 1 27 0
+ 151 0044 7B68     		ldr	r3, [r7, #4]
+ 152 0046 5A68     		ldr	r2, [r3, #4]
+ 153 0048 FB68     		ldr	r3, [r7, #12]
+ 154 004a 1A44     		add	r2, r2, r3
+ 155 004c 7B68     		ldr	r3, [r7, #4]
+ 156 004e 5A60     		str	r2, [r3, #4]
+  28:Src/encoder.c ****   return dl;
+ 157              		.loc 1 28 0
+ 158 0050 FB68     		ldr	r3, [r7, #12]
+  29:Src/encoder.c **** }
+ 159              		.loc 1 29 0
+ 160 0052 1846     		mov	r0, r3
+ 161 0054 1437     		adds	r7, r7, #20
+ 162              	.LCFI9:
+ 163              		.cfi_def_cfa_offset 4
+ 164 0056 BD46     		mov	sp, r7
+ 165              	.LCFI10:
+ 166              		.cfi_def_cfa_register 13
+ 167              		@ sp needed
+ 168 0058 5DF8047B 		ldr	r7, [sp], #4
+ 169              	.LCFI11:
+ 170              		.cfi_restore 7
+ 171              		.cfi_def_cfa_offset 0
+ 172 005c 7047     		bx	lr
+ 173              		.cfi_endproc
+ 174              	.LFE696:
+ 176              		.section	.text.start_encoder,"ax",%progbits
+ 177              		.align	1
+ 178              		.global	start_encoder
+ 179              		.syntax unified
+ 180              		.thumb
+ 181              		.thumb_func
+ 182              		.fpu fpv4-sp-d16
+ 184              	start_encoder:
+ 185              	.LFB697:
+  30:Src/encoder.c **** 
+  31:Src/encoder.c **** void start_encoder(volatile Encoder *encoder){
+ 186              		.loc 1 31 0
+ 187              		.cfi_startproc
+ 188              		@ args = 0, pretend = 0, frame = 8
+ 189              		@ frame_needed = 1, uses_anonymous_args = 0
+ 190 0000 80B5     		push	{r7, lr}
+ 191              	.LCFI12:
+ 192              		.cfi_def_cfa_offset 8
+ 193              		.cfi_offset 7, -8
+ 194              		.cfi_offset 14, -4
+ 195 0002 82B0     		sub	sp, sp, #8
+ 196              	.LCFI13:
+ 197              		.cfi_def_cfa_offset 16
+ 198 0004 00AF     		add	r7, sp, #0
+ 199              	.LCFI14:
+ 200              		.cfi_def_cfa_register 7
+ 201 0006 7860     		str	r0, [r7, #4]
+  32:Src/encoder.c ****   HAL_TIM_Encoder_Start(encoder->htim, TIM_CHANNEL_ALL);
+ 202              		.loc 1 32 0
+ 203 0008 7B68     		ldr	r3, [r7, #4]
+ARM GAS  /tmp/cc07JOAh.s 			page 5
+
+
+ 204 000a 9B68     		ldr	r3, [r3, #8]
+ 205 000c 3C21     		movs	r1, #60
+ 206 000e 1846     		mov	r0, r3
+ 207 0010 FFF7FEFF 		bl	HAL_TIM_Encoder_Start
+  33:Src/encoder.c ****   HAL_TIM_Base_Start_IT(encoder->htim2);
+ 208              		.loc 1 33 0
+ 209 0014 7B68     		ldr	r3, [r7, #4]
+ 210 0016 DB68     		ldr	r3, [r3, #12]
+ 211 0018 1846     		mov	r0, r3
+ 212 001a FFF7FEFF 		bl	HAL_TIM_Base_Start_IT
+  34:Src/encoder.c **** }
+ 213              		.loc 1 34 0
+ 214 001e 00BF     		nop
+ 215 0020 0837     		adds	r7, r7, #8
+ 216              	.LCFI15:
+ 217              		.cfi_def_cfa_offset 8
+ 218 0022 BD46     		mov	sp, r7
+ 219              	.LCFI16:
+ 220              		.cfi_def_cfa_register 13
+ 221              		@ sp needed
+ 222 0024 80BD     		pop	{r7, pc}
+ 223              		.cfi_endproc
+ 224              	.LFE697:
+ 226              		.text
+ 227              	.Letext0:
+ 228              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 229              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 230              		.file 4 "Drivers/CMSIS/Include/core_cm4.h"
+ 231              		.file 5 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 232              		.file 6 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 233              		.file 7 "/usr/arm-none-eabi/include/sys/lock.h"
+ 234              		.file 8 "/usr/arm-none-eabi/include/sys/_types.h"
+ 235              		.file 9 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 236              		.file 10 "/usr/arm-none-eabi/include/sys/reent.h"
+ 237              		.file 11 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h"
+ 238              		.file 12 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma.h"
+ 239              		.file 13 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h"
+ 240              		.file 14 "Inc/encoder.h"
+ 241              		.file 15 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ARM GAS  /tmp/cc07JOAh.s 			page 6
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 encoder.c
+     /tmp/cc07JOAh.s:18     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 $d
+     /tmp/cc07JOAh.s:21     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 CHANNEL_OFFSET_TAB
+     /tmp/cc07JOAh.s:30     .text.init_encoder:0000000000000000 $t
+     /tmp/cc07JOAh.s:37     .text.init_encoder:0000000000000000 init_encoder
+     /tmp/cc07JOAh.s:90     .text.update_encoder:0000000000000000 $t
+     /tmp/cc07JOAh.s:97     .text.update_encoder:0000000000000000 update_encoder
+     /tmp/cc07JOAh.s:177    .text.start_encoder:0000000000000000 $t
+     /tmp/cc07JOAh.s:184    .text.start_encoder:0000000000000000 start_encoder
+
+UNDEFINED SYMBOLS
+HAL_TIM_Encoder_Start
+HAL_TIM_Base_Start_IT

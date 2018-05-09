@@ -1,0 +1,278 @@
+ARM GAS  /tmp/cc7du78V.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"fsm_place.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.rodata.CHANNEL_OFFSET_TAB,"a",%progbits
+  18              		.align	2
+  21              	CHANNEL_OFFSET_TAB:
+  22 0000 08       		.byte	8
+  23 0001 1C       		.byte	28
+  24 0002 30       		.byte	48
+  25 0003 44       		.byte	68
+  26 0004 58       		.byte	88
+  27 0005 6C       		.byte	108
+  28 0006 80       		.byte	-128
+  29              		.comm	fsm,4,4
+  30              		.section	.text.FSM_Place_Init,"ax",%progbits
+  31              		.align	1
+  32              		.global	FSM_Place_Init
+  33              		.syntax unified
+  34              		.thumb
+  35              		.thumb_func
+  36              		.fpu fpv4-sp-d16
+  38              	FSM_Place_Init:
+  39              	.LFB695:
+  40              		.file 1 "Src/fsm_place.c"
+   1:Src/fsm_place.c **** #include "fsm_place.h"
+   2:Src/fsm_place.c **** 
+   3:Src/fsm_place.c **** void FSM_Place_Init(FSM_Instance *fsm)
+   4:Src/fsm_place.c **** {
+  41              		.loc 1 4 0
+  42              		.cfi_startproc
+  43              		@ args = 0, pretend = 0, frame = 8
+  44              		@ frame_needed = 1, uses_anonymous_args = 0
+  45 0000 80B5     		push	{r7, lr}
+  46              	.LCFI0:
+  47              		.cfi_def_cfa_offset 8
+  48              		.cfi_offset 7, -8
+  49              		.cfi_offset 14, -4
+  50 0002 82B0     		sub	sp, sp, #8
+  51              	.LCFI1:
+  52              		.cfi_def_cfa_offset 16
+  53 0004 00AF     		add	r7, sp, #0
+  54              	.LCFI2:
+  55              		.cfi_def_cfa_register 7
+  56 0006 7860     		str	r0, [r7, #4]
+ARM GAS  /tmp/cc7du78V.s 			page 2
+
+
+   5:Src/fsm_place.c ****   fsm->status=FSM_RUNNING;
+  57              		.loc 1 5 0
+  58 0008 7B68     		ldr	r3, [r7, #4]
+  59 000a 0022     		movs	r2, #0
+  60 000c 1A71     		strb	r2, [r3, #4]
+   6:Src/fsm_place.c ****   imp_goal=P0;
+  61              		.loc 1 6 0
+  62 000e 0B4B     		ldr	r3, .L4
+  63 0010 4FF4FA42 		mov	r2, #32000
+  64 0014 1A60     		str	r2, [r3]
+   7:Src/fsm_place.c ****   if(reached(&pid_z,imp_goal-encoder.steps))
+  65              		.loc 1 7 0
+  66 0016 094B     		ldr	r3, .L4
+  67 0018 1A68     		ldr	r2, [r3]
+  68 001a 094B     		ldr	r3, .L4+4
+  69 001c 5B68     		ldr	r3, [r3, #4]
+  70 001e D31A     		subs	r3, r2, r3
+  71 0020 1946     		mov	r1, r3
+  72 0022 0848     		ldr	r0, .L4+8
+  73 0024 FFF7FEFF 		bl	reached
+  74 0028 0346     		mov	r3, r0
+  75 002a 002B     		cmp	r3, #0
+  76 002c 02D0     		beq	.L3
+   8:Src/fsm_place.c ****   {
+   9:Src/fsm_place.c ****       fsm->run=FSM_Place_Open;
+  77              		.loc 1 9 0
+  78 002e 7B68     		ldr	r3, [r7, #4]
+  79 0030 054A     		ldr	r2, .L4+12
+  80 0032 1A60     		str	r2, [r3]
+  81              	.L3:
+  10:Src/fsm_place.c ****   }
+  11:Src/fsm_place.c **** }
+  82              		.loc 1 11 0
+  83 0034 00BF     		nop
+  84 0036 0837     		adds	r7, r7, #8
+  85              	.LCFI3:
+  86              		.cfi_def_cfa_offset 8
+  87 0038 BD46     		mov	sp, r7
+  88              	.LCFI4:
+  89              		.cfi_def_cfa_register 13
+  90              		@ sp needed
+  91 003a 80BD     		pop	{r7, pc}
+  92              	.L5:
+  93              		.align	2
+  94              	.L4:
+  95 003c 00000000 		.word	imp_goal
+  96 0040 00000000 		.word	encoder
+  97 0044 00000000 		.word	pid_z
+  98 0048 00000000 		.word	FSM_Place_Open
+  99              		.cfi_endproc
+ 100              	.LFE695:
+ 102              		.section	.text.FSM_Place_Open,"ax",%progbits
+ 103              		.align	1
+ 104              		.global	FSM_Place_Open
+ 105              		.syntax unified
+ 106              		.thumb
+ 107              		.thumb_func
+ARM GAS  /tmp/cc7du78V.s 			page 3
+
+
+ 108              		.fpu fpv4-sp-d16
+ 110              	FSM_Place_Open:
+ 111              	.LFB696:
+  12:Src/fsm_place.c **** 
+  13:Src/fsm_place.c **** void FSM_Place_Open(FSM_Instance *fsm)
+  14:Src/fsm_place.c **** {
+ 112              		.loc 1 14 0
+ 113              		.cfi_startproc
+ 114              		@ args = 0, pretend = 0, frame = 8
+ 115              		@ frame_needed = 1, uses_anonymous_args = 0
+ 116 0000 80B5     		push	{r7, lr}
+ 117              	.LCFI5:
+ 118              		.cfi_def_cfa_offset 8
+ 119              		.cfi_offset 7, -8
+ 120              		.cfi_offset 14, -4
+ 121 0002 82B0     		sub	sp, sp, #8
+ 122              	.LCFI6:
+ 123              		.cfi_def_cfa_offset 16
+ 124 0004 00AF     		add	r7, sp, #0
+ 125              	.LCFI7:
+ 126              		.cfi_def_cfa_register 7
+ 127 0006 7860     		str	r0, [r7, #4]
+  15:Src/fsm_place.c ****   Z_Open();
+ 128              		.loc 1 15 0
+ 129 0008 FFF7FEFF 		bl	Z_Open
+  16:Src/fsm_place.c ****   if(Z_Is_Open())
+ 130              		.loc 1 16 0
+ 131 000c FFF7FEFF 		bl	Z_Is_Open
+ 132 0010 0346     		mov	r3, r0
+ 133 0012 002B     		cmp	r3, #0
+ 134 0014 02D0     		beq	.L8
+  17:Src/fsm_place.c ****     fsm->run=FSM_Place_End;
+ 135              		.loc 1 17 0
+ 136 0016 7B68     		ldr	r3, [r7, #4]
+ 137 0018 024A     		ldr	r2, .L9
+ 138 001a 1A60     		str	r2, [r3]
+ 139              	.L8:
+  18:Src/fsm_place.c **** }
+ 140              		.loc 1 18 0
+ 141 001c 00BF     		nop
+ 142 001e 0837     		adds	r7, r7, #8
+ 143              	.LCFI8:
+ 144              		.cfi_def_cfa_offset 8
+ 145 0020 BD46     		mov	sp, r7
+ 146              	.LCFI9:
+ 147              		.cfi_def_cfa_register 13
+ 148              		@ sp needed
+ 149 0022 80BD     		pop	{r7, pc}
+ 150              	.L10:
+ 151              		.align	2
+ 152              	.L9:
+ 153 0024 00000000 		.word	FSM_Place_End
+ 154              		.cfi_endproc
+ 155              	.LFE696:
+ 157              		.section	.text.FSM_Place_End,"ax",%progbits
+ 158              		.align	1
+ 159              		.global	FSM_Place_End
+ARM GAS  /tmp/cc7du78V.s 			page 4
+
+
+ 160              		.syntax unified
+ 161              		.thumb
+ 162              		.thumb_func
+ 163              		.fpu fpv4-sp-d16
+ 165              	FSM_Place_End:
+ 166              	.LFB697:
+  19:Src/fsm_place.c **** 
+  20:Src/fsm_place.c **** void FSM_Place_End(FSM_Instance *fsm)
+  21:Src/fsm_place.c **** {
+ 167              		.loc 1 21 0
+ 168              		.cfi_startproc
+ 169              		@ args = 0, pretend = 0, frame = 8
+ 170              		@ frame_needed = 1, uses_anonymous_args = 0
+ 171              		@ link register save eliminated.
+ 172 0000 80B4     		push	{r7}
+ 173              	.LCFI10:
+ 174              		.cfi_def_cfa_offset 4
+ 175              		.cfi_offset 7, -4
+ 176 0002 83B0     		sub	sp, sp, #12
+ 177              	.LCFI11:
+ 178              		.cfi_def_cfa_offset 16
+ 179 0004 00AF     		add	r7, sp, #0
+ 180              	.LCFI12:
+ 181              		.cfi_def_cfa_register 7
+ 182 0006 7860     		str	r0, [r7, #4]
+  22:Src/fsm_place.c ****   fsm->status=FSM_SUCCESS;
+ 183              		.loc 1 22 0
+ 184 0008 7B68     		ldr	r3, [r7, #4]
+ 185 000a 0122     		movs	r2, #1
+ 186 000c 1A71     		strb	r2, [r3, #4]
+  23:Src/fsm_place.c **** }
+ 187              		.loc 1 23 0
+ 188 000e 00BF     		nop
+ 189 0010 0C37     		adds	r7, r7, #12
+ 190              	.LCFI13:
+ 191              		.cfi_def_cfa_offset 4
+ 192 0012 BD46     		mov	sp, r7
+ 193              	.LCFI14:
+ 194              		.cfi_def_cfa_register 13
+ 195              		@ sp needed
+ 196 0014 5DF8047B 		ldr	r7, [sp], #4
+ 197              	.LCFI15:
+ 198              		.cfi_restore 7
+ 199              		.cfi_def_cfa_offset 0
+ 200 0018 7047     		bx	lr
+ 201              		.cfi_endproc
+ 202              	.LFE697:
+ 204              		.text
+ 205              	.Letext0:
+ 206              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 207              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 208              		.file 4 "Drivers/CMSIS/Include/core_cm4.h"
+ 209              		.file 5 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/system_stm32f3xx.h"
+ 210              		.file 6 "Drivers/CMSIS/Device/ST/STM32F3xx/Include/stm32f303x8.h"
+ 211              		.file 7 "Inc/ax_12a.h"
+ 212              		.file 8 "/usr/arm-none-eabi/include/sys/lock.h"
+ 213              		.file 9 "/usr/arm-none-eabi/include/sys/_types.h"
+ARM GAS  /tmp/cc7du78V.s 			page 5
+
+
+ 214              		.file 10 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 215              		.file 11 "/usr/arm-none-eabi/include/sys/reent.h"
+ 216              		.file 12 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_def.h"
+ 217              		.file 13 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_dma.h"
+ 218              		.file 14 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim.h"
+ 219              		.file 15 "Inc/fsm_master.h"
+ 220              		.file 16 "/usr/arm-none-eabi/include/stdlib.h"
+ 221              		.file 17 "Inc/Robotronik_corp_pid.h"
+ 222              		.file 18 "Inc/encoder.h"
+ 223              		.file 19 "Inc/Z_axis.h"
+ 224              		.file 20 "Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_ll_dma.h"
+ARM GAS  /tmp/cc7du78V.s 			page 6
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 fsm_place.c
+     /tmp/cc7du78V.s:18     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 $d
+     /tmp/cc7du78V.s:21     .rodata.CHANNEL_OFFSET_TAB:0000000000000000 CHANNEL_OFFSET_TAB
+                            *COM*:0000000000000004 fsm
+     /tmp/cc7du78V.s:31     .text.FSM_Place_Init:0000000000000000 $t
+     /tmp/cc7du78V.s:38     .text.FSM_Place_Init:0000000000000000 FSM_Place_Init
+     /tmp/cc7du78V.s:95     .text.FSM_Place_Init:000000000000003c $d
+     /tmp/cc7du78V.s:110    .text.FSM_Place_Open:0000000000000000 FSM_Place_Open
+     /tmp/cc7du78V.s:103    .text.FSM_Place_Open:0000000000000000 $t
+     /tmp/cc7du78V.s:153    .text.FSM_Place_Open:0000000000000024 $d
+     /tmp/cc7du78V.s:165    .text.FSM_Place_End:0000000000000000 FSM_Place_End
+     /tmp/cc7du78V.s:158    .text.FSM_Place_End:0000000000000000 $t
+
+UNDEFINED SYMBOLS
+reached
+imp_goal
+encoder
+pid_z
+Z_Open
+Z_Is_Open
