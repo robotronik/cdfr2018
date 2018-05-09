@@ -10,9 +10,9 @@ int Position_Init(){
   if(RC_Client_Add_Function(&pos_client, POS_RESET, "", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_SUM, "fffif", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_DIFF, "fffif", "")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_SET_ODO, "BB", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_SET_ODO, "BBf", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_GET_ODO, "", "BBf")) return -1;
-  if(RC_Client_Add_Function(&pos_client, POS_GO_FORWARD, "ff", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_GO_FORWARD, "ff", "")) return -1;//!
   if(RC_Client_Add_Function(&pos_client, POS_SET_ANGLE, "ff", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_SET_POSITION_X_Y, "ffBB", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_GET_STATE, "", "b")) return -1;
@@ -24,6 +24,10 @@ int Position_Init(){
   if(RC_Client_Add_Function(&pos_client, POS_CONFIG_CURVE, "ffffffff", "")) return -1;
   
   return 0;
+}
+
+int Position_Init_Odometry(){
+  return RC_Call(&pos_client, POS_SET_ODO, me.x, me.y, me.angle);
 }
 
 int Pos_Reset(){

@@ -54,6 +54,9 @@
 #include "map.h"
 #include "position_client.h"
 #include "z_client.h"
+#include "gas.h"
+#include "build.h"
+#include "obstacle.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -129,9 +132,6 @@ int main(void)
   Init_ToF(&tof[TOF_FRONT_RIGHT], 0x56, TOF_FR_RESET_GPIO_Port, TOF_FR_RESET_Pin);
   Init_ToF(&tof[TOF_REAR_LEFT], 0x58, TOF_RL_RESET_GPIO_Port, TOF_RL_RESET_Pin);
   Init_ToF(&tof[TOF_REAR_RIGHT], 0x60, TOF_RR_RESET_GPIO_Port, TOF_RR_RESET_Pin);
-
-  //Enable the polling timer
-  HAL_TIM_Base_Start_IT(&htim3);
   
   //==================================================//
   //           UART Protocol Init                     //
@@ -153,17 +153,50 @@ int main(void)
   //           Remote Call Client Init                //
   //==================================================//
   PI_Init();
+
   Position_Init();
+  Pos_Reset();
+  Brake();
   Z_Init();
+  Z_Reset();
+
   
   //==================================================//
   //                 Wait Start                       //
   //==================================================//
-
-  Team t = wait_start();
-  
+  wait_start();
+  switch(team){
+  case GREEN_TEAM:
+    PI_Log("Green team\n");
+    break;
+  case ORANGE_TEAM:
+    PI_Log("Orange team\n");
+    break;
+  }
   PI_Start();
-  Init_Strategy(t);
+  
+  Init_Strategy(team);
+  Position_Init_Odometry();
+
+  Z_Arm_Out();
+  Z_State state;
+  if(Z_Wait_State(&state) == -1){
+    PI_Log("Z State error\n");
+  }
+  switch(state){
+  case Z_SUCCESS:
+    PI_Log("Z_SUCCESS\n");
+    break;
+  case Z_ERROR:
+    PI_Log("Z_ERROR\n");
+    break;
+  }
+  PI_Log("Z End\n");
+  
+  
+  //<homologation>
+  //Go_Straight((t==GREEN_TEAM)?610:(AREA_WIDTH-610), 180-DIST_APPROACH-CUBE_SIZE, true, 0.2), Z_Place();
+  //</homologation>
   
   //TODO : init strategy, odometry, ...
   
@@ -184,10 +217,18 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  
-  
+
+
+  //me.angle = 0;
+  me.x = AREA_WIDTH/2;
+  me.y = AREA_HEIGHT/2;
   while (1){
-    
+    /*__disable_irq();
+    Print_Obstacles();
+    PI_Log("\n\n");
+    __enable_irq();*/
+    //Print_ToF();
+    HAL_Delay(500);
     /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */

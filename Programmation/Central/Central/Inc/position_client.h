@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "map.h"
 
-
 #define POS_Z 1.
 #define POS_W 1.
 #define POS_P 1.
@@ -35,6 +34,7 @@ typedef enum Pos_Client_Function_E{
 }Pos_Client_Function;
 
 int Position_Init();
+int Position_Init_Odometry();
 int Pos_Reset();
 int Pos_Config_Curve(float z, float w, float vc, float vr, float P, float I, float D, float speed_percent_tolerance);
 int Pos_Send_Path(Cell *path_end, uint16_t x_goal, uint16_t y_goal);

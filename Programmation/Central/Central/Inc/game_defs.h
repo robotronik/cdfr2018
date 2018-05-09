@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 //MAP
-#define SQUARE_SIZE 40//mm
+#define SQUARE_SIZE 50//mm
 #define AREA_HEIGHT 2000
 #define AREA_WIDTH 3000
 #define MAP_HEIGHT (AREA_HEIGHT / SQUARE_SIZE)
@@ -57,8 +57,8 @@
 
 //Teams
 typedef enum Team_E{
-  GREEN_TEAM,
-  ORANGE_TEAM,
+  GREEN_TEAM = 0,
+  ORANGE_TEAM = 1,
 }Team;
 
 typedef enum FSM_Plan_State_E{

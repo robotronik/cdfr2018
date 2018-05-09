@@ -56,7 +56,7 @@ int Update_Construction(Cube *c, Construction *construction);
 uint16_t Get_Construction_Score(Construction *construction);
 
 //Init
-void Init_Strategy(Team team);
+void Init_Strategy();
 
 #define Get_Cell(x, y) (map[(y==AREA_HEIGHT)?MAP_HEIGHT-1:y/SQUARE_SIZE][(x==AREA_WIDTH)?MAP_WIDTH-1:x/SQUARE_SIZE])
 #define min(a, b) (((a)<(b))?(a):(b))

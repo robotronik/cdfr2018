@@ -14,16 +14,18 @@ int PI_Init(){
   if(RC_Client_Add_Function(&pi_client, PI_PLAN, "", "bs")) return -1;
   if(RC_Client_Add_Function(&pi_client, PI_LOG, "s", "")) return -1;
   //if(RC_Client_Add_Function(&pi_client, PI_ASSER, "b", "bfffii")) return -1;
-  
-  return 0;
-}
 
-int PI_Start(){
   /*
    * RP_Sync is mandatory here : the Raspberry's fsm receiver is in an
    * indeterminate state at program startup.
    */
   RP_Sync(&pi_iface, RC_TRANSFERT_TIMEOUT);
+  
+  return 0;
+}
+
+int PI_Start(){
+
   
   return RC_Call(&pi_client, PI_START);
 }

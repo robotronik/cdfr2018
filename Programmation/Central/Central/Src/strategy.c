@@ -115,8 +115,7 @@ static void Cube_Sort(uint16_t from_x_, uint16_t from_y_){
 //               Init Strategy                      //
 //==================================================//
 
-void Init_Strategy(Team _team){
-  team = _team;
+void Init_Strategy(){
   me.x = (team == GREEN_TEAM)?ROBOT_X0:(AREA_WIDTH-ROBOT_X0);
   me.y = ROBOT_Y0;
   me.angle = (team == GREEN_TEAM)?ROBOT_A0:PI;
@@ -126,7 +125,7 @@ void Init_Strategy(Team _team){
   //Initializing objects availability
   int k;
   for(k = 0; k < NB_CUBES; k++){
-    cube[k].availability = ((_team==GREEN_TEAM) != (k >= (NB_CUBES/2)))?LIKELY:UNCERTAIN;
+    cube[k].availability = ((team==GREEN_TEAM) != (k >= (NB_CUBES/2)))?LIKELY:UNCERTAIN;
   }
   for(k = 0; k < NB_SETS; k++){
     set[k].availability = CUBE_SET(k, 0).availability;

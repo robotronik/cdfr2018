@@ -25,11 +25,12 @@ int Z_Init(){
 int Z_Get_State(Z_State *state){
   return RC_Call(&z_client, Z_GET_STATE, state);
 }
-
+#include "pi_client.h"
 int Z_Wait_State(Z_State *state){
   if(Z_Get_State(state)) return -1;
 
-  while((Z_Wait_State(state) == 0) && (*state == Z_RUNNING)){
+  while((Z_Get_State(state) == 0) && (*state == Z_RUNNING)){
+    PI_Log("%d\n", *state);
     HAL_Delay(100);
   }
 

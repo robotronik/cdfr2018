@@ -7,6 +7,7 @@
 #include "strategy.h"
 #include "map.h"
 #include "interface.h"
+#include "stm32f4xx_hal.h"
 
 Obstacle obstacle[N_MAX_OBSTACLES];
 int nb_obstacles = 0;
@@ -66,9 +67,9 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
     Compute_Obstacle(&updated[n++], ref, -(SENSOR_DIST_TANGENT + min(rl_d, rr_d)), 0);
   }else{
     if(present[REAR_LEFT])
-      updated[n++] = in_range[FRONT_LEFT];
+      updated[n++] = in_range[REAR_LEFT];
     if(present[REAR_RIGHT])
-      updated[n++] = in_range[FRONT_RIGHT];
+      updated[n++] = in_range[REAR_RIGHT];
   }
 
   //Fill the updated table with old entries that have not expired and
@@ -187,8 +188,14 @@ void Print_Obstacles(void){
   int i = 0;
   for(; i < nb_obstacles; i++){
     Obstacle *const obs = &obstacle[i];
-    Print("Obstacle %d : %u, %" PRIu16 ", (%" PRId16 ", %" PRId16"), (%"PRId16", %"PRId16")\n",
-	  i, obs->last_detection, obs->distance, obs->x, obs->y, obs->x_c, obs->y_c);
+    Print("Obstacle n°%d : %u ms, %" PRIu16 " mm, (%" PRId16 " , %" PRId16"), c (%"PRId16", %"PRId16")\n",
+	  i,
+	  (HAL_GetTick() - obs->last_detection),
+	  obs->distance,
+	  obs->x,
+	  obs->y,
+	  obs->x_c,
+	  obs->y_c);
   }
 }
 

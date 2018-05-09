@@ -57,17 +57,21 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     }
   }
   else if(htim->Instance == htim3.Instance){
+
+    //Pos_Get_Position();
+
+    __disable_irq();
     //ToF polling timer
     int i;
     for(i = 0; i < NB_TOF; i++){
       ToF_Poll_Measurement_Data(&tof[i]);
     }
-    Pos_Get_Position();
     Update_Obstacles(&me,
 		     ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]),
 		     ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]),
 		     ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]),
 		     ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
+    __enable_irq();
   }
 }
 /* USER CODE END 0 */

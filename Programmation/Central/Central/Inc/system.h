@@ -8,7 +8,7 @@
 
 #define JACK_FILTER 5
 
-Team wait_start();
+void wait_start();
 /**
  * Waits for the match to start. Returns the selected team when the
  * match begins.
@@ -17,5 +17,6 @@ Team wait_start();
 void stop();
 void remote_stop();
 void hlt();
+void Print_ToF();
 
 #endif
