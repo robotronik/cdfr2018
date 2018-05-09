@@ -6,7 +6,7 @@
 #include "game_defs.h"
 
 #define DIST_ALIGN (CUBE_OBS + ROBOT_RADIUS)
-#define DIST_APPROACH ROBOT_RADIUS //<-- TO CHANGE
+#define DIST_APPROACH 103 //ok
 #define APPROACH_SPEED_RATIO 0.1
 
 void Build_Building();
