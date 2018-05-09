@@ -1,0 +1,1111 @@
+ARM GAS  /tmp/ccYqKCzT.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"tof.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.ToF_SetNewRange,"ax",%progbits
+  18              		.align	1
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu fpv4-sp-d16
+  24              	ToF_SetNewRange:
+  25              	.LFB684:
+  26              		.file 1 "Src/tof.c"
+   1:Src/tof.c     **** /*
+   2:Src/tof.c     ****  * The code below is inspired by the STMicroelectronics X-CUBE-53L0A1 example source code. Here is 
+   3:Src/tof.c     ****  * 
+   4:Src/tof.c     ****  * COPYRIGHT(c) 2015 STMicroelectronics
+   5:Src/tof.c     ****  *
+   6:Src/tof.c     ****  * Redistribution and use in source and binary forms, with or without modification,
+   7:Src/tof.c     ****  * are permitted provided that the following conditions are met:
+   8:Src/tof.c     ****  *   1. Redistributions of source code must retain the above copyright notice,
+   9:Src/tof.c     ****  *      this list of conditions and the following disclaimer.
+  10:Src/tof.c     ****  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  11:Src/tof.c     ****  *      this list of conditions and the following disclaimer in the documentation
+  12:Src/tof.c     ****  *      and/or other materials provided with the distribution.
+  13:Src/tof.c     ****  *   3. Neither the name of STMicroelectronics nor the names of its contributors
+  14:Src/tof.c     ****  *      may be used to endorse or promote products derived from this software
+  15:Src/tof.c     ****  *      without specific prior written permission.
+  16:Src/tof.c     ****  *
+  17:Src/tof.c     ****  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  18:Src/tof.c     ****  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  19:Src/tof.c     ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  20:Src/tof.c     ****  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  21:Src/tof.c     ****  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  22:Src/tof.c     ****  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  23:Src/tof.c     ****  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  24:Src/tof.c     ****  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  25:Src/tof.c     ****  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  26:Src/tof.c     ****  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  27:Src/tof.c     ****  *
+  28:Src/tof.c     ****  ******************************************************************************
+  29:Src/tof.c     ****  */
+  30:Src/tof.c     **** #include "tof.h"
+  31:Src/tof.c     **** #include "pi_client.h"
+  32:Src/tof.c     **** 
+ARM GAS  /tmp/ccYqKCzT.s 			page 2
+
+
+  33:Src/tof.c     **** void ToF_Init_Struct(ToF_Handler *htof, I2C_HandleTypeDef *hi2c){
+  34:Src/tof.c     ****   htof->dev.I2cHandle = hi2c;
+  35:Src/tof.c     ****   htof->dev.I2cDevAddr = 0x52;
+  36:Src/tof.c     ****   htof->dev.Present = 0;
+  37:Src/tof.c     **** 
+  38:Src/tof.c     ****   //Set I2C speed to 400KHz
+  39:Src/tof.c     ****   VL53L0X_WrByte(&htof->dev, 0x88, 0x00);
+  40:Src/tof.c     **** }
+  41:Src/tof.c     **** 
+  42:Src/tof.c     **** int ToF_Poke(ToF_Dev *dev){
+  43:Src/tof.c     ****   int status;
+  44:Src/tof.c     ****   //Read ID to know if the address is correct
+  45:Src/tof.c     ****   uint16_t id = 0;
+  46:Src/tof.c     ****   status = VL53L0X_RdWord(dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID, &id);
+  47:Src/tof.c     ****   
+  48:Src/tof.c     ****   //I2C error or bad ID
+  49:Src/tof.c     ****   if(status || id != 0xEEAA){
+  50:Src/tof.c     ****     return -1;
+  51:Src/tof.c     ****   }
+  52:Src/tof.c     ****   
+  53:Src/tof.c     ****   return 0;
+  54:Src/tof.c     **** }
+  55:Src/tof.c     **** 
+  56:Src/tof.c     **** int ToF_Set_Address(ToF_Dev *dev, uint8_t addr){
+  57:Src/tof.c     ****   //Set device address
+  58:Src/tof.c     ****   int status = VL53L0X_SetDeviceAddress(dev, addr);
+  59:Src/tof.c     ****   if(status) return -1;
+  60:Src/tof.c     ****   dev->I2cDevAddr = addr;
+  61:Src/tof.c     **** 
+  62:Src/tof.c     ****   //Check if the device work with the new address
+  63:Src/tof.c     ****   return ToF_Poke(dev);
+  64:Src/tof.c     **** }
+  65:Src/tof.c     **** 
+  66:Src/tof.c     **** int ToF_Init_Device(ToF_Dev *dev){
+  67:Src/tof.c     ****   //Init the device
+  68:Src/tof.c     ****   int status = VL53L0X_DataInit(dev);
+  69:Src/tof.c     ****   if(status == 0)
+  70:Src/tof.c     ****     dev->Present = 1;
+  71:Src/tof.c     ****   else
+  72:Src/tof.c     ****     return -1;
+  73:Src/tof.c     ****   
+  74:Src/tof.c     ****   //Static init
+  75:Src/tof.c     ****   status = VL53L0X_StaticInit(dev);
+  76:Src/tof.c     ****   if(status) return -1;
+  77:Src/tof.c     ****   return 0;
+  78:Src/tof.c     **** }
+  79:Src/tof.c     **** 
+  80:Src/tof.c     **** int ToF_Configure_Device(ToF_Dev *dev, ToF_Params *params, VL53L0X_DeviceModes mode){
+  81:Src/tof.c     ****   int status = 0;
+  82:Src/tof.c     **** 
+  83:Src/tof.c     ****   do{
+  84:Src/tof.c     ****     //Ref Spad Management
+  85:Src/tof.c     ****     status = VL53L0X_PerformRefSpadManagement(dev, &params->refSpadCount, &params->isApertureSpads)
+  86:Src/tof.c     ****     if(status) break;
+  87:Src/tof.c     **** 
+  88:Src/tof.c     ****     //Ref calibration
+  89:Src/tof.c     ****     status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
+ARM GAS  /tmp/ccYqKCzT.s 			page 3
+
+
+  90:Src/tof.c     ****     if(status) break;
+  91:Src/tof.c     ****    
+  92:Src/tof.c     ****     //Set single ranging mode
+  93:Src/tof.c     ****     status = VL53L0X_SetDeviceMode(dev, mode);
+  94:Src/tof.c     ****     if(status) break;
+  95:Src/tof.c     ****   
+  96:Src/tof.c     ****     //Enable Sigma Limit
+  97:Src/tof.c     ****     status = VL53L0X_SetLimitCheckEnable(dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, 1);
+  98:Src/tof.c     ****     if(status) break;
+  99:Src/tof.c     ****   
+ 100:Src/tof.c     ****     //Enable Signal Limit
+ 101:Src/tof.c     ****     status = VL53L0X_SetLimitCheckEnable(dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, 1);
+ 102:Src/tof.c     ****     if(status) break;
+ 103:Src/tof.c     ****   
+ 104:Src/tof.c     ****     status = VL53L0X_SetLimitCheckValue(dev, VL53L0X_CHECKENABLE_SIGNAL_RATE_FINAL_RANGE, params->s
+ 105:Src/tof.c     ****     if(status) break;
+ 106:Src/tof.c     ****   
+ 107:Src/tof.c     ****     status = VL53L0X_SetLimitCheckValue(dev, VL53L0X_CHECKENABLE_SIGMA_FINAL_RANGE, params->sigmaLi
+ 108:Src/tof.c     ****     if(status) break;
+ 109:Src/tof.c     ****   
+ 110:Src/tof.c     ****     status = VL53L0X_SetMeasurementTimingBudgetMicroSeconds(dev, params->timingBudget);
+ 111:Src/tof.c     ****     if(status) break;
+ 112:Src/tof.c     ****   
+ 113:Src/tof.c     ****     status = VL53L0X_SetVcselPulsePeriod(dev, VL53L0X_VCSEL_PERIOD_PRE_RANGE, params->preRangeVcsel
+ 114:Src/tof.c     ****     if(status) break;
+ 115:Src/tof.c     **** 
+ 116:Src/tof.c     ****     status = VL53L0X_SetVcselPulsePeriod(dev, VL53L0X_VCSEL_PERIOD_FINAL_RANGE, params->finalRangeV
+ 117:Src/tof.c     ****     if(status) break;
+ 118:Src/tof.c     ****   
+ 119:Src/tof.c     ****     status = VL53L0X_PerformRefCalibration(dev, &params->VhvSettings, &params->PhaseCal);
+ 120:Src/tof.c     ****     if(status) break;
+ 121:Src/tof.c     ****   
+ 122:Src/tof.c     ****     dev->LeakyFirst = 1;
+ 123:Src/tof.c     **** 
+ 124:Src/tof.c     ****     return 0;
+ 125:Src/tof.c     ****   }while(0);
+ 126:Src/tof.c     ****   
+ 127:Src/tof.c     ****   return -1;
+ 128:Src/tof.c     **** }
+ 129:Src/tof.c     **** 
+ 130:Src/tof.c     **** static void ToF_SetNewRange(ToF_Dev *dev, ToF_Data *data){
+  27              		.loc 1 130 0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  31              		@ link register save eliminated.
+  32              	.LVL0:
+ 131:Src/tof.c     ****   /* Store new ranging data into the device structure, apply leaky
+ 132:Src/tof.c     ****      integrator if needed */
+ 133:Src/tof.c     ****   static int LeakyFactorFix8 = (int)( 0.6 *256);
+ 134:Src/tof.c     ****     
+ 135:Src/tof.c     ****   if(data->RangeStatus == 0){
+  33              		.loc 1 135 0
+  34 0000 0B7E     		ldrb	r3, [r1, #24]	@ zero_extendqisi2
+  35 0002 BBB9     		cbnz	r3, .L2
+ 136:Src/tof.c     ****     if(dev->LeakyFirst){
+  36              		.loc 1 136 0
+ARM GAS  /tmp/ccYqKCzT.s 			page 4
+
+
+  37 0004 D0F87C31 		ldr	r3, [r0, #380]
+  38 0008 33B1     		cbz	r3, .L3
+ 137:Src/tof.c     ****       dev->LeakyFirst = 0;
+  39              		.loc 1 137 0
+  40 000a 0023     		movs	r3, #0
+  41 000c C0F87C31 		str	r3, [r0, #380]
+ 138:Src/tof.c     ****       dev->LeakyRange = data->RangeMilliMeter;
+  42              		.loc 1 138 0
+  43 0010 0B89     		ldrh	r3, [r1, #8]
+  44 0012 C0F87831 		str	r3, [r0, #376]
+  45 0016 7047     		bx	lr
+  46              	.L3:
+ 139:Src/tof.c     ****     }
+ 140:Src/tof.c     ****     else{
+ 141:Src/tof.c     ****       dev->LeakyRange = (dev->LeakyRange*LeakyFactorFix8 + (256-LeakyFactorFix8)*data->RangeMilliMe
+  47              		.loc 1 141 0
+  48 0018 D0F87831 		ldr	r3, [r0, #376]
+  49 001c 03EBC303 		add	r3, r3, r3, lsl #3
+  50 0020 03EB0313 		add	r3, r3, r3, lsl #4
+  51 0024 0A89     		ldrh	r2, [r1, #8]
+  52 0026 6721     		movs	r1, #103
+  53              	.LVL1:
+  54 0028 01FB0233 		mla	r3, r1, r2, r3
+  55 002c 1B12     		asrs	r3, r3, #8
+  56 002e C0F87831 		str	r3, [r0, #376]
+  57 0032 7047     		bx	lr
+  58              	.LVL2:
+  59              	.L2:
+ 142:Src/tof.c     ****     }
+ 143:Src/tof.c     ****   }
+ 144:Src/tof.c     ****   else{
+ 145:Src/tof.c     ****     dev->LeakyFirst = 1;
+  60              		.loc 1 145 0
+  61 0034 0123     		movs	r3, #1
+  62 0036 C0F87C31 		str	r3, [r0, #380]
+ 146:Src/tof.c     ****   }
+ 147:Src/tof.c     **** }
+  63              		.loc 1 147 0
+  64 003a 7047     		bx	lr
+  65              		.cfi_endproc
+  66              	.LFE684:
+  68              		.section	.text.ToF_Init_Struct,"ax",%progbits
+  69              		.align	1
+  70              		.global	ToF_Init_Struct
+  71              		.syntax unified
+  72              		.thumb
+  73              		.thumb_func
+  74              		.fpu fpv4-sp-d16
+  76              	ToF_Init_Struct:
+  77              	.LFB679:
+  33:Src/tof.c     ****   htof->dev.I2cHandle = hi2c;
+  78              		.loc 1 33 0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 0
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82              	.LVL3:
+  83 0000 08B5     		push	{r3, lr}
+ARM GAS  /tmp/ccYqKCzT.s 			page 5
+
+
+  84              	.LCFI0:
+  85              		.cfi_def_cfa_offset 8
+  86              		.cfi_offset 3, -8
+  87              		.cfi_offset 14, -4
+  34:Src/tof.c     ****   htof->dev.I2cDevAddr = 0x52;
+  88              		.loc 1 34 0
+  89 0002 C0F85C11 		str	r1, [r0, #348]
+  35:Src/tof.c     ****   htof->dev.Present = 0;
+  90              		.loc 1 35 0
+  91 0006 5222     		movs	r2, #82
+  92 0008 80F86021 		strb	r2, [r0, #352]
+  36:Src/tof.c     **** 
+  93              		.loc 1 36 0
+  94 000c 0022     		movs	r2, #0
+  95 000e C0F86821 		str	r2, [r0, #360]
+  39:Src/tof.c     **** }
+  96              		.loc 1 39 0
+  97 0012 8821     		movs	r1, #136
+  98              	.LVL4:
+  99 0014 FFF7FEFF 		bl	VL53L0X_WrByte
+ 100              	.LVL5:
+  40:Src/tof.c     **** 
+ 101              		.loc 1 40 0
+ 102 0018 08BD     		pop	{r3, pc}
+ 103              		.cfi_endproc
+ 104              	.LFE679:
+ 106              		.section	.text.ToF_Poke,"ax",%progbits
+ 107              		.align	1
+ 108              		.global	ToF_Poke
+ 109              		.syntax unified
+ 110              		.thumb
+ 111              		.thumb_func
+ 112              		.fpu fpv4-sp-d16
+ 114              	ToF_Poke:
+ 115              	.LFB680:
+  42:Src/tof.c     ****   int status;
+ 116              		.loc 1 42 0
+ 117              		.cfi_startproc
+ 118              		@ args = 0, pretend = 0, frame = 8
+ 119              		@ frame_needed = 0, uses_anonymous_args = 0
+ 120              	.LVL6:
+ 121 0000 00B5     		push	{lr}
+ 122              	.LCFI1:
+ 123              		.cfi_def_cfa_offset 4
+ 124              		.cfi_offset 14, -4
+ 125 0002 83B0     		sub	sp, sp, #12
+ 126              	.LCFI2:
+ 127              		.cfi_def_cfa_offset 16
+  45:Src/tof.c     ****   status = VL53L0X_RdWord(dev, VL53L0X_REG_IDENTIFICATION_MODEL_ID, &id);
+ 128              		.loc 1 45 0
+ 129 0004 02AA     		add	r2, sp, #8
+ 130 0006 0023     		movs	r3, #0
+ 131 0008 22F8023D 		strh	r3, [r2, #-2]!	@ movhi
+  46:Src/tof.c     ****   
+ 132              		.loc 1 46 0
+ 133 000c C021     		movs	r1, #192
+ 134 000e FFF7FEFF 		bl	VL53L0X_RdWord
+ARM GAS  /tmp/ccYqKCzT.s 			page 6
+
+
+ 135              	.LVL7:
+  49:Src/tof.c     ****     return -1;
+ 136              		.loc 1 49 0
+ 137 0012 60B9     		cbnz	r0, .L9
+  49:Src/tof.c     ****     return -1;
+ 138              		.loc 1 49 0 is_stmt 0 discriminator 1
+ 139 0014 BDF80620 		ldrh	r2, [sp, #6]
+ 140 0018 4EF6AA63 		movw	r3, #61098
+ 141 001c 9A42     		cmp	r2, r3
+ 142 001e 03D1     		bne	.L12
+  53:Src/tof.c     **** }
+ 143              		.loc 1 53 0 is_stmt 1
+ 144 0020 0020     		movs	r0, #0
+ 145              	.LVL8:
+ 146              	.L7:
+  54:Src/tof.c     **** 
+ 147              		.loc 1 54 0
+ 148 0022 03B0     		add	sp, sp, #12
+ 149              	.LCFI3:
+ 150              		.cfi_remember_state
+ 151              		.cfi_def_cfa_offset 4
+ 152              		@ sp needed
+ 153 0024 5DF804FB 		ldr	pc, [sp], #4
+ 154              	.LVL9:
+ 155              	.L12:
+ 156              	.LCFI4:
+ 157              		.cfi_restore_state
+  50:Src/tof.c     ****   }
+ 158              		.loc 1 50 0
+ 159 0028 4FF0FF30 		mov	r0, #-1
+ 160              	.LVL10:
+ 161 002c F9E7     		b	.L7
+ 162              	.LVL11:
+ 163              	.L9:
+ 164 002e 4FF0FF30 		mov	r0, #-1
+ 165              	.LVL12:
+ 166 0032 F6E7     		b	.L7
+ 167              		.cfi_endproc
+ 168              	.LFE680:
+ 170              		.section	.text.ToF_Set_Address,"ax",%progbits
+ 171              		.align	1
+ 172              		.global	ToF_Set_Address
+ 173              		.syntax unified
+ 174              		.thumb
+ 175              		.thumb_func
+ 176              		.fpu fpv4-sp-d16
+ 178              	ToF_Set_Address:
+ 179              	.LFB681:
+  56:Src/tof.c     ****   //Set device address
+ 180              		.loc 1 56 0
+ 181              		.cfi_startproc
+ 182              		@ args = 0, pretend = 0, frame = 0
+ 183              		@ frame_needed = 0, uses_anonymous_args = 0
+ 184              	.LVL13:
+ 185 0000 38B5     		push	{r3, r4, r5, lr}
+ 186              	.LCFI5:
+ 187              		.cfi_def_cfa_offset 16
+ARM GAS  /tmp/ccYqKCzT.s 			page 7
+
+
+ 188              		.cfi_offset 3, -16
+ 189              		.cfi_offset 4, -12
+ 190              		.cfi_offset 5, -8
+ 191              		.cfi_offset 14, -4
+ 192 0002 0446     		mov	r4, r0
+ 193 0004 0D46     		mov	r5, r1
+  58:Src/tof.c     ****   if(status) return -1;
+ 194              		.loc 1 58 0
+ 195 0006 FFF7FEFF 		bl	VL53L0X_SetDeviceAddress
+ 196              	.LVL14:
+  59:Src/tof.c     ****   dev->I2cDevAddr = addr;
+ 197              		.loc 1 59 0
+ 198 000a 28B9     		cbnz	r0, .L15
+  60:Src/tof.c     **** 
+ 199              		.loc 1 60 0
+ 200 000c 84F86051 		strb	r5, [r4, #352]
+  63:Src/tof.c     **** }
+ 201              		.loc 1 63 0
+ 202 0010 2046     		mov	r0, r4
+ 203              	.LVL15:
+ 204 0012 FFF7FEFF 		bl	ToF_Poke
+ 205              	.LVL16:
+ 206              	.L13:
+  64:Src/tof.c     **** 
+ 207              		.loc 1 64 0
+ 208 0016 38BD     		pop	{r3, r4, r5, pc}
+ 209              	.LVL17:
+ 210              	.L15:
+  59:Src/tof.c     ****   dev->I2cDevAddr = addr;
+ 211              		.loc 1 59 0
+ 212 0018 4FF0FF30 		mov	r0, #-1
+ 213              	.LVL18:
+ 214 001c FBE7     		b	.L13
+ 215              		.cfi_endproc
+ 216              	.LFE681:
+ 218              		.section	.text.ToF_Init_Device,"ax",%progbits
+ 219              		.align	1
+ 220              		.global	ToF_Init_Device
+ 221              		.syntax unified
+ 222              		.thumb
+ 223              		.thumb_func
+ 224              		.fpu fpv4-sp-d16
+ 226              	ToF_Init_Device:
+ 227              	.LFB682:
+  66:Src/tof.c     ****   //Init the device
+ 228              		.loc 1 66 0
+ 229              		.cfi_startproc
+ 230              		@ args = 0, pretend = 0, frame = 0
+ 231              		@ frame_needed = 0, uses_anonymous_args = 0
+ 232              	.LVL19:
+ 233 0000 10B5     		push	{r4, lr}
+ 234              	.LCFI6:
+ 235              		.cfi_def_cfa_offset 8
+ 236              		.cfi_offset 4, -8
+ 237              		.cfi_offset 14, -4
+ 238 0002 0446     		mov	r4, r0
+  68:Src/tof.c     ****   if(status == 0)
+ARM GAS  /tmp/ccYqKCzT.s 			page 8
+
+
+ 239              		.loc 1 68 0
+ 240 0004 FFF7FEFF 		bl	VL53L0X_DataInit
+ 241              	.LVL20:
+  69:Src/tof.c     ****     dev->Present = 1;
+ 242              		.loc 1 69 0
+ 243 0008 58B9     		cbnz	r0, .L19
+  70:Src/tof.c     ****   else
+ 244              		.loc 1 70 0
+ 245 000a 0123     		movs	r3, #1
+ 246 000c C4F86831 		str	r3, [r4, #360]
+  75:Src/tof.c     ****   if(status) return -1;
+ 247              		.loc 1 75 0
+ 248 0010 2046     		mov	r0, r4
+ 249              	.LVL21:
+ 250 0012 FFF7FEFF 		bl	VL53L0X_StaticInit
+ 251              	.LVL22:
+  76:Src/tof.c     ****   return 0;
+ 252              		.loc 1 76 0
+ 253 0016 08B9     		cbnz	r0, .L22
+  77:Src/tof.c     **** }
+ 254              		.loc 1 77 0
+ 255 0018 0020     		movs	r0, #0
+ 256              	.LVL23:
+ 257              	.L17:
+  78:Src/tof.c     **** 
+ 258              		.loc 1 78 0
+ 259 001a 10BD     		pop	{r4, pc}
+ 260              	.LVL24:
+ 261              	.L22:
+  76:Src/tof.c     ****   return 0;
+ 262              		.loc 1 76 0
+ 263 001c 4FF0FF30 		mov	r0, #-1
+ 264              	.LVL25:
+ 265 0020 FBE7     		b	.L17
+ 266              	.LVL26:
+ 267              	.L19:
+  72:Src/tof.c     ****   
+ 268              		.loc 1 72 0
+ 269 0022 4FF0FF30 		mov	r0, #-1
+ 270              	.LVL27:
+ 271 0026 F8E7     		b	.L17
+ 272              		.cfi_endproc
+ 273              	.LFE682:
+ 275              		.section	.text.ToF_Configure_Device,"ax",%progbits
+ 276              		.align	1
+ 277              		.global	ToF_Configure_Device
+ 278              		.syntax unified
+ 279              		.thumb
+ 280              		.thumb_func
+ 281              		.fpu fpv4-sp-d16
+ 283              	ToF_Configure_Device:
+ 284              	.LFB683:
+  80:Src/tof.c     ****   int status = 0;
+ 285              		.loc 1 80 0
+ 286              		.cfi_startproc
+ 287              		@ args = 0, pretend = 0, frame = 0
+ 288              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  /tmp/ccYqKCzT.s 			page 9
+
+
+ 289              	.LVL28:
+ 290 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 291              	.LCFI7:
+ 292              		.cfi_def_cfa_offset 24
+ 293              		.cfi_offset 3, -24
+ 294              		.cfi_offset 4, -20
+ 295              		.cfi_offset 5, -16
+ 296              		.cfi_offset 6, -12
+ 297              		.cfi_offset 7, -8
+ 298              		.cfi_offset 14, -4
+ 299 0002 0446     		mov	r4, r0
+ 300 0004 0D46     		mov	r5, r1
+ 301 0006 1746     		mov	r7, r2
+ 302              	.LVL29:
+  85:Src/tof.c     ****     if(status) break;
+ 303              		.loc 1 85 0
+ 304 0008 01F10802 		add	r2, r1, #8
+ 305              	.LVL30:
+ 306 000c 0431     		adds	r1, r1, #4
+ 307              	.LVL31:
+ 308 000e FFF7FEFF 		bl	VL53L0X_PerformRefSpadManagement
+ 309              	.LVL32:
+  86:Src/tof.c     **** 
+ 310              		.loc 1 86 0
+ 311 0012 0028     		cmp	r0, #0
+ 312 0014 3ED1     		bne	.L25
+  89:Src/tof.c     ****     if(status) break;
+ 313              		.loc 1 89 0
+ 314 0016 6E1C     		adds	r6, r5, #1
+ 315 0018 3246     		mov	r2, r6
+ 316 001a 2946     		mov	r1, r5
+ 317 001c 2046     		mov	r0, r4
+ 318              	.LVL33:
+ 319 001e FFF7FEFF 		bl	VL53L0X_PerformRefCalibration
+ 320              	.LVL34:
+  90:Src/tof.c     ****    
+ 321              		.loc 1 90 0
+ 322 0022 D0BB     		cbnz	r0, .L26
+  93:Src/tof.c     ****     if(status) break;
+ 323              		.loc 1 93 0
+ 324 0024 3946     		mov	r1, r7
+ 325 0026 2046     		mov	r0, r4
+ 326              	.LVL35:
+ 327 0028 FFF7FEFF 		bl	VL53L0X_SetDeviceMode
+ 328              	.LVL36:
+  94:Src/tof.c     ****   
+ 329              		.loc 1 94 0
+ 330 002c C0BB     		cbnz	r0, .L27
+  97:Src/tof.c     ****     if(status) break;
+ 331              		.loc 1 97 0
+ 332 002e 0122     		movs	r2, #1
+ 333 0030 0021     		movs	r1, #0
+ 334 0032 2046     		mov	r0, r4
+ 335              	.LVL37:
+ 336 0034 FFF7FEFF 		bl	VL53L0X_SetLimitCheckEnable
+ 337              	.LVL38:
+  98:Src/tof.c     ****   
+ARM GAS  /tmp/ccYqKCzT.s 			page 10
+
+
+ 338              		.loc 1 98 0
+ 339 0038 A8BB     		cbnz	r0, .L28
+ 101:Src/tof.c     ****     if(status) break;
+ 340              		.loc 1 101 0
+ 341 003a 0122     		movs	r2, #1
+ 342 003c 1146     		mov	r1, r2
+ 343 003e 2046     		mov	r0, r4
+ 344              	.LVL39:
+ 345 0040 FFF7FEFF 		bl	VL53L0X_SetLimitCheckEnable
+ 346              	.LVL40:
+ 102:Src/tof.c     ****   
+ 347              		.loc 1 102 0
+ 348 0044 90BB     		cbnz	r0, .L29
+ 104:Src/tof.c     ****     if(status) break;
+ 349              		.loc 1 104 0
+ 350 0046 EA68     		ldr	r2, [r5, #12]
+ 351 0048 0121     		movs	r1, #1
+ 352 004a 2046     		mov	r0, r4
+ 353              	.LVL41:
+ 354 004c FFF7FEFF 		bl	VL53L0X_SetLimitCheckValue
+ 355              	.LVL42:
+ 105:Src/tof.c     ****   
+ 356              		.loc 1 105 0
+ 357 0050 78BB     		cbnz	r0, .L30
+ 107:Src/tof.c     ****     if(status) break;
+ 358              		.loc 1 107 0
+ 359 0052 2A69     		ldr	r2, [r5, #16]
+ 360 0054 0021     		movs	r1, #0
+ 361 0056 2046     		mov	r0, r4
+ 362              	.LVL43:
+ 363 0058 FFF7FEFF 		bl	VL53L0X_SetLimitCheckValue
+ 364              	.LVL44:
+ 108:Src/tof.c     ****   
+ 365              		.loc 1 108 0
+ 366 005c 60BB     		cbnz	r0, .L31
+ 110:Src/tof.c     ****     if(status) break;
+ 367              		.loc 1 110 0
+ 368 005e 6969     		ldr	r1, [r5, #20]
+ 369 0060 2046     		mov	r0, r4
+ 370              	.LVL45:
+ 371 0062 FFF7FEFF 		bl	VL53L0X_SetMeasurementTimingBudgetMicroSeconds
+ 372              	.LVL46:
+ 111:Src/tof.c     ****   
+ 373              		.loc 1 111 0
+ 374 0066 50BB     		cbnz	r0, .L32
+ 113:Src/tof.c     ****     if(status) break;
+ 375              		.loc 1 113 0
+ 376 0068 2A7E     		ldrb	r2, [r5, #24]	@ zero_extendqisi2
+ 377 006a 0021     		movs	r1, #0
+ 378 006c 2046     		mov	r0, r4
+ 379              	.LVL47:
+ 380 006e FFF7FEFF 		bl	VL53L0X_SetVcselPulsePeriod
+ 381              	.LVL48:
+ 114:Src/tof.c     **** 
+ 382              		.loc 1 114 0
+ 383 0072 38BB     		cbnz	r0, .L33
+ 116:Src/tof.c     ****     if(status) break;
+ARM GAS  /tmp/ccYqKCzT.s 			page 11
+
+
+ 384              		.loc 1 116 0
+ 385 0074 6A7E     		ldrb	r2, [r5, #25]	@ zero_extendqisi2
+ 386 0076 0121     		movs	r1, #1
+ 387 0078 2046     		mov	r0, r4
+ 388              	.LVL49:
+ 389 007a FFF7FEFF 		bl	VL53L0X_SetVcselPulsePeriod
+ 390              	.LVL50:
+ 117:Src/tof.c     ****   
+ 391              		.loc 1 117 0
+ 392 007e 20BB     		cbnz	r0, .L34
+ 119:Src/tof.c     ****     if(status) break;
+ 393              		.loc 1 119 0
+ 394 0080 3246     		mov	r2, r6
+ 395 0082 2946     		mov	r1, r5
+ 396 0084 2046     		mov	r0, r4
+ 397              	.LVL51:
+ 398 0086 FFF7FEFF 		bl	VL53L0X_PerformRefCalibration
+ 399              	.LVL52:
+ 120:Src/tof.c     ****   
+ 400              		.loc 1 120 0
+ 401 008a 08BB     		cbnz	r0, .L35
+ 122:Src/tof.c     **** 
+ 402              		.loc 1 122 0
+ 403 008c 0123     		movs	r3, #1
+ 404 008e C4F87C31 		str	r3, [r4, #380]
+ 405              	.LVL53:
+ 406              	.L23:
+ 128:Src/tof.c     **** 
+ 407              		.loc 1 128 0
+ 408 0092 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 409              	.LVL54:
+ 410              	.L25:
+ 127:Src/tof.c     **** }
+ 411              		.loc 1 127 0
+ 412 0094 4FF0FF30 		mov	r0, #-1
+ 413              	.LVL55:
+ 414 0098 FBE7     		b	.L23
+ 415              	.LVL56:
+ 416              	.L26:
+ 417 009a 4FF0FF30 		mov	r0, #-1
+ 418              	.LVL57:
+ 419 009e F8E7     		b	.L23
+ 420              	.LVL58:
+ 421              	.L27:
+ 422 00a0 4FF0FF30 		mov	r0, #-1
+ 423              	.LVL59:
+ 424 00a4 F5E7     		b	.L23
+ 425              	.LVL60:
+ 426              	.L28:
+ 427 00a6 4FF0FF30 		mov	r0, #-1
+ 428              	.LVL61:
+ 429 00aa F2E7     		b	.L23
+ 430              	.LVL62:
+ 431              	.L29:
+ 432 00ac 4FF0FF30 		mov	r0, #-1
+ 433              	.LVL63:
+ 434 00b0 EFE7     		b	.L23
+ARM GAS  /tmp/ccYqKCzT.s 			page 12
+
+
+ 435              	.LVL64:
+ 436              	.L30:
+ 437 00b2 4FF0FF30 		mov	r0, #-1
+ 438              	.LVL65:
+ 439 00b6 ECE7     		b	.L23
+ 440              	.LVL66:
+ 441              	.L31:
+ 442 00b8 4FF0FF30 		mov	r0, #-1
+ 443              	.LVL67:
+ 444 00bc E9E7     		b	.L23
+ 445              	.LVL68:
+ 446              	.L32:
+ 447 00be 4FF0FF30 		mov	r0, #-1
+ 448              	.LVL69:
+ 449 00c2 E6E7     		b	.L23
+ 450              	.LVL70:
+ 451              	.L33:
+ 452 00c4 4FF0FF30 		mov	r0, #-1
+ 453              	.LVL71:
+ 454 00c8 E3E7     		b	.L23
+ 455              	.LVL72:
+ 456              	.L34:
+ 457 00ca 4FF0FF30 		mov	r0, #-1
+ 458              	.LVL73:
+ 459 00ce E0E7     		b	.L23
+ 460              	.LVL74:
+ 461              	.L35:
+ 462 00d0 4FF0FF30 		mov	r0, #-1
+ 463              	.LVL75:
+ 464 00d4 DDE7     		b	.L23
+ 465              		.cfi_endproc
+ 466              	.LFE683:
+ 468              		.section	.text.ToF_Poll_Measurement_Data,"ax",%progbits
+ 469              		.align	1
+ 470              		.global	ToF_Poll_Measurement_Data
+ 471              		.syntax unified
+ 472              		.thumb
+ 473              		.thumb_func
+ 474              		.fpu fpv4-sp-d16
+ 476              	ToF_Poll_Measurement_Data:
+ 477              	.LFB685:
+ 148:Src/tof.c     **** 
+ 149:Src/tof.c     **** int ToF_Poll_Measurement_Data(ToF_Handler *htof){
+ 478              		.loc 1 149 0
+ 479              		.cfi_startproc
+ 480              		@ args = 0, pretend = 0, frame = 8
+ 481              		@ frame_needed = 0, uses_anonymous_args = 0
+ 482              	.LVL76:
+ 150:Src/tof.c     ****   if(!htof->dev.Present) return -1;
+ 483              		.loc 1 150 0
+ 484 0000 D0F86831 		ldr	r3, [r0, #360]
+ 485 0004 FBB1     		cbz	r3, .L39
+ 149:Src/tof.c     ****   if(!htof->dev.Present) return -1;
+ 486              		.loc 1 149 0
+ 487 0006 30B5     		push	{r4, r5, lr}
+ 488              	.LCFI8:
+ 489              		.cfi_def_cfa_offset 12
+ARM GAS  /tmp/ccYqKCzT.s 			page 13
+
+
+ 490              		.cfi_offset 4, -12
+ 491              		.cfi_offset 5, -8
+ 492              		.cfi_offset 14, -4
+ 493 0008 83B0     		sub	sp, sp, #12
+ 494              	.LCFI9:
+ 495              		.cfi_def_cfa_offset 24
+ 496 000a 0446     		mov	r4, r0
+ 151:Src/tof.c     ****   
+ 152:Src/tof.c     ****   uint8_t ready;
+ 153:Src/tof.c     ****   if(VL53L0X_GetMeasurementDataReady(&htof->dev, &ready) != VL53L0X_ERROR_NONE){
+ 497              		.loc 1 153 0
+ 498 000c 0DF10701 		add	r1, sp, #7
+ 499 0010 FFF7FEFF 		bl	VL53L0X_GetMeasurementDataReady
+ 500              	.LVL77:
+ 501 0014 D0B9     		cbnz	r0, .L40
+ 154:Src/tof.c     ****     return -1;
+ 155:Src/tof.c     ****   }
+ 156:Src/tof.c     **** 
+ 157:Src/tof.c     ****   if(!ready){
+ 502              		.loc 1 157 0
+ 503 0016 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 504 001a 13B9     		cbnz	r3, .L47
+ 158:Src/tof.c     ****     return 1;
+ 505              		.loc 1 158 0
+ 506 001c 0120     		movs	r0, #1
+ 507              	.L37:
+ 159:Src/tof.c     ****   }
+ 160:Src/tof.c     **** 
+ 161:Src/tof.c     ****   if(VL53L0X_GetRangingMeasurementData(&htof->dev, &htof->data) != VL53L0X_ERROR_NONE){
+ 162:Src/tof.c     ****     return -1;
+ 163:Src/tof.c     ****   }
+ 164:Src/tof.c     **** 
+ 165:Src/tof.c     ****   ToF_SetNewRange(&htof->dev, &htof->data);
+ 166:Src/tof.c     ****   
+ 167:Src/tof.c     ****   VL53L0X_ClearInterruptMask(&htof->dev, -1);
+ 168:Src/tof.c     ****   
+ 169:Src/tof.c     ****   return 0;
+ 170:Src/tof.c     **** }
+ 508              		.loc 1 170 0
+ 509 001e 03B0     		add	sp, sp, #12
+ 510              	.LCFI10:
+ 511              		.cfi_remember_state
+ 512              		.cfi_def_cfa_offset 12
+ 513              		@ sp needed
+ 514 0020 30BD     		pop	{r4, r5, pc}
+ 515              	.LVL78:
+ 516              	.L47:
+ 517              	.LCFI11:
+ 518              		.cfi_restore_state
+ 161:Src/tof.c     ****     return -1;
+ 519              		.loc 1 161 0
+ 520 0022 04F5C875 		add	r5, r4, #400
+ 521 0026 2946     		mov	r1, r5
+ 522 0028 2046     		mov	r0, r4
+ 523 002a FFF7FEFF 		bl	VL53L0X_GetRangingMeasurementData
+ 524              	.LVL79:
+ 525 002e 80B9     		cbnz	r0, .L42
+ARM GAS  /tmp/ccYqKCzT.s 			page 14
+
+
+ 165:Src/tof.c     ****   
+ 526              		.loc 1 165 0
+ 527 0030 2946     		mov	r1, r5
+ 528 0032 2046     		mov	r0, r4
+ 529 0034 FFF7FEFF 		bl	ToF_SetNewRange
+ 530              	.LVL80:
+ 167:Src/tof.c     ****   
+ 531              		.loc 1 167 0
+ 532 0038 4FF0FF31 		mov	r1, #-1
+ 533 003c 2046     		mov	r0, r4
+ 534 003e FFF7FEFF 		bl	VL53L0X_ClearInterruptMask
+ 535              	.LVL81:
+ 169:Src/tof.c     **** }
+ 536              		.loc 1 169 0
+ 537 0042 0020     		movs	r0, #0
+ 538 0044 EBE7     		b	.L37
+ 539              	.LVL82:
+ 540              	.L39:
+ 541              	.LCFI12:
+ 542              		.cfi_def_cfa_offset 0
+ 543              		.cfi_restore 4
+ 544              		.cfi_restore 5
+ 545              		.cfi_restore 14
+ 150:Src/tof.c     ****   
+ 546              		.loc 1 150 0
+ 547 0046 4FF0FF30 		mov	r0, #-1
+ 548              	.LVL83:
+ 549              		.loc 1 170 0
+ 550 004a 7047     		bx	lr
+ 551              	.LVL84:
+ 552              	.L40:
+ 553              	.LCFI13:
+ 554              		.cfi_def_cfa_offset 24
+ 555              		.cfi_offset 4, -12
+ 556              		.cfi_offset 5, -8
+ 557              		.cfi_offset 14, -4
+ 154:Src/tof.c     ****   }
+ 558              		.loc 1 154 0
+ 559 004c 4FF0FF30 		mov	r0, #-1
+ 560 0050 E5E7     		b	.L37
+ 561              	.L42:
+ 162:Src/tof.c     ****   }
+ 562              		.loc 1 162 0
+ 563 0052 4FF0FF30 		mov	r0, #-1
+ 564 0056 E2E7     		b	.L37
+ 565              		.cfi_endproc
+ 566              	.LFE685:
+ 568              		.section	.text.ToF_Perform_Measurement,"ax",%progbits
+ 569              		.align	1
+ 570              		.global	ToF_Perform_Measurement
+ 571              		.syntax unified
+ 572              		.thumb
+ 573              		.thumb_func
+ 574              		.fpu fpv4-sp-d16
+ 576              	ToF_Perform_Measurement:
+ 577              	.LFB686:
+ 171:Src/tof.c     **** 
+ARM GAS  /tmp/ccYqKCzT.s 			page 15
+
+
+ 172:Src/tof.c     **** int ToF_Perform_Measurement(ToF_Dev *dev, ToF_Data *data){
+ 578              		.loc 1 172 0
+ 579              		.cfi_startproc
+ 580              		@ args = 0, pretend = 0, frame = 0
+ 581              		@ frame_needed = 0, uses_anonymous_args = 0
+ 582              	.LVL85:
+ 583 0000 38B5     		push	{r3, r4, r5, lr}
+ 584              	.LCFI14:
+ 585              		.cfi_def_cfa_offset 16
+ 586              		.cfi_offset 3, -16
+ 587              		.cfi_offset 4, -12
+ 588              		.cfi_offset 5, -8
+ 589              		.cfi_offset 14, -4
+ 173:Src/tof.c     ****   if(!dev->Present) return -1;
+ 590              		.loc 1 173 0
+ 591 0002 D0F86831 		ldr	r3, [r0, #360]
+ 592 0006 53B1     		cbz	r3, .L50
+ 593 0008 0D46     		mov	r5, r1
+ 594 000a 0446     		mov	r4, r0
+ 174:Src/tof.c     **** 
+ 175:Src/tof.c     ****   if(VL53L0X_PerformSingleRangingMeasurement(dev, data) != VL53L0X_ERROR_NONE){
+ 595              		.loc 1 175 0
+ 596 000c FFF7FEFF 		bl	VL53L0X_PerformSingleRangingMeasurement
+ 597              	.LVL86:
+ 598 0010 40B9     		cbnz	r0, .L51
+ 176:Src/tof.c     ****     return -1;
+ 177:Src/tof.c     ****   }
+ 178:Src/tof.c     **** 
+ 179:Src/tof.c     ****   ToF_SetNewRange(dev, data);
+ 599              		.loc 1 179 0
+ 600 0012 2946     		mov	r1, r5
+ 601 0014 2046     		mov	r0, r4
+ 602 0016 FFF7FEFF 		bl	ToF_SetNewRange
+ 603              	.LVL87:
+ 180:Src/tof.c     ****   
+ 181:Src/tof.c     ****   return 0;
+ 604              		.loc 1 181 0
+ 605 001a 0020     		movs	r0, #0
+ 606              	.LVL88:
+ 607              	.L48:
+ 182:Src/tof.c     **** }
+ 608              		.loc 1 182 0
+ 609 001c 38BD     		pop	{r3, r4, r5, pc}
+ 610              	.LVL89:
+ 611              	.L50:
+ 173:Src/tof.c     **** 
+ 612              		.loc 1 173 0
+ 613 001e 4FF0FF30 		mov	r0, #-1
+ 614              	.LVL90:
+ 615 0022 FBE7     		b	.L48
+ 616              	.LVL91:
+ 617              	.L51:
+ 176:Src/tof.c     ****   }
+ 618              		.loc 1 176 0
+ 619 0024 4FF0FF30 		mov	r0, #-1
+ 620 0028 F8E7     		b	.L48
+ 621              		.cfi_endproc
+ARM GAS  /tmp/ccYqKCzT.s 			page 16
+
+
+ 622              	.LFE686:
+ 624              		.section	.text.ToF_Get_Last_Range,"ax",%progbits
+ 625              		.align	1
+ 626              		.global	ToF_Get_Last_Range
+ 627              		.syntax unified
+ 628              		.thumb
+ 629              		.thumb_func
+ 630              		.fpu fpv4-sp-d16
+ 632              	ToF_Get_Last_Range:
+ 633              	.LFB687:
+ 183:Src/tof.c     **** 
+ 184:Src/tof.c     **** int ToF_Get_Last_Range(ToF_Handler *htof){
+ 634              		.loc 1 184 0
+ 635              		.cfi_startproc
+ 636              		@ args = 0, pretend = 0, frame = 0
+ 637              		@ frame_needed = 0, uses_anonymous_args = 0
+ 638              		@ link register save eliminated.
+ 639              	.LVL92:
+ 640              	.LBB6:
+ 641              	.LBB7:
+ 642              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V4.30
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****    All rights reserved.
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****      specific prior written permission.
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****    *
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:Drivers/CMSIS/Include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:Drivers/CMSIS/Include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:Drivers/CMSIS/Include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:Drivers/CMSIS/Include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:Drivers/CMSIS/Include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+ARM GAS  /tmp/ccYqKCzT.s 			page 17
+
+
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  47:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+  51:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  53:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  54:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  60:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+  62:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:Drivers/CMSIS/Include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+ 643              		.loc 2 71 0
+ 644              		.syntax unified
+ 645              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 646 0000 72B6     		cpsid i
+ 647              	@ 0 "" 2
+ 648              		.thumb
+ 649              		.syntax unified
+ 650              	.LBE7:
+ 651              	.LBE6:
+ 185:Src/tof.c     ****   __disable_irq();
+ 186:Src/tof.c     ****   int r = (htof->data.RangeStatus==0)?(htof->dev.LeakyRange):0;
+ 652              		.loc 1 186 0
+ 653 0002 90F8A831 		ldrb	r3, [r0, #424]	@ zero_extendqisi2
+ 654 0006 1BB9     		cbnz	r3, .L55
+ 655              		.loc 1 186 0 is_stmt 0 discriminator 1
+ 656 0008 D0F87801 		ldr	r0, [r0, #376]
+ 657              	.LVL93:
+ 658              	.L54:
+ 659              	.LBB8:
+ 660              	.LBB9:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 661              		.loc 2 60 0 is_stmt 1 discriminator 4
+ARM GAS  /tmp/ccYqKCzT.s 			page 18
+
+
+ 662              		.syntax unified
+ 663              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 664 000c 62B6     		cpsie i
+ 665              	@ 0 "" 2
+ 666              		.thumb
+ 667              		.syntax unified
+ 668              	.LBE9:
+ 669              	.LBE8:
+ 187:Src/tof.c     ****   __enable_irq();
+ 188:Src/tof.c     ****   return r;
+ 189:Src/tof.c     **** }
+ 670              		.loc 1 189 0 discriminator 4
+ 671 000e 7047     		bx	lr
+ 672              	.LVL94:
+ 673              	.L55:
+ 186:Src/tof.c     ****   __enable_irq();
+ 674              		.loc 1 186 0
+ 675 0010 0020     		movs	r0, #0
+ 676              	.LVL95:
+ 677 0012 FBE7     		b	.L54
+ 678              		.cfi_endproc
+ 679              	.LFE687:
+ 681              		.text
+ 682              	.Letext0:
+ 683              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 684              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 685              		.file 5 "Drivers/VL53L0X/API/vl53l0x_types.h"
+ 686              		.file 6 "Drivers/VL53L0X/API/vl53l0x_device.h"
+ 687              		.file 7 "Drivers/VL53L0X/API/vl53l0x_def.h"
+ 688              		.file 8 "/usr/arm-none-eabi/include/sys/lock.h"
+ 689              		.file 9 "/usr/arm-none-eabi/include/sys/_types.h"
+ 690              		.file 10 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 691              		.file 11 "/usr/arm-none-eabi/include/sys/reent.h"
+ 692              		.file 12 "Drivers/CMSIS/Include/core_cm4.h"
+ 693              		.file 13 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h"
+ 694              		.file 14 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f401xe.h"
+ 695              		.file 15 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 696              		.file 16 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 697              		.file 17 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h"
+ 698              		.file 18 "Drivers/VL53L0X/Platform/vl53l0x_platform.h"
+ 699              		.file 19 "Inc/tof.h"
+ 700              		.file 20 "Inc/crc_16.h"
+ 701              		.file 21 "Inc/robotronik_protocol.h"
+ 702              		.file 22 "Inc/usart.h"
+ 703              		.file 23 "/usr/arm-none-eabi/include/stdlib.h"
+ 704              		.file 24 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_dma.h"
+ 705              		.file 25 "Drivers/VL53L0X/API/vl53l0x_api.h"
+ARM GAS  /tmp/ccYqKCzT.s 			page 19
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 tof.c
+     /tmp/ccYqKCzT.s:18     .text.ToF_SetNewRange:0000000000000000 $t
+     /tmp/ccYqKCzT.s:24     .text.ToF_SetNewRange:0000000000000000 ToF_SetNewRange
+     /tmp/ccYqKCzT.s:69     .text.ToF_Init_Struct:0000000000000000 $t
+     /tmp/ccYqKCzT.s:76     .text.ToF_Init_Struct:0000000000000000 ToF_Init_Struct
+     /tmp/ccYqKCzT.s:107    .text.ToF_Poke:0000000000000000 $t
+     /tmp/ccYqKCzT.s:114    .text.ToF_Poke:0000000000000000 ToF_Poke
+     /tmp/ccYqKCzT.s:171    .text.ToF_Set_Address:0000000000000000 $t
+     /tmp/ccYqKCzT.s:178    .text.ToF_Set_Address:0000000000000000 ToF_Set_Address
+     /tmp/ccYqKCzT.s:219    .text.ToF_Init_Device:0000000000000000 $t
+     /tmp/ccYqKCzT.s:226    .text.ToF_Init_Device:0000000000000000 ToF_Init_Device
+     /tmp/ccYqKCzT.s:276    .text.ToF_Configure_Device:0000000000000000 $t
+     /tmp/ccYqKCzT.s:283    .text.ToF_Configure_Device:0000000000000000 ToF_Configure_Device
+     /tmp/ccYqKCzT.s:469    .text.ToF_Poll_Measurement_Data:0000000000000000 $t
+     /tmp/ccYqKCzT.s:476    .text.ToF_Poll_Measurement_Data:0000000000000000 ToF_Poll_Measurement_Data
+     /tmp/ccYqKCzT.s:569    .text.ToF_Perform_Measurement:0000000000000000 $t
+     /tmp/ccYqKCzT.s:576    .text.ToF_Perform_Measurement:0000000000000000 ToF_Perform_Measurement
+     /tmp/ccYqKCzT.s:625    .text.ToF_Get_Last_Range:0000000000000000 $t
+     /tmp/ccYqKCzT.s:632    .text.ToF_Get_Last_Range:0000000000000000 ToF_Get_Last_Range
+
+UNDEFINED SYMBOLS
+VL53L0X_WrByte
+VL53L0X_RdWord
+VL53L0X_SetDeviceAddress
+VL53L0X_DataInit
+VL53L0X_StaticInit
+VL53L0X_PerformRefSpadManagement
+VL53L0X_PerformRefCalibration
+VL53L0X_SetDeviceMode
+VL53L0X_SetLimitCheckEnable
+VL53L0X_SetLimitCheckValue
+VL53L0X_SetMeasurementTimingBudgetMicroSeconds
+VL53L0X_SetVcselPulsePeriod
+VL53L0X_GetMeasurementDataReady
+VL53L0X_GetRangingMeasurementData
+VL53L0X_ClearInterruptMask
+VL53L0X_PerformSingleRangingMeasurement

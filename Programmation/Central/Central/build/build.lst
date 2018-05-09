@@ -1,0 +1,766 @@
+ARM GAS  /tmp/ccw8qWeD.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"build.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	__aeabi_f2d
+  18              		.global	__aeabi_dmul
+  19              		.global	__aeabi_i2d
+  20              		.global	__aeabi_dsub
+  21              		.global	__aeabi_d2uiz
+  22              		.section	.text.Quit_Set,"ax",%progbits
+  23              		.align	1
+  24              		.syntax unified
+  25              		.thumb
+  26              		.thumb_func
+  27              		.fpu fpv4-sp-d16
+  29              	Quit_Set:
+  30              	.LFB1:
+  31              		.file 1 "Src/build.c"
+   1:Src/build.c   **** #include "build.h"
+   2:Src/build.c   **** #include "strategy.h"
+   3:Src/build.c   **** #include "gas.h"
+   4:Src/build.c   **** #include "z_client.h"
+   5:Src/build.c   **** #include <math.h>
+   6:Src/build.c   **** 
+   7:Src/build.c   **** static float dir_to_angle[4] = {[FROM_UP] = M_PI/2,
+   8:Src/build.c   **** 				[FROM_RIGHT] = M_PI,
+   9:Src/build.c   **** 				[FROM_BOT] = -M_PI/2,
+  10:Src/build.c   **** 				[FROM_LEFT] = 0};
+  11:Src/build.c   **** static void Quit_Set();
+  12:Src/build.c   **** 
+  13:Src/build.c   **** void Build_Building(){
+  14:Src/build.c   ****   Compute_Building_Strategy();
+  15:Src/build.c   ****   //While there is cubes to get
+  16:Src/build.c   ****   while(build_ctx.construction.size != 5 && strat.nb_targets){
+  17:Src/build.c   ****     //Try to get selected cubes, if it fail try again with another
+  18:Src/build.c   ****     //strategy
+  19:Src/build.c   ****     int i;
+  20:Src/build.c   ****     for(i = 0; i < strat.nb_targets; i++){
+  21:Src/build.c   ****       if(Get_Cube(&strat.steps_tab[i]) == -1){
+  22:Src/build.c   **** 	Compute_Building_Strategy();
+  23:Src/build.c   **** 	break;
+  24:Src/build.c   ****       }
+  25:Src/build.c   ****     }
+  26:Src/build.c   ****     
+  27:Src/build.c   ****     //If the building is complete, stop
+ARM GAS  /tmp/ccw8qWeD.s 			page 2
+
+
+  28:Src/build.c   ****     if(i == strat.nb_targets)
+  29:Src/build.c   ****       break;
+  30:Src/build.c   ****   }
+  31:Src/build.c   ****   
+  32:Src/build.c   ****   if(build_ctx.on_set){
+  33:Src/build.c   ****     Quit_Set();
+  34:Src/build.c   ****   }
+  35:Src/build.c   ****   
+  36:Src/build.c   ****   //If the construction is not empty, place it.
+  37:Src/build.c   ****   if(build_ctx.construction.size != 0){
+  38:Src/build.c   ****     Place_Building();
+  39:Src/build.c   ****   }
+  40:Src/build.c   **** }
+  41:Src/build.c   **** 
+  42:Src/build.c   **** 
+  43:Src/build.c   **** static void Quit_Set(){
+  32              		.loc 1 43 0
+  33              		.cfi_startproc
+  34              		@ args = 0, pretend = 0, frame = 0
+  35              		@ frame_needed = 0, uses_anonymous_args = 0
+  36 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 32
+  39              		.cfi_offset 3, -32
+  40              		.cfi_offset 4, -28
+  41              		.cfi_offset 5, -24
+  42              		.cfi_offset 6, -20
+  43              		.cfi_offset 7, -16
+  44              		.cfi_offset 8, -12
+  45              		.cfi_offset 9, -8
+  46              		.cfi_offset 14, -4
+  47 0004 2DED028B 		vpush.64	{d8}
+  48              	.LCFI1:
+  49              		.cfi_def_cfa_offset 40
+  50              		.cfi_offset 80, -40
+  51              		.cfi_offset 81, -36
+  44:Src/build.c   ****   float last_angle = dir_to_angle[build_ctx.align_dir];
+  52              		.loc 1 44 0
+  53 0008 2B4B     		ldr	r3, .L4+8
+  54 000a 9A78     		ldrb	r2, [r3, #2]	@ zero_extendqisi2
+  55 000c 2B4B     		ldr	r3, .L4+12
+  56 000e 03EB8203 		add	r3, r3, r2, lsl #2
+  57 0012 D3F80090 		ldr	r9, [r3]	@ float
+  58              	.LVL0:
+  59              	.L2:
+  45:Src/build.c   ****   while(Go_Straight(me.x - DIST_ALIGN * cos(last_angle),
+  60              		.loc 1 45 0 discriminator 1
+  61 0016 2A4C     		ldr	r4, .L4+16
+  62 0018 2588     		ldrh	r5, [r4]
+  63 001a 4846     		mov	r0, r9	@ float
+  64 001c FFF7FEFF 		bl	__aeabi_f2d
+  65              	.LVL1:
+  66 0020 41EC180B 		vmov	d8, r0, r1
+  67 0024 41EC100B 		vmov	d0, r0, r1
+  68 0028 FFF7FEFF 		bl	cos
+  69              	.LVL2:
+  70 002c 20A3     		adr	r3, .L4
+ARM GAS  /tmp/ccw8qWeD.s 			page 3
+
+
+  71 002e D3E90023 		ldrd	r2, [r3]
+  72 0032 51EC100B 		vmov	r0, r1, d0
+  73 0036 FFF7FEFF 		bl	__aeabi_dmul
+  74              	.LVL3:
+  75 003a 0646     		mov	r6, r0
+  76 003c 0F46     		mov	r7, r1
+  77 003e 2846     		mov	r0, r5
+  78 0040 FFF7FEFF 		bl	__aeabi_i2d
+  79              	.LVL4:
+  80 0044 3246     		mov	r2, r6
+  81 0046 3B46     		mov	r3, r7
+  82 0048 FFF7FEFF 		bl	__aeabi_dsub
+  83              	.LVL5:
+  84 004c 0646     		mov	r6, r0
+  85 004e 0F46     		mov	r7, r1
+  46:Src/build.c   **** 		    me.y - DIST_ALIGN * sin(last_angle),
+  86              		.loc 1 46 0 discriminator 1
+  87 0050 B4F80280 		ldrh	r8, [r4, #2]
+  88 0054 B0EE480A 		vmov.f32	s0, s16
+  89 0058 F0EE680A 		vmov.f32	s1, s17
+  90 005c FFF7FEFF 		bl	sin
+  91              	.LVL6:
+  92 0060 13A3     		adr	r3, .L4
+  93 0062 D3E90023 		ldrd	r2, [r3]
+  94 0066 51EC100B 		vmov	r0, r1, d0
+  95 006a FFF7FEFF 		bl	__aeabi_dmul
+  96              	.LVL7:
+  97 006e 0446     		mov	r4, r0
+  98 0070 0D46     		mov	r5, r1
+  99 0072 4046     		mov	r0, r8
+ 100 0074 FFF7FEFF 		bl	__aeabi_i2d
+ 101              	.LVL8:
+ 102 0078 2246     		mov	r2, r4
+ 103 007a 2B46     		mov	r3, r5
+ 104 007c FFF7FEFF 		bl	__aeabi_dsub
+ 105              	.LVL9:
+  45:Src/build.c   ****   while(Go_Straight(me.x - DIST_ALIGN * cos(last_angle),
+ 106              		.loc 1 45 0 discriminator 1
+ 107 0080 FFF7FEFF 		bl	__aeabi_d2uiz
+ 108              	.LVL10:
+ 109 0084 84B2     		uxth	r4, r0
+ 110 0086 3046     		mov	r0, r6
+ 111 0088 3946     		mov	r1, r7
+ 112 008a FFF7FEFF 		bl	__aeabi_d2uiz
+ 113              	.LVL11:
+ 114 008e B7EE000A 		vmov.f32	s0, #1.0e+0
+ 115 0092 0022     		movs	r2, #0
+ 116 0094 2146     		mov	r1, r4
+ 117 0096 80B2     		uxth	r0, r0
+ 118 0098 FFF7FEFF 		bl	Go_Straight
+ 119              	.LVL12:
+ 120 009c 0028     		cmp	r0, #0
+ 121 009e BAD1     		bne	.L2
+  47:Src/build.c   **** 		    false,
+  48:Src/build.c   **** 		    1.) != 0);
+  49:Src/build.c   ****   build_ctx.on_set = false;
+ 122              		.loc 1 49 0
+ARM GAS  /tmp/ccw8qWeD.s 			page 4
+
+
+ 123 00a0 054B     		ldr	r3, .L4+8
+ 124 00a2 0022     		movs	r2, #0
+ 125 00a4 1A70     		strb	r2, [r3]
+  50:Src/build.c   **** }
+ 126              		.loc 1 50 0
+ 127 00a6 BDEC028B 		vldm	sp!, {d8}
+ 128              	.LCFI2:
+ 129              		.cfi_restore 80
+ 130              		.cfi_restore 81
+ 131              		.cfi_def_cfa_offset 32
+ 132 00aa BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 133              	.LVL13:
+ 134              	.L5:
+ 135 00ae 00BF     		.align	3
+ 136              	.L4:
+ 137 00b0 33333333 		.word	858993459
+ 138 00b4 33136940 		.word	1080628019
+ 139 00b8 00000000 		.word	build_ctx
+ 140 00bc 00000000 		.word	.LANCHOR0
+ 141 00c0 00000000 		.word	me
+ 142              		.cfi_endproc
+ 143              	.LFE1:
+ 145              		.section	.text.Get_Cube,"ax",%progbits
+ 146              		.align	1
+ 147              		.global	Get_Cube
+ 148              		.syntax unified
+ 149              		.thumb
+ 150              		.thumb_func
+ 151              		.fpu fpv4-sp-d16
+ 153              	Get_Cube:
+ 154              	.LFB2:
+  51:Src/build.c   **** 
+  52:Src/build.c   **** int Get_Cube(Target *t){
+ 155              		.loc 1 52 0
+ 156              		.cfi_startproc
+ 157              		@ args = 0, pretend = 0, frame = 24
+ 158              		@ frame_needed = 0, uses_anonymous_args = 0
+ 159              	.LVL14:
+ 160 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 161              	.LCFI3:
+ 162              		.cfi_def_cfa_offset 36
+ 163              		.cfi_offset 4, -36
+ 164              		.cfi_offset 5, -32
+ 165              		.cfi_offset 6, -28
+ 166              		.cfi_offset 7, -24
+ 167              		.cfi_offset 8, -20
+ 168              		.cfi_offset 9, -16
+ 169              		.cfi_offset 10, -12
+ 170              		.cfi_offset 11, -8
+ 171              		.cfi_offset 14, -4
+ 172 0004 2DED048B 		vpush.64	{d8, d9}
+ 173              	.LCFI4:
+ 174              		.cfi_def_cfa_offset 52
+ 175              		.cfi_offset 80, -52
+ 176              		.cfi_offset 81, -48
+ 177              		.cfi_offset 82, -44
+ 178              		.cfi_offset 83, -40
+ARM GAS  /tmp/ccw8qWeD.s 			page 5
+
+
+ 179 0008 87B0     		sub	sp, sp, #28
+ 180              	.LCFI5:
+ 181              		.cfi_def_cfa_offset 80
+ 182 000a 8246     		mov	r10, r0
+  53:Src/build.c   ****   Cube *const c = t->c;
+ 183              		.loc 1 53 0
+ 184 000c 0568     		ldr	r5, [r0]
+ 185              	.LVL15:
+  54:Src/build.c   ****   uint8_t set_index = (c-cube)/CUBES_PER_SET;
+ 186              		.loc 1 54 0
+ 187 000e 704B     		ldr	r3, .L14+16
+ 188 0010 EB1A     		subs	r3, r5, r3
+ 189 0012 5C10     		asrs	r4, r3, #1
+ 190 0014 6F4B     		ldr	r3, .L14+20
+ 191 0016 03FB04F3 		mul	r3, r3, r4
+ 192 001a 6F4A     		ldr	r2, .L14+24
+ 193 001c 82FB0312 		smull	r1, r2, r2, r3
+ 194 0020 DC17     		asrs	r4, r3, #31
+ 195 0022 C4EB6204 		rsb	r4, r4, r2, asr #1
+ 196 0026 E4B2     		uxtb	r4, r4
+ 197              	.LVL16:
+  55:Src/build.c   **** 
+  56:Src/build.c   ****   float angle_align = dir_to_angle[t->d];
+ 198              		.loc 1 56 0
+ 199 0028 90F80480 		ldrb	r8, [r0, #4]	@ zero_extendqisi2
+ 200 002c 6B4B     		ldr	r3, .L14+28
+ 201 002e 03EB8803 		add	r3, r3, r8, lsl #2
+ 202 0032 93ED009A 		vldr.32	s18, [r3]
+ 203              	.LVL17:
+  57:Src/build.c   ****   uint16_t x_align = c->x - DIST_ALIGN * cos(angle_align);
+ 204              		.loc 1 57 0
+ 205 0036 B5F80290 		ldrh	r9, [r5, #2]
+ 206 003a 19EE100A 		vmov	r0, s18
+ 207              	.LVL18:
+ 208 003e FFF7FEFF 		bl	__aeabi_f2d
+ 209              	.LVL19:
+ 210 0042 41EC180B 		vmov	d8, r0, r1
+ 211 0046 41EC100B 		vmov	d0, r0, r1
+ 212 004a FFF7FEFF 		bl	cos
+ 213              	.LVL20:
+ 214 004e 51EC100B 		vmov	r0, r1, d0
+ 215 0052 8DED000B 		vstr.64	d0, [sp]
+ 216 0056 5AA3     		adr	r3, .L14
+ 217 0058 D3E90023 		ldrd	r2, [r3]
+ 218 005c FFF7FEFF 		bl	__aeabi_dmul
+ 219              	.LVL21:
+ 220 0060 0646     		mov	r6, r0
+ 221 0062 0F46     		mov	r7, r1
+ 222 0064 4846     		mov	r0, r9
+ 223 0066 FFF7FEFF 		bl	__aeabi_i2d
+ 224              	.LVL22:
+ 225 006a 3246     		mov	r2, r6
+ 226 006c 3B46     		mov	r3, r7
+ 227 006e FFF7FEFF 		bl	__aeabi_dsub
+ 228              	.LVL23:
+ 229 0072 FFF7FEFF 		bl	__aeabi_d2uiz
+ 230              	.LVL24:
+ARM GAS  /tmp/ccw8qWeD.s 			page 6
+
+
+ 231 0076 1FFA80FB 		uxth	fp, r0
+ 232              	.LVL25:
+  58:Src/build.c   ****   uint16_t y_align = c->y - DIST_ALIGN * sin(angle_align);
+ 233              		.loc 1 58 0
+ 234 007a B5F80490 		ldrh	r9, [r5, #4]
+ 235 007e B0EE480A 		vmov.f32	s0, s16
+ 236 0082 F0EE680A 		vmov.f32	s1, s17
+ 237 0086 FFF7FEFF 		bl	sin
+ 238              	.LVL26:
+ 239 008a 51EC100B 		vmov	r0, r1, d0
+ 240 008e 8DED020B 		vstr.64	d0, [sp, #8]
+ 241 0092 4BA3     		adr	r3, .L14
+ 242 0094 D3E90023 		ldrd	r2, [r3]
+ 243 0098 FFF7FEFF 		bl	__aeabi_dmul
+ 244              	.LVL27:
+ 245 009c 0646     		mov	r6, r0
+ 246 009e 0F46     		mov	r7, r1
+ 247 00a0 4846     		mov	r0, r9
+ 248 00a2 FFF7FEFF 		bl	__aeabi_i2d
+ 249              	.LVL28:
+ 250 00a6 3246     		mov	r2, r6
+ 251 00a8 3B46     		mov	r3, r7
+ 252 00aa FFF7FEFF 		bl	__aeabi_dsub
+ 253              	.LVL29:
+ 254 00ae FFF7FEFF 		bl	__aeabi_d2uiz
+ 255              	.LVL30:
+ 256 00b2 86B2     		uxth	r6, r0
+ 257              	.LVL31:
+  59:Src/build.c   **** 
+  60:Src/build.c   ****   //Quit set if needed
+  61:Src/build.c   ****   if(build_ctx.on_set &&//On a set
+ 258              		.loc 1 61 0
+ 259 00b4 4A4B     		ldr	r3, .L14+32
+ 260 00b6 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 261 00b8 4BB1     		cbz	r3, .L7
+  62:Src/build.c   ****      ((build_ctx.set_number != set_index)//But not the right one
+ 262              		.loc 1 62 0 discriminator 1
+ 263 00ba 494B     		ldr	r3, .L14+32
+ 264 00bc 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+  61:Src/build.c   ****      ((build_ctx.set_number != set_index)//But not the right one
+ 265              		.loc 1 61 0 discriminator 1
+ 266 00be A342     		cmp	r3, r4
+ 267 00c0 03D1     		bne	.L8
+  63:Src/build.c   ****       || (build_ctx.align_dir != t->d))){//Or not well aligned){
+ 268              		.loc 1 63 0
+ 269 00c2 474B     		ldr	r3, .L14+32
+ 270 00c4 9B78     		ldrb	r3, [r3, #2]	@ zero_extendqisi2
+ 271 00c6 9845     		cmp	r8, r3
+ 272 00c8 01D0     		beq	.L7
+ 273              	.L8:
+  64:Src/build.c   ****      Quit_Set();
+ 274              		.loc 1 64 0
+ 275 00ca FFF7FEFF 		bl	Quit_Set
+ 276              	.LVL32:
+ 277              	.L7:
+  65:Src/build.c   ****   }
+  66:Src/build.c   ****   
+ARM GAS  /tmp/ccw8qWeD.s 			page 7
+
+
+  67:Src/build.c   ****   //Align if needed
+  68:Src/build.c   ****   if(!build_ctx.on_set){
+ 278              		.loc 1 68 0
+ 279 00ce 444B     		ldr	r3, .L14+32
+ 280 00d0 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 281 00d2 6BB9     		cbnz	r3, .L9
+  69:Src/build.c   ****     if((GOGOGO(x_align, y_align) == -1)
+ 282              		.loc 1 69 0
+ 283 00d4 3146     		mov	r1, r6
+ 284 00d6 5846     		mov	r0, fp
+ 285 00d8 FFF7FEFF 		bl	GOGOGO
+ 286              	.LVL33:
+ 287 00dc B0F1FF3F 		cmp	r0, #-1
+ 288 00e0 63D0     		beq	.L10
+  70:Src/build.c   ****        || (Rotate(angle_align) == -1)){
+ 289              		.loc 1 70 0
+ 290 00e2 B0EE490A 		vmov.f32	s0, s18
+ 291 00e6 FFF7FEFF 		bl	Rotate
+ 292              	.LVL34:
+ 293 00ea B0F1FF3F 		cmp	r0, #-1
+ 294 00ee 5CD0     		beq	.L10
+ 295              	.L9:
+  71:Src/build.c   ****       c->availability = UNCERTAIN;//TMP
+  72:Src/build.c   ****       return -1;
+  73:Src/build.c   ****     }
+  74:Src/build.c   ****   }
+  75:Src/build.c   **** 
+  76:Src/build.c   ****   //Approach the cube
+  77:Src/build.c   ****   Go_Straight(c->x - DIST_APPROACH * cos(angle_align),
+ 296              		.loc 1 77 0
+ 297 00f0 B5F80280 		ldrh	r8, [r5, #2]
+ 298 00f4 34A3     		adr	r3, .L14+8
+ 299 00f6 D3E90023 		ldrd	r2, [r3]
+ 300 00fa DDE90001 		ldrd	r0, [sp]
+ 301 00fe FFF7FEFF 		bl	__aeabi_dmul
+ 302              	.LVL35:
+ 303 0102 0646     		mov	r6, r0
+ 304              	.LVL36:
+ 305 0104 0F46     		mov	r7, r1
+ 306 0106 4046     		mov	r0, r8
+ 307 0108 FFF7FEFF 		bl	__aeabi_i2d
+ 308              	.LVL37:
+ 309 010c 3246     		mov	r2, r6
+ 310 010e 3B46     		mov	r3, r7
+ 311 0110 FFF7FEFF 		bl	__aeabi_dsub
+ 312              	.LVL38:
+ 313 0114 0646     		mov	r6, r0
+ 314 0116 0F46     		mov	r7, r1
+  78:Src/build.c   **** 	      c->y - DIST_APPROACH * sin(angle_align),
+ 315              		.loc 1 78 0
+ 316 0118 B5F804B0 		ldrh	fp, [r5, #4]
+ 317              	.LVL39:
+ 318 011c 2AA3     		adr	r3, .L14+8
+ 319 011e D3E90023 		ldrd	r2, [r3]
+ 320 0122 DDE90201 		ldrd	r0, [sp, #8]
+ 321 0126 FFF7FEFF 		bl	__aeabi_dmul
+ 322              	.LVL40:
+ARM GAS  /tmp/ccw8qWeD.s 			page 8
+
+
+ 323 012a 8046     		mov	r8, r0
+ 324 012c 8946     		mov	r9, r1
+ 325 012e 5846     		mov	r0, fp
+ 326 0130 FFF7FEFF 		bl	__aeabi_i2d
+ 327              	.LVL41:
+ 328 0134 4246     		mov	r2, r8
+ 329 0136 4B46     		mov	r3, r9
+ 330 0138 FFF7FEFF 		bl	__aeabi_dsub
+ 331              	.LVL42:
+  77:Src/build.c   **** 	      c->y - DIST_APPROACH * sin(angle_align),
+ 332              		.loc 1 77 0
+ 333 013c FFF7FEFF 		bl	__aeabi_d2uiz
+ 334              	.LVL43:
+ 335 0140 1FFA80F8 		uxth	r8, r0
+ 336 0144 3046     		mov	r0, r6
+ 337 0146 3946     		mov	r1, r7
+ 338 0148 FFF7FEFF 		bl	__aeabi_d2uiz
+ 339              	.LVL44:
+ 340 014c 9FED250A 		vldr.32	s0, .L14+36
+ 341 0150 0122     		movs	r2, #1
+ 342 0152 4146     		mov	r1, r8
+ 343 0154 80B2     		uxth	r0, r0
+ 344 0156 FFF7FEFF 		bl	Go_Straight
+ 345              	.LVL45:
+  79:Src/build.c   **** 	      true,
+  80:Src/build.c   **** 	      APPROACH_SPEED_RATIO);
+  81:Src/build.c   ****   build_ctx.on_set = true;
+ 346              		.loc 1 81 0
+ 347 015a 214B     		ldr	r3, .L14+32
+ 348 015c 0122     		movs	r2, #1
+ 349 015e 1A70     		strb	r2, [r3]
+  82:Src/build.c   ****   build_ctx.align_dir = t->d;
+ 350              		.loc 1 82 0
+ 351 0160 9AF80420 		ldrb	r2, [r10, #4]	@ zero_extendqisi2
+ 352 0164 9A70     		strb	r2, [r3, #2]
+  83:Src/build.c   ****   build_ctx.set_number = set_index;
+ 353              		.loc 1 83 0
+ 354 0166 5C70     		strb	r4, [r3, #1]
+  84:Src/build.c   **** 
+  85:Src/build.c   ****   //Stack the cube
+  86:Src/build.c   ****   if(Z_Stack(build_ctx.construction.size == 4) == -1){
+ 355              		.loc 1 86 0
+ 356 0168 187E     		ldrb	r0, [r3, #24]	@ zero_extendqisi2
+ 357 016a 0428     		cmp	r0, #4
+ 358 016c 14BF     		ite	ne
+ 359 016e 0020     		movne	r0, #0
+ 360 0170 0120     		moveq	r0, #1
+ 361 0172 FFF7FEFF 		bl	Z_Stack
+ 362              	.LVL46:
+ 363 0176 B0F1FF3F 		cmp	r0, #-1
+ 364 017a 11D0     		beq	.L6
+  87:Src/build.c   ****     return -1;
+  88:Src/build.c   ****   }
+  89:Src/build.c   **** 
+  90:Src/build.c   ****   c->availability = ZERO_PROBABILITY;
+ 365              		.loc 1 90 0
+ 366 017c 0023     		movs	r3, #0
+ARM GAS  /tmp/ccw8qWeD.s 			page 9
+
+
+ 367 017e 6B70     		strb	r3, [r5, #1]
+  91:Src/build.c   ****   
+  92:Src/build.c   ****   Z_State state;
+  93:Src/build.c   ****   if(Z_Wait_State(&state) == -1){
+ 368              		.loc 1 93 0
+ 369 0180 0DF11700 		add	r0, sp, #23
+ 370 0184 FFF7FEFF 		bl	Z_Wait_State
+ 371              	.LVL47:
+ 372 0188 B0F1FF3F 		cmp	r0, #-1
+ 373 018c 08D0     		beq	.L6
+  94:Src/build.c   ****     return -1;
+  95:Src/build.c   ****   }
+  96:Src/build.c   ****   
+  97:Src/build.c   ****   if(state == Z_SUCCESS){
+ 374              		.loc 1 97 0
+ 375 018e 9DF81730 		ldrb	r3, [sp, #23]	@ zero_extendqisi2
+ 376 0192 012B     		cmp	r3, #1
+ 377 0194 0ED1     		bne	.L12
+  98:Src/build.c   ****     Update_Construction(c, &build_ctx.construction);
+ 378              		.loc 1 98 0
+ 379 0196 1449     		ldr	r1, .L14+40
+ 380 0198 2846     		mov	r0, r5
+ 381 019a FFF7FEFF 		bl	Update_Construction
+ 382              	.LVL48:
+  99:Src/build.c   ****     return 0;
+ 383              		.loc 1 99 0
+ 384 019e 0020     		movs	r0, #0
+ 385              	.L6:
+ 100:Src/build.c   ****   }else{
+ 101:Src/build.c   ****     return -1;
+ 102:Src/build.c   ****   }  
+ 103:Src/build.c   **** }
+ 386              		.loc 1 103 0
+ 387 01a0 07B0     		add	sp, sp, #28
+ 388              	.LCFI6:
+ 389              		.cfi_remember_state
+ 390              		.cfi_def_cfa_offset 52
+ 391              		@ sp needed
+ 392 01a2 BDEC048B 		vldm	sp!, {d8-d9}
+ 393              	.LCFI7:
+ 394              		.cfi_restore 82
+ 395              		.cfi_restore 83
+ 396              		.cfi_restore 80
+ 397              		.cfi_restore 81
+ 398              		.cfi_def_cfa_offset 36
+ 399              	.LVL49:
+ 400 01a6 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 401              	.LVL50:
+ 402              	.L10:
+ 403              	.LCFI8:
+ 404              		.cfi_restore_state
+  71:Src/build.c   ****       return -1;
+ 405              		.loc 1 71 0
+ 406 01aa 0223     		movs	r3, #2
+ 407 01ac 6B70     		strb	r3, [r5, #1]
+  72:Src/build.c   ****     }
+ 408              		.loc 1 72 0
+ARM GAS  /tmp/ccw8qWeD.s 			page 10
+
+
+ 409 01ae 4FF0FF30 		mov	r0, #-1
+ 410 01b2 F5E7     		b	.L6
+ 411              	.LVL51:
+ 412              	.L12:
+ 101:Src/build.c   ****   }  
+ 413              		.loc 1 101 0
+ 414 01b4 4FF0FF30 		mov	r0, #-1
+ 415 01b8 F2E7     		b	.L6
+ 416              	.L15:
+ 417 01ba 00BFAFF3 		.align	3
+ 417      0080
+ 418              	.L14:
+ 419 01c0 33333333 		.word	858993459
+ 420 01c4 33136940 		.word	1080628019
+ 421 01c8 00000000 		.word	0
+ 422 01cc 00C05940 		.word	1079623680
+ 423 01d0 00000000 		.word	cube
+ 424 01d4 ABAAAAAA 		.word	-1431655765
+ 425 01d8 67666666 		.word	1717986919
+ 426 01dc 00000000 		.word	.LANCHOR0
+ 427 01e0 00000000 		.word	build_ctx
+ 428 01e4 CDCCCC3D 		.word	1036831949
+ 429 01e8 04000000 		.word	build_ctx+4
+ 430              		.cfi_endproc
+ 431              	.LFE2:
+ 433              		.section	.text.Build_Building,"ax",%progbits
+ 434              		.align	1
+ 435              		.global	Build_Building
+ 436              		.syntax unified
+ 437              		.thumb
+ 438              		.thumb_func
+ 439              		.fpu fpv4-sp-d16
+ 441              	Build_Building:
+ 442              	.LFB0:
+  13:Src/build.c   ****   Compute_Building_Strategy();
+ 443              		.loc 1 13 0
+ 444              		.cfi_startproc
+ 445              		@ args = 0, pretend = 0, frame = 0
+ 446              		@ frame_needed = 0, uses_anonymous_args = 0
+ 447 0000 10B5     		push	{r4, lr}
+ 448              	.LCFI9:
+ 449              		.cfi_def_cfa_offset 8
+ 450              		.cfi_offset 4, -8
+ 451              		.cfi_offset 14, -4
+  14:Src/build.c   ****   //While there is cubes to get
+ 452              		.loc 1 14 0
+ 453 0002 FFF7FEFF 		bl	Compute_Building_Strategy
+ 454              	.LVL52:
+  16:Src/build.c   ****     //Try to get selected cubes, if it fail try again with another
+ 455              		.loc 1 16 0
+ 456 0006 05E0     		b	.L17
+ 457              	.LVL53:
+ 458              	.L26:
+ 459              	.LBB2:
+  22:Src/build.c   **** 	break;
+ 460              		.loc 1 22 0
+ 461 0008 FFF7FEFF 		bl	Compute_Building_Strategy
+ARM GAS  /tmp/ccw8qWeD.s 			page 11
+
+
+ 462              	.LVL54:
+ 463              	.L19:
+  28:Src/build.c   ****       break;
+ 464              		.loc 1 28 0
+ 465 000c 114B     		ldr	r3, .L28
+ 466 000e 5B6D     		ldr	r3, [r3, #84]
+ 467 0010 A342     		cmp	r3, r4
+ 468 0012 17D0     		beq	.L21
+ 469              	.LVL55:
+ 470              	.L17:
+ 471              	.LBE2:
+  16:Src/build.c   ****     //Try to get selected cubes, if it fail try again with another
+ 472              		.loc 1 16 0
+ 473 0014 104B     		ldr	r3, .L28+4
+ 474 0016 1B7E     		ldrb	r3, [r3, #24]	@ zero_extendqisi2
+ 475 0018 052B     		cmp	r3, #5
+ 476 001a 13D0     		beq	.L21
+  16:Src/build.c   ****     //Try to get selected cubes, if it fail try again with another
+ 477              		.loc 1 16 0 is_stmt 0 discriminator 1
+ 478 001c 0D4B     		ldr	r3, .L28
+ 479 001e 5B6D     		ldr	r3, [r3, #84]
+ 480 0020 83B1     		cbz	r3, .L21
+ 481              	.LBB3:
+  20:Src/build.c   ****       if(Get_Cube(&strat.steps_tab[i]) == -1){
+ 482              		.loc 1 20 0 is_stmt 1
+ 483 0022 0024     		movs	r4, #0
+ 484              	.L22:
+ 485              	.LVL56:
+  20:Src/build.c   ****       if(Get_Cube(&strat.steps_tab[i]) == -1){
+ 486              		.loc 1 20 0 is_stmt 0 discriminator 1
+ 487 0024 0B4B     		ldr	r3, .L28
+ 488 0026 5B6D     		ldr	r3, [r3, #84]
+ 489 0028 A342     		cmp	r3, r4
+ 490 002a EFDD     		ble	.L19
+  21:Src/build.c   **** 	Compute_Building_Strategy();
+ 491              		.loc 1 21 0 is_stmt 1
+ 492 002c 04EB4402 		add	r2, r4, r4, lsl #1
+ 493 0030 9300     		lsls	r3, r2, #2
+ 494 0032 0848     		ldr	r0, .L28
+ 495 0034 1844     		add	r0, r0, r3
+ 496 0036 FFF7FEFF 		bl	Get_Cube
+ 497              	.LVL57:
+ 498 003a B0F1FF3F 		cmp	r0, #-1
+ 499 003e E3D0     		beq	.L26
+  20:Src/build.c   ****       if(Get_Cube(&strat.steps_tab[i]) == -1){
+ 500              		.loc 1 20 0 discriminator 2
+ 501 0040 0134     		adds	r4, r4, #1
+ 502              	.LVL58:
+ 503 0042 EFE7     		b	.L22
+ 504              	.LVL59:
+ 505              	.L21:
+ 506              	.LBE3:
+  32:Src/build.c   ****     Quit_Set();
+ 507              		.loc 1 32 0
+ 508 0044 044B     		ldr	r3, .L28+4
+ 509 0046 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 510 0048 03B9     		cbnz	r3, .L27
+ARM GAS  /tmp/ccw8qWeD.s 			page 12
+
+
+ 511              	.L16:
+  40:Src/build.c   **** 
+ 512              		.loc 1 40 0
+ 513 004a 10BD     		pop	{r4, pc}
+ 514              	.L27:
+  33:Src/build.c   ****   }
+ 515              		.loc 1 33 0
+ 516 004c FFF7FEFF 		bl	Quit_Set
+ 517              	.LVL60:
+  40:Src/build.c   **** 
+ 518              		.loc 1 40 0
+ 519 0050 FBE7     		b	.L16
+ 520              	.L29:
+ 521 0052 00BF     		.align	2
+ 522              	.L28:
+ 523 0054 00000000 		.word	strat
+ 524 0058 00000000 		.word	build_ctx
+ 525              		.cfi_endproc
+ 526              	.LFE0:
+ 528              		.section	.text.Place_Building,"ax",%progbits
+ 529              		.align	1
+ 530              		.global	Place_Building
+ 531              		.syntax unified
+ 532              		.thumb
+ 533              		.thumb_func
+ 534              		.fpu fpv4-sp-d16
+ 536              	Place_Building:
+ 537              	.LFB3:
+ 104:Src/build.c   **** 
+ 105:Src/build.c   **** void Place_Building(){
+ 538              		.loc 1 105 0
+ 539              		.cfi_startproc
+ 540              		@ args = 0, pretend = 0, frame = 0
+ 541              		@ frame_needed = 0, uses_anonymous_args = 0
+ 542              		@ link register save eliminated.
+ 106:Src/build.c   ****   
+ 107:Src/build.c   **** }
+ 543              		.loc 1 107 0
+ 544 0000 7047     		bx	lr
+ 545              		.cfi_endproc
+ 546              	.LFE3:
+ 548              		.section	.rodata.dir_to_angle,"a",%progbits
+ 549              		.align	2
+ 550              		.set	.LANCHOR0,. + 0
+ 553              	dir_to_angle:
+ 554 0000 DB0FC93F 		.word	1070141403
+ 555 0004 DB0F4940 		.word	1078530011
+ 556 0008 DB0FC9BF 		.word	3217625051
+ 557 000c 00000000 		.word	0
+ 558              		.text
+ 559              	.Letext0:
+ 560              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 561              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 562              		.file 4 "Inc/game_defs.h"
+ 563              		.file 5 "Inc/strategy.h"
+ 564              		.file 6 "Inc/z_client.h"
+ 565              		.file 7 "/usr/arm-none-eabi/include/sys/lock.h"
+ARM GAS  /tmp/ccw8qWeD.s 			page 13
+
+
+ 566              		.file 8 "/usr/arm-none-eabi/include/sys/_types.h"
+ 567              		.file 9 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 568              		.file 10 "/usr/arm-none-eabi/include/sys/reent.h"
+ 569              		.file 11 "/usr/arm-none-eabi/include/math.h"
+ 570              		.file 12 "Inc/gas.h"
+ARM GAS  /tmp/ccw8qWeD.s 			page 14
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 build.c
+     /tmp/ccw8qWeD.s:23     .text.Quit_Set:0000000000000000 $t
+     /tmp/ccw8qWeD.s:29     .text.Quit_Set:0000000000000000 Quit_Set
+     /tmp/ccw8qWeD.s:137    .text.Quit_Set:00000000000000b0 $d
+     /tmp/ccw8qWeD.s:146    .text.Get_Cube:0000000000000000 $t
+     /tmp/ccw8qWeD.s:153    .text.Get_Cube:0000000000000000 Get_Cube
+     /tmp/ccw8qWeD.s:419    .text.Get_Cube:00000000000001c0 $d
+     /tmp/ccw8qWeD.s:434    .text.Build_Building:0000000000000000 $t
+     /tmp/ccw8qWeD.s:441    .text.Build_Building:0000000000000000 Build_Building
+     /tmp/ccw8qWeD.s:523    .text.Build_Building:0000000000000054 $d
+     /tmp/ccw8qWeD.s:529    .text.Place_Building:0000000000000000 $t
+     /tmp/ccw8qWeD.s:536    .text.Place_Building:0000000000000000 Place_Building
+     /tmp/ccw8qWeD.s:549    .rodata.dir_to_angle:0000000000000000 $d
+     /tmp/ccw8qWeD.s:553    .rodata.dir_to_angle:0000000000000000 dir_to_angle
+
+UNDEFINED SYMBOLS
+__aeabi_f2d
+__aeabi_dmul
+__aeabi_i2d
+__aeabi_dsub
+__aeabi_d2uiz
+cos
+sin
+Go_Straight
+build_ctx
+me
+GOGOGO
+Rotate
+Z_Stack
+Z_Wait_State
+Update_Construction
+cube
+Compute_Building_Strategy
+strat

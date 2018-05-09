@@ -1,0 +1,1068 @@
+ARM GAS  /tmp/ccNBoO1v.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"position_client.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.Position_Init,"ax",%progbits
+  18              		.align	1
+  19              		.global	Position_Init
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	Position_Init:
+  26              	.LFB679:
+  27              		.file 1 "Src/position_client.c"
+   1:Src/position_client.c **** #include "position_client.h"
+   2:Src/position_client.c **** #include "strategy.h"
+   3:Src/position_client.c **** #include "remote_call.h"
+   4:Src/position_client.c **** #include "usart.h"
+   5:Src/position_client.c **** static RC_Client pos_client;
+   6:Src/position_client.c **** 
+   7:Src/position_client.c **** int Position_Init(){
+  28              		.loc 1 7 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+   8:Src/position_client.c ****   RC_Client_Init(&pos_client, &pos_iface, 0);
+  37              		.loc 1 8 0
+  38 0002 554C     		ldr	r4, .L19
+  39 0004 0022     		movs	r2, #0
+  40 0006 5549     		ldr	r1, .L19+4
+  41 0008 2046     		mov	r0, r4
+  42 000a FFF7FEFF 		bl	RC_Client_Init
+  43              	.LVL0:
+   9:Src/position_client.c ****   
+  10:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_RESET, "", "")) return -1;
+  44              		.loc 1 10 0
+  45 000e 544A     		ldr	r2, .L19+8
+  46 0010 1346     		mov	r3, r2
+  47 0012 0121     		movs	r1, #1
+  48 0014 2046     		mov	r0, r4
+ARM GAS  /tmp/ccNBoO1v.s 			page 2
+
+
+  49 0016 FFF7FEFF 		bl	RC_Client_Add_Function
+  50              	.LVL1:
+  51 001a 0028     		cmp	r0, #0
+  52 001c 72D1     		bne	.L3
+  11:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_SUM, "fffif", "")) return -1;
+  53              		.loc 1 11 0
+  54 001e 504B     		ldr	r3, .L19+8
+  55 0020 504A     		ldr	r2, .L19+12
+  56 0022 0221     		movs	r1, #2
+  57 0024 2046     		mov	r0, r4
+  58 0026 FFF7FEFF 		bl	RC_Client_Add_Function
+  59              	.LVL2:
+  60 002a 0028     		cmp	r0, #0
+  61 002c 6DD1     		bne	.L4
+  12:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_DIFF, "fffif", "")) return -1;
+  62              		.loc 1 12 0
+  63 002e 4C4B     		ldr	r3, .L19+8
+  64 0030 4C4A     		ldr	r2, .L19+12
+  65 0032 0321     		movs	r1, #3
+  66 0034 2046     		mov	r0, r4
+  67 0036 FFF7FEFF 		bl	RC_Client_Add_Function
+  68              	.LVL3:
+  69 003a 0028     		cmp	r0, #0
+  70 003c 68D1     		bne	.L5
+  13:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ODO, "BBf", "")) return -1;
+  71              		.loc 1 13 0
+  72 003e 484B     		ldr	r3, .L19+8
+  73 0040 494A     		ldr	r2, .L19+16
+  74 0042 0421     		movs	r1, #4
+  75 0044 2046     		mov	r0, r4
+  76 0046 FFF7FEFF 		bl	RC_Client_Add_Function
+  77              	.LVL4:
+  78 004a 0028     		cmp	r0, #0
+  79 004c 63D1     		bne	.L6
+  14:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_GET_ODO, "", "BBf")) return -1;
+  80              		.loc 1 14 0
+  81 004e 464B     		ldr	r3, .L19+16
+  82 0050 434A     		ldr	r2, .L19+8
+  83 0052 0521     		movs	r1, #5
+  84 0054 2046     		mov	r0, r4
+  85 0056 FFF7FEFF 		bl	RC_Client_Add_Function
+  86              	.LVL5:
+  87 005a 0028     		cmp	r0, #0
+  88 005c 5ED1     		bne	.L7
+  15:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_GO_FORWARD, "ff", "")) return -1;//!
+  89              		.loc 1 15 0
+  90 005e 404B     		ldr	r3, .L19+8
+  91 0060 424A     		ldr	r2, .L19+20
+  92 0062 0721     		movs	r1, #7
+  93 0064 2046     		mov	r0, r4
+  94 0066 FFF7FEFF 		bl	RC_Client_Add_Function
+  95              	.LVL6:
+  96 006a 0028     		cmp	r0, #0
+  97 006c 59D1     		bne	.L8
+  16:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ANGLE, "ff", "")) return -1;
+  98              		.loc 1 16 0
+  99 006e 3C4B     		ldr	r3, .L19+8
+ARM GAS  /tmp/ccNBoO1v.s 			page 3
+
+
+ 100 0070 3E4A     		ldr	r2, .L19+20
+ 101 0072 0821     		movs	r1, #8
+ 102 0074 2046     		mov	r0, r4
+ 103 0076 FFF7FEFF 		bl	RC_Client_Add_Function
+ 104              	.LVL7:
+ 105 007a 0028     		cmp	r0, #0
+ 106 007c 54D1     		bne	.L9
+  17:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_POSITION_X_Y, "ffBB", "")) return -1;
+ 107              		.loc 1 17 0
+ 108 007e 384B     		ldr	r3, .L19+8
+ 109 0080 3B4A     		ldr	r2, .L19+24
+ 110 0082 0A21     		movs	r1, #10
+ 111 0084 2046     		mov	r0, r4
+ 112 0086 FFF7FEFF 		bl	RC_Client_Add_Function
+ 113              	.LVL8:
+ 114 008a 0028     		cmp	r0, #0
+ 115 008c 4FD1     		bne	.L10
+  18:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_GET_STATE, "", "b")) return -1;
+ 116              		.loc 1 18 0
+ 117 008e 394B     		ldr	r3, .L19+28
+ 118 0090 334A     		ldr	r2, .L19+8
+ 119 0092 0021     		movs	r1, #0
+ 120 0094 2046     		mov	r0, r4
+ 121 0096 FFF7FEFF 		bl	RC_Client_Add_Function
+ 122              	.LVL9:
+ 123 009a 0028     		cmp	r0, #0
+ 124 009c 4AD1     		bne	.L11
+  19:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_BALEC, "", "")) return -1;
+ 125              		.loc 1 19 0
+ 126 009e 304A     		ldr	r2, .L19+8
+ 127 00a0 1346     		mov	r3, r2
+ 128 00a2 0621     		movs	r1, #6
+ 129 00a4 2046     		mov	r0, r4
+ 130 00a6 FFF7FEFF 		bl	RC_Client_Add_Function
+ 131              	.LVL10:
+ 132 00aa 0028     		cmp	r0, #0
+ 133 00ac 45D1     		bne	.L12
+  20:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_BRAKE, "", "")) return -1;
+ 134              		.loc 1 20 0
+ 135 00ae 2C4A     		ldr	r2, .L19+8
+ 136 00b0 1346     		mov	r3, r2
+ 137 00b2 0921     		movs	r1, #9
+ 138 00b4 2046     		mov	r0, r4
+ 139 00b6 FFF7FEFF 		bl	RC_Client_Add_Function
+ 140              	.LVL11:
+ 141 00ba 0028     		cmp	r0, #0
+ 142 00bc 40D1     		bne	.L13
+  21:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_INIT_PATH, "", "")) return -1;
+ 143              		.loc 1 21 0
+ 144 00be 284A     		ldr	r2, .L19+8
+ 145 00c0 1346     		mov	r3, r2
+ 146 00c2 0B21     		movs	r1, #11
+ 147 00c4 2046     		mov	r0, r4
+ 148 00c6 FFF7FEFF 		bl	RC_Client_Add_Function
+ 149              	.LVL12:
+ 150 00ca 0028     		cmp	r0, #0
+ 151 00cc 3BD1     		bne	.L14
+ARM GAS  /tmp/ccNBoO1v.s 			page 4
+
+
+  22:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_ADD_POINT, "BB", "")) return -1;
+ 152              		.loc 1 22 0
+ 153 00ce 244B     		ldr	r3, .L19+8
+ 154 00d0 294A     		ldr	r2, .L19+32
+ 155 00d2 0C21     		movs	r1, #12
+ 156 00d4 2046     		mov	r0, r4
+ 157 00d6 FFF7FEFF 		bl	RC_Client_Add_Function
+ 158              	.LVL13:
+ 159 00da B8BB     		cbnz	r0, .L15
+  23:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_FOLLOW_PATH, "", "")) return -1;
+ 160              		.loc 1 23 0
+ 161 00dc 204A     		ldr	r2, .L19+8
+ 162 00de 1346     		mov	r3, r2
+ 163 00e0 0D21     		movs	r1, #13
+ 164 00e2 2046     		mov	r0, r4
+ 165 00e4 FFF7FEFF 		bl	RC_Client_Add_Function
+ 166              	.LVL14:
+ 167 00e8 98BB     		cbnz	r0, .L16
+  24:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_CONFIG_CURVE, "ffffffff", "")) return -1;
+ 168              		.loc 1 24 0
+ 169 00ea 1D4B     		ldr	r3, .L19+8
+ 170 00ec 234A     		ldr	r2, .L19+36
+ 171 00ee 0E21     		movs	r1, #14
+ 172 00f0 2046     		mov	r0, r4
+ 173 00f2 FFF7FEFF 		bl	RC_Client_Add_Function
+ 174              	.LVL15:
+ 175 00f6 0346     		mov	r3, r0
+ 176 00f8 08B9     		cbnz	r0, .L18
+ 177              	.L1:
+  25:Src/position_client.c ****   
+  26:Src/position_client.c ****   return 0;
+  27:Src/position_client.c **** }
+ 178              		.loc 1 27 0
+ 179 00fa 1846     		mov	r0, r3
+ 180 00fc 10BD     		pop	{r4, pc}
+ 181              	.L18:
+  24:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_CONFIG_CURVE, "ffffffff", "")) return -1;
+ 182              		.loc 1 24 0
+ 183 00fe 4FF0FF33 		mov	r3, #-1
+ 184 0102 FAE7     		b	.L1
+ 185              	.L3:
+  10:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_SUM, "fffif", "")) return -1;
+ 186              		.loc 1 10 0
+ 187 0104 4FF0FF33 		mov	r3, #-1
+ 188 0108 F7E7     		b	.L1
+ 189              	.L4:
+  11:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ASSER_DIFF, "fffif", "")) return -1;
+ 190              		.loc 1 11 0
+ 191 010a 4FF0FF33 		mov	r3, #-1
+ 192 010e F4E7     		b	.L1
+ 193              	.L5:
+  12:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ODO, "BBf", "")) return -1;
+ 194              		.loc 1 12 0
+ 195 0110 4FF0FF33 		mov	r3, #-1
+ 196 0114 F1E7     		b	.L1
+ 197              	.L6:
+  13:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_GET_ODO, "", "BBf")) return -1;
+ARM GAS  /tmp/ccNBoO1v.s 			page 5
+
+
+ 198              		.loc 1 13 0
+ 199 0116 4FF0FF33 		mov	r3, #-1
+ 200 011a EEE7     		b	.L1
+ 201              	.L7:
+  14:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_GO_FORWARD, "ff", "")) return -1;//!
+ 202              		.loc 1 14 0
+ 203 011c 4FF0FF33 		mov	r3, #-1
+ 204 0120 EBE7     		b	.L1
+ 205              	.L8:
+  15:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_ANGLE, "ff", "")) return -1;
+ 206              		.loc 1 15 0
+ 207 0122 4FF0FF33 		mov	r3, #-1
+ 208 0126 E8E7     		b	.L1
+ 209              	.L9:
+  16:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_SET_POSITION_X_Y, "ffBB", "")) return -1;
+ 210              		.loc 1 16 0
+ 211 0128 4FF0FF33 		mov	r3, #-1
+ 212 012c E5E7     		b	.L1
+ 213              	.L10:
+  17:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_GET_STATE, "", "b")) return -1;
+ 214              		.loc 1 17 0
+ 215 012e 4FF0FF33 		mov	r3, #-1
+ 216 0132 E2E7     		b	.L1
+ 217              	.L11:
+  18:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_BALEC, "", "")) return -1;
+ 218              		.loc 1 18 0
+ 219 0134 4FF0FF33 		mov	r3, #-1
+ 220 0138 DFE7     		b	.L1
+ 221              	.L12:
+  19:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_BRAKE, "", "")) return -1;
+ 222              		.loc 1 19 0
+ 223 013a 4FF0FF33 		mov	r3, #-1
+ 224 013e DCE7     		b	.L1
+ 225              	.L13:
+  20:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_INIT_PATH, "", "")) return -1;
+ 226              		.loc 1 20 0
+ 227 0140 4FF0FF33 		mov	r3, #-1
+ 228 0144 D9E7     		b	.L1
+ 229              	.L14:
+  21:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_ADD_POINT, "BB", "")) return -1;
+ 230              		.loc 1 21 0
+ 231 0146 4FF0FF33 		mov	r3, #-1
+ 232 014a D6E7     		b	.L1
+ 233              	.L15:
+  22:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_FOLLOW_PATH, "", "")) return -1;
+ 234              		.loc 1 22 0
+ 235 014c 4FF0FF33 		mov	r3, #-1
+ 236 0150 D3E7     		b	.L1
+ 237              	.L16:
+  23:Src/position_client.c ****   if(RC_Client_Add_Function(&pos_client, POS_CONFIG_CURVE, "ffffffff", "")) return -1;
+ 238              		.loc 1 23 0
+ 239 0152 4FF0FF33 		mov	r3, #-1
+ 240 0156 D0E7     		b	.L1
+ 241              	.L20:
+ 242              		.align	2
+ 243              	.L19:
+ 244 0158 00000000 		.word	.LANCHOR0
+ARM GAS  /tmp/ccNBoO1v.s 			page 6
+
+
+ 245 015c 00000000 		.word	pos_iface
+ 246 0160 00000000 		.word	.LC0
+ 247 0164 04000000 		.word	.LC1
+ 248 0168 0C000000 		.word	.LC2
+ 249 016c 10000000 		.word	.LC3
+ 250 0170 14000000 		.word	.LC4
+ 251 0174 1C000000 		.word	.LC5
+ 252 0178 20000000 		.word	.LC6
+ 253 017c 24000000 		.word	.LC7
+ 254              		.cfi_endproc
+ 255              	.LFE679:
+ 257              		.global	__aeabi_f2d
+ 258              		.section	.text.Position_Init_Odometry,"ax",%progbits
+ 259              		.align	1
+ 260              		.global	Position_Init_Odometry
+ 261              		.syntax unified
+ 262              		.thumb
+ 263              		.thumb_func
+ 264              		.fpu fpv4-sp-d16
+ 266              	Position_Init_Odometry:
+ 267              	.LFB680:
+  28:Src/position_client.c **** 
+  29:Src/position_client.c **** int Position_Init_Odometry(){
+ 268              		.loc 1 29 0
+ 269              		.cfi_startproc
+ 270              		@ args = 0, pretend = 0, frame = 0
+ 271              		@ frame_needed = 0, uses_anonymous_args = 0
+ 272 0000 30B5     		push	{r4, r5, lr}
+ 273              	.LCFI1:
+ 274              		.cfi_def_cfa_offset 12
+ 275              		.cfi_offset 4, -12
+ 276              		.cfi_offset 5, -8
+ 277              		.cfi_offset 14, -4
+ 278 0002 83B0     		sub	sp, sp, #12
+ 279              	.LCFI2:
+ 280              		.cfi_def_cfa_offset 24
+  30:Src/position_client.c ****   return RC_Call(&pos_client, POS_SET_ODO, me.x, me.y, me.angle);
+ 281              		.loc 1 30 0
+ 282 0004 074B     		ldr	r3, .L23
+ 283 0006 1C88     		ldrh	r4, [r3]
+ 284 0008 5D88     		ldrh	r5, [r3, #2]
+ 285 000a 5868     		ldr	r0, [r3, #4]	@ float
+ 286 000c FFF7FEFF 		bl	__aeabi_f2d
+ 287              	.LVL16:
+ 288 0010 CDE90001 		strd	r0, [sp]
+ 289 0014 2B46     		mov	r3, r5
+ 290 0016 2246     		mov	r2, r4
+ 291 0018 0421     		movs	r1, #4
+ 292 001a 0348     		ldr	r0, .L23+4
+ 293 001c FFF7FEFF 		bl	RC_Call
+ 294              	.LVL17:
+  31:Src/position_client.c **** }
+ 295              		.loc 1 31 0
+ 296 0020 03B0     		add	sp, sp, #12
+ 297              	.LCFI3:
+ 298              		.cfi_def_cfa_offset 12
+ 299              		@ sp needed
+ARM GAS  /tmp/ccNBoO1v.s 			page 7
+
+
+ 300 0022 30BD     		pop	{r4, r5, pc}
+ 301              	.L24:
+ 302              		.align	2
+ 303              	.L23:
+ 304 0024 00000000 		.word	me
+ 305 0028 00000000 		.word	.LANCHOR0
+ 306              		.cfi_endproc
+ 307              	.LFE680:
+ 309              		.section	.text.Pos_Reset,"ax",%progbits
+ 310              		.align	1
+ 311              		.global	Pos_Reset
+ 312              		.syntax unified
+ 313              		.thumb
+ 314              		.thumb_func
+ 315              		.fpu fpv4-sp-d16
+ 317              	Pos_Reset:
+ 318              	.LFB681:
+  32:Src/position_client.c **** 
+  33:Src/position_client.c **** int Pos_Reset(){
+ 319              		.loc 1 33 0
+ 320              		.cfi_startproc
+ 321              		@ args = 0, pretend = 0, frame = 0
+ 322              		@ frame_needed = 0, uses_anonymous_args = 0
+ 323 0000 08B5     		push	{r3, lr}
+ 324              	.LCFI4:
+ 325              		.cfi_def_cfa_offset 8
+ 326              		.cfi_offset 3, -8
+ 327              		.cfi_offset 14, -4
+  34:Src/position_client.c ****   return RC_Call(&pos_client, POS_RESET);
+ 328              		.loc 1 34 0
+ 329 0002 0121     		movs	r1, #1
+ 330 0004 0148     		ldr	r0, .L27
+ 331 0006 FFF7FEFF 		bl	RC_Call
+ 332              	.LVL18:
+  35:Src/position_client.c **** }
+ 333              		.loc 1 35 0
+ 334 000a 08BD     		pop	{r3, pc}
+ 335              	.L28:
+ 336              		.align	2
+ 337              	.L27:
+ 338 000c 00000000 		.word	.LANCHOR0
+ 339              		.cfi_endproc
+ 340              	.LFE681:
+ 342              		.section	.text.Pos_Get_State,"ax",%progbits
+ 343              		.align	1
+ 344              		.global	Pos_Get_State
+ 345              		.syntax unified
+ 346              		.thumb
+ 347              		.thumb_func
+ 348              		.fpu fpv4-sp-d16
+ 350              	Pos_Get_State:
+ 351              	.LFB682:
+  36:Src/position_client.c **** 
+  37:Src/position_client.c **** int Pos_Get_State(Position_State *state){
+ 352              		.loc 1 37 0
+ 353              		.cfi_startproc
+ 354              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccNBoO1v.s 			page 8
+
+
+ 355              		@ frame_needed = 0, uses_anonymous_args = 0
+ 356              	.LVL19:
+ 357 0000 08B5     		push	{r3, lr}
+ 358              	.LCFI5:
+ 359              		.cfi_def_cfa_offset 8
+ 360              		.cfi_offset 3, -8
+ 361              		.cfi_offset 14, -4
+  38:Src/position_client.c ****   return RC_Call(&pos_client, POS_GET_STATE, state);
+ 362              		.loc 1 38 0
+ 363 0002 0246     		mov	r2, r0
+ 364 0004 0021     		movs	r1, #0
+ 365 0006 0248     		ldr	r0, .L31
+ 366              	.LVL20:
+ 367 0008 FFF7FEFF 		bl	RC_Call
+ 368              	.LVL21:
+  39:Src/position_client.c **** }
+ 369              		.loc 1 39 0
+ 370 000c 08BD     		pop	{r3, pc}
+ 371              	.L32:
+ 372 000e 00BF     		.align	2
+ 373              	.L31:
+ 374 0010 00000000 		.word	.LANCHOR0
+ 375              		.cfi_endproc
+ 376              	.LFE682:
+ 378              		.section	.text.Pos_Config_Curve,"ax",%progbits
+ 379              		.align	1
+ 380              		.global	Pos_Config_Curve
+ 381              		.syntax unified
+ 382              		.thumb
+ 383              		.thumb_func
+ 384              		.fpu fpv4-sp-d16
+ 386              	Pos_Config_Curve:
+ 387              	.LFB683:
+  40:Src/position_client.c **** 
+  41:Src/position_client.c **** int Pos_Config_Curve(float z, float w, float vc, float vr, float P, float I, float D, float speed_p
+ 388              		.loc 1 41 0
+ 389              		.cfi_startproc
+ 390              		@ args = 0, pretend = 0, frame = 0
+ 391              		@ frame_needed = 0, uses_anonymous_args = 0
+ 392              	.LVL22:
+ 393 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 394              	.LCFI6:
+ 395              		.cfi_def_cfa_offset 36
+ 396              		.cfi_offset 4, -36
+ 397              		.cfi_offset 5, -32
+ 398              		.cfi_offset 6, -28
+ 399              		.cfi_offset 7, -24
+ 400              		.cfi_offset 8, -20
+ 401              		.cfi_offset 9, -16
+ 402              		.cfi_offset 10, -12
+ 403              		.cfi_offset 11, -8
+ 404              		.cfi_offset 14, -4
+ 405 0004 2DED028B 		vpush.64	{d8}
+ 406              	.LCFI7:
+ 407              		.cfi_def_cfa_offset 44
+ 408              		.cfi_offset 80, -44
+ 409              		.cfi_offset 81, -40
+ARM GAS  /tmp/ccNBoO1v.s 			page 9
+
+
+ 410 0008 8FB0     		sub	sp, sp, #60
+ 411              	.LCFI8:
+ 412              		.cfi_def_cfa_offset 104
+ 413 000a 10EE906A 		vmov	r6, s1
+ 414 000e 11EE107A 		vmov	r7, s2
+ 415 0012 11EE908A 		vmov	r8, s3
+ 416 0016 12EE109A 		vmov	r9, s4
+ 417 001a 12EE90AA 		vmov	r10, s5
+ 418 001e 13EE10BA 		vmov	fp, s6
+ 419 0022 B0EE638A 		vmov.f32	s16, s7
+  42:Src/position_client.c ****   return RC_Call(&pos_client, POS_CONFIG_CURVE, z, w, vc, vr, P, I, D, speed_percent_tolerance);//z
+ 420              		.loc 1 42 0
+ 421 0026 10EE100A 		vmov	r0, s0
+ 422 002a FFF7FEFF 		bl	__aeabi_f2d
+ 423              	.LVL23:
+ 424 002e 0446     		mov	r4, r0
+ 425 0030 0D46     		mov	r5, r1
+ 426 0032 18EE100A 		vmov	r0, s16
+ 427 0036 FFF7FEFF 		bl	__aeabi_f2d
+ 428              	.LVL24:
+ 429 003a CDE90C01 		strd	r0, [sp, #48]
+ 430 003e 5846     		mov	r0, fp	@ float
+ 431 0040 FFF7FEFF 		bl	__aeabi_f2d
+ 432              	.LVL25:
+ 433 0044 CDE90A01 		strd	r0, [sp, #40]
+ 434 0048 5046     		mov	r0, r10	@ float
+ 435 004a FFF7FEFF 		bl	__aeabi_f2d
+ 436              	.LVL26:
+ 437 004e CDE90801 		strd	r0, [sp, #32]
+ 438 0052 4846     		mov	r0, r9	@ float
+ 439 0054 FFF7FEFF 		bl	__aeabi_f2d
+ 440              	.LVL27:
+ 441 0058 CDE90601 		strd	r0, [sp, #24]
+ 442 005c 4046     		mov	r0, r8	@ float
+ 443 005e FFF7FEFF 		bl	__aeabi_f2d
+ 444              	.LVL28:
+ 445 0062 CDE90401 		strd	r0, [sp, #16]
+ 446 0066 3846     		mov	r0, r7	@ float
+ 447 0068 FFF7FEFF 		bl	__aeabi_f2d
+ 448              	.LVL29:
+ 449 006c CDE90201 		strd	r0, [sp, #8]
+ 450 0070 3046     		mov	r0, r6	@ float
+ 451 0072 FFF7FEFF 		bl	__aeabi_f2d
+ 452              	.LVL30:
+ 453 0076 CDE90001 		strd	r0, [sp]
+ 454 007a 2246     		mov	r2, r4
+ 455 007c 2B46     		mov	r3, r5
+ 456 007e 0E21     		movs	r1, #14
+ 457 0080 0348     		ldr	r0, .L35
+ 458 0082 FFF7FEFF 		bl	RC_Call
+ 459              	.LVL31:
+  43:Src/position_client.c **** }
+ 460              		.loc 1 43 0
+ 461 0086 0FB0     		add	sp, sp, #60
+ 462              	.LCFI9:
+ 463              		.cfi_def_cfa_offset 44
+ 464              		@ sp needed
+ARM GAS  /tmp/ccNBoO1v.s 			page 10
+
+
+ 465 0088 BDEC028B 		vldm	sp!, {d8}
+ 466              	.LCFI10:
+ 467              		.cfi_restore 80
+ 468              		.cfi_restore 81
+ 469              		.cfi_def_cfa_offset 36
+ 470              	.LVL32:
+ 471 008c BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 472              	.LVL33:
+ 473              	.L36:
+ 474              		.align	2
+ 475              	.L35:
+ 476 0090 00000000 		.word	.LANCHOR0
+ 477              		.cfi_endproc
+ 478              	.LFE683:
+ 480              		.section	.text.Pos_Send_Path,"ax",%progbits
+ 481              		.align	1
+ 482              		.global	Pos_Send_Path
+ 483              		.syntax unified
+ 484              		.thumb
+ 485              		.thumb_func
+ 486              		.fpu fpv4-sp-d16
+ 488              	Pos_Send_Path:
+ 489              	.LFB684:
+  44:Src/position_client.c **** 
+  45:Src/position_client.c **** int Pos_Send_Path(Cell *path_end, uint16_t x_goal, uint16_t y_goal){
+ 490              		.loc 1 45 0
+ 491              		.cfi_startproc
+ 492              		@ args = 0, pretend = 0, frame = 0
+ 493              		@ frame_needed = 0, uses_anonymous_args = 0
+ 494              	.LVL34:
+  46:Src/position_client.c ****   if(path_end == NULL){
+ 495              		.loc 1 46 0
+ 496 0000 38B3     		cbz	r0, .L41
+  45:Src/position_client.c ****   if(path_end == NULL){
+ 497              		.loc 1 45 0
+ 498 0002 70B5     		push	{r4, r5, r6, lr}
+ 499              	.LCFI11:
+ 500              		.cfi_def_cfa_offset 16
+ 501              		.cfi_offset 4, -16
+ 502              		.cfi_offset 5, -12
+ 503              		.cfi_offset 6, -8
+ 504              		.cfi_offset 14, -4
+ 505 0004 0446     		mov	r4, r0
+ 506 0006 1646     		mov	r6, r2
+ 507 0008 0D46     		mov	r5, r1
+  47:Src/position_client.c ****     return -1;
+  48:Src/position_client.c ****   }
+  49:Src/position_client.c ****   
+  50:Src/position_client.c ****   if(RC_Call(&pos_client, POS_INIT_PATH) != 0){
+ 508              		.loc 1 50 0
+ 509 000a 0B21     		movs	r1, #11
+ 510              	.LVL35:
+ 511 000c 1648     		ldr	r0, .L52
+ 512              	.LVL36:
+ 513 000e FFF7FEFF 		bl	RC_Call
+ 514              	.LVL37:
+ 515 0012 10BB     		cbnz	r0, .L42
+ARM GAS  /tmp/ccNBoO1v.s 			page 11
+
+
+  51:Src/position_client.c ****     return -1;
+  52:Src/position_client.c ****   }
+  53:Src/position_client.c **** 
+  54:Src/position_client.c ****   //Last point
+  55:Src/position_client.c ****   if(RC_Call(&pos_client, POS_ADD_POINT, x_goal, y_goal) != 0){
+ 516              		.loc 1 55 0
+ 517 0014 3346     		mov	r3, r6
+ 518 0016 2A46     		mov	r2, r5
+ 519 0018 0C21     		movs	r1, #12
+ 520 001a 1348     		ldr	r0, .L52
+ 521 001c FFF7FEFF 		bl	RC_Call
+ 522              	.LVL38:
+ 523 0020 F0B9     		cbnz	r0, .L49
+ 524              	.L39:
+  56:Src/position_client.c ****     return -1;
+  57:Src/position_client.c ****   }
+  58:Src/position_client.c **** 
+  59:Src/position_client.c ****   Cell *current_cell;
+  60:Src/position_client.c ****   while((current_cell = path_end->pred) != NULL){
+ 525              		.loc 1 60 0
+ 526 0022 2268     		ldr	r2, [r4]
+ 527              	.LVL39:
+ 528 0024 52B1     		cbz	r2, .L50
+  61:Src/position_client.c ****     if(RC_Call(&pos_client, POS_ADD_POINT, current_cell->x, current_cell->y) != 0){
+ 529              		.loc 1 61 0
+ 530 0026 9379     		ldrb	r3, [r2, #6]	@ zero_extendqisi2
+ 531 0028 5279     		ldrb	r2, [r2, #5]	@ zero_extendqisi2
+ 532              	.LVL40:
+ 533 002a 0C21     		movs	r1, #12
+ 534 002c 0E48     		ldr	r0, .L52
+ 535 002e FFF7FEFF 		bl	RC_Call
+ 536              	.LVL41:
+ 537 0032 0028     		cmp	r0, #0
+ 538 0034 F5D0     		beq	.L39
+  62:Src/position_client.c ****       return -1;
+ 539              		.loc 1 62 0
+ 540 0036 4FF0FF33 		mov	r3, #-1
+ 541 003a 05E0     		b	.L37
+ 542              	.LVL42:
+ 543              	.L50:
+  63:Src/position_client.c ****     }
+  64:Src/position_client.c ****   }
+  65:Src/position_client.c ****   
+  66:Src/position_client.c ****   if(RC_Call(&pos_client, POS_FOLLOW_PATH) != 0){
+ 544              		.loc 1 66 0
+ 545 003c 0D21     		movs	r1, #13
+ 546 003e 0A48     		ldr	r0, .L52
+ 547 0040 FFF7FEFF 		bl	RC_Call
+ 548              	.LVL43:
+ 549 0044 0346     		mov	r3, r0
+ 550 0046 08B9     		cbnz	r0, .L51
+ 551              	.L37:
+  67:Src/position_client.c ****     return -1;
+  68:Src/position_client.c ****   }
+  69:Src/position_client.c **** 
+  70:Src/position_client.c ****   return 0;
+  71:Src/position_client.c **** }
+ARM GAS  /tmp/ccNBoO1v.s 			page 12
+
+
+ 552              		.loc 1 71 0
+ 553 0048 1846     		mov	r0, r3
+ 554 004a 70BD     		pop	{r4, r5, r6, pc}
+ 555              	.LVL44:
+ 556              	.L51:
+  67:Src/position_client.c ****     return -1;
+ 557              		.loc 1 67 0
+ 558 004c 4FF0FF33 		mov	r3, #-1
+ 559 0050 FAE7     		b	.L37
+ 560              	.LVL45:
+ 561              	.L41:
+ 562              	.LCFI12:
+ 563              		.cfi_def_cfa_offset 0
+ 564              		.cfi_restore 4
+ 565              		.cfi_restore 5
+ 566              		.cfi_restore 6
+ 567              		.cfi_restore 14
+  47:Src/position_client.c ****   }
+ 568              		.loc 1 47 0
+ 569 0052 4FF0FF33 		mov	r3, #-1
+ 570              		.loc 1 71 0
+ 571 0056 1846     		mov	r0, r3
+ 572              	.LVL46:
+ 573 0058 7047     		bx	lr
+ 574              	.LVL47:
+ 575              	.L42:
+ 576              	.LCFI13:
+ 577              		.cfi_def_cfa_offset 16
+ 578              		.cfi_offset 4, -16
+ 579              		.cfi_offset 5, -12
+ 580              		.cfi_offset 6, -8
+ 581              		.cfi_offset 14, -4
+  51:Src/position_client.c ****   }
+ 582              		.loc 1 51 0
+ 583 005a 4FF0FF33 		mov	r3, #-1
+ 584 005e F3E7     		b	.L37
+ 585              	.L49:
+  56:Src/position_client.c ****   }
+ 586              		.loc 1 56 0
+ 587 0060 4FF0FF33 		mov	r3, #-1
+ 588 0064 F0E7     		b	.L37
+ 589              	.L53:
+ 590 0066 00BF     		.align	2
+ 591              	.L52:
+ 592 0068 00000000 		.word	.LANCHOR0
+ 593              		.cfi_endproc
+ 594              	.LFE684:
+ 596              		.section	.text.Pos_Init_Position,"ax",%progbits
+ 597              		.align	1
+ 598              		.global	Pos_Init_Position
+ 599              		.syntax unified
+ 600              		.thumb
+ 601              		.thumb_func
+ 602              		.fpu fpv4-sp-d16
+ 604              	Pos_Init_Position:
+ 605              	.LFB685:
+  72:Src/position_client.c **** 
+ARM GAS  /tmp/ccNBoO1v.s 			page 13
+
+
+  73:Src/position_client.c **** int Pos_Init_Position(uint16_t x0, uint16_t y0){
+ 606              		.loc 1 73 0
+ 607              		.cfi_startproc
+ 608              		@ args = 0, pretend = 0, frame = 0
+ 609              		@ frame_needed = 0, uses_anonymous_args = 0
+ 610              	.LVL48:
+ 611 0000 08B5     		push	{r3, lr}
+ 612              	.LCFI14:
+ 613              		.cfi_def_cfa_offset 8
+ 614              		.cfi_offset 3, -8
+ 615              		.cfi_offset 14, -4
+  74:Src/position_client.c ****   return RC_Call(&pos_client, POS_SET_ODO, x0, y0);
+ 616              		.loc 1 74 0
+ 617 0002 0B46     		mov	r3, r1
+ 618 0004 0246     		mov	r2, r0
+ 619 0006 0421     		movs	r1, #4
+ 620              	.LVL49:
+ 621 0008 0148     		ldr	r0, .L56
+ 622              	.LVL50:
+ 623 000a FFF7FEFF 		bl	RC_Call
+ 624              	.LVL51:
+  75:Src/position_client.c **** }
+ 625              		.loc 1 75 0
+ 626 000e 08BD     		pop	{r3, pc}
+ 627              	.L57:
+ 628              		.align	2
+ 629              	.L56:
+ 630 0010 00000000 		.word	.LANCHOR0
+ 631              		.cfi_endproc
+ 632              	.LFE685:
+ 634              		.section	.text.Pos_Get_Position,"ax",%progbits
+ 635              		.align	1
+ 636              		.global	Pos_Get_Position
+ 637              		.syntax unified
+ 638              		.thumb
+ 639              		.thumb_func
+ 640              		.fpu fpv4-sp-d16
+ 642              	Pos_Get_Position:
+ 643              	.LFB686:
+  76:Src/position_client.c **** 
+  77:Src/position_client.c **** int Pos_Get_Position(){
+ 644              		.loc 1 77 0
+ 645              		.cfi_startproc
+ 646              		@ args = 0, pretend = 0, frame = 0
+ 647              		@ frame_needed = 0, uses_anonymous_args = 0
+ 648 0000 00B5     		push	{lr}
+ 649              	.LCFI15:
+ 650              		.cfi_def_cfa_offset 4
+ 651              		.cfi_offset 14, -4
+ 652 0002 83B0     		sub	sp, sp, #12
+ 653              	.LCFI16:
+ 654              		.cfi_def_cfa_offset 16
+  78:Src/position_client.c ****   return RC_Call(&pos_client, POS_GET_ODO, &me.x, &me.y, &me.angle);
+ 655              		.loc 1 78 0
+ 656 0004 054B     		ldr	r3, .L60
+ 657 0006 9A1E     		subs	r2, r3, #2
+ 658 0008 111D     		adds	r1, r2, #4
+ARM GAS  /tmp/ccNBoO1v.s 			page 14
+
+
+ 659 000a 0091     		str	r1, [sp]
+ 660 000c 0521     		movs	r1, #5
+ 661 000e 0448     		ldr	r0, .L60+4
+ 662 0010 FFF7FEFF 		bl	RC_Call
+ 663              	.LVL52:
+  79:Src/position_client.c **** }
+ 664              		.loc 1 79 0
+ 665 0014 03B0     		add	sp, sp, #12
+ 666              	.LCFI17:
+ 667              		.cfi_def_cfa_offset 4
+ 668              		@ sp needed
+ 669 0016 5DF804FB 		ldr	pc, [sp], #4
+ 670              	.L61:
+ 671 001a 00BF     		.align	2
+ 672              	.L60:
+ 673 001c 02000000 		.word	me+2
+ 674 0020 00000000 		.word	.LANCHOR0
+ 675              		.cfi_endproc
+ 676              	.LFE686:
+ 678              		.section	.text.Pos_Go_Forward,"ax",%progbits
+ 679              		.align	1
+ 680              		.global	Pos_Go_Forward
+ 681              		.syntax unified
+ 682              		.thumb
+ 683              		.thumb_func
+ 684              		.fpu fpv4-sp-d16
+ 686              	Pos_Go_Forward:
+ 687              	.LFB687:
+  80:Src/position_client.c **** 
+  81:Src/position_client.c **** int Pos_Go_Forward(float speed, float distance){
+ 688              		.loc 1 81 0
+ 689              		.cfi_startproc
+ 690              		@ args = 0, pretend = 0, frame = 0
+ 691              		@ frame_needed = 0, uses_anonymous_args = 0
+ 692              	.LVL53:
+ 693 0000 70B5     		push	{r4, r5, r6, lr}
+ 694              	.LCFI18:
+ 695              		.cfi_def_cfa_offset 16
+ 696              		.cfi_offset 4, -16
+ 697              		.cfi_offset 5, -12
+ 698              		.cfi_offset 6, -8
+ 699              		.cfi_offset 14, -4
+ 700 0002 82B0     		sub	sp, sp, #8
+ 701              	.LCFI19:
+ 702              		.cfi_def_cfa_offset 24
+ 703 0004 10EE906A 		vmov	r6, s1
+  82:Src/position_client.c ****   return RC_Call(&pos_client, POS_GO_FORWARD, speed, distance);
+ 704              		.loc 1 82 0
+ 705 0008 10EE100A 		vmov	r0, s0
+ 706 000c FFF7FEFF 		bl	__aeabi_f2d
+ 707              	.LVL54:
+ 708 0010 0446     		mov	r4, r0
+ 709 0012 0D46     		mov	r5, r1
+ 710 0014 3046     		mov	r0, r6	@ float
+ 711 0016 FFF7FEFF 		bl	__aeabi_f2d
+ 712              	.LVL55:
+ 713 001a CDE90001 		strd	r0, [sp]
+ARM GAS  /tmp/ccNBoO1v.s 			page 15
+
+
+ 714 001e 2246     		mov	r2, r4
+ 715 0020 2B46     		mov	r3, r5
+ 716 0022 0721     		movs	r1, #7
+ 717 0024 0248     		ldr	r0, .L64
+ 718 0026 FFF7FEFF 		bl	RC_Call
+ 719              	.LVL56:
+  83:Src/position_client.c **** }
+ 720              		.loc 1 83 0
+ 721 002a 02B0     		add	sp, sp, #8
+ 722              	.LCFI20:
+ 723              		.cfi_def_cfa_offset 16
+ 724              		@ sp needed
+ 725 002c 70BD     		pop	{r4, r5, r6, pc}
+ 726              	.LVL57:
+ 727              	.L65:
+ 728 002e 00BF     		.align	2
+ 729              	.L64:
+ 730 0030 00000000 		.word	.LANCHOR0
+ 731              		.cfi_endproc
+ 732              	.LFE687:
+ 734              		.section	.text.Pos_Set_Angle,"ax",%progbits
+ 735              		.align	1
+ 736              		.global	Pos_Set_Angle
+ 737              		.syntax unified
+ 738              		.thumb
+ 739              		.thumb_func
+ 740              		.fpu fpv4-sp-d16
+ 742              	Pos_Set_Angle:
+ 743              	.LFB688:
+  84:Src/position_client.c **** 
+  85:Src/position_client.c **** int Pos_Set_Angle(float speed, float angle){
+ 744              		.loc 1 85 0
+ 745              		.cfi_startproc
+ 746              		@ args = 0, pretend = 0, frame = 0
+ 747              		@ frame_needed = 0, uses_anonymous_args = 0
+ 748              	.LVL58:
+ 749 0000 70B5     		push	{r4, r5, r6, lr}
+ 750              	.LCFI21:
+ 751              		.cfi_def_cfa_offset 16
+ 752              		.cfi_offset 4, -16
+ 753              		.cfi_offset 5, -12
+ 754              		.cfi_offset 6, -8
+ 755              		.cfi_offset 14, -4
+ 756 0002 82B0     		sub	sp, sp, #8
+ 757              	.LCFI22:
+ 758              		.cfi_def_cfa_offset 24
+ 759 0004 10EE906A 		vmov	r6, s1
+  86:Src/position_client.c ****   return RC_Call(&pos_client, POS_SET_ANGLE, speed, angle);
+ 760              		.loc 1 86 0
+ 761 0008 10EE100A 		vmov	r0, s0
+ 762 000c FFF7FEFF 		bl	__aeabi_f2d
+ 763              	.LVL59:
+ 764 0010 0446     		mov	r4, r0
+ 765 0012 0D46     		mov	r5, r1
+ 766 0014 3046     		mov	r0, r6	@ float
+ 767 0016 FFF7FEFF 		bl	__aeabi_f2d
+ 768              	.LVL60:
+ARM GAS  /tmp/ccNBoO1v.s 			page 16
+
+
+ 769 001a CDE90001 		strd	r0, [sp]
+ 770 001e 2246     		mov	r2, r4
+ 771 0020 2B46     		mov	r3, r5
+ 772 0022 0821     		movs	r1, #8
+ 773 0024 0248     		ldr	r0, .L68
+ 774 0026 FFF7FEFF 		bl	RC_Call
+ 775              	.LVL61:
+  87:Src/position_client.c **** }
+ 776              		.loc 1 87 0
+ 777 002a 02B0     		add	sp, sp, #8
+ 778              	.LCFI23:
+ 779              		.cfi_def_cfa_offset 16
+ 780              		@ sp needed
+ 781 002c 70BD     		pop	{r4, r5, r6, pc}
+ 782              	.LVL62:
+ 783              	.L69:
+ 784 002e 00BF     		.align	2
+ 785              	.L68:
+ 786 0030 00000000 		.word	.LANCHOR0
+ 787              		.cfi_endproc
+ 788              	.LFE688:
+ 790              		.section	.text.Pos_Brake,"ax",%progbits
+ 791              		.align	1
+ 792              		.global	Pos_Brake
+ 793              		.syntax unified
+ 794              		.thumb
+ 795              		.thumb_func
+ 796              		.fpu fpv4-sp-d16
+ 798              	Pos_Brake:
+ 799              	.LFB689:
+  88:Src/position_client.c **** 
+  89:Src/position_client.c **** int Pos_Brake(){
+ 800              		.loc 1 89 0
+ 801              		.cfi_startproc
+ 802              		@ args = 0, pretend = 0, frame = 0
+ 803              		@ frame_needed = 0, uses_anonymous_args = 0
+ 804 0000 08B5     		push	{r3, lr}
+ 805              	.LCFI24:
+ 806              		.cfi_def_cfa_offset 8
+ 807              		.cfi_offset 3, -8
+ 808              		.cfi_offset 14, -4
+  90:Src/position_client.c ****   return RC_Call(&pos_client, POS_BRAKE);
+ 809              		.loc 1 90 0
+ 810 0002 0921     		movs	r1, #9
+ 811 0004 0148     		ldr	r0, .L72
+ 812 0006 FFF7FEFF 		bl	RC_Call
+ 813              	.LVL63:
+  91:Src/position_client.c **** }
+ 814              		.loc 1 91 0
+ 815 000a 08BD     		pop	{r3, pc}
+ 816              	.L73:
+ 817              		.align	2
+ 818              	.L72:
+ 819 000c 00000000 		.word	.LANCHOR0
+ 820              		.cfi_endproc
+ 821              	.LFE689:
+ 823              		.section	.bss.pos_client,"aw",%nobits
+ARM GAS  /tmp/ccNBoO1v.s 			page 17
+
+
+ 824              		.align	2
+ 825              		.set	.LANCHOR0,. + 0
+ 828              	pos_client:
+ 829 0000 00000000 		.space	616
+ 829      00000000 
+ 829      00000000 
+ 829      00000000 
+ 829      00000000 
+ 830              		.section	.rodata.Position_Init.str1.4,"aMS",%progbits,1
+ 831              		.align	2
+ 832              	.LC0:
+ 833 0000 00       		.ascii	"\000"
+ 834 0001 000000   		.space	3
+ 835              	.LC1:
+ 836 0004 66666669 		.ascii	"fffif\000"
+ 836      6600
+ 837 000a 0000     		.space	2
+ 838              	.LC2:
+ 839 000c 42426600 		.ascii	"BBf\000"
+ 840              	.LC3:
+ 841 0010 666600   		.ascii	"ff\000"
+ 842 0013 00       		.space	1
+ 843              	.LC4:
+ 844 0014 66664242 		.ascii	"ffBB\000"
+ 844      00
+ 845 0019 000000   		.space	3
+ 846              	.LC5:
+ 847 001c 6200     		.ascii	"b\000"
+ 848 001e 0000     		.space	2
+ 849              	.LC6:
+ 850 0020 424200   		.ascii	"BB\000"
+ 851 0023 00       		.space	1
+ 852              	.LC7:
+ 853 0024 66666666 		.ascii	"ffffffff\000"
+ 853      66666666 
+ 853      00
+ 854              		.text
+ 855              	.Letext0:
+ 856              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 857              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 858              		.file 4 "Inc/game_defs.h"
+ 859              		.file 5 "Inc/map.h"
+ 860              		.file 6 "Inc/position_client.h"
+ 861              		.file 7 "Inc/strategy.h"
+ 862              		.file 8 "/usr/arm-none-eabi/include/sys/lock.h"
+ 863              		.file 9 "/usr/arm-none-eabi/include/sys/_types.h"
+ 864              		.file 10 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 865              		.file 11 "/usr/arm-none-eabi/include/sys/reent.h"
+ 866              		.file 12 "/usr/arm-none-eabi/include/stdlib.h"
+ 867              		.file 13 "Inc/crc_16.h"
+ 868              		.file 14 "Inc/robotronik_protocol.h"
+ 869              		.file 15 "Inc/remote_call.h"
+ 870              		.file 16 "Drivers/CMSIS/Include/core_cm4.h"
+ 871              		.file 17 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h"
+ 872              		.file 18 "Inc/usart.h"
+ 873              		.file 19 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_dma.h"
+ARM GAS  /tmp/ccNBoO1v.s 			page 18
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 position_client.c
+     /tmp/ccNBoO1v.s:18     .text.Position_Init:0000000000000000 $t
+     /tmp/ccNBoO1v.s:25     .text.Position_Init:0000000000000000 Position_Init
+     /tmp/ccNBoO1v.s:244    .text.Position_Init:0000000000000158 $d
+     /tmp/ccNBoO1v.s:259    .text.Position_Init_Odometry:0000000000000000 $t
+     /tmp/ccNBoO1v.s:266    .text.Position_Init_Odometry:0000000000000000 Position_Init_Odometry
+     /tmp/ccNBoO1v.s:304    .text.Position_Init_Odometry:0000000000000024 $d
+     /tmp/ccNBoO1v.s:310    .text.Pos_Reset:0000000000000000 $t
+     /tmp/ccNBoO1v.s:317    .text.Pos_Reset:0000000000000000 Pos_Reset
+     /tmp/ccNBoO1v.s:338    .text.Pos_Reset:000000000000000c $d
+     /tmp/ccNBoO1v.s:343    .text.Pos_Get_State:0000000000000000 $t
+     /tmp/ccNBoO1v.s:350    .text.Pos_Get_State:0000000000000000 Pos_Get_State
+     /tmp/ccNBoO1v.s:374    .text.Pos_Get_State:0000000000000010 $d
+     /tmp/ccNBoO1v.s:379    .text.Pos_Config_Curve:0000000000000000 $t
+     /tmp/ccNBoO1v.s:386    .text.Pos_Config_Curve:0000000000000000 Pos_Config_Curve
+     /tmp/ccNBoO1v.s:476    .text.Pos_Config_Curve:0000000000000090 $d
+     /tmp/ccNBoO1v.s:481    .text.Pos_Send_Path:0000000000000000 $t
+     /tmp/ccNBoO1v.s:488    .text.Pos_Send_Path:0000000000000000 Pos_Send_Path
+     /tmp/ccNBoO1v.s:592    .text.Pos_Send_Path:0000000000000068 $d
+     /tmp/ccNBoO1v.s:597    .text.Pos_Init_Position:0000000000000000 $t
+     /tmp/ccNBoO1v.s:604    .text.Pos_Init_Position:0000000000000000 Pos_Init_Position
+     /tmp/ccNBoO1v.s:630    .text.Pos_Init_Position:0000000000000010 $d
+     /tmp/ccNBoO1v.s:635    .text.Pos_Get_Position:0000000000000000 $t
+     /tmp/ccNBoO1v.s:642    .text.Pos_Get_Position:0000000000000000 Pos_Get_Position
+     /tmp/ccNBoO1v.s:673    .text.Pos_Get_Position:000000000000001c $d
+     /tmp/ccNBoO1v.s:679    .text.Pos_Go_Forward:0000000000000000 $t
+     /tmp/ccNBoO1v.s:686    .text.Pos_Go_Forward:0000000000000000 Pos_Go_Forward
+     /tmp/ccNBoO1v.s:730    .text.Pos_Go_Forward:0000000000000030 $d
+     /tmp/ccNBoO1v.s:735    .text.Pos_Set_Angle:0000000000000000 $t
+     /tmp/ccNBoO1v.s:742    .text.Pos_Set_Angle:0000000000000000 Pos_Set_Angle
+     /tmp/ccNBoO1v.s:786    .text.Pos_Set_Angle:0000000000000030 $d
+     /tmp/ccNBoO1v.s:791    .text.Pos_Brake:0000000000000000 $t
+     /tmp/ccNBoO1v.s:798    .text.Pos_Brake:0000000000000000 Pos_Brake
+     /tmp/ccNBoO1v.s:819    .text.Pos_Brake:000000000000000c $d
+     /tmp/ccNBoO1v.s:824    .bss.pos_client:0000000000000000 $d
+     /tmp/ccNBoO1v.s:828    .bss.pos_client:0000000000000000 pos_client
+     /tmp/ccNBoO1v.s:831    .rodata.Position_Init.str1.4:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+RC_Client_Init
+RC_Client_Add_Function
+pos_iface
+__aeabi_f2d
+RC_Call
+me

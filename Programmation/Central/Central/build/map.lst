@@ -1,0 +1,1052 @@
+ARM GAS  /tmp/cctCEan5.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"map.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	__aeabi_f2d
+  18              		.global	__aeabi_dadd
+  19              		.global	__aeabi_d2uiz
+  20              		.section	.text.square_limit,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  25              		.fpu fpv4-sp-d16
+  27              	square_limit:
+  28              	.LFB1:
+  29              		.file 1 "Src/map.c"
+   1:Src/map.c     **** #include <math.h>
+   2:Src/map.c     **** #include "map.h"
+   3:Src/map.c     **** #include "strategy.h"
+   4:Src/map.c     **** 
+   5:Src/map.c     **** Cell map[MAP_HEIGHT][MAP_WIDTH];
+   6:Src/map.c     **** 
+   7:Src/map.c     **** #define ADD_PADDING(coord, size, limit) {		\
+   8:Src/map.c     ****     if(coord > ROBOT_RADIUS){				\
+   9:Src/map.c     ****       coord -= ROBOT_RADIUS;				\
+  10:Src/map.c     ****       size += ROBOT_RADIUS;				\
+  11:Src/map.c     ****     }else{						\
+  12:Src/map.c     ****       coord = 0;					\
+  13:Src/map.c     ****     }							\
+  14:Src/map.c     ****     if(coord+size+ROBOT_RADIUS < limit){		\
+  15:Src/map.c     ****       size += ROBOT_RADIUS;				\
+  16:Src/map.c     ****     }else{						\
+  17:Src/map.c     ****       size = limit-coord;				\
+  18:Src/map.c     ****     }							\
+  19:Src/map.c     ****   }
+  20:Src/map.c     **** 
+  21:Src/map.c     **** Cell* Cell_From_Pos(uint16_t x, uint16_t y){
+  22:Src/map.c     ****   int const i = y / SQUARE_SIZE;
+  23:Src/map.c     ****   int const j = x / SQUARE_SIZE;
+  24:Src/map.c     **** 
+  25:Src/map.c     ****   if(i < 0 || i >= MAP_HEIGHT || j < 0 || j >= MAP_WIDTH){
+  26:Src/map.c     ****     return NULL;
+  27:Src/map.c     ****   }
+  28:Src/map.c     **** 
+  29:Src/map.c     ****   return &map[i][j];
+ARM GAS  /tmp/cctCEan5.s 			page 2
+
+
+  30:Src/map.c     **** }
+  31:Src/map.c     **** 
+  32:Src/map.c     **** static void square_limit(uint32_t real_x, uint32_t real_y, uint32_t width, uint32_t height){
+  30              		.loc 1 32 0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              	.LVL0:
+  35 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 24
+  38              		.cfi_offset 3, -24
+  39              		.cfi_offset 4, -20
+  40              		.cfi_offset 5, -16
+  41              		.cfi_offset 6, -12
+  42              		.cfi_offset 7, -8
+  43              		.cfi_offset 14, -4
+  44 0002 2DED028B 		vpush.64	{d8}
+  45              	.LCFI1:
+  46              		.cfi_def_cfa_offset 32
+  47              		.cfi_offset 80, -32
+  48              		.cfi_offset 81, -28
+  33:Src/map.c     ****   ADD_PADDING(real_x, width, AREA_WIDTH);
+  49              		.loc 1 33 0
+  50 0006 6E28     		cmp	r0, #110
+  51 0008 02D9     		bls	.L12
+  52              		.loc 1 33 0 is_stmt 0 discriminator 1
+  53 000a 6E38     		subs	r0, r0, #110
+  54              	.LVL1:
+  55 000c 6E32     		adds	r2, r2, #110
+  56              	.LVL2:
+  57 000e 00E0     		b	.L2
+  58              	.L12:
+  59              		.loc 1 33 0
+  60 0010 0020     		movs	r0, #0
+  61              	.LVL3:
+  62              	.L2:
+  63              		.loc 1 33 0 discriminator 4
+  64 0012 8418     		adds	r4, r0, r2
+  65 0014 6E34     		adds	r4, r4, #110
+  66 0016 40F6B735 		movw	r5, #2999
+  67 001a AC42     		cmp	r4, r5
+  68 001c 07D8     		bhi	.L3
+  69              		.loc 1 33 0 discriminator 5
+  70 001e 02F16E04 		add	r4, r2, #110
+  71              	.LVL4:
+  72              	.L4:
+  34:Src/map.c     ****   ADD_PADDING(real_y, height, AREA_HEIGHT);
+  73              		.loc 1 34 0 is_stmt 1
+  74 0022 6E29     		cmp	r1, #110
+  75 0024 07D9     		bls	.L13
+  76              		.loc 1 34 0 is_stmt 0 discriminator 1
+  77 0026 A1F16E06 		sub	r6, r1, #110
+  78              	.LVL5:
+  79 002a 6E33     		adds	r3, r3, #110
+  80              	.LVL6:
+  81 002c 04E0     		b	.L5
+ARM GAS  /tmp/cctCEan5.s 			page 3
+
+
+  82              	.LVL7:
+  83              	.L3:
+  33:Src/map.c     ****   ADD_PADDING(real_x, width, AREA_WIDTH);
+  84              		.loc 1 33 0 is_stmt 1 discriminator 6
+  85 002e C0F53B64 		rsb	r4, r0, #2992
+  86 0032 0834     		adds	r4, r4, #8
+  87              	.LVL8:
+  88 0034 F5E7     		b	.L4
+  89              	.L13:
+  90              		.loc 1 34 0
+  91 0036 0026     		movs	r6, #0
+  92              	.LVL9:
+  93              	.L5:
+  94              		.loc 1 34 0 is_stmt 0 discriminator 4
+  95 0038 F218     		adds	r2, r6, r3
+  96 003a 6E32     		adds	r2, r2, #110
+  97 003c B2F5FA6F 		cmp	r2, #2000
+  98 0040 49D2     		bcs	.L6
+  99              		.loc 1 34 0 discriminator 5
+ 100 0042 03F16E07 		add	r7, r3, #110
+ 101              	.LVL10:
+ 102              	.L7:
+  35:Src/map.c     ****   
+  36:Src/map.c     ****   const uint8_t x = (float) real_x / SQUARE_SIZE + .5;
+ 103              		.loc 1 36 0 is_stmt 1
+ 104 0046 07EE900A 		vmov	s15, r0	@ int
+ 105 004a F8EE677A 		vcvt.f32.u32	s15, s15
+ 106 004e 9FED308A 		vldr.32	s16, .L16
+ 107 0052 C7EE887A 		vdiv.f32	s15, s15, s16
+ 108 0056 17EE900A 		vmov	r0, s15
+ 109              	.LVL11:
+ 110 005a FFF7FEFF 		bl	__aeabi_f2d
+ 111              	.LVL12:
+ 112 005e 0022     		movs	r2, #0
+ 113 0060 2C4B     		ldr	r3, .L16+4
+ 114 0062 FFF7FEFF 		bl	__aeabi_dadd
+ 115              	.LVL13:
+ 116 0066 FFF7FEFF 		bl	__aeabi_d2uiz
+ 117              	.LVL14:
+ 118 006a C5B2     		uxtb	r5, r0
+ 119              	.LVL15:
+  37:Src/map.c     ****   const uint8_t y = (float) real_y / SQUARE_SIZE + .5;
+ 120              		.loc 1 37 0
+ 121 006c 07EE906A 		vmov	s15, r6	@ int
+ 122 0070 F8EE677A 		vcvt.f32.u32	s15, s15
+ 123 0074 C7EE887A 		vdiv.f32	s15, s15, s16
+ 124 0078 17EE900A 		vmov	r0, s15
+ 125 007c FFF7FEFF 		bl	__aeabi_f2d
+ 126              	.LVL16:
+ 127 0080 0022     		movs	r2, #0
+ 128 0082 244B     		ldr	r3, .L16+4
+ 129 0084 FFF7FEFF 		bl	__aeabi_dadd
+ 130              	.LVL17:
+ 131 0088 FFF7FEFF 		bl	__aeabi_d2uiz
+ 132              	.LVL18:
+ 133 008c C6B2     		uxtb	r6, r0
+ 134              	.LVL19:
+ARM GAS  /tmp/cctCEan5.s 			page 4
+
+
+  38:Src/map.c     ****   const uint8_t w = (float) width / SQUARE_SIZE + .5;
+ 135              		.loc 1 38 0
+ 136 008e 07EE904A 		vmov	s15, r4	@ int
+ 137 0092 F8EE677A 		vcvt.f32.u32	s15, s15
+ 138 0096 C7EE887A 		vdiv.f32	s15, s15, s16
+ 139 009a 17EE900A 		vmov	r0, s15
+ 140 009e FFF7FEFF 		bl	__aeabi_f2d
+ 141              	.LVL20:
+ 142 00a2 0022     		movs	r2, #0
+ 143 00a4 1B4B     		ldr	r3, .L16+4
+ 144 00a6 FFF7FEFF 		bl	__aeabi_dadd
+ 145              	.LVL21:
+ 146 00aa FFF7FEFF 		bl	__aeabi_d2uiz
+ 147              	.LVL22:
+ 148 00ae C4B2     		uxtb	r4, r0
+ 149              	.LVL23:
+  39:Src/map.c     ****   const uint8_t h = (float) height / SQUARE_SIZE + .5;
+ 150              		.loc 1 39 0
+ 151 00b0 07EE907A 		vmov	s15, r7	@ int
+ 152 00b4 F8EE677A 		vcvt.f32.u32	s15, s15
+ 153 00b8 C7EE887A 		vdiv.f32	s15, s15, s16
+ 154 00bc 17EE900A 		vmov	r0, s15
+ 155 00c0 FFF7FEFF 		bl	__aeabi_f2d
+ 156              	.LVL24:
+ 157 00c4 0022     		movs	r2, #0
+ 158 00c6 134B     		ldr	r3, .L16+4
+ 159 00c8 FFF7FEFF 		bl	__aeabi_dadd
+ 160              	.LVL25:
+ 161 00cc FFF7FEFF 		bl	__aeabi_d2uiz
+ 162              	.LVL26:
+ 163 00d0 C0B2     		uxtb	r0, r0
+ 164              	.LVL27:
+  40:Src/map.c     ****   
+  41:Src/map.c     ****   int i, j;
+  42:Src/map.c     ****   for(i = y; i < y+h; i++){
+ 165              		.loc 1 42 0
+ 166 00d2 B446     		mov	ip, r6
+ 167              	.LVL28:
+ 168 00d4 11E0     		b	.L8
+ 169              	.LVL29:
+ 170              	.L6:
+  34:Src/map.c     ****   
+ 171              		.loc 1 34 0 discriminator 6
+ 172 00d6 C6F5FA67 		rsb	r7, r6, #2000
+ 173              	.LVL30:
+ 174 00da B4E7     		b	.L7
+ 175              	.LVL31:
+ 176              	.L10:
+  43:Src/map.c     ****     for(j = x; j < x+w; j++){
+  44:Src/map.c     ****       map[i][j].obstacle = 1;
+ 177              		.loc 1 44 0 discriminator 3
+ 178 00dc 06EB8603 		add	r3, r6, r6, lsl #2
+ 179 00e0 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 180 00e4 1344     		add	r3, r3, r2
+ 181 00e6 0C49     		ldr	r1, .L16+8
+ 182 00e8 01EB0313 		add	r3, r1, r3, lsl #4
+ 183 00ec 0121     		movs	r1, #1
+ARM GAS  /tmp/cctCEan5.s 			page 5
+
+
+ 184 00ee 1971     		strb	r1, [r3, #4]
+  43:Src/map.c     ****     for(j = x; j < x+w; j++){
+ 185              		.loc 1 43 0 discriminator 3
+ 186 00f0 0A44     		add	r2, r2, r1
+ 187              	.LVL32:
+ 188              	.L9:
+  43:Src/map.c     ****     for(j = x; j < x+w; j++){
+ 189              		.loc 1 43 0 is_stmt 0 discriminator 1
+ 190 00f2 E319     		adds	r3, r4, r7
+ 191 00f4 9342     		cmp	r3, r2
+ 192 00f6 F1DC     		bgt	.L10
+  42:Src/map.c     ****     for(j = x; j < x+w; j++){
+ 193              		.loc 1 42 0 is_stmt 1 discriminator 2
+ 194 00f8 0136     		adds	r6, r6, #1
+ 195              	.LVL33:
+ 196              	.L8:
+  42:Src/map.c     ****     for(j = x; j < x+w; j++){
+ 197              		.loc 1 42 0 is_stmt 0 discriminator 1
+ 198 00fa 00EB0C03 		add	r3, r0, ip
+ 199 00fe B342     		cmp	r3, r6
+ 200 0100 02DD     		ble	.L15
+  43:Src/map.c     ****     for(j = x; j < x+w; j++){
+ 201              		.loc 1 43 0 is_stmt 1
+ 202 0102 2F46     		mov	r7, r5
+ 203              	.LVL34:
+ 204 0104 2A46     		mov	r2, r5
+ 205 0106 F4E7     		b	.L9
+ 206              	.LVL35:
+ 207              	.L15:
+  45:Src/map.c     ****     }
+  46:Src/map.c     ****   }
+  47:Src/map.c     **** }
+ 208              		.loc 1 47 0
+ 209 0108 BDEC028B 		vldm	sp!, {d8}
+ 210              	.LCFI2:
+ 211              		.cfi_restore 80
+ 212              		.cfi_restore 81
+ 213              		.cfi_def_cfa_offset 24
+ 214 010c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 215              	.LVL36:
+ 216              	.L17:
+ 217 010e 00BF     		.align	2
+ 218              	.L16:
+ 219 0110 00002042 		.word	1109393408
+ 220 0114 0000E03F 		.word	1071644672
+ 221 0118 00000000 		.word	map
+ 222              		.cfi_endproc
+ 223              	.LFE1:
+ 225              		.global	__aeabi_i2d
+ 226              		.global	__aeabi_dsub
+ 227              		.global	__aeabi_d2f
+ 228              		.global	__aeabi_ddiv
+ 229              		.global	__aeabi_d2iz
+ 230              		.section	.text.circle_limit,"ax",%progbits
+ 231              		.align	1
+ 232              		.syntax unified
+ 233              		.thumb
+ARM GAS  /tmp/cctCEan5.s 			page 6
+
+
+ 234              		.thumb_func
+ 235              		.fpu fpv4-sp-d16
+ 237              	circle_limit:
+ 238              	.LFB2:
+  48:Src/map.c     **** 
+  49:Src/map.c     **** static void circle_limit(uint32_t real_x, uint32_t real_y, uint32_t radius){
+ 239              		.loc 1 49 0
+ 240              		.cfi_startproc
+ 241              		@ args = 0, pretend = 0, frame = 0
+ 242              		@ frame_needed = 0, uses_anonymous_args = 0
+ 243              	.LVL37:
+ 244 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 245              	.LCFI3:
+ 246              		.cfi_def_cfa_offset 32
+ 247              		.cfi_offset 3, -32
+ 248              		.cfi_offset 4, -28
+ 249              		.cfi_offset 5, -24
+ 250              		.cfi_offset 6, -20
+ 251              		.cfi_offset 7, -16
+ 252              		.cfi_offset 8, -12
+ 253              		.cfi_offset 9, -8
+ 254              		.cfi_offset 14, -4
+ 255 0004 2DED028B 		vpush.64	{d8}
+ 256              	.LCFI4:
+ 257              		.cfi_def_cfa_offset 40
+ 258              		.cfi_offset 80, -40
+ 259              		.cfi_offset 81, -36
+  50:Src/map.c     ****   int r = radius + ROBOT_RADIUS;
+ 260              		.loc 1 50 0
+ 261 0008 6E32     		adds	r2, r2, #110
+ 262              	.LVL38:
+  51:Src/map.c     **** 
+  52:Src/map.c     ****   uint16_t X0 = real_x / SQUARE_SIZE, Y0 = real_y / SQUARE_SIZE;
+ 263              		.loc 1 52 0
+ 264 000a 504C     		ldr	r4, .L25
+ 265 000c A4FB0035 		umull	r3, r5, r4, r0
+ 266 0010 6D09     		lsrs	r5, r5, #5
+ 267              	.LVL39:
+ 268 0012 A4FB0134 		umull	r3, r4, r4, r1
+ 269 0016 6409     		lsrs	r4, r4, #5
+ 270              	.LVL40:
+  53:Src/map.c     ****   uint16_t dx = real_x % SQUARE_SIZE, dy = real_y % SQUARE_SIZE;
+ 271              		.loc 1 53 0
+ 272 0018 05EB8503 		add	r3, r5, r5, lsl #2
+ 273 001c DE00     		lsls	r6, r3, #3
+ 274 001e 861B     		subs	r6, r0, r6
+ 275              	.LVL41:
+ 276 0020 04EB8400 		add	r0, r4, r4, lsl #2
+ 277              	.LVL42:
+ 278 0024 C300     		lsls	r3, r0, #3
+ 279 0026 CB1A     		subs	r3, r1, r3
+ 280              	.LVL43:
+  54:Src/map.c     **** 
+  55:Src/map.c     ****   //Number of cubes
+  56:Src/map.c     ****   int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
+ 281              		.loc 1 56 0
+ 282 0028 B1B2     		uxth	r1, r6
+ARM GAS  /tmp/cctCEan5.s 			page 7
+
+
+ 283              	.LVL44:
+ 284 002a 9BB2     		uxth	r3, r3
+ 285 002c C1F12800 		rsb	r0, r1, #40
+ 286 0030 C3F12806 		rsb	r6, r3, #40
+ 287              	.LVL45:
+ 288 0034 B042     		cmp	r0, r6
+ 289 0036 B8BF     		it	lt
+ 290 0038 3046     		movlt	r0, r6
+ 291 003a 8342     		cmp	r3, r0
+ 292 003c B8BF     		it	lt
+ 293 003e 0346     		movlt	r3, r0
+ 294              	.LVL46:
+ 295 0040 9942     		cmp	r1, r3
+ 296 0042 ACBF     		ite	ge
+ 297 0044 531A     		subge	r3, r2, r1
+ 298 0046 D31A     		sublt	r3, r2, r3
+ 299 0048 414A     		ldr	r2, .L25+4
+ 300              	.LVL47:
+ 301 004a 82FB0312 		smull	r1, r2, r2, r3
+ 302              	.LVL48:
+ 303 004e DB17     		asrs	r3, r3, #31
+ 304 0050 C3EB2213 		rsb	r3, r3, r2, asr #4
+ 305              	.LVL49:
+  57:Src/map.c     **** 
+  58:Src/map.c     ****   //Check if this circle can be drawn
+  59:Src/map.c     ****   if((X0 < N-1) || (X0 > MAP_WIDTH - N) || (Y0 < N-1) || (Y0 > MAP_HEIGHT - N)){
+ 306              		.loc 1 59 0
+ 307 0054 ADB2     		uxth	r5, r5
+ 308              	.LVL50:
+ 309 0056 AB42     		cmp	r3, r5
+ 310 0058 74DC     		bgt	.L18
+ 311 005a 5F1C     		adds	r7, r3, #1
+ 312              	.LVL51:
+ 313              		.loc 1 59 0 is_stmt 0 discriminator 1
+ 314 005c C7F14B02 		rsb	r2, r7, #75
+ 315 0060 9542     		cmp	r5, r2
+ 316 0062 6FDC     		bgt	.L18
+ 317              		.loc 1 59 0 discriminator 2
+ 318 0064 A4B2     		uxth	r4, r4
+ 319              	.LVL52:
+ 320 0066 A342     		cmp	r3, r4
+ 321 0068 6CDC     		bgt	.L18
+ 322              		.loc 1 59 0 discriminator 3
+ 323 006a C7F13203 		rsb	r3, r7, #50
+ 324 006e 9C42     		cmp	r4, r3
+ 325 0070 68DC     		bgt	.L18
+ 326              	.LVL53:
+  60:Src/map.c     ****     return;
+  61:Src/map.c     ****   }
+  62:Src/map.c     ****   
+  63:Src/map.c     ****   //Draw the circle
+  64:Src/map.c     ****   int X = 0;
+  65:Src/map.c     ****   float R = N*SQUARE_SIZE - (float) SQUARE_SIZE/2.;
+ 327              		.loc 1 65 0 is_stmt 1
+ 328 0072 07EB8703 		add	r3, r7, r7, lsl #2
+ 329 0076 D800     		lsls	r0, r3, #3
+ 330 0078 FFF7FEFF 		bl	__aeabi_i2d
+ARM GAS  /tmp/cctCEan5.s 			page 8
+
+
+ 331              	.LVL54:
+ 332 007c 0022     		movs	r2, #0
+ 333 007e 354B     		ldr	r3, .L25+8
+ 334 0080 FFF7FEFF 		bl	__aeabi_dsub
+ 335              	.LVL55:
+ 336 0084 FFF7FEFF 		bl	__aeabi_d2f
+ 337              	.LVL56:
+ 338 0088 08EE100A 		vmov	s16, r0
+ 339              	.LVL57:
+  66:Src/map.c     ****   int DX = 0;
+ 340              		.loc 1 66 0
+ 341 008c 4FF00008 		mov	r8, #0
+  67:Src/map.c     **** 
+  68:Src/map.c     ****   for(X = 0; X < N; X++, DX += SQUARE_SIZE){
+ 342              		.loc 1 68 0
+ 343 0090 4646     		mov	r6, r8
+ 344 0092 2CE0     		b	.L20
+ 345              	.LVL58:
+ 346              	.L22:
+ 347              	.LBB2:
+  69:Src/map.c     ****     float DY = sqrt(R*R - DX*DX);
+  70:Src/map.c     ****     int NB_Y = 1 + (DY-(float)SQUARE_SIZE/2.)/SQUARE_SIZE;
+  71:Src/map.c     ****     int Y;
+  72:Src/map.c     ****     for(Y = 0; Y < NB_Y; Y++){
+  73:Src/map.c     **** 	map[Y0 + Y][X0 + X].obstacle = 1;
+ 348              		.loc 1 73 0 discriminator 3
+ 349 0094 04EB0C03 		add	r3, r4, ip
+ 350 0098 AA19     		adds	r2, r5, r6
+ 351 009a 2F49     		ldr	r1, .L25+12
+ 352 009c 03EB8303 		add	r3, r3, r3, lsl #2
+ 353 00a0 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 354 00a4 03EB0209 		add	r9, r3, r2
+ 355 00a8 01EB0919 		add	r9, r1, r9, lsl #4
+ 356 00ac 4FF0010E 		mov	lr, #1
+ 357 00b0 89F804E0 		strb	lr, [r9, #4]
+  74:Src/map.c     **** 	map[Y0 + Y][X0 - X].obstacle = 1;
+ 358              		.loc 1 74 0 discriminator 3
+ 359 00b4 A5EB0609 		sub	r9, r5, r6
+ 360 00b8 4B44     		add	r3, r3, r9
+ 361 00ba 01EB0313 		add	r3, r1, r3, lsl #4
+ 362 00be 83F804E0 		strb	lr, [r3, #4]
+  75:Src/map.c     **** 	map[Y0 - Y][X0 + X].obstacle = 1;
+ 363              		.loc 1 75 0 discriminator 3
+ 364 00c2 A4EB0C03 		sub	r3, r4, ip
+ 365 00c6 03EB8303 		add	r3, r3, r3, lsl #2
+ 366 00ca C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 367 00ce 1A44     		add	r2, r2, r3
+ 368 00d0 01EB0212 		add	r2, r1, r2, lsl #4
+ 369 00d4 82F804E0 		strb	lr, [r2, #4]
+  76:Src/map.c     **** 	map[Y0 - Y][X0 - X].obstacle = 1;
+ 370              		.loc 1 76 0 discriminator 3
+ 371 00d8 4B44     		add	r3, r3, r9
+ 372 00da 01EB0313 		add	r3, r1, r3, lsl #4
+ 373 00de 83F804E0 		strb	lr, [r3, #4]
+  72:Src/map.c     **** 	map[Y0 + Y][X0 + X].obstacle = 1;
+ 374              		.loc 1 72 0 discriminator 3
+ 375 00e2 F444     		add	ip, ip, lr
+ARM GAS  /tmp/cctCEan5.s 			page 9
+
+
+ 376              	.LVL59:
+ 377              	.L21:
+  72:Src/map.c     **** 	map[Y0 + Y][X0 + X].obstacle = 1;
+ 378              		.loc 1 72 0 is_stmt 0 discriminator 1
+ 379 00e4 8445     		cmp	ip, r0
+ 380 00e6 D5DB     		blt	.L22
+ 381              	.LBE2:
+  68:Src/map.c     ****     float DY = sqrt(R*R - DX*DX);
+ 382              		.loc 1 68 0 is_stmt 1 discriminator 2
+ 383 00e8 0136     		adds	r6, r6, #1
+ 384              	.LVL60:
+ 385 00ea 08F12808 		add	r8, r8, #40
+ 386              	.LVL61:
+ 387              	.L20:
+  68:Src/map.c     ****     float DY = sqrt(R*R - DX*DX);
+ 388              		.loc 1 68 0 is_stmt 0 discriminator 1
+ 389 00ee BE42     		cmp	r6, r7
+ 390 00f0 28DA     		bge	.L18
+ 391              	.LBB3:
+  69:Src/map.c     ****     int NB_Y = 1 + (DY-(float)SQUARE_SIZE/2.)/SQUARE_SIZE;
+ 392              		.loc 1 69 0 is_stmt 1
+ 393 00f2 28EE087A 		vmul.f32	s14, s16, s16
+ 394 00f6 08FB08F3 		mul	r3, r8, r8
+ 395 00fa 07EE903A 		vmov	s15, r3	@ int
+ 396 00fe F8EEE77A 		vcvt.f32.s32	s15, s15
+ 397 0102 77EE677A 		vsub.f32	s15, s14, s15
+ 398 0106 17EE900A 		vmov	r0, s15
+ 399 010a FFF7FEFF 		bl	__aeabi_f2d
+ 400              	.LVL62:
+ 401 010e 41EC100B 		vmov	d0, r0, r1
+ 402 0112 FFF7FEFF 		bl	sqrt
+ 403              	.LVL63:
+ 404 0116 51EC100B 		vmov	r0, r1, d0
+ 405 011a FFF7FEFF 		bl	__aeabi_d2f
+ 406              	.LVL64:
+  70:Src/map.c     ****     int Y;
+ 407              		.loc 1 70 0
+ 408 011e FFF7FEFF 		bl	__aeabi_f2d
+ 409              	.LVL65:
+ 410 0122 0022     		movs	r2, #0
+ 411 0124 0B4B     		ldr	r3, .L25+8
+ 412 0126 FFF7FEFF 		bl	__aeabi_dsub
+ 413              	.LVL66:
+ 414 012a 0022     		movs	r2, #0
+ 415 012c 0B4B     		ldr	r3, .L25+16
+ 416 012e FFF7FEFF 		bl	__aeabi_ddiv
+ 417              	.LVL67:
+ 418 0132 0022     		movs	r2, #0
+ 419 0134 0A4B     		ldr	r3, .L25+20
+ 420 0136 FFF7FEFF 		bl	__aeabi_dadd
+ 421              	.LVL68:
+ 422 013a FFF7FEFF 		bl	__aeabi_d2iz
+ 423              	.LVL69:
+  72:Src/map.c     **** 	map[Y0 + Y][X0 + X].obstacle = 1;
+ 424              		.loc 1 72 0
+ 425 013e 4FF0000C 		mov	ip, #0
+ 426 0142 CFE7     		b	.L21
+ARM GAS  /tmp/cctCEan5.s 			page 10
+
+
+ 427              	.LVL70:
+ 428              	.L18:
+ 429              	.LBE3:
+  77:Src/map.c     ****     }
+  78:Src/map.c     ****   }
+  79:Src/map.c     **** }
+ 430              		.loc 1 79 0
+ 431 0144 BDEC028B 		vldm	sp!, {d8}
+ 432              	.LCFI5:
+ 433              		.cfi_restore 80
+ 434              		.cfi_restore 81
+ 435              		.cfi_def_cfa_offset 32
+ 436 0148 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 437              	.LVL71:
+ 438              	.L26:
+ 439              		.align	2
+ 440              	.L25:
+ 441 014c CDCCCCCC 		.word	-858993459
+ 442 0150 67666666 		.word	1717986919
+ 443 0154 00003440 		.word	1077149696
+ 444 0158 00000000 		.word	map
+ 445 015c 00004440 		.word	1078198272
+ 446 0160 0000F03F 		.word	1072693248
+ 447              		.cfi_endproc
+ 448              	.LFE2:
+ 450              		.section	.text.Cell_From_Pos,"ax",%progbits
+ 451              		.align	1
+ 452              		.global	Cell_From_Pos
+ 453              		.syntax unified
+ 454              		.thumb
+ 455              		.thumb_func
+ 456              		.fpu fpv4-sp-d16
+ 458              	Cell_From_Pos:
+ 459              	.LFB0:
+  21:Src/map.c     ****   int const i = y / SQUARE_SIZE;
+ 460              		.loc 1 21 0
+ 461              		.cfi_startproc
+ 462              		@ args = 0, pretend = 0, frame = 0
+ 463              		@ frame_needed = 0, uses_anonymous_args = 0
+ 464              		@ link register save eliminated.
+ 465              	.LVL72:
+  22:Src/map.c     ****   int const j = x / SQUARE_SIZE;
+ 466              		.loc 1 22 0
+ 467 0000 0B4B     		ldr	r3, .L31
+ 468 0002 A3FB0121 		umull	r2, r1, r3, r1
+ 469              	.LVL73:
+ 470 0006 4909     		lsrs	r1, r1, #5
+ 471              	.LVL74:
+  23:Src/map.c     **** 
+ 472              		.loc 1 23 0
+ 473 0008 A3FB0030 		umull	r3, r0, r3, r0
+ 474              	.LVL75:
+ 475 000c 4009     		lsrs	r0, r0, #5
+ 476              	.LVL76:
+  25:Src/map.c     ****     return NULL;
+ 477              		.loc 1 25 0
+ 478 000e 3129     		cmp	r1, #49
+ARM GAS  /tmp/cctCEan5.s 			page 11
+
+
+ 479 0010 0AD8     		bhi	.L29
+  25:Src/map.c     ****     return NULL;
+ 480              		.loc 1 25 0 is_stmt 0 discriminator 2
+ 481 0012 4A28     		cmp	r0, #74
+ 482 0014 0ADC     		bgt	.L30
+  29:Src/map.c     **** }
+ 483              		.loc 1 29 0 is_stmt 1
+ 484 0016 01EB8101 		add	r1, r1, r1, lsl #2
+ 485              	.LVL77:
+ 486 001a C1EB0111 		rsb	r1, r1, r1, lsl #4
+ 487 001e 0144     		add	r1, r1, r0
+ 488 0020 0448     		ldr	r0, .L31+4
+ 489              	.LVL78:
+ 490 0022 00EB0110 		add	r0, r0, r1, lsl #4
+ 491 0026 7047     		bx	lr
+ 492              	.LVL79:
+ 493              	.L29:
+  26:Src/map.c     ****   }
+ 494              		.loc 1 26 0
+ 495 0028 0020     		movs	r0, #0
+ 496              	.LVL80:
+ 497 002a 7047     		bx	lr
+ 498              	.LVL81:
+ 499              	.L30:
+ 500 002c 0020     		movs	r0, #0
+ 501              	.LVL82:
+  30:Src/map.c     **** 
+ 502              		.loc 1 30 0
+ 503 002e 7047     		bx	lr
+ 504              	.L32:
+ 505              		.align	2
+ 506              	.L31:
+ 507 0030 CDCCCCCC 		.word	-858993459
+ 508 0034 00000000 		.word	map
+ 509              		.cfi_endproc
+ 510              	.LFE0:
+ 512              		.section	.text.Init_Map,"ax",%progbits
+ 513              		.align	1
+ 514              		.global	Init_Map
+ 515              		.syntax unified
+ 516              		.thumb
+ 517              		.thumb_func
+ 518              		.fpu fpv4-sp-d16
+ 520              	Init_Map:
+ 521              	.LFB3:
+  80:Src/map.c     **** 
+  81:Src/map.c     **** void Init_Map(void){
+ 522              		.loc 1 81 0
+ 523              		.cfi_startproc
+ 524              		@ args = 0, pretend = 0, frame = 0
+ 525              		@ frame_needed = 0, uses_anonymous_args = 0
+ 526              		@ link register save eliminated.
+ 527              	.LVL83:
+  82:Src/map.c     ****   int i, j;
+  83:Src/map.c     ****   for(i = 0; i < MAP_HEIGHT; i++){
+ 528              		.loc 1 83 0
+ 529 0000 0020     		movs	r0, #0
+ARM GAS  /tmp/cctCEan5.s 			page 12
+
+
+ 530 0002 0DE0     		b	.L34
+ 531              	.LVL84:
+ 532              	.L35:
+  84:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+  85:Src/map.c     ****       map[i][j].x = j;
+ 533              		.loc 1 85 0 discriminator 3
+ 534 0004 00EB8003 		add	r3, r0, r0, lsl #2
+ 535 0008 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 536 000c 1344     		add	r3, r3, r2
+ 537 000e 0749     		ldr	r1, .L39
+ 538 0010 01EB0313 		add	r3, r1, r3, lsl #4
+ 539 0014 5A71     		strb	r2, [r3, #5]
+  86:Src/map.c     ****       map[i][j].y = i;
+ 540              		.loc 1 86 0 discriminator 3
+ 541 0016 9871     		strb	r0, [r3, #6]
+  84:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 542              		.loc 1 84 0 discriminator 3
+ 543 0018 0132     		adds	r2, r2, #1
+ 544              	.LVL85:
+ 545              	.L36:
+  84:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 546              		.loc 1 84 0 is_stmt 0 discriminator 1
+ 547 001a 4A2A     		cmp	r2, #74
+ 548 001c F2DD     		ble	.L35
+  83:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 549              		.loc 1 83 0 is_stmt 1 discriminator 2
+ 550 001e 0130     		adds	r0, r0, #1
+ 551              	.LVL86:
+ 552              	.L34:
+  83:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 553              		.loc 1 83 0 is_stmt 0 discriminator 1
+ 554 0020 3128     		cmp	r0, #49
+ 555 0022 01DC     		bgt	.L38
+  84:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 556              		.loc 1 84 0 is_stmt 1
+ 557 0024 0022     		movs	r2, #0
+ 558 0026 F8E7     		b	.L36
+ 559              	.L38:
+  87:Src/map.c     ****     }
+  88:Src/map.c     ****   }
+  89:Src/map.c     **** }
+ 560              		.loc 1 89 0
+ 561 0028 7047     		bx	lr
+ 562              	.L40:
+ 563 002a 00BF     		.align	2
+ 564              	.L39:
+ 565 002c 00000000 		.word	map
+ 566              		.cfi_endproc
+ 567              	.LFE3:
+ 569              		.section	.text.Refresh_Map,"ax",%progbits
+ 570              		.align	1
+ 571              		.global	Refresh_Map
+ 572              		.syntax unified
+ 573              		.thumb
+ 574              		.thumb_func
+ 575              		.fpu fpv4-sp-d16
+ 577              	Refresh_Map:
+ARM GAS  /tmp/cctCEan5.s 			page 13
+
+
+ 578              	.LFB4:
+  90:Src/map.c     **** 
+  91:Src/map.c     **** void Refresh_Map(){
+ 579              		.loc 1 91 0
+ 580              		.cfi_startproc
+ 581              		@ args = 0, pretend = 0, frame = 0
+ 582              		@ frame_needed = 0, uses_anonymous_args = 0
+ 583 0000 38B5     		push	{r3, r4, r5, lr}
+ 584              	.LCFI6:
+ 585              		.cfi_def_cfa_offset 16
+ 586              		.cfi_offset 3, -16
+ 587              		.cfi_offset 4, -12
+ 588              		.cfi_offset 5, -8
+ 589              		.cfi_offset 14, -4
+ 590              	.LVL87:
+  92:Src/map.c     ****   //Clear
+  93:Src/map.c     ****   int i, j;
+  94:Src/map.c     ****   for(i = 0; i < MAP_HEIGHT; i++){
+ 591              		.loc 1 94 0
+ 592 0002 0020     		movs	r0, #0
+ 593 0004 0DE0     		b	.L42
+ 594              	.LVL88:
+ 595              	.L43:
+  95:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+  96:Src/map.c     ****       map[i][j].obstacle = 0;
+ 596              		.loc 1 96 0 discriminator 3
+ 597 0006 00EB8003 		add	r3, r0, r0, lsl #2
+ 598 000a C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 599 000e 1344     		add	r3, r3, r2
+ 600 0010 4949     		ldr	r1, .L62
+ 601 0012 01EB0313 		add	r3, r1, r3, lsl #4
+ 602 0016 0021     		movs	r1, #0
+ 603 0018 1971     		strb	r1, [r3, #4]
+  95:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 604              		.loc 1 95 0 discriminator 3
+ 605 001a 0132     		adds	r2, r2, #1
+ 606              	.LVL89:
+ 607              	.L44:
+  95:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 608              		.loc 1 95 0 is_stmt 0 discriminator 1
+ 609 001c 4A2A     		cmp	r2, #74
+ 610 001e F2DD     		ble	.L43
+  94:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 611              		.loc 1 94 0 is_stmt 1 discriminator 2
+ 612 0020 0130     		adds	r0, r0, #1
+ 613              	.LVL90:
+ 614              	.L42:
+  94:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 615              		.loc 1 94 0 is_stmt 0 discriminator 1
+ 616 0022 3128     		cmp	r0, #49
+ 617 0024 01DC     		bgt	.L58
+  95:Src/map.c     ****     for(j = 0; j < MAP_WIDTH; j++){
+ 618              		.loc 1 95 0 is_stmt 1
+ 619 0026 0022     		movs	r2, #0
+ 620 0028 F8E7     		b	.L44
+ 621              	.L58:
+  97:Src/map.c     ****     }
+ARM GAS  /tmp/cctCEan5.s 			page 14
+
+
+  98:Src/map.c     ****   }
+  99:Src/map.c     **** 
+ 100:Src/map.c     ****   //Edges
+ 101:Src/map.c     ****   const int w = ROBOT_RADIUS/SQUARE_SIZE + .5;
+ 102:Src/map.c     ****   int k, l;
+ 103:Src/map.c     ****   for(k = 0; k < MAP_HEIGHT; k++){
+ 622              		.loc 1 103 0
+ 623 002a 0024     		movs	r4, #0
+ 624 002c 13E0     		b	.L45
+ 625              	.LVL91:
+ 626              	.L46:
+ 104:Src/map.c     ****     for(l = 0; l < w; l++){
+ 105:Src/map.c     ****       map[k][l].obstacle = 1;
+ 627              		.loc 1 105 0 discriminator 3
+ 628 002e 4249     		ldr	r1, .L62
+ 629 0030 04EB8403 		add	r3, r4, r4, lsl #2
+ 630 0034 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 631 0038 9818     		adds	r0, r3, r2
+ 632 003a 01EB0010 		add	r0, r1, r0, lsl #4
+ 633 003e 0125     		movs	r5, #1
+ 634 0040 0571     		strb	r5, [r0, #4]
+ 106:Src/map.c     ****       map[k][MAP_WIDTH-1-l].obstacle = 1;
+ 635              		.loc 1 106 0 discriminator 3
+ 636 0042 C2F14A00 		rsb	r0, r2, #74
+ 637 0046 0344     		add	r3, r3, r0
+ 638 0048 01EB0313 		add	r3, r1, r3, lsl #4
+ 639 004c 1D71     		strb	r5, [r3, #4]
+ 104:Src/map.c     ****     for(l = 0; l < w; l++){
+ 640              		.loc 1 104 0 discriminator 3
+ 641 004e 2A44     		add	r2, r2, r5
+ 642              	.LVL92:
+ 643              	.L47:
+ 104:Src/map.c     ****     for(l = 0; l < w; l++){
+ 644              		.loc 1 104 0 is_stmt 0 discriminator 1
+ 645 0050 012A     		cmp	r2, #1
+ 646 0052 ECDD     		ble	.L46
+ 103:Src/map.c     ****     for(l = 0; l < w; l++){
+ 647              		.loc 1 103 0 is_stmt 1 discriminator 2
+ 648 0054 0134     		adds	r4, r4, #1
+ 649              	.LVL93:
+ 650              	.L45:
+ 103:Src/map.c     ****     for(l = 0; l < w; l++){
+ 651              		.loc 1 103 0 is_stmt 0 discriminator 1
+ 652 0056 312C     		cmp	r4, #49
+ 653 0058 01DC     		bgt	.L59
+ 104:Src/map.c     ****     for(l = 0; l < w; l++){
+ 654              		.loc 1 104 0 is_stmt 1
+ 655 005a 0022     		movs	r2, #0
+ 656 005c F8E7     		b	.L47
+ 657              	.L59:
+ 107:Src/map.c     ****     }
+ 108:Src/map.c     ****   }
+ 109:Src/map.c     ****   for(k = 0; k < MAP_WIDTH; k++){
+ 658              		.loc 1 109 0
+ 659 005e 0024     		movs	r4, #0
+ 660              	.LVL94:
+ 661 0060 17E0     		b	.L48
+ARM GAS  /tmp/cctCEan5.s 			page 15
+
+
+ 662              	.LVL95:
+ 663              	.L49:
+ 110:Src/map.c     ****     for(l = 0; l < w; l++){
+ 111:Src/map.c     ****       map[l][k].obstacle = 1;
+ 664              		.loc 1 111 0 discriminator 3
+ 665 0062 3548     		ldr	r0, .L62
+ 666 0064 01EB8102 		add	r2, r1, r1, lsl #2
+ 667 0068 C2EB0212 		rsb	r2, r2, r2, lsl #4
+ 668 006c 2244     		add	r2, r2, r4
+ 669 006e 00EB0212 		add	r2, r0, r2, lsl #4
+ 670 0072 0125     		movs	r5, #1
+ 671 0074 1571     		strb	r5, [r2, #4]
+ 112:Src/map.c     ****       map[MAP_HEIGHT-1-l][k].obstacle = 1;
+ 672              		.loc 1 112 0 discriminator 3
+ 673 0076 C1F13103 		rsb	r3, r1, #49
+ 674 007a 03EB8303 		add	r3, r3, r3, lsl #2
+ 675 007e C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 676 0082 2344     		add	r3, r3, r4
+ 677 0084 00EB0313 		add	r3, r0, r3, lsl #4
+ 678 0088 1D71     		strb	r5, [r3, #4]
+ 110:Src/map.c     ****     for(l = 0; l < w; l++){
+ 679              		.loc 1 110 0 discriminator 3
+ 680 008a 2944     		add	r1, r1, r5
+ 681              	.LVL96:
+ 682              	.L50:
+ 110:Src/map.c     ****     for(l = 0; l < w; l++){
+ 683              		.loc 1 110 0 is_stmt 0 discriminator 1
+ 684 008c 0129     		cmp	r1, #1
+ 685 008e E8DD     		ble	.L49
+ 109:Src/map.c     ****     for(l = 0; l < w; l++){
+ 686              		.loc 1 109 0 is_stmt 1 discriminator 2
+ 687 0090 0134     		adds	r4, r4, #1
+ 688              	.LVL97:
+ 689              	.L48:
+ 109:Src/map.c     ****     for(l = 0; l < w; l++){
+ 690              		.loc 1 109 0 is_stmt 0 discriminator 1
+ 691 0092 4A2C     		cmp	r4, #74
+ 692 0094 01DC     		bgt	.L60
+ 110:Src/map.c     ****     for(l = 0; l < w; l++){
+ 693              		.loc 1 110 0 is_stmt 1
+ 694 0096 0021     		movs	r1, #0
+ 695 0098 F8E7     		b	.L50
+ 696              	.L60:
+ 113:Src/map.c     ****     }
+ 114:Src/map.c     ****     }
+ 115:Src/map.c     **** 
+ 116:Src/map.c     ****   //Cubes
+ 117:Src/map.c     ****   int n;
+ 118:Src/map.c     ****   for(n = 0; n < NB_CUBES; n++){
+ 697              		.loc 1 118 0
+ 698 009a 0024     		movs	r4, #0
+ 699              	.LVL98:
+ 700 009c 00E0     		b	.L51
+ 701              	.LVL99:
+ 702              	.L52:
+ 703              		.loc 1 118 0 is_stmt 0 discriminator 2
+ 704 009e 0134     		adds	r4, r4, #1
+ARM GAS  /tmp/cctCEan5.s 			page 16
+
+
+ 705              	.LVL100:
+ 706              	.L51:
+ 707              		.loc 1 118 0 discriminator 1
+ 708 00a0 1D2C     		cmp	r4, #29
+ 709 00a2 0FDC     		bgt	.L61
+ 119:Src/map.c     ****     if(cube[n].availability > ZERO_PROBABILITY)
+ 710              		.loc 1 119 0 is_stmt 1
+ 711 00a4 04EB4403 		add	r3, r4, r4, lsl #1
+ 712 00a8 5A00     		lsls	r2, r3, #1
+ 713 00aa 244B     		ldr	r3, .L62+4
+ 714 00ac 1344     		add	r3, r3, r2
+ 715 00ae 5B78     		ldrb	r3, [r3, #1]	@ zero_extendqisi2
+ 716 00b0 002B     		cmp	r3, #0
+ 717 00b2 F4D0     		beq	.L52
+ 120:Src/map.c     ****       circle_limit(cube[n].x, cube[n].y, CUBE_OBS);
+ 718              		.loc 1 120 0
+ 719 00b4 214B     		ldr	r3, .L62+4
+ 720 00b6 1344     		add	r3, r3, r2
+ 721 00b8 5A22     		movs	r2, #90
+ 722 00ba 9988     		ldrh	r1, [r3, #4]
+ 723 00bc 5888     		ldrh	r0, [r3, #2]
+ 724 00be FFF7FEFF 		bl	circle_limit
+ 725              	.LVL101:
+ 726 00c2 ECE7     		b	.L52
+ 727              	.L61:
+ 121:Src/map.c     ****   }
+ 122:Src/map.c     ****   
+ 123:Src/map.c     ****   //Construction zones
+ 124:Src/map.c     ****   square_limit(CZ_X, 0, CZ_W, CZ_H);
+ 728              		.loc 1 124 0
+ 729 00c4 8223     		movs	r3, #130
+ 730 00c6 40F23A22 		movw	r2, #570
+ 731 00ca 0021     		movs	r1, #0
+ 732 00cc 4FF4C870 		mov	r0, #400
+ 733 00d0 FFF7FEFF 		bl	square_limit
+ 734              	.LVL102:
+ 125:Src/map.c     ****   square_limit(AREA_WIDTH-CZ_X-CZ_W, 0, CZ_W, CZ_H);
+ 735              		.loc 1 125 0
+ 736 00d4 8223     		movs	r3, #130
+ 737 00d6 40F23A22 		movw	r2, #570
+ 738 00da 0021     		movs	r1, #0
+ 739 00dc 40F2EE70 		movw	r0, #2030
+ 740 00e0 FFF7FEFF 		bl	square_limit
+ 741              	.LVL103:
+ 126:Src/map.c     **** 
+ 127:Src/map.c     ****   //Water dispensers
+ 128:Src/map.c     ****   square_limit(0, WD_SIDE_Y-WD_R/2, WD_R, WD_R);
+ 742              		.loc 1 128 0
+ 743 00e4 6423     		movs	r3, #100
+ 744 00e6 1A46     		mov	r2, r3
+ 745 00e8 40F21631 		movw	r1, #790
+ 746 00ec 0020     		movs	r0, #0
+ 747 00ee FFF7FEFF 		bl	square_limit
+ 748              	.LVL104:
+ 129:Src/map.c     ****   square_limit(AREA_WIDTH-1-WD_R, WD_SIDE_Y-WD_R/2, WD_R, WD_R);
+ 749              		.loc 1 129 0
+ 750 00f2 6423     		movs	r3, #100
+ARM GAS  /tmp/cctCEan5.s 			page 17
+
+
+ 751 00f4 1A46     		mov	r2, r3
+ 752 00f6 40F21631 		movw	r1, #790
+ 753 00fa 40F65330 		movw	r0, #2899
+ 754 00fe FFF7FEFF 		bl	square_limit
+ 755              	.LVL105:
+ 130:Src/map.c     ****   square_limit(WD_BOTTOM_X-WD_R/2, AREA_HEIGHT-1-WD_R, WD_R, WD_R);
+ 756              		.loc 1 130 0
+ 757 0102 6423     		movs	r3, #100
+ 758 0104 1A46     		mov	r2, r3
+ 759 0106 40F26B71 		movw	r1, #1899
+ 760 010a 4FF40C70 		mov	r0, #560
+ 761 010e FFF7FEFF 		bl	square_limit
+ 762              	.LVL106:
+ 131:Src/map.c     ****   square_limit(AREA_WIDTH-WD_BOTTOM_X-WD_R, AREA_HEIGHT-1-WD_R, WD_R, WD_R);
+ 763              		.loc 1 131 0
+ 764 0112 6423     		movs	r3, #100
+ 765 0114 1A46     		mov	r2, r3
+ 766 0116 40F26B71 		movw	r1, #1899
+ 767 011a 40F6F200 		movw	r0, #2290
+ 768 011e FFF7FEFF 		bl	square_limit
+ 769              	.LVL107:
+ 132:Src/map.c     ****   
+ 133:Src/map.c     ****   //Treatment plants
+ 134:Src/map.c     ****   square_limit(TP_X, TP_Y, TP_W, TP_H);
+ 770              		.loc 1 134 0
+ 771 0122 FA23     		movs	r3, #250
+ 772 0124 4FF49662 		mov	r2, #1200
+ 773 0128 40F2D661 		movw	r1, #1750
+ 774 012c 40F27E30 		movw	r0, #894
+ 775 0130 FFF7FEFF 		bl	square_limit
+ 776              	.LVL108:
+ 135:Src/map.c     ****   
+ 136:Src/map.c     **** }
+ 777              		.loc 1 136 0
+ 778 0134 38BD     		pop	{r3, r4, r5, pc}
+ 779              	.LVL109:
+ 780              	.L63:
+ 781 0136 00BF     		.align	2
+ 782              	.L62:
+ 783 0138 00000000 		.word	map
+ 784 013c 00000000 		.word	cube
+ 785              		.cfi_endproc
+ 786              	.LFE4:
+ 788              		.comm	map,60000,4
+ 789              		.text
+ 790              	.Letext0:
+ 791              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 792              		.file 3 "/usr/arm-none-eabi/include/sys/lock.h"
+ 793              		.file 4 "/usr/arm-none-eabi/include/sys/_types.h"
+ 794              		.file 5 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 795              		.file 6 "/usr/arm-none-eabi/include/sys/reent.h"
+ 796              		.file 7 "/usr/arm-none-eabi/include/math.h"
+ 797              		.file 8 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 798              		.file 9 "Inc/game_defs.h"
+ 799              		.file 10 "Inc/map.h"
+ 800              		.file 11 "Inc/strategy.h"
+ARM GAS  /tmp/cctCEan5.s 			page 18
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 map.c
+     /tmp/cctCEan5.s:21     .text.square_limit:0000000000000000 $t
+     /tmp/cctCEan5.s:27     .text.square_limit:0000000000000000 square_limit
+     /tmp/cctCEan5.s:219    .text.square_limit:0000000000000110 $d
+                            *COM*:000000000000ea60 map
+     /tmp/cctCEan5.s:231    .text.circle_limit:0000000000000000 $t
+     /tmp/cctCEan5.s:237    .text.circle_limit:0000000000000000 circle_limit
+     /tmp/cctCEan5.s:441    .text.circle_limit:000000000000014c $d
+     /tmp/cctCEan5.s:451    .text.Cell_From_Pos:0000000000000000 $t
+     /tmp/cctCEan5.s:458    .text.Cell_From_Pos:0000000000000000 Cell_From_Pos
+     /tmp/cctCEan5.s:507    .text.Cell_From_Pos:0000000000000030 $d
+     /tmp/cctCEan5.s:513    .text.Init_Map:0000000000000000 $t
+     /tmp/cctCEan5.s:520    .text.Init_Map:0000000000000000 Init_Map
+     /tmp/cctCEan5.s:565    .text.Init_Map:000000000000002c $d
+     /tmp/cctCEan5.s:570    .text.Refresh_Map:0000000000000000 $t
+     /tmp/cctCEan5.s:577    .text.Refresh_Map:0000000000000000 Refresh_Map
+     /tmp/cctCEan5.s:783    .text.Refresh_Map:0000000000000138 $d
+
+UNDEFINED SYMBOLS
+__aeabi_f2d
+__aeabi_dadd
+__aeabi_d2uiz
+__aeabi_i2d
+__aeabi_dsub
+__aeabi_d2f
+__aeabi_ddiv
+__aeabi_d2iz
+sqrt
+cube

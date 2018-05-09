@@ -1,0 +1,3367 @@
+ARM GAS  /tmp/ccwIJuYj.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"obstacle.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	__aeabi_i2d
+  18              		.global	__aeabi_d2uiz
+  19              		.global	__aeabi_f2d
+  20              		.global	__aeabi_dmul
+  21              		.global	__aeabi_dsub
+  22              		.global	__aeabi_d2iz
+  23              		.global	__aeabi_dadd
+  24              		.section	.text.Compute_Obstacle,"ax",%progbits
+  25              		.align	1
+  26              		.syntax unified
+  27              		.thumb
+  28              		.thumb_func
+  29              		.fpu fpv4-sp-d16
+  31              	Compute_Obstacle:
+  32              	.LFB680:
+  33              		.file 1 "Src/obstacle.c"
+   1:Src/obstacle.c **** #include "obstacle.h"
+   2:Src/obstacle.c **** 
+   3:Src/obstacle.c **** #include <inttypes.h>
+   4:Src/obstacle.c **** #include <stdbool.h>
+   5:Src/obstacle.c **** #include <stdlib.h>
+   6:Src/obstacle.c **** #include <math.h>
+   7:Src/obstacle.c **** #include "strategy.h"
+   8:Src/obstacle.c **** #include "map.h"
+   9:Src/obstacle.c **** #include "interface.h"
+  10:Src/obstacle.c **** #include "stm32f4xx_hal.h"
+  11:Src/obstacle.c **** 
+  12:Src/obstacle.c **** Obstacle obstacle[N_MAX_OBSTACLES];
+  13:Src/obstacle.c **** int nb_obstacles = 0;
+  14:Src/obstacle.c **** uint16_t sensor_raw[4];
+  15:Src/obstacle.c **** 
+  16:Src/obstacle.c **** static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel);
+  17:Src/obstacle.c **** static float Free_Blocks_Dir(float angle);
+  18:Src/obstacle.c **** 
+  19:Src/obstacle.c **** void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t rl_d, uint16_t rr_d)
+  20:Src/obstacle.c ****   Obstacle in_range[4];
+  21:Src/obstacle.c ****   bool present[4];
+  22:Src/obstacle.c ****   sensor_raw[FRONT_LEFT] = fl_d;
+  23:Src/obstacle.c ****   sensor_raw[FRONT_RIGHT] = fr_d;
+  24:Src/obstacle.c ****   sensor_raw[REAR_LEFT] = rl_d;
+  25:Src/obstacle.c ****   sensor_raw[REAR_RIGHT] = rr_d;
+ARM GAS  /tmp/ccwIJuYj.s 			page 2
+
+
+  26:Src/obstacle.c ****   int16_t x_rel[4] = {
+  27:Src/obstacle.c ****     [FRONT_LEFT] = SENSOR_DIST_TANGENT + fl_d,
+  28:Src/obstacle.c ****     [FRONT_RIGHT] = SENSOR_DIST_TANGENT + fr_d,
+  29:Src/obstacle.c ****     [REAR_LEFT] = -(SENSOR_DIST_TANGENT + rl_d),
+  30:Src/obstacle.c ****     [REAR_RIGHT] = -(SENSOR_DIST_TANGENT + rr_d)};
+  31:Src/obstacle.c ****   int16_t y_rel[4] = {
+  32:Src/obstacle.c ****     [FRONT_LEFT] = -SENSOR_DIST_PERP,
+  33:Src/obstacle.c ****     [FRONT_RIGHT] = SENSOR_DIST_PERP,
+  34:Src/obstacle.c ****     [REAR_LEFT] = -SENSOR_DIST_PERP,
+  35:Src/obstacle.c ****     [REAR_RIGHT] = SENSOR_DIST_PERP};
+  36:Src/obstacle.c ****   uint32_t ticks = Get_Ticks();
+  37:Src/obstacle.c **** 
+  38:Src/obstacle.c ****   //Compute obstacles
+  39:Src/obstacle.c ****   int i;
+  40:Src/obstacle.c ****   for(i = 0; i < 4; i++){
+  41:Src/obstacle.c ****     //If the sensor detect an obstacle, compute it
+  42:Src/obstacle.c ****     present[i] = sensor_raw[i] && !Compute_Obstacle(&in_range[i], ref, x_rel[i], y_rel[i]);
+  43:Src/obstacle.c ****   }
+  44:Src/obstacle.c **** 
+  45:Src/obstacle.c ****   Obstacle updated[N_MAX_OBSTACLES];
+  46:Src/obstacle.c ****   int n = 0;
+  47:Src/obstacle.c **** 
+  48:Src/obstacle.c ****   //Front
+  49:Src/obstacle.c ****   if(present[FRONT_LEFT] && present[FRONT_RIGHT]
+  50:Src/obstacle.c ****      && (dist(in_range[FRONT_LEFT].x, in_range[FRONT_LEFT].y,
+  51:Src/obstacle.c **** 	      in_range[FRONT_RIGHT].x, in_range[FRONT_RIGHT].y)
+  52:Src/obstacle.c **** 	 < 2*OBS_RADIUS)){
+  53:Src/obstacle.c ****     //If the two sensors detect the same obstacle
+  54:Src/obstacle.c ****     Compute_Obstacle(&updated[n++], ref, SENSOR_DIST_TANGENT + min(fl_d, fr_d), 0);
+  55:Src/obstacle.c ****   }else{
+  56:Src/obstacle.c ****     if(present[FRONT_LEFT])
+  57:Src/obstacle.c ****       updated[n++] = in_range[FRONT_LEFT];
+  58:Src/obstacle.c ****     if(present[FRONT_RIGHT])
+  59:Src/obstacle.c ****       updated[n++] = in_range[FRONT_RIGHT];
+  60:Src/obstacle.c ****   }
+  61:Src/obstacle.c **** 
+  62:Src/obstacle.c ****   //Rear
+  63:Src/obstacle.c ****   if(present[REAR_LEFT] && present[REAR_RIGHT]
+  64:Src/obstacle.c ****      && (dist(in_range[REAR_LEFT].x, in_range[REAR_LEFT].y,
+  65:Src/obstacle.c **** 	      in_range[REAR_RIGHT].x, in_range[REAR_RIGHT].y)
+  66:Src/obstacle.c **** 	 < 2*OBS_RADIUS)){
+  67:Src/obstacle.c ****     Compute_Obstacle(&updated[n++], ref, -(SENSOR_DIST_TANGENT + min(rl_d, rr_d)), 0);
+  68:Src/obstacle.c ****   }else{
+  69:Src/obstacle.c ****     if(present[REAR_LEFT])
+  70:Src/obstacle.c ****       updated[n++] = in_range[REAR_LEFT];
+  71:Src/obstacle.c ****     if(present[REAR_RIGHT])
+  72:Src/obstacle.c ****       updated[n++] = in_range[REAR_RIGHT];
+  73:Src/obstacle.c ****   }
+  74:Src/obstacle.c **** 
+  75:Src/obstacle.c ****   //Fill the updated table with old entries that have not expired and
+  76:Src/obstacle.c ****   //are not a duplicate
+  77:Src/obstacle.c ****   for(i = 0; n < N_MAX_OBSTACLES && i < nb_obstacles; i++){
+  78:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+  79:Src/obstacle.c **** 
+  80:Src/obstacle.c ****     //Has it expired ?
+  81:Src/obstacle.c ****     if((ticks - obs->last_detection) > OBSTACLE_LIFETIME){
+  82:Src/obstacle.c ****       continue;
+ARM GAS  /tmp/ccwIJuYj.s 			page 3
+
+
+  83:Src/obstacle.c ****     }
+  84:Src/obstacle.c **** 
+  85:Src/obstacle.c ****     //Update distances
+  86:Src/obstacle.c ****     obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
+  87:Src/obstacle.c ****     obs->distance = dist(ref->x, ref->y, obs->x, obs->y);
+  88:Src/obstacle.c ****     
+  89:Src/obstacle.c ****     //Is it a duplicate ?
+  90:Src/obstacle.c ****     int j = 0;
+  91:Src/obstacle.c ****     for(j = 0; j < n; j++){
+  92:Src/obstacle.c ****       //If it overlaps with another obstacle
+  93:Src/obstacle.c ****       if(dist(obs->x_c, obs->y_c, updated[j].x_c, updated[j].y_c) < 2*OBS_RADIUS)
+  94:Src/obstacle.c **** 	break;
+  95:Src/obstacle.c ****     }
+  96:Src/obstacle.c ****     if(j != n){
+  97:Src/obstacle.c ****       break;
+  98:Src/obstacle.c ****     }
+  99:Src/obstacle.c **** 
+ 100:Src/obstacle.c ****     //Is it explicitely NOT in range ?
+ 101:Src/obstacle.c ****     {
+ 102:Src/obstacle.c ****       int16_t x_ro = obs->x_c - ref->x;
+ 103:Src/obstacle.c ****       int16_t y_ro = obs->y_c - ref->y;
+ 104:Src/obstacle.c ****       
+ 105:Src/obstacle.c ****       //Rotate
+ 106:Src/obstacle.c ****       x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
+ 107:Src/obstacle.c ****       y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
+ 108:Src/obstacle.c **** 
+ 109:Src/obstacle.c ****       if((y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){//Should be in range
+ 110:Src/obstacle.c **** 	//Update range
+ 111:Src/obstacle.c **** 	obs->range = (x_ro > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
+ 112:Src/obstacle.c **** 	
+ 113:Src/obstacle.c **** 	if((x_ro > 0
+ 114:Src/obstacle.c **** 	     && (!fl_d || (x_ro + OBS_RADIUS < fl_d))//No detection at left
+ 115:Src/obstacle.c **** 	     && (!fr_d || (x_ro + OBS_RADIUS < fr_d))//No detection at right
+ 116:Src/obstacle.c **** 	    )
+ 117:Src/obstacle.c **** 	   ||
+ 118:Src/obstacle.c **** 	   (x_ro < 0
+ 119:Src/obstacle.c **** 	    && (!rl_d || (-x_ro + OBS_RADIUS < rl_d))
+ 120:Src/obstacle.c **** 	    && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
+ 121:Src/obstacle.c **** 	    )){
+ 122:Src/obstacle.c **** 	  //Not in range but should be
+ 123:Src/obstacle.c **** 	  obs->no_detect++;
+ 124:Src/obstacle.c **** 	}
+ 125:Src/obstacle.c ****       }else{
+ 126:Src/obstacle.c **** 	//Not in range
+ 127:Src/obstacle.c **** 	obs->range = OUT_OF_RANGE;
+ 128:Src/obstacle.c ****       }
+ 129:Src/obstacle.c ****     }
+ 130:Src/obstacle.c ****     
+ 131:Src/obstacle.c ****     if(obs->no_detect == OBS_NODETECT_COUNT)
+ 132:Src/obstacle.c ****       break;
+ 133:Src/obstacle.c **** 
+ 134:Src/obstacle.c ****     /*
+ 135:Src/obstacle.c ****      * From this point, we know that this obstacle hasn't expired yet,
+ 136:Src/obstacle.c ****      * does not overlap any other known obstacle, and it has not moved
+ 137:Src/obstacle.c ****      * away. So we keep track of this obstacle with updated
+ 138:Src/obstacle.c ****      * measurements.
+ 139:Src/obstacle.c ****      */
+ARM GAS  /tmp/ccwIJuYj.s 			page 4
+
+
+ 140:Src/obstacle.c ****     updated[n++] = *obs;
+ 141:Src/obstacle.c ****   }
+ 142:Src/obstacle.c **** 
+ 143:Src/obstacle.c ****   //Then copy the updated table to the global table
+ 144:Src/obstacle.c ****   for(i = 0; i < n; i++){
+ 145:Src/obstacle.c ****     obstacle[i] = updated[i];
+ 146:Src/obstacle.c ****   }
+ 147:Src/obstacle.c ****   nb_obstacles = n;
+ 148:Src/obstacle.c **** }
+ 149:Src/obstacle.c **** 
+ 150:Src/obstacle.c **** static int Compute_Obstacle(Obstacle *obs, const Robot *ref, int16_t x_rel, int16_t y_rel){
+  34              		.loc 1 150 0
+  35              		.cfi_startproc
+  36              		@ args = 0, pretend = 0, frame = 24
+  37              		@ frame_needed = 0, uses_anonymous_args = 0
+  38              	.LVL0:
+  39 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+  40              	.LCFI0:
+  41              		.cfi_def_cfa_offset 36
+  42              		.cfi_offset 4, -36
+  43              		.cfi_offset 5, -32
+  44              		.cfi_offset 6, -28
+  45              		.cfi_offset 7, -24
+  46              		.cfi_offset 8, -20
+  47              		.cfi_offset 9, -16
+  48              		.cfi_offset 10, -12
+  49              		.cfi_offset 11, -8
+  50              		.cfi_offset 14, -4
+  51 0004 2DED028B 		vpush.64	{d8}
+  52              	.LCFI1:
+  53              		.cfi_def_cfa_offset 44
+  54              		.cfi_offset 80, -44
+  55              		.cfi_offset 81, -40
+  56 0008 87B0     		sub	sp, sp, #28
+  57              	.LCFI2:
+  58              		.cfi_def_cfa_offset 72
+  59 000a 0446     		mov	r4, r0
+  60 000c 0D46     		mov	r5, r1
+  61 000e 9246     		mov	r10, r2
+  62 0010 9B46     		mov	fp, r3
+ 151:Src/obstacle.c ****   //Get ticks at detection time
+ 152:Src/obstacle.c ****   obs->last_detection = Get_Ticks();
+  63              		.loc 1 152 0
+  64 0012 FFF7FEFF 		bl	HAL_GetTick
+  65              	.LVL1:
+  66 0016 2060     		str	r0, [r4]
+ 153:Src/obstacle.c **** 
+ 154:Src/obstacle.c ****   //Distance ref -> obstacle
+ 155:Src/obstacle.c ****   obs->distance = sqrt(x_rel*x_rel + y_rel*y_rel);
+  67              		.loc 1 155 0
+  68 0018 0BFB0BF0 		mul	r0, fp, fp
+  69 001c 0AFB0A00 		mla	r0, r10, r10, r0
+  70 0020 FFF7FEFF 		bl	__aeabi_i2d
+  71              	.LVL2:
+  72 0024 41EC100B 		vmov	d0, r0, r1
+  73 0028 FFF7FEFF 		bl	sqrt
+  74              	.LVL3:
+ARM GAS  /tmp/ccwIJuYj.s 			page 5
+
+
+  75 002c 51EC100B 		vmov	r0, r1, d0
+  76 0030 FFF7FEFF 		bl	__aeabi_d2uiz
+  77              	.LVL4:
+  78 0034 A080     		strh	r0, [r4, #4]	@ movhi
+ 156:Src/obstacle.c ****   //Print("Distance : %"PRId16"\n", obs->distance);
+ 157:Src/obstacle.c **** 
+ 158:Src/obstacle.c ****   //Change coordinate system to compute ref -> obstacle vector 
+ 159:Src/obstacle.c ****   int16_t x_ro = (float) x_rel*cos(ref->angle) - (float) y_rel*sin(ref->angle);
+  79              		.loc 1 159 0
+  80 0036 07EE90AA 		vmov	s15, r10	@ int
+  81 003a F8EEE77A 		vcvt.f32.s32	s15, s15
+  82 003e 17EE900A 		vmov	r0, s15
+  83 0042 FFF7FEFF 		bl	__aeabi_f2d
+  84              	.LVL5:
+  85 0046 0646     		mov	r6, r0
+  86 0048 0F46     		mov	r7, r1
+  87 004a 6868     		ldr	r0, [r5, #4]	@ float
+  88 004c FFF7FEFF 		bl	__aeabi_f2d
+  89              	.LVL6:
+  90 0050 41EC180B 		vmov	d8, r0, r1
+  91 0054 41EC100B 		vmov	d0, r0, r1
+  92 0058 FFF7FEFF 		bl	cos
+  93              	.LVL7:
+  94 005c 53EC102B 		vmov	r2, r3, d0
+  95 0060 8DED020B 		vstr.64	d0, [sp, #8]
+  96 0064 3046     		mov	r0, r6
+  97 0066 3946     		mov	r1, r7
+  98 0068 FFF7FEFF 		bl	__aeabi_dmul
+  99              	.LVL8:
+ 100 006c 8046     		mov	r8, r0
+ 101 006e 8946     		mov	r9, r1
+ 102 0070 07EE90BA 		vmov	s15, fp	@ int
+ 103 0074 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 104 0078 17EE900A 		vmov	r0, s15
+ 105 007c FFF7FEFF 		bl	__aeabi_f2d
+ 106              	.LVL9:
+ 107 0080 CDE90001 		strd	r0, [sp]
+ 108 0084 B0EE480A 		vmov.f32	s0, s16
+ 109 0088 F0EE680A 		vmov.f32	s1, s17
+ 110 008c FFF7FEFF 		bl	sin
+ 111              	.LVL10:
+ 112 0090 53EC102B 		vmov	r2, r3, d0
+ 113 0094 8DED040B 		vstr.64	d0, [sp, #16]
+ 114 0098 DDE90001 		ldrd	r0, [sp]
+ 115 009c FFF7FEFF 		bl	__aeabi_dmul
+ 116              	.LVL11:
+ 117 00a0 0246     		mov	r2, r0
+ 118 00a2 0B46     		mov	r3, r1
+ 119 00a4 4046     		mov	r0, r8
+ 120 00a6 4946     		mov	r1, r9
+ 121 00a8 FFF7FEFF 		bl	__aeabi_dsub
+ 122              	.LVL12:
+ 123 00ac FFF7FEFF 		bl	__aeabi_d2iz
+ 124              	.LVL13:
+ 125 00b0 0FFA80F8 		sxth	r8, r0
+ 126              	.LVL14:
+ 160:Src/obstacle.c ****   int16_t y_ro = (float) x_rel*sin(ref->angle) + (float) y_rel*cos(ref->angle);
+ARM GAS  /tmp/ccwIJuYj.s 			page 6
+
+
+ 127              		.loc 1 160 0
+ 128 00b4 DDE90423 		ldrd	r2, [sp, #16]
+ 129 00b8 3046     		mov	r0, r6
+ 130 00ba 3946     		mov	r1, r7
+ 131 00bc FFF7FEFF 		bl	__aeabi_dmul
+ 132              	.LVL15:
+ 133 00c0 0646     		mov	r6, r0
+ 134 00c2 0F46     		mov	r7, r1
+ 135 00c4 DDE90023 		ldrd	r2, [sp]
+ 136 00c8 DDE90201 		ldrd	r0, [sp, #8]
+ 137 00cc FFF7FEFF 		bl	__aeabi_dmul
+ 138              	.LVL16:
+ 139 00d0 0246     		mov	r2, r0
+ 140 00d2 0B46     		mov	r3, r1
+ 141 00d4 3046     		mov	r0, r6
+ 142 00d6 3946     		mov	r1, r7
+ 143 00d8 FFF7FEFF 		bl	__aeabi_dadd
+ 144              	.LVL17:
+ 145 00dc FFF7FEFF 		bl	__aeabi_d2iz
+ 146              	.LVL18:
+ 161:Src/obstacle.c ****   //Print("(%d, %d)\n", x_ro, y_ro);
+ 162:Src/obstacle.c ****   
+ 163:Src/obstacle.c ****   //Compute obstacle position
+ 164:Src/obstacle.c ****   obs->x = ref->x + x_ro;
+ 147              		.loc 1 164 0
+ 148 00e0 2B88     		ldrh	r3, [r5]
+ 149 00e2 9844     		add	r8, r8, r3
+ 150              	.LVL19:
+ 151 00e4 0FFA88F8 		sxth	r8, r8
+ 152 00e8 A4F80680 		strh	r8, [r4, #6]	@ movhi
+ 165:Src/obstacle.c ****   obs->y = ref->y + y_ro;
+ 153              		.loc 1 165 0
+ 154 00ec B5F80290 		ldrh	r9, [r5, #2]
+ 155 00f0 09FA80F9 		sxtah	r9, r9, r0
+ 156 00f4 0FFA89F9 		sxth	r9, r9
+ 157 00f8 A4F80890 		strh	r9, [r4, #8]	@ movhi
+ 166:Src/obstacle.c ****   //Print("(%d, %d)\n", obs->x, obs->y);
+ 167:Src/obstacle.c ****   
+ 168:Src/obstacle.c ****   //Guess center of obstacle, assuming it's a robot
+ 169:Src/obstacle.c ****   obs->x_c = obs->x + OBS_RADIUS * cos(ref->angle);
+ 158              		.loc 1 169 0
+ 159 00fc 6868     		ldr	r0, [r5, #4]	@ float
+ 160              	.LVL20:
+ 161 00fe FFF7FEFF 		bl	__aeabi_f2d
+ 162              	.LVL21:
+ 163 0102 41EC100B 		vmov	d0, r0, r1
+ 164 0106 FFF7FEFF 		bl	cos
+ 165              	.LVL22:
+ 166 010a 45A3     		adr	r3, .L8+8
+ 167 010c D3E90023 		ldrd	r2, [r3]
+ 168 0110 51EC100B 		vmov	r0, r1, d0
+ 169 0114 FFF7FEFF 		bl	__aeabi_dmul
+ 170              	.LVL23:
+ 171 0118 0646     		mov	r6, r0
+ 172 011a 0F46     		mov	r7, r1
+ 173 011c 4046     		mov	r0, r8
+ 174 011e FFF7FEFF 		bl	__aeabi_i2d
+ARM GAS  /tmp/ccwIJuYj.s 			page 7
+
+
+ 175              	.LVL24:
+ 176 0122 3246     		mov	r2, r6
+ 177 0124 3B46     		mov	r3, r7
+ 178 0126 FFF7FEFF 		bl	__aeabi_dadd
+ 179              	.LVL25:
+ 180 012a FFF7FEFF 		bl	__aeabi_d2iz
+ 181              	.LVL26:
+ 182 012e 6081     		strh	r0, [r4, #10]	@ movhi
+ 170:Src/obstacle.c ****   obs->y_c = obs->y + OBS_RADIUS * sin(ref->angle);
+ 183              		.loc 1 170 0
+ 184 0130 6868     		ldr	r0, [r5, #4]	@ float
+ 185 0132 FFF7FEFF 		bl	__aeabi_f2d
+ 186              	.LVL27:
+ 187 0136 41EC100B 		vmov	d0, r0, r1
+ 188 013a FFF7FEFF 		bl	sin
+ 189              	.LVL28:
+ 190 013e 38A3     		adr	r3, .L8+8
+ 191 0140 D3E90023 		ldrd	r2, [r3]
+ 192 0144 51EC100B 		vmov	r0, r1, d0
+ 193 0148 FFF7FEFF 		bl	__aeabi_dmul
+ 194              	.LVL29:
+ 195 014c 0646     		mov	r6, r0
+ 196 014e 0F46     		mov	r7, r1
+ 197 0150 4846     		mov	r0, r9
+ 198 0152 FFF7FEFF 		bl	__aeabi_i2d
+ 199              	.LVL30:
+ 200 0156 3246     		mov	r2, r6
+ 201 0158 3B46     		mov	r3, r7
+ 202 015a FFF7FEFF 		bl	__aeabi_dadd
+ 203              	.LVL31:
+ 204 015e FFF7FEFF 		bl	__aeabi_d2iz
+ 205              	.LVL32:
+ 206 0162 00B2     		sxth	r0, r0
+ 207 0164 A081     		strh	r0, [r4, #12]	@ movhi
+ 171:Src/obstacle.c ****   obs->distance_c = dist(ref->x, ref->y, obs->x_c, obs->y_c);
+ 208              		.loc 1 171 0
+ 209 0166 6B88     		ldrh	r3, [r5, #2]
+ 210 0168 9FED2B8B 		vldr.64	d8, .L8
+ 211 016c C01A     		subs	r0, r0, r3
+ 212 016e FFF7FEFF 		bl	__aeabi_i2d
+ 213              	.LVL33:
+ 214 0172 B0EE481A 		vmov.f32	s2, s16
+ 215 0176 F0EE681A 		vmov.f32	s3, s17
+ 216 017a 41EC100B 		vmov	d0, r0, r1
+ 217 017e FFF7FEFF 		bl	pow
+ 218              	.LVL34:
+ 219 0182 57EC106B 		vmov	r6, r7, d0
+ 220 0186 B4F90A00 		ldrsh	r0, [r4, #10]
+ 221 018a 2B88     		ldrh	r3, [r5]
+ 222 018c C01A     		subs	r0, r0, r3
+ 223 018e FFF7FEFF 		bl	__aeabi_i2d
+ 224              	.LVL35:
+ 225 0192 B0EE481A 		vmov.f32	s2, s16
+ 226 0196 F0EE681A 		vmov.f32	s3, s17
+ 227 019a 41EC100B 		vmov	d0, r0, r1
+ 228 019e FFF7FEFF 		bl	pow
+ 229              	.LVL36:
+ARM GAS  /tmp/ccwIJuYj.s 			page 8
+
+
+ 230 01a2 53EC102B 		vmov	r2, r3, d0
+ 231 01a6 3046     		mov	r0, r6
+ 232 01a8 3946     		mov	r1, r7
+ 233 01aa FFF7FEFF 		bl	__aeabi_dadd
+ 234              	.LVL37:
+ 235 01ae 41EC100B 		vmov	d0, r0, r1
+ 236 01b2 FFF7FEFF 		bl	sqrt
+ 237              	.LVL38:
+ 238 01b6 51EC100B 		vmov	r0, r1, d0
+ 239 01ba FFF7FEFF 		bl	__aeabi_d2uiz
+ 240              	.LVL39:
+ 241 01be E081     		strh	r0, [r4, #14]	@ movhi
+ 172:Src/obstacle.c ****   //Print("(%d, %d)\n", obs->x_c, obs->y_c);
+ 173:Src/obstacle.c ****   
+ 174:Src/obstacle.c ****   //Check if the obstacle is within the map
+ 175:Src/obstacle.c ****   if((obs->x_c >= OBS_RADIUS)
+ 242              		.loc 1 175 0
+ 243 01c0 B4F90A30 		ldrsh	r3, [r4, #10]
+ 244 01c4 BD2B     		cmp	r3, #189
+ 245 01c6 1ADD     		ble	.L3
+ 176:Src/obstacle.c ****      && (obs->y_c >= OBS_RADIUS)
+ 246              		.loc 1 176 0
+ 247 01c8 B4F90C20 		ldrsh	r2, [r4, #12]
+ 248 01cc BD2A     		cmp	r2, #189
+ 249 01ce 19DD     		ble	.L4
+ 177:Src/obstacle.c ****      && (obs->x_c <= AREA_WIDTH - OBS_RADIUS)
+ 250              		.loc 1 177 0
+ 251 01d0 40F6FA21 		movw	r1, #2810
+ 252 01d4 8B42     		cmp	r3, r1
+ 253 01d6 18DC     		bgt	.L5
+ 178:Src/obstacle.c ****      && (obs->y_c <= AREA_HEIGHT - OBS_RADIUS)){
+ 254              		.loc 1 178 0
+ 255 01d8 40F21273 		movw	r3, #1810
+ 256 01dc 9A42     		cmp	r2, r3
+ 257 01de 17DC     		bgt	.L6
+ 179:Src/obstacle.c ****     obs->no_detect = 0;
+ 258              		.loc 1 179 0
+ 259 01e0 0020     		movs	r0, #0
+ 260 01e2 2074     		strb	r0, [r4, #16]
+ 180:Src/obstacle.c ****     obs->range = (x_rel > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
+ 261              		.loc 1 180 0
+ 262 01e4 8245     		cmp	r10, r0
+ 263 01e6 CCBF     		ite	gt
+ 264 01e8 4FF0000A 		movgt	r10, #0
+ 265 01ec 4FF0010A 		movle	r10, #1
+ 266 01f0 84F811A0 		strb	r10, [r4, #17]
+ 267              	.L1:
+ 181:Src/obstacle.c ****     return 0;
+ 182:Src/obstacle.c ****   }else{
+ 183:Src/obstacle.c ****     return -1;
+ 184:Src/obstacle.c ****   }
+ 185:Src/obstacle.c **** }
+ 268              		.loc 1 185 0
+ 269 01f4 07B0     		add	sp, sp, #28
+ 270              	.LCFI3:
+ 271              		.cfi_remember_state
+ 272              		.cfi_def_cfa_offset 44
+ARM GAS  /tmp/ccwIJuYj.s 			page 9
+
+
+ 273              		@ sp needed
+ 274 01f6 BDEC028B 		vldm	sp!, {d8}
+ 275              	.LCFI4:
+ 276              		.cfi_restore 80
+ 277              		.cfi_restore 81
+ 278              		.cfi_def_cfa_offset 36
+ 279 01fa BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 280              	.LVL40:
+ 281              	.L3:
+ 282              	.LCFI5:
+ 283              		.cfi_restore_state
+ 183:Src/obstacle.c ****   }
+ 284              		.loc 1 183 0
+ 285 01fe 4FF0FF30 		mov	r0, #-1
+ 286 0202 F7E7     		b	.L1
+ 287              	.L4:
+ 288 0204 4FF0FF30 		mov	r0, #-1
+ 289 0208 F4E7     		b	.L1
+ 290              	.L5:
+ 291 020a 4FF0FF30 		mov	r0, #-1
+ 292 020e F1E7     		b	.L1
+ 293              	.L6:
+ 294 0210 4FF0FF30 		mov	r0, #-1
+ 295 0214 EEE7     		b	.L1
+ 296              	.L9:
+ 297 0216 00BF     		.align	3
+ 298              	.L8:
+ 299 0218 00000000 		.word	0
+ 300 021c 00000040 		.word	1073741824
+ 301 0220 00000000 		.word	0
+ 302 0224 00C06740 		.word	1080541184
+ 303              		.cfi_endproc
+ 304              	.LFE680:
+ 306              		.global	__aeabi_d2f
+ 307              		.section	.text.Free_Blocks_Dir,"ax",%progbits
+ 308              		.align	1
+ 309              		.syntax unified
+ 310              		.thumb
+ 311              		.thumb_func
+ 312              		.fpu fpv4-sp-d16
+ 314              	Free_Blocks_Dir:
+ 315              	.LFB688:
+ 186:Src/obstacle.c **** 
+ 187:Src/obstacle.c **** void Print_Obstacles(void){
+ 188:Src/obstacle.c ****   int i = 0;
+ 189:Src/obstacle.c ****   for(; i < nb_obstacles; i++){
+ 190:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 191:Src/obstacle.c ****     Print("Obstacle n°%d : %u ms, %" PRIu16 " mm, (%" PRId16 " , %" PRId16"), c (%"PRId16", %"PRId
+ 192:Src/obstacle.c **** 	  i,
+ 193:Src/obstacle.c **** 	  (HAL_GetTick() - obs->last_detection),
+ 194:Src/obstacle.c **** 	  obs->distance,
+ 195:Src/obstacle.c **** 	  obs->x,
+ 196:Src/obstacle.c **** 	  obs->y,
+ 197:Src/obstacle.c **** 	  obs->x_c,
+ 198:Src/obstacle.c **** 	  obs->y_c);
+ 199:Src/obstacle.c ****   }
+ 200:Src/obstacle.c **** }
+ARM GAS  /tmp/ccwIJuYj.s 			page 10
+
+
+ 201:Src/obstacle.c **** 
+ 202:Src/obstacle.c **** 
+ 203:Src/obstacle.c **** int Materialize_Obstacle(Obstacle *obs, uint16_t margin){
+ 204:Src/obstacle.c ****   //Check if the obstacle will not overlay our robot
+ 205:Src/obstacle.c ****   uint16_t r_obs = OBS_RADIUS + ROBOT_RADIUS;
+ 206:Src/obstacle.c ****   //Print("Radius : %" PRIu16 "\n", r);
+ 207:Src/obstacle.c ****   if(dist(me.x, me.y, obs->x_c, obs->y_c) <= (r_obs + 1.415*SQUARE_SIZE)){
+ 208:Src/obstacle.c ****     return -1;
+ 209:Src/obstacle.c ****   }
+ 210:Src/obstacle.c **** 
+ 211:Src/obstacle.c ****   uint16_t X0 = obs->x_c/SQUARE_SIZE, Y0 = obs->y_c/SQUARE_SIZE;
+ 212:Src/obstacle.c ****   uint16_t dx = obs->x_c%SQUARE_SIZE, dy = obs->y_c%SQUARE_SIZE;
+ 213:Src/obstacle.c **** 
+ 214:Src/obstacle.c ****   //Number of cubes
+ 215:Src/obstacle.c ****   int r = r_obs + margin;
+ 216:Src/obstacle.c ****   int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
+ 217:Src/obstacle.c ****   //Print("N : %d\n", N);
+ 218:Src/obstacle.c ****   
+ 219:Src/obstacle.c ****   //Check if this circle can be drawn
+ 220:Src/obstacle.c ****   if((X0 < N-1) || (X0 > MAP_WIDTH - N) || (Y0 < N-1) || (Y0 > MAP_HEIGHT - N)){
+ 221:Src/obstacle.c ****     return -1;
+ 222:Src/obstacle.c ****   }
+ 223:Src/obstacle.c **** 
+ 224:Src/obstacle.c ****   //Draw the circle
+ 225:Src/obstacle.c ****   int X = 0;
+ 226:Src/obstacle.c ****   float R = N*SQUARE_SIZE - (float) SQUARE_SIZE/2.;
+ 227:Src/obstacle.c ****   int DX = 0;
+ 228:Src/obstacle.c **** 
+ 229:Src/obstacle.c ****   //Vector O->R
+ 230:Src/obstacle.c ****   int X_OR = me.x/SQUARE_SIZE - X0, Y_OR = me.y/SQUARE_SIZE - Y0;
+ 231:Src/obstacle.c ****   float N_OR = sqrt(X_OR*X_OR + Y_OR*Y_OR);
+ 232:Src/obstacle.c ****   X_OR *= (1. - 1.415 / N_OR);
+ 233:Src/obstacle.c ****   Y_OR *= (1. - 1.415 / N_OR);
+ 234:Src/obstacle.c ****   N_OR -= 1.415;
+ 235:Src/obstacle.c **** 
+ 236:Src/obstacle.c ****   int treshold = N_OR * N_OR - 1;
+ 237:Src/obstacle.c ****   for(X = 0; X < N; X++, DX += SQUARE_SIZE){
+ 238:Src/obstacle.c ****     float DY = sqrt(R*R - DX*DX);
+ 239:Src/obstacle.c ****     int NB_Y = 1 + (DY-(float)SQUARE_SIZE/2.)/SQUARE_SIZE;
+ 240:Src/obstacle.c ****     int Y;
+ 241:Src/obstacle.c ****     for(Y = 0; Y < NB_Y; Y++){
+ 242:Src/obstacle.c ****       int p_scal = X_OR*X + Y_OR*Y;
+ 243:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 244:Src/obstacle.c **** 	map[Y0 + Y][X0 + X].obstacle = 1;
+ 245:Src/obstacle.c **** 
+ 246:Src/obstacle.c ****       p_scal = -X_OR*X + Y_OR*Y;
+ 247:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 248:Src/obstacle.c **** 	map[Y0 + Y][X0 - X].obstacle = 1;
+ 249:Src/obstacle.c **** 
+ 250:Src/obstacle.c ****       p_scal = X_OR*X - Y_OR*Y;
+ 251:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 252:Src/obstacle.c **** 	map[Y0 - Y][X0 + X].obstacle = 1;
+ 253:Src/obstacle.c ****  
+ 254:Src/obstacle.c ****       p_scal = -X_OR*X - Y_OR*Y;
+ 255:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 256:Src/obstacle.c **** 	map[Y0 - Y][X0 - X].obstacle = 1;
+ 257:Src/obstacle.c ****     }
+ARM GAS  /tmp/ccwIJuYj.s 			page 11
+
+
+ 258:Src/obstacle.c ****   }
+ 259:Src/obstacle.c ****   
+ 260:Src/obstacle.c ****   return 0;
+ 261:Src/obstacle.c **** }
+ 262:Src/obstacle.c **** 
+ 263:Src/obstacle.c **** int Materialize_Obstacles(uint16_t margin){
+ 264:Src/obstacle.c ****   int i;
+ 265:Src/obstacle.c ****   int status = 0;
+ 266:Src/obstacle.c ****   for(i = 0; i < nb_obstacles; i++){
+ 267:Src/obstacle.c ****     if(Materialize_Obstacle(&obstacle[i], margin) != 0){
+ 268:Src/obstacle.c ****       status = -1;
+ 269:Src/obstacle.c ****     }
+ 270:Src/obstacle.c ****   }
+ 271:Src/obstacle.c ****   return status;
+ 272:Src/obstacle.c **** }
+ 273:Src/obstacle.c **** 
+ 274:Src/obstacle.c **** int Can_Rotate(){
+ 275:Src/obstacle.c ****   int i;
+ 276:Src/obstacle.c ****   for(i = 0; i < nb_obstacles; i++){
+ 277:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 278:Src/obstacle.c ****     if(dist(me.x, me.y, obs->x, obs->y) < ROBOT_RADIUS + MARGIN_MIN){
+ 279:Src/obstacle.c ****       break;
+ 280:Src/obstacle.c ****     }
+ 281:Src/obstacle.c ****   }
+ 282:Src/obstacle.c ****   
+ 283:Src/obstacle.c ****   return (i == nb_obstacles);
+ 284:Src/obstacle.c **** }
+ 285:Src/obstacle.c **** 
+ 286:Src/obstacle.c **** int Can_Move(float distance, bool forward, float *max_speed_ratio){
+ 287:Src/obstacle.c ****   int i;
+ 288:Src/obstacle.c ****   float dist_min = 10000.;
+ 289:Src/obstacle.c ****   for(i = 0; i < nb_obstacles; i++){
+ 290:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 291:Src/obstacle.c ****     float obs_dist = obs->distance;
+ 292:Src/obstacle.c **** 
+ 293:Src/obstacle.c ****     //If the obstacle is in direction range
+ 294:Src/obstacle.c ****     if((forward && obs->range == IN_RANGE_FORWARD)
+ 295:Src/obstacle.c ****        || (!forward && obs->range == IN_RANGE_BACKWARD)){
+ 296:Src/obstacle.c ****       if(distance > obs_dist - (ROBOT_RADIUS + MARGIN_MIN)){
+ 297:Src/obstacle.c ****         return 0;
+ 298:Src/obstacle.c ****       }
+ 299:Src/obstacle.c ****       if(obs_dist < dist_min){
+ 300:Src/obstacle.c **** 	dist_min = obs_dist;
+ 301:Src/obstacle.c ****       }
+ 302:Src/obstacle.c ****     }
+ 303:Src/obstacle.c ****   }
+ 304:Src/obstacle.c **** 
+ 305:Src/obstacle.c ****   *max_speed_ratio = min(max(0., (dist_min - (ROBOT_RADIUS + MARGIN_MIN))/1000.), 1.);
+ 306:Src/obstacle.c **** 
+ 307:Src/obstacle.c ****   return 1;
+ 308:Src/obstacle.c **** }
+ 309:Src/obstacle.c **** 
+ 310:Src/obstacle.c **** void Get_In_Range_Obstacle_Dist(float *fwd_dist, float *bwd_dist){
+ 311:Src/obstacle.c ****   float min_fwd = 10000., min_bwd = 10000.;
+ 312:Src/obstacle.c **** 
+ 313:Src/obstacle.c ****   //We do not use robot's obstacles here
+ 314:Src/obstacle.c ****   Refresh_Map();
+ARM GAS  /tmp/ccwIJuYj.s 			page 12
+
+
+ 315:Src/obstacle.c ****   
+ 316:Src/obstacle.c ****   //Check distances to robots
+ 317:Src/obstacle.c ****   int i;
+ 318:Src/obstacle.c ****   for(i = 0; i < nb_obstacles; i++){
+ 319:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 320:Src/obstacle.c ****     switch(obs->range){
+ 321:Src/obstacle.c ****     case IN_RANGE_FORWARD:
+ 322:Src/obstacle.c ****       if(obs->distance < min_fwd){
+ 323:Src/obstacle.c **** 	min_fwd = obs->distance;
+ 324:Src/obstacle.c ****       }
+ 325:Src/obstacle.c ****       break;
+ 326:Src/obstacle.c ****     case IN_RANGE_BACKWARD:
+ 327:Src/obstacle.c ****       if(obs->distance < min_bwd){
+ 328:Src/obstacle.c **** 	min_bwd = obs->distance;
+ 329:Src/obstacle.c ****       }
+ 330:Src/obstacle.c ****       break;
+ 331:Src/obstacle.c ****     case OUT_OF_RANGE:
+ 332:Src/obstacle.c ****       //balec
+ 333:Src/obstacle.c ****       break;
+ 334:Src/obstacle.c ****     }
+ 335:Src/obstacle.c ****   }
+ 336:Src/obstacle.c **** 
+ 337:Src/obstacle.c ****   min_fwd -= OBS_RADIUS + MARGIN_MIN;
+ 338:Src/obstacle.c ****   min_bwd -= OBS_RADIUS + MARGIN_MIN;
+ 339:Src/obstacle.c ****   if(min_fwd < 0) min_fwd = 0;
+ 340:Src/obstacle.c ****   if(min_bwd < 0) min_bwd = 0;
+ 341:Src/obstacle.c **** 
+ 342:Src/obstacle.c ****   *fwd_dist = min_fwd;
+ 343:Src/obstacle.c ****   *bwd_dist = min_bwd;
+ 344:Src/obstacle.c **** }
+ 345:Src/obstacle.c **** 
+ 346:Src/obstacle.c **** void Get_Avoidance_Flexibility(float *fwd_dist, float *bwd_dist){
+ 347:Src/obstacle.c ****   Get_In_Range_Obstacle_Dist(fwd_dist, bwd_dist);
+ 348:Src/obstacle.c **** 
+ 349:Src/obstacle.c ****   //Check distance to map objects
+ 350:Src/obstacle.c ****   *fwd_dist = min(*fwd_dist, Free_Blocks_Dir(me.angle));
+ 351:Src/obstacle.c ****   float angle_bwd = me.angle + M_PI;
+ 352:Src/obstacle.c ****   if(me.angle > M_PI){
+ 353:Src/obstacle.c ****     me.angle -= 2*M_PI;
+ 354:Src/obstacle.c ****   }
+ 355:Src/obstacle.c ****   *bwd_dist = min(*bwd_dist, Free_Blocks_Dir(angle_bwd));
+ 356:Src/obstacle.c **** }
+ 357:Src/obstacle.c **** 
+ 358:Src/obstacle.c **** static float Free_Blocks_Dir(float angle){
+ 316              		.loc 1 358 0
+ 317              		.cfi_startproc
+ 318              		@ args = 0, pretend = 0, frame = 0
+ 319              		@ frame_needed = 0, uses_anonymous_args = 0
+ 320              	.LVL41:
+ 321 0000 38B5     		push	{r3, r4, r5, lr}
+ 322              	.LCFI6:
+ 323              		.cfi_def_cfa_offset 16
+ 324              		.cfi_offset 3, -16
+ 325              		.cfi_offset 4, -12
+ 326              		.cfi_offset 5, -8
+ 327              		.cfi_offset 14, -4
+ 328 0002 2DED068B 		vpush.64	{d8, d9, d10}
+ARM GAS  /tmp/ccwIJuYj.s 			page 13
+
+
+ 329              	.LCFI7:
+ 330              		.cfi_def_cfa_offset 40
+ 331              		.cfi_offset 80, -40
+ 332              		.cfi_offset 81, -36
+ 333              		.cfi_offset 82, -32
+ 334              		.cfi_offset 83, -28
+ 335              		.cfi_offset 84, -24
+ 336              		.cfi_offset 85, -20
+ 359:Src/obstacle.c ****   float dx = 10*cos(angle);
+ 337              		.loc 1 359 0
+ 338 0006 10EE100A 		vmov	r0, s0
+ 339 000a FFF7FEFF 		bl	__aeabi_f2d
+ 340              	.LVL42:
+ 341 000e 41EC180B 		vmov	d8, r0, r1
+ 342 0012 41EC100B 		vmov	d0, r0, r1
+ 343 0016 FFF7FEFF 		bl	cos
+ 344              	.LVL43:
+ 345 001a 0022     		movs	r2, #0
+ 346 001c 484B     		ldr	r3, .L15+16
+ 347 001e 51EC100B 		vmov	r0, r1, d0
+ 348 0022 FFF7FEFF 		bl	__aeabi_dmul
+ 349              	.LVL44:
+ 350 0026 FFF7FEFF 		bl	__aeabi_d2f
+ 351              	.LVL45:
+ 352 002a 0AEE900A 		vmov	s21, r0
+ 353              	.LVL46:
+ 360:Src/obstacle.c ****   float dy = 10*sin(angle);
+ 354              		.loc 1 360 0
+ 355 002e B0EE480A 		vmov.f32	s0, s16
+ 356 0032 F0EE680A 		vmov.f32	s1, s17
+ 357 0036 FFF7FEFF 		bl	sin
+ 358              	.LVL47:
+ 359 003a 0022     		movs	r2, #0
+ 360 003c 404B     		ldr	r3, .L15+16
+ 361 003e 51EC100B 		vmov	r0, r1, d0
+ 362 0042 FFF7FEFF 		bl	__aeabi_dmul
+ 363              	.LVL48:
+ 364 0046 FFF7FEFF 		bl	__aeabi_d2f
+ 365              	.LVL49:
+ 366 004a 0AEE100A 		vmov	s20, r0
+ 367              	.LVL50:
+ 361:Src/obstacle.c **** 
+ 362:Src/obstacle.c ****   float x_l = 0, y_l = 0;
+ 363:Src/obstacle.c ****   float pos_x = me.x, pos_y = me.y;
+ 368              		.loc 1 363 0
+ 369 004e 3D4B     		ldr	r3, .L15+20
+ 370 0050 1A88     		ldrh	r2, [r3]
+ 371 0052 09EE102A 		vmov	s18, r2	@ int
+ 372 0056 B8EE499A 		vcvt.f32.u32	s18, s18
+ 373              	.LVL51:
+ 374 005a 5B88     		ldrh	r3, [r3, #2]
+ 375 005c 09EE903A 		vmov	s19, r3	@ int
+ 376 0060 F8EE699A 		vcvt.f32.u32	s19, s19
+ 377              	.LVL52:
+ 364:Src/obstacle.c ****   Cell *current_cell;
+ 365:Src/obstacle.c ****   while((current_cell = Cell_From_Pos(pos_x+dx+(SQUARE_SIZE*1.415), pos_y+dy+(SQUARE_SIZE*1.415))) 
+ 378              		.loc 1 365 0
+ARM GAS  /tmp/ccwIJuYj.s 			page 14
+
+
+ 379 0064 03E0     		b	.L12
+ 380              	.LVL53:
+ 381              	.L13:
+ 366:Src/obstacle.c ****     pos_x += dx;
+ 367:Src/obstacle.c ****     pos_y += dy;
+ 382              		.loc 1 367 0
+ 383 0066 F0EE689A 		vmov.f32	s19, s17
+ 384              	.LVL54:
+ 366:Src/obstacle.c ****     pos_x += dx;
+ 385              		.loc 1 366 0
+ 386 006a B0EE489A 		vmov.f32	s18, s16
+ 387              	.LVL55:
+ 388              	.L12:
+ 365:Src/obstacle.c ****     pos_x += dx;
+ 389              		.loc 1 365 0
+ 390 006e 39EE2A8A 		vadd.f32	s16, s18, s21
+ 391 0072 18EE100A 		vmov	r0, s16
+ 392 0076 FFF7FEFF 		bl	__aeabi_f2d
+ 393              	.LVL56:
+ 394 007a 2DA3     		adr	r3, .L15
+ 395 007c D3E90023 		ldrd	r2, [r3]
+ 396 0080 FFF7FEFF 		bl	__aeabi_dadd
+ 397              	.LVL57:
+ 398 0084 FFF7FEFF 		bl	__aeabi_d2uiz
+ 399              	.LVL58:
+ 400 0088 84B2     		uxth	r4, r0
+ 401 008a 79EE8A8A 		vadd.f32	s17, s19, s20
+ 402 008e 18EE900A 		vmov	r0, s17
+ 403 0092 FFF7FEFF 		bl	__aeabi_f2d
+ 404              	.LVL59:
+ 405 0096 26A3     		adr	r3, .L15
+ 406 0098 D3E90023 		ldrd	r2, [r3]
+ 407 009c FFF7FEFF 		bl	__aeabi_dadd
+ 408              	.LVL60:
+ 409 00a0 FFF7FEFF 		bl	__aeabi_d2uiz
+ 410              	.LVL61:
+ 411 00a4 81B2     		uxth	r1, r0
+ 412 00a6 2046     		mov	r0, r4
+ 413 00a8 FFF7FEFF 		bl	Cell_From_Pos
+ 414              	.LVL62:
+ 415 00ac 10B1     		cbz	r0, .L11
+ 365:Src/obstacle.c ****     pos_x += dx;
+ 416              		.loc 1 365 0 is_stmt 0 discriminator 1
+ 417 00ae 0379     		ldrb	r3, [r0, #4]	@ zero_extendqisi2
+ 418 00b0 002B     		cmp	r3, #0
+ 419 00b2 D8D0     		beq	.L13
+ 420              	.L11:
+ 368:Src/obstacle.c ****   }
+ 369:Src/obstacle.c ****   x_l = pos_x - me.x;
+ 421              		.loc 1 369 0 is_stmt 1
+ 422 00b4 234B     		ldr	r3, .L15+20
+ 423 00b6 1A88     		ldrh	r2, [r3]
+ 424 00b8 07EE902A 		vmov	s15, r2	@ int
+ 425 00bc F8EEE77A 		vcvt.f32.s32	s15, s15
+ 426 00c0 39EE679A 		vsub.f32	s18, s18, s15
+ 427              	.LVL63:
+ 370:Src/obstacle.c ****   y_l = pos_y - me.y;
+ARM GAS  /tmp/ccwIJuYj.s 			page 15
+
+
+ 428              		.loc 1 370 0
+ 429 00c4 5B88     		ldrh	r3, [r3, #2]
+ 430 00c6 07EE903A 		vmov	s15, r3	@ int
+ 431 00ca F8EEE77A 		vcvt.f32.s32	s15, s15
+ 432              	.LVL64:
+ 371:Src/obstacle.c **** 
+ 372:Src/obstacle.c ****   return dist(0, 0, x_l, y_l);
+ 433              		.loc 1 372 0
+ 434 00ce 9FED1A8B 		vldr.64	d8, .L15+8
+ 435 00d2 79EEE77A 		vsub.f32	s15, s19, s15
+ 436              	.LVL65:
+ 437 00d6 17EE900A 		vmov	r0, s15
+ 438              	.LVL66:
+ 439 00da FFF7FEFF 		bl	__aeabi_f2d
+ 440              	.LVL67:
+ 441 00de B0EE481A 		vmov.f32	s2, s16
+ 442 00e2 F0EE681A 		vmov.f32	s3, s17
+ 443 00e6 41EC100B 		vmov	d0, r0, r1
+ 444 00ea FFF7FEFF 		bl	pow
+ 445              	.LVL68:
+ 446 00ee 55EC104B 		vmov	r4, r5, d0
+ 447 00f2 19EE100A 		vmov	r0, s18
+ 448 00f6 FFF7FEFF 		bl	__aeabi_f2d
+ 449              	.LVL69:
+ 450 00fa B0EE481A 		vmov.f32	s2, s16
+ 451 00fe F0EE681A 		vmov.f32	s3, s17
+ 452 0102 41EC100B 		vmov	d0, r0, r1
+ 453 0106 FFF7FEFF 		bl	pow
+ 454              	.LVL70:
+ 455 010a 53EC102B 		vmov	r2, r3, d0
+ 456 010e 2046     		mov	r0, r4
+ 457 0110 2946     		mov	r1, r5
+ 458 0112 FFF7FEFF 		bl	__aeabi_dadd
+ 459              	.LVL71:
+ 460 0116 41EC100B 		vmov	d0, r0, r1
+ 461 011a FFF7FEFF 		bl	sqrt
+ 462              	.LVL72:
+ 463 011e 51EC100B 		vmov	r0, r1, d0
+ 464 0122 FFF7FEFF 		bl	__aeabi_d2f
+ 465              	.LVL73:
+ 373:Src/obstacle.c **** }
+ 466              		.loc 1 373 0
+ 467 0126 00EE100A 		vmov	s0, r0
+ 468 012a BDEC068B 		vldm	sp!, {d8-d10}
+ 469              	.LCFI8:
+ 470              		.cfi_restore 84
+ 471              		.cfi_restore 85
+ 472              		.cfi_restore 82
+ 473              		.cfi_restore 83
+ 474              		.cfi_restore 80
+ 475              		.cfi_restore 81
+ 476              		.cfi_def_cfa_offset 16
+ 477              	.LVL74:
+ 478 012e 38BD     		pop	{r3, r4, r5, pc}
+ 479              	.L16:
+ 480              		.align	3
+ 481              	.L15:
+ARM GAS  /tmp/ccwIJuYj.s 			page 16
+
+
+ 482 0130 CDCCCCCC 		.word	3435973837
+ 483 0134 CC4C4C40 		.word	1078742220
+ 484 0138 00000000 		.word	0
+ 485 013c 00000040 		.word	1073741824
+ 486 0140 00002440 		.word	1076101120
+ 487 0144 00000000 		.word	me
+ 488              		.cfi_endproc
+ 489              	.LFE688:
+ 491              		.global	__aeabi_dcmplt
+ 492              		.section	.text.Update_Obstacles,"ax",%progbits
+ 493              		.align	1
+ 494              		.global	Update_Obstacles
+ 495              		.syntax unified
+ 496              		.thumb
+ 497              		.thumb_func
+ 498              		.fpu fpv4-sp-d16
+ 500              	Update_Obstacles:
+ 501              	.LFB679:
+  19:Src/obstacle.c ****   Obstacle in_range[4];
+ 502              		.loc 1 19 0
+ 503              		.cfi_startproc
+ 504              		@ args = 4, pretend = 0, frame = 224
+ 505              		@ frame_needed = 0, uses_anonymous_args = 0
+ 506              	.LVL75:
+ 507 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 508              	.LCFI9:
+ 509              		.cfi_def_cfa_offset 36
+ 510              		.cfi_offset 4, -36
+ 511              		.cfi_offset 5, -32
+ 512              		.cfi_offset 6, -28
+ 513              		.cfi_offset 7, -24
+ 514              		.cfi_offset 8, -20
+ 515              		.cfi_offset 9, -16
+ 516              		.cfi_offset 10, -12
+ 517              		.cfi_offset 11, -8
+ 518              		.cfi_offset 14, -4
+ 519 0004 2DED048B 		vpush.64	{d8, d9}
+ 520              	.LCFI10:
+ 521              		.cfi_def_cfa_offset 52
+ 522              		.cfi_offset 80, -52
+ 523              		.cfi_offset 81, -48
+ 524              		.cfi_offset 82, -44
+ 525              		.cfi_offset 83, -40
+ 526 0008 B9B0     		sub	sp, sp, #228
+ 527              	.LCFI11:
+ 528              		.cfi_def_cfa_offset 280
+ 529 000a 8146     		mov	r9, r0
+ 530 000c 8846     		mov	r8, r1
+ 531 000e 1046     		mov	r0, r2
+ 532              	.LVL76:
+ 533 0010 0792     		str	r2, [sp, #28]
+ 534 0012 1C46     		mov	r4, r3
+ 535 0014 0893     		str	r3, [sp, #32]
+ 536 0016 BDF81821 		ldrh	r2, [sp, #280]
+ 537              	.LVL77:
+ 538 001a 0992     		str	r2, [sp, #36]
+  22:Src/obstacle.c ****   sensor_raw[FRONT_RIGHT] = fr_d;
+ARM GAS  /tmp/ccwIJuYj.s 			page 17
+
+
+ 539              		.loc 1 22 0
+ 540 001c 924B     		ldr	r3, .L59+16
+ 541              	.LVL78:
+ 542 001e 1980     		strh	r1, [r3]	@ movhi
+  23:Src/obstacle.c ****   sensor_raw[REAR_LEFT] = rl_d;
+ 543              		.loc 1 23 0
+ 544 0020 5880     		strh	r0, [r3, #2]	@ movhi
+  24:Src/obstacle.c ****   sensor_raw[REAR_RIGHT] = rr_d;
+ 545              		.loc 1 24 0
+ 546 0022 9C80     		strh	r4, [r3, #4]	@ movhi
+  25:Src/obstacle.c ****   int16_t x_rel[4] = {
+ 547              		.loc 1 25 0
+ 548 0024 DA80     		strh	r2, [r3, #6]	@ movhi
+  27:Src/obstacle.c ****     [FRONT_RIGHT] = SENSOR_DIST_TANGENT + fr_d,
+ 549              		.loc 1 27 0
+ 550 0026 08F15003 		add	r3, r8, #80
+ 551 002a 0FFA83FA 		sxth	r10, r3
+  26:Src/obstacle.c ****     [FRONT_LEFT] = SENSOR_DIST_TANGENT + fl_d,
+ 552              		.loc 1 26 0
+ 553 002e ADF884A0 		strh	r10, [sp, #132]	@ movhi
+  28:Src/obstacle.c ****     [REAR_LEFT] = -(SENSOR_DIST_TANGENT + rl_d),
+ 554              		.loc 1 28 0
+ 555 0032 00F15006 		add	r6, r0, #80
+ 556 0036 36B2     		sxth	r6, r6
+  26:Src/obstacle.c ****     [FRONT_LEFT] = SENSOR_DIST_TANGENT + fl_d,
+ 557              		.loc 1 26 0
+ 558 0038 ADF88660 		strh	r6, [sp, #134]	@ movhi
+  29:Src/obstacle.c ****     [REAR_RIGHT] = -(SENSOR_DIST_TANGENT + rr_d)};
+ 559              		.loc 1 29 0
+ 560 003c 4FF6B075 		movw	r5, #65456
+ 561 0040 2F1B     		subs	r7, r5, r4
+ 562 0042 3FB2     		sxth	r7, r7
+  26:Src/obstacle.c ****     [FRONT_LEFT] = SENSOR_DIST_TANGENT + fl_d,
+ 563              		.loc 1 26 0
+ 564 0044 ADF88870 		strh	r7, [sp, #136]	@ movhi
+  30:Src/obstacle.c ****   int16_t y_rel[4] = {
+ 565              		.loc 1 30 0
+ 566 0048 AD1A     		subs	r5, r5, r2
+ 567 004a 2DB2     		sxth	r5, r5
+  26:Src/obstacle.c ****     [FRONT_LEFT] = SENSOR_DIST_TANGENT + fl_d,
+ 568              		.loc 1 26 0
+ 569 004c ADF88A50 		strh	r5, [sp, #138]	@ movhi
+  31:Src/obstacle.c ****     [FRONT_LEFT] = -SENSOR_DIST_PERP,
+ 570              		.loc 1 31 0
+ 571 0050 864A     		ldr	r2, .L59+20
+ 572 0052 1FAB     		add	r3, sp, #124
+ 573 0054 92E80300 		ldm	r2, {r0, r1}
+ 574              	.LVL79:
+ 575 0058 83E80300 		stm	r3, {r0, r1}
+  36:Src/obstacle.c **** 
+ 576              		.loc 1 36 0
+ 577 005c FFF7FEFF 		bl	HAL_GetTick
+ 578              	.LVL80:
+ 579 0060 8346     		mov	fp, r0
+ 580              	.LVL81:
+  40:Src/obstacle.c ****     //If the sensor detect an obstacle, compute it
+ 581              		.loc 1 40 0
+ARM GAS  /tmp/ccwIJuYj.s 			page 18
+
+
+ 582 0062 0024     		movs	r4, #0
+ 583 0064 16E0     		b	.L18
+ 584              	.LVL82:
+ 585              	.L56:
+  42:Src/obstacle.c ****   }
+ 586              		.loc 1 42 0 discriminator 1
+ 587 0066 04EB8403 		add	r3, r4, r4, lsl #2
+ 588 006a 9800     		lsls	r0, r3, #2
+ 589 006c 38AB     		add	r3, sp, #224
+ 590 006e 03EB4402 		add	r2, r3, r4, lsl #1
+ 591 0072 32F9643C 		ldrsh	r3, [r2, #-100]
+ 592 0076 32F95C2C 		ldrsh	r2, [r2, #-92]
+ 593 007a 4946     		mov	r1, r9
+ 594 007c 0DF1900C 		add	ip, sp, #144
+ 595 0080 6044     		add	r0, r0, ip
+ 596 0082 FFF7FEFF 		bl	Compute_Obstacle
+ 597              	.LVL83:
+ 598 0086 70B9     		cbnz	r0, .L47
+  42:Src/obstacle.c ****   }
+ 599              		.loc 1 42 0 is_stmt 0
+ 600 0088 0122     		movs	r2, #1
+ 601              	.L19:
+  42:Src/obstacle.c ****   }
+ 602              		.loc 1 42 0 discriminator 6
+ 603 008a 38AB     		add	r3, sp, #224
+ 604 008c 2344     		add	r3, r3, r4
+ 605 008e 03F8542C 		strb	r2, [r3, #-84]
+  40:Src/obstacle.c ****     //If the sensor detect an obstacle, compute it
+ 606              		.loc 1 40 0 is_stmt 1 discriminator 6
+ 607 0092 0134     		adds	r4, r4, #1
+ 608              	.LVL84:
+ 609              	.L18:
+  40:Src/obstacle.c ****     //If the sensor detect an obstacle, compute it
+ 610              		.loc 1 40 0 is_stmt 0 discriminator 2
+ 611 0094 032C     		cmp	r4, #3
+ 612 0096 08DC     		bgt	.L55
+  42:Src/obstacle.c ****   }
+ 613              		.loc 1 42 0 is_stmt 1
+ 614 0098 734B     		ldr	r3, .L59+16
+ 615 009a 33F81430 		ldrh	r3, [r3, r4, lsl #1]
+ 616 009e 002B     		cmp	r3, #0
+ 617 00a0 E1D1     		bne	.L56
+ 618 00a2 0022     		movs	r2, #0
+ 619 00a4 F1E7     		b	.L19
+ 620              	.L47:
+ 621 00a6 0022     		movs	r2, #0
+ 622 00a8 EFE7     		b	.L19
+ 623              	.L55:
+ 624              	.LVL85:
+  49:Src/obstacle.c ****      && (dist(in_range[FRONT_LEFT].x, in_range[FRONT_LEFT].y,
+ 625              		.loc 1 49 0
+ 626 00aa 9DF88C40 		ldrb	r4, [sp, #140]	@ zero_extendqisi2
+ 627              	.LVL86:
+ 628 00ae 14B1     		cbz	r4, .L21
+  49:Src/obstacle.c ****      && (dist(in_range[FRONT_LEFT].x, in_range[FRONT_LEFT].y,
+ 629              		.loc 1 49 0 is_stmt 0 discriminator 1
+ 630 00b0 9DF88D30 		ldrb	r3, [sp, #141]	@ zero_extendqisi2
+ARM GAS  /tmp/ccwIJuYj.s 			page 19
+
+
+ 631 00b4 53B9     		cbnz	r3, .L57
+ 632              	.L21:
+  56:Src/obstacle.c ****       updated[n++] = in_range[FRONT_LEFT];
+ 633              		.loc 1 56 0 is_stmt 1
+ 634 00b6 002C     		cmp	r4, #0
+ 635 00b8 4CD0     		beq	.L48
+ 636              	.LVL87:
+  57:Src/obstacle.c ****     if(present[FRONT_RIGHT])
+ 637              		.loc 1 57 0
+ 638 00ba 0BAC     		add	r4, sp, #44
+ 639 00bc 24AE     		add	r6, sp, #144
+ 640 00be 0FCE     		ldmia	r6!, {r0, r1, r2, r3}
+ 641 00c0 0FC4     		stmia	r4!, {r0, r1, r2, r3}
+ 642 00c2 3368     		ldr	r3, [r6]
+ 643 00c4 2360     		str	r3, [r4]
+ 644 00c6 4FF0010A 		mov	r10, #1
+ 645 00ca 45E0     		b	.L25
+ 646              	.LVL88:
+ 647              	.L57:
+  50:Src/obstacle.c **** 	      in_range[FRONT_RIGHT].x, in_range[FRONT_RIGHT].y)
+ 648              		.loc 1 50 0
+ 649 00cc BDF9AC00 		ldrsh	r0, [sp, #172]
+ 650 00d0 BDF99830 		ldrsh	r3, [sp, #152]
+ 651 00d4 9FED608B 		vldr.64	d8, .L59
+ 652 00d8 C01A     		subs	r0, r0, r3
+ 653 00da FFF7FEFF 		bl	__aeabi_i2d
+ 654              	.LVL89:
+ 655 00de B0EE481A 		vmov.f32	s2, s16
+ 656 00e2 F0EE681A 		vmov.f32	s3, s17
+ 657 00e6 41EC100B 		vmov	d0, r0, r1
+ 658 00ea FFF7FEFF 		bl	pow
+ 659              	.LVL90:
+ 660 00ee B0EE409A 		vmov.f32	s18, s0
+ 661 00f2 F0EE609A 		vmov.f32	s19, s1
+ 662 00f6 BDF9AA00 		ldrsh	r0, [sp, #170]
+ 663 00fa BDF99630 		ldrsh	r3, [sp, #150]
+ 664 00fe C01A     		subs	r0, r0, r3
+ 665 0100 FFF7FEFF 		bl	__aeabi_i2d
+ 666              	.LVL91:
+ 667 0104 B0EE481A 		vmov.f32	s2, s16
+ 668 0108 F0EE681A 		vmov.f32	s3, s17
+ 669 010c 41EC100B 		vmov	d0, r0, r1
+ 670 0110 FFF7FEFF 		bl	pow
+ 671              	.LVL92:
+ 672 0114 53EC102B 		vmov	r2, r3, d0
+ 673 0118 51EC190B 		vmov	r0, r1, d9
+ 674 011c FFF7FEFF 		bl	__aeabi_dadd
+ 675              	.LVL93:
+ 676 0120 41EC100B 		vmov	d0, r0, r1
+ 677 0124 FFF7FEFF 		bl	sqrt
+ 678              	.LVL94:
+ 679 0128 4DA3     		adr	r3, .L59+8
+ 680 012a D3E90023 		ldrd	r2, [r3]
+ 681 012e 51EC100B 		vmov	r0, r1, d0
+ 682 0132 FFF7FEFF 		bl	__aeabi_dcmplt
+ 683              	.LVL95:
+ 684 0136 0028     		cmp	r0, #0
+ARM GAS  /tmp/ccwIJuYj.s 			page 20
+
+
+ 685 0138 BDD0     		beq	.L21
+ 686              	.LVL96:
+  54:Src/obstacle.c ****   }else{
+ 687              		.loc 1 54 0
+ 688 013a 079B     		ldr	r3, [sp, #28]
+ 689 013c 9845     		cmp	r8, r3
+ 690 013e 00D2     		bcs	.L23
+ 691 0140 5646     		mov	r6, r10
+ 692              	.L23:
+  54:Src/obstacle.c ****   }else{
+ 693              		.loc 1 54 0 is_stmt 0 discriminator 4
+ 694 0142 0023     		movs	r3, #0
+ 695 0144 3246     		mov	r2, r6
+ 696 0146 4946     		mov	r1, r9
+ 697 0148 0BA8     		add	r0, sp, #44
+ 698 014a FFF7FEFF 		bl	Compute_Obstacle
+ 699              	.LVL97:
+ 700 014e 4FF0010A 		mov	r10, #1
+ 701 0152 11E0     		b	.L24
+ 702              	.LVL98:
+ 703              	.L48:
+  46:Src/obstacle.c **** 
+ 704              		.loc 1 46 0 is_stmt 1
+ 705 0154 4FF0000A 		mov	r10, #0
+ 706              	.LVL99:
+ 707              	.L25:
+  58:Src/obstacle.c ****       updated[n++] = in_range[FRONT_RIGHT];
+ 708              		.loc 1 58 0
+ 709 0158 9DF88D30 		ldrb	r3, [sp, #141]	@ zero_extendqisi2
+ 710 015c 63B1     		cbz	r3, .L24
+ 711              	.LVL100:
+  59:Src/obstacle.c ****   }
+ 712              		.loc 1 59 0
+ 713 015e 0AEB8A03 		add	r3, r10, r10, lsl #2
+ 714 0162 9C00     		lsls	r4, r3, #2
+ 715 0164 38AB     		add	r3, sp, #224
+ 716 0166 1C44     		add	r4, r4, r3
+ 717 0168 B43C     		subs	r4, r4, #180
+ 718 016a 29AE     		add	r6, sp, #164
+ 719 016c 0FCE     		ldmia	r6!, {r0, r1, r2, r3}
+ 720 016e 0FC4     		stmia	r4!, {r0, r1, r2, r3}
+ 721 0170 3368     		ldr	r3, [r6]
+ 722 0172 2360     		str	r3, [r4]
+ 723 0174 0AF1010A 		add	r10, r10, #1
+ 724              	.LVL101:
+ 725              	.L24:
+  63:Src/obstacle.c ****      && (dist(in_range[REAR_LEFT].x, in_range[REAR_LEFT].y,
+ 726              		.loc 1 63 0
+ 727 0178 9DF88E40 		ldrb	r4, [sp, #142]	@ zero_extendqisi2
+ 728 017c 14B1     		cbz	r4, .L26
+  63:Src/obstacle.c ****      && (dist(in_range[REAR_LEFT].x, in_range[REAR_LEFT].y,
+ 729              		.loc 1 63 0 is_stmt 0 discriminator 1
+ 730 017e 9DF88F30 		ldrb	r3, [sp, #143]	@ zero_extendqisi2
+ 731 0182 FBB9     		cbnz	r3, .L58
+ 732              	.L26:
+  69:Src/obstacle.c ****       updated[n++] = in_range[REAR_LEFT];
+ 733              		.loc 1 69 0 is_stmt 1
+ARM GAS  /tmp/ccwIJuYj.s 			page 21
+
+
+ 734 0184 64B1     		cbz	r4, .L30
+ 735              	.LVL102:
+  70:Src/obstacle.c ****     if(present[REAR_RIGHT])
+ 736              		.loc 1 70 0
+ 737 0186 0AEB8A03 		add	r3, r10, r10, lsl #2
+ 738 018a 9C00     		lsls	r4, r3, #2
+ 739 018c 38AB     		add	r3, sp, #224
+ 740 018e 1C44     		add	r4, r4, r3
+ 741 0190 B43C     		subs	r4, r4, #180
+ 742 0192 2EAD     		add	r5, sp, #184
+ 743 0194 0FCD     		ldmia	r5!, {r0, r1, r2, r3}
+ 744 0196 0FC4     		stmia	r4!, {r0, r1, r2, r3}
+ 745 0198 2B68     		ldr	r3, [r5]
+ 746 019a 2360     		str	r3, [r4]
+ 747 019c 0AF1010A 		add	r10, r10, #1
+ 748              	.LVL103:
+ 749              	.L30:
+  71:Src/obstacle.c ****       updated[n++] = in_range[REAR_RIGHT];
+ 750              		.loc 1 71 0
+ 751 01a0 9DF88F30 		ldrb	r3, [sp, #143]	@ zero_extendqisi2
+ 752 01a4 63B1     		cbz	r3, .L29
+ 753              	.LVL104:
+  72:Src/obstacle.c ****   }
+ 754              		.loc 1 72 0
+ 755 01a6 0AEB8A03 		add	r3, r10, r10, lsl #2
+ 756 01aa 9C00     		lsls	r4, r3, #2
+ 757 01ac 38AB     		add	r3, sp, #224
+ 758 01ae 1C44     		add	r4, r4, r3
+ 759 01b0 B43C     		subs	r4, r4, #180
+ 760 01b2 33AD     		add	r5, sp, #204
+ 761 01b4 0FCD     		ldmia	r5!, {r0, r1, r2, r3}
+ 762 01b6 0FC4     		stmia	r4!, {r0, r1, r2, r3}
+ 763 01b8 2B68     		ldr	r3, [r5]
+ 764 01ba 2360     		str	r3, [r4]
+ 765 01bc 0AF1010A 		add	r10, r10, #1
+ 766              	.LVL105:
+ 767              	.L29:
+  67:Src/obstacle.c ****   }else{
+ 768              		.loc 1 67 0 discriminator 1
+ 769 01c0 0024     		movs	r4, #0
+ 770 01c2 24E1     		b	.L42
+ 771              	.L58:
+  64:Src/obstacle.c **** 	      in_range[REAR_RIGHT].x, in_range[REAR_RIGHT].y)
+ 772              		.loc 1 64 0
+ 773 01c4 BDF9D400 		ldrsh	r0, [sp, #212]
+ 774 01c8 BDF9C030 		ldrsh	r3, [sp, #192]
+ 775 01cc 9FED228B 		vldr.64	d8, .L59
+ 776 01d0 C01A     		subs	r0, r0, r3
+ 777 01d2 FFF7FEFF 		bl	__aeabi_i2d
+ 778              	.LVL106:
+ 779 01d6 B0EE481A 		vmov.f32	s2, s16
+ 780 01da F0EE681A 		vmov.f32	s3, s17
+ 781 01de 41EC100B 		vmov	d0, r0, r1
+ 782 01e2 FFF7FEFF 		bl	pow
+ 783              	.LVL107:
+ 784 01e6 B0EE409A 		vmov.f32	s18, s0
+ 785 01ea F0EE609A 		vmov.f32	s19, s1
+ARM GAS  /tmp/ccwIJuYj.s 			page 22
+
+
+ 786 01ee BDF9D200 		ldrsh	r0, [sp, #210]
+ 787 01f2 BDF9BE30 		ldrsh	r3, [sp, #190]
+ 788 01f6 C01A     		subs	r0, r0, r3
+ 789 01f8 FFF7FEFF 		bl	__aeabi_i2d
+ 790              	.LVL108:
+ 791 01fc B0EE481A 		vmov.f32	s2, s16
+ 792 0200 F0EE681A 		vmov.f32	s3, s17
+ 793 0204 41EC100B 		vmov	d0, r0, r1
+ 794 0208 FFF7FEFF 		bl	pow
+ 795              	.LVL109:
+ 796 020c 53EC102B 		vmov	r2, r3, d0
+ 797 0210 51EC190B 		vmov	r0, r1, d9
+ 798 0214 FFF7FEFF 		bl	__aeabi_dadd
+ 799              	.LVL110:
+ 800 0218 41EC100B 		vmov	d0, r0, r1
+ 801 021c FFF7FEFF 		bl	sqrt
+ 802              	.LVL111:
+ 803 0220 0FA3     		adr	r3, .L59+8
+ 804 0222 D3E90023 		ldrd	r2, [r3]
+ 805 0226 51EC100B 		vmov	r0, r1, d0
+ 806 022a FFF7FEFF 		bl	__aeabi_dcmplt
+ 807              	.LVL112:
+ 808 022e 0028     		cmp	r0, #0
+ 809 0230 A8D0     		beq	.L26
+  67:Src/obstacle.c ****   }else{
+ 810              		.loc 1 67 0
+ 811 0232 0AF10104 		add	r4, r10, #1
+ 812              	.LVL113:
+ 813 0236 0AEB8A03 		add	r3, r10, r10, lsl #2
+ 814 023a 9800     		lsls	r0, r3, #2
+ 815 023c 0BAB     		add	r3, sp, #44
+ 816 023e 1844     		add	r0, r0, r3
+ 817 0240 089B     		ldr	r3, [sp, #32]
+ 818 0242 099A     		ldr	r2, [sp, #36]
+ 819 0244 9342     		cmp	r3, r2
+ 820 0246 00D2     		bcs	.L28
+ 821 0248 3D46     		mov	r5, r7
+ 822              	.L28:
+  67:Src/obstacle.c ****   }else{
+ 823              		.loc 1 67 0 is_stmt 0 discriminator 4
+ 824 024a 0023     		movs	r3, #0
+ 825 024c 2A46     		mov	r2, r5
+ 826 024e 4946     		mov	r1, r9
+ 827 0250 FFF7FEFF 		bl	Compute_Obstacle
+ 828              	.LVL114:
+ 829 0254 A246     		mov	r10, r4
+ 830 0256 B3E7     		b	.L29
+ 831              	.L60:
+ 832              		.align	3
+ 833              	.L59:
+ 834 0258 00000000 		.word	0
+ 835 025c 00000040 		.word	1073741824
+ 836 0260 00000000 		.word	0
+ 837 0264 00C07740 		.word	1081589760
+ 838 0268 00000000 		.word	sensor_raw
+ 839 026c 00000000 		.word	.LANCHOR0
+ 840              	.LVL115:
+ARM GAS  /tmp/ccwIJuYj.s 			page 23
+
+
+ 841              	.L33:
+ 842              	.LBB2:
+  96:Src/obstacle.c ****       break;
+ 843              		.loc 1 96 0 is_stmt 1
+ 844 0270 BA45     		cmp	r10, r7
+ 845 0272 40F0B181 		bne	.L35
+ 846              	.LBB3:
+ 102:Src/obstacle.c ****       int16_t y_ro = obs->y_c - ref->y;
+ 847              		.loc 1 102 0
+ 848 0276 A200     		lsls	r2, r4, #2
+ 849 0278 2244     		add	r2, r2, r4
+ 850 027a 9100     		lsls	r1, r2, #2
+ 851 027c C84B     		ldr	r3, .L61+16
+ 852 027e 0B44     		add	r3, r3, r1
+ 853 0280 5889     		ldrh	r0, [r3, #10]
+ 854 0282 B9F80020 		ldrh	r2, [r9]
+ 855 0286 801A     		subs	r0, r0, r2
+ 856 0288 00B2     		sxth	r0, r0
+ 857              	.LVL116:
+ 103:Src/obstacle.c ****       
+ 858              		.loc 1 103 0
+ 859 028a 9B89     		ldrh	r3, [r3, #12]
+ 860 028c B9F80220 		ldrh	r2, [r9, #2]
+ 861 0290 9B1A     		subs	r3, r3, r2
+ 862 0292 1DB2     		sxth	r5, r3
+ 863              	.LVL117:
+ 106:Src/obstacle.c ****       y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
+ 864              		.loc 1 106 0
+ 865 0294 07EE900A 		vmov	s15, r0	@ int
+ 866 0298 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 867 029c 17EE900A 		vmov	r0, s15
+ 868              	.LVL118:
+ 869 02a0 FFF7FEFF 		bl	__aeabi_f2d
+ 870              	.LVL119:
+ 871 02a4 CDE90001 		strd	r0, [sp]
+ 872 02a8 D9F80460 		ldr	r6, [r9, #4]	@ float
+ 873 02ac 86F00040 		eor	r0, r6, #-2147483648
+ 874 02b0 FFF7FEFF 		bl	__aeabi_f2d
+ 875              	.LVL120:
+ 876 02b4 41EC180B 		vmov	d8, r0, r1
+ 877 02b8 41EC100B 		vmov	d0, r0, r1
+ 878 02bc FFF7FEFF 		bl	cos
+ 879              	.LVL121:
+ 880 02c0 53EC102B 		vmov	r2, r3, d0
+ 881 02c4 8DED020B 		vstr.64	d0, [sp, #8]
+ 882 02c8 DDE90001 		ldrd	r0, [sp]
+ 883 02cc FFF7FEFF 		bl	__aeabi_dmul
+ 884              	.LVL122:
+ 885 02d0 CDE90401 		strd	r0, [sp, #16]
+ 886 02d4 07EE905A 		vmov	s15, r5	@ int
+ 887 02d8 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 888 02dc 17EE900A 		vmov	r0, s15
+ 889 02e0 FFF7FEFF 		bl	__aeabi_f2d
+ 890              	.LVL123:
+ 891 02e4 CDE90001 		strd	r0, [sp]
+ 892 02e8 3046     		mov	r0, r6	@ float
+ 893 02ea FFF7FEFF 		bl	__aeabi_f2d
+ARM GAS  /tmp/ccwIJuYj.s 			page 24
+
+
+ 894              	.LVL124:
+ 895 02ee 41EC100B 		vmov	d0, r0, r1
+ 896 02f2 FFF7FEFF 		bl	sin
+ 897              	.LVL125:
+ 898 02f6 53EC102B 		vmov	r2, r3, d0
+ 899 02fa DDE90001 		ldrd	r0, [sp]
+ 900 02fe FFF7FEFF 		bl	__aeabi_dmul
+ 901              	.LVL126:
+ 902 0302 0246     		mov	r2, r0
+ 903 0304 0B46     		mov	r3, r1
+ 904 0306 DDE90401 		ldrd	r0, [sp, #16]
+ 905 030a FFF7FEFF 		bl	__aeabi_dadd
+ 906              	.LVL127:
+ 907 030e FFF7FEFF 		bl	__aeabi_d2iz
+ 908              	.LVL128:
+ 909 0312 05B2     		sxth	r5, r0
+ 910              	.LVL129:
+ 107:Src/obstacle.c **** 
+ 911              		.loc 1 107 0
+ 912 0314 07EE905A 		vmov	s15, r5	@ int
+ 913 0318 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 914 031c 17EE900A 		vmov	r0, s15
+ 915 0320 FFF7FEFF 		bl	__aeabi_f2d
+ 916              	.LVL130:
+ 917 0324 0646     		mov	r6, r0
+ 918 0326 0F46     		mov	r7, r1
+ 919              	.LVL131:
+ 920 0328 B0EE480A 		vmov.f32	s0, s16
+ 921 032c F0EE680A 		vmov.f32	s1, s17
+ 922 0330 FFF7FEFF 		bl	sin
+ 923              	.LVL132:
+ 924 0334 53EC102B 		vmov	r2, r3, d0
+ 925 0338 3046     		mov	r0, r6
+ 926 033a 3946     		mov	r1, r7
+ 927 033c FFF7FEFF 		bl	__aeabi_dmul
+ 928              	.LVL133:
+ 929 0340 0646     		mov	r6, r0
+ 930 0342 0F46     		mov	r7, r1
+ 931 0344 DDE90023 		ldrd	r2, [sp]
+ 932 0348 DDE90201 		ldrd	r0, [sp, #8]
+ 933 034c FFF7FEFF 		bl	__aeabi_dmul
+ 934              	.LVL134:
+ 935 0350 0246     		mov	r2, r0
+ 936 0352 0B46     		mov	r3, r1
+ 937 0354 3046     		mov	r0, r6
+ 938 0356 3946     		mov	r1, r7
+ 939 0358 FFF7FEFF 		bl	__aeabi_dadd
+ 940              	.LVL135:
+ 941 035c FFF7FEFF 		bl	__aeabi_d2iz
+ 942              	.LVL136:
+ 943 0360 00B2     		sxth	r0, r0
+ 944              	.LVL137:
+ 109:Src/obstacle.c **** 	//Update range
+ 945              		.loc 1 109 0
+ 946 0362 5030     		adds	r0, r0, #80
+ 947              	.LVL138:
+ 948 0364 80B2     		uxth	r0, r0
+ARM GAS  /tmp/ccwIJuYj.s 			page 25
+
+
+ 949              	.LVL139:
+ 950 0366 A028     		cmp	r0, #160
+ 951 0368 2FD8     		bhi	.L36
+ 111:Src/obstacle.c **** 	
+ 952              		.loc 1 111 0
+ 953 036a 002D     		cmp	r5, #0
+ 954 036c D4BF     		ite	le
+ 955 036e 0121     		movle	r1, #1
+ 956 0370 0021     		movgt	r1, #0
+ 957 0372 04EB8403 		add	r3, r4, r4, lsl #2
+ 958 0376 4FEA8302 		lsl	r2, r3, #2
+ 959 037a 894B     		ldr	r3, .L61+16
+ 960 037c 1344     		add	r3, r3, r2
+ 961 037e 5974     		strb	r1, [r3, #17]
+ 113:Src/obstacle.c **** 	     && (!fl_d || (x_ro + OBS_RADIUS < fl_d))//No detection at left
+ 962              		.loc 1 113 0
+ 963 0380 0CDD     		ble	.L37
+ 114:Src/obstacle.c **** 	     && (!fr_d || (x_ro + OBS_RADIUS < fr_d))//No detection at right
+ 964              		.loc 1 114 0
+ 965 0382 B8F1000F 		cmp	r8, #0
+ 966 0386 03D0     		beq	.L38
+ 114:Src/obstacle.c **** 	     && (!fr_d || (x_ro + OBS_RADIUS < fr_d))//No detection at right
+ 967              		.loc 1 114 0 is_stmt 0 discriminator 1
+ 968 0388 05F1BE03 		add	r3, r5, #190
+ 969 038c 4345     		cmp	r3, r8
+ 970 038e 05DA     		bge	.L37
+ 971              	.L38:
+ 115:Src/obstacle.c **** 	    )
+ 972              		.loc 1 115 0 is_stmt 1
+ 973 0390 079A     		ldr	r2, [sp, #28]
+ 974 0392 8AB1     		cbz	r2, .L39
+ 115:Src/obstacle.c **** 	    )
+ 975              		.loc 1 115 0 is_stmt 0 discriminator 1
+ 976 0394 05F1BE03 		add	r3, r5, #190
+ 977 0398 9342     		cmp	r3, r2
+ 978 039a 0DDB     		blt	.L39
+ 979              	.L37:
+ 117:Src/obstacle.c **** 	   (x_ro < 0
+ 980              		.loc 1 117 0 is_stmt 1
+ 981 039c 002D     		cmp	r5, #0
+ 982 039e 1BDA     		bge	.L40
+ 119:Src/obstacle.c **** 	    && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
+ 983              		.loc 1 119 0
+ 984 03a0 089A     		ldr	r2, [sp, #32]
+ 985 03a2 1AB1     		cbz	r2, .L41
+ 119:Src/obstacle.c **** 	    && (!rr_d || (-x_ro + OBS_RADIUS < rr_d))
+ 986              		.loc 1 119 0 is_stmt 0 discriminator 1
+ 987 03a4 C5F1BE03 		rsb	r3, r5, #190
+ 988 03a8 9342     		cmp	r3, r2
+ 989 03aa 15DA     		bge	.L40
+ 990              	.L41:
+ 120:Src/obstacle.c **** 	    )){
+ 991              		.loc 1 120 0 is_stmt 1
+ 992 03ac 099B     		ldr	r3, [sp, #36]
+ 993 03ae 1BB1     		cbz	r3, .L39
+ 120:Src/obstacle.c **** 	    )){
+ 994              		.loc 1 120 0 is_stmt 0 discriminator 1
+ARM GAS  /tmp/ccwIJuYj.s 			page 26
+
+
+ 995 03b0 C5F1BE05 		rsb	r5, r5, #190
+ 996              	.LVL140:
+ 997 03b4 9D42     		cmp	r5, r3
+ 998 03b6 0FDA     		bge	.L40
+ 999              	.L39:
+ 123:Src/obstacle.c **** 	}
+ 1000              		.loc 1 123 0 is_stmt 1
+ 1001 03b8 A200     		lsls	r2, r4, #2
+ 1002 03ba 2244     		add	r2, r2, r4
+ 1003 03bc 9100     		lsls	r1, r2, #2
+ 1004 03be 784B     		ldr	r3, .L61+16
+ 1005 03c0 0B44     		add	r3, r3, r1
+ 1006 03c2 1A7C     		ldrb	r2, [r3, #16]	@ zero_extendqisi2
+ 1007 03c4 0132     		adds	r2, r2, #1
+ 1008 03c6 1A74     		strb	r2, [r3, #16]
+ 1009 03c8 06E0     		b	.L40
+ 1010              	.LVL141:
+ 1011              	.L36:
+ 127:Src/obstacle.c ****       }
+ 1012              		.loc 1 127 0
+ 1013 03ca 04EB8403 		add	r3, r4, r4, lsl #2
+ 1014 03ce 9A00     		lsls	r2, r3, #2
+ 1015 03d0 734B     		ldr	r3, .L61+16
+ 1016 03d2 1344     		add	r3, r3, r2
+ 1017 03d4 0222     		movs	r2, #2
+ 1018 03d6 5A74     		strb	r2, [r3, #17]
+ 1019              	.LVL142:
+ 1020              	.L40:
+ 1021              	.LBE3:
+ 131:Src/obstacle.c ****       break;
+ 1022              		.loc 1 131 0
+ 1023 03d8 04EB8403 		add	r3, r4, r4, lsl #2
+ 1024 03dc 9A00     		lsls	r2, r3, #2
+ 1025 03de 704B     		ldr	r3, .L61+16
+ 1026 03e0 1344     		add	r3, r3, r2
+ 1027 03e2 1B7C     		ldrb	r3, [r3, #16]	@ zero_extendqisi2
+ 1028 03e4 052B     		cmp	r3, #5
+ 1029 03e6 00F0F780 		beq	.L35
+ 1030              	.LVL143:
+ 140:Src/obstacle.c ****   }
+ 1031              		.loc 1 140 0
+ 1032 03ea 0AEB8A03 		add	r3, r10, r10, lsl #2
+ 1033 03ee 9D00     		lsls	r5, r3, #2
+ 1034 03f0 38AB     		add	r3, sp, #224
+ 1035 03f2 1D44     		add	r5, r5, r3
+ 1036 03f4 04EB8402 		add	r2, r4, r4, lsl #2
+ 1037 03f8 9300     		lsls	r3, r2, #2
+ 1038 03fa B43D     		subs	r5, r5, #180
+ 1039 03fc 684E     		ldr	r6, .L61+16
+ 1040 03fe 1E44     		add	r6, r6, r3
+ 1041 0400 0FCE     		ldmia	r6!, {r0, r1, r2, r3}
+ 1042 0402 0FC5     		stmia	r5!, {r0, r1, r2, r3}
+ 1043 0404 3368     		ldr	r3, [r6]
+ 1044 0406 2B60     		str	r3, [r5]
+ 1045 0408 0AF1010A 		add	r10, r10, #1
+ 1046              	.LVL144:
+ 1047              	.L31:
+ARM GAS  /tmp/ccwIJuYj.s 			page 27
+
+
+ 1048              	.LBE2:
+  77:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1049              		.loc 1 77 0 discriminator 2
+ 1050 040c 0134     		adds	r4, r4, #1
+ 1051              	.LVL145:
+ 1052              	.L42:
+  77:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1053              		.loc 1 77 0 is_stmt 0 discriminator 1
+ 1054 040e BAF1030F 		cmp	r10, #3
+ 1055 0412 00F3E180 		bgt	.L35
+  77:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1056              		.loc 1 77 0 discriminator 3
+ 1057 0416 634B     		ldr	r3, .L61+20
+ 1058 0418 1B68     		ldr	r3, [r3]
+ 1059 041a A342     		cmp	r3, r4
+ 1060 041c 40F3DC80 		ble	.L35
+ 1061              	.LVL146:
+ 1062              	.LBB4:
+  81:Src/obstacle.c ****       continue;
+ 1063              		.loc 1 81 0 is_stmt 1
+ 1064 0420 04EB8402 		add	r2, r4, r4, lsl #2
+ 1065 0424 9300     		lsls	r3, r2, #2
+ 1066 0426 5E4A     		ldr	r2, .L61+16
+ 1067 0428 D358     		ldr	r3, [r2, r3]
+ 1068 042a ABEB0303 		sub	r3, fp, r3
+ 1069 042e 41F28832 		movw	r2, #5000
+ 1070 0432 9342     		cmp	r3, r2
+ 1071 0434 EAD8     		bhi	.L31
+  86:Src/obstacle.c ****     obs->distance = dist(ref->x, ref->y, obs->x, obs->y);
+ 1072              		.loc 1 86 0
+ 1073 0436 A300     		lsls	r3, r4, #2
+ 1074 0438 2344     		add	r3, r3, r4
+ 1075 043a 9A00     		lsls	r2, r3, #2
+ 1076 043c 584D     		ldr	r5, .L61+16
+ 1077 043e 1544     		add	r5, r5, r2
+ 1078 0440 B5F90C00 		ldrsh	r0, [r5, #12]
+ 1079 0444 B9F80230 		ldrh	r3, [r9, #2]
+ 1080 0448 9FED518B 		vldr.64	d8, .L61
+ 1081 044c C01A     		subs	r0, r0, r3
+ 1082 044e FFF7FEFF 		bl	__aeabi_i2d
+ 1083              	.LVL147:
+ 1084 0452 B0EE481A 		vmov.f32	s2, s16
+ 1085 0456 F0EE681A 		vmov.f32	s3, s17
+ 1086 045a 41EC100B 		vmov	d0, r0, r1
+ 1087 045e FFF7FEFF 		bl	pow
+ 1088              	.LVL148:
+ 1089 0462 57EC106B 		vmov	r6, r7, d0
+ 1090 0466 B5F90A00 		ldrsh	r0, [r5, #10]
+ 1091 046a B9F80030 		ldrh	r3, [r9]
+ 1092 046e C01A     		subs	r0, r0, r3
+ 1093 0470 FFF7FEFF 		bl	__aeabi_i2d
+ 1094              	.LVL149:
+ 1095 0474 B0EE481A 		vmov.f32	s2, s16
+ 1096 0478 F0EE681A 		vmov.f32	s3, s17
+ 1097 047c 41EC100B 		vmov	d0, r0, r1
+ 1098 0480 FFF7FEFF 		bl	pow
+ 1099              	.LVL150:
+ARM GAS  /tmp/ccwIJuYj.s 			page 28
+
+
+ 1100 0484 53EC102B 		vmov	r2, r3, d0
+ 1101 0488 3046     		mov	r0, r6
+ 1102 048a 3946     		mov	r1, r7
+ 1103 048c FFF7FEFF 		bl	__aeabi_dadd
+ 1104              	.LVL151:
+ 1105 0490 41EC100B 		vmov	d0, r0, r1
+ 1106 0494 FFF7FEFF 		bl	sqrt
+ 1107              	.LVL152:
+ 1108 0498 51EC100B 		vmov	r0, r1, d0
+ 1109 049c FFF7FEFF 		bl	__aeabi_d2uiz
+ 1110              	.LVL153:
+ 1111 04a0 E881     		strh	r0, [r5, #14]	@ movhi
+  87:Src/obstacle.c ****     
+ 1112              		.loc 1 87 0
+ 1113 04a2 B5F90800 		ldrsh	r0, [r5, #8]
+ 1114 04a6 B9F80230 		ldrh	r3, [r9, #2]
+ 1115 04aa C01A     		subs	r0, r0, r3
+ 1116 04ac FFF7FEFF 		bl	__aeabi_i2d
+ 1117              	.LVL154:
+ 1118 04b0 B0EE481A 		vmov.f32	s2, s16
+ 1119 04b4 F0EE681A 		vmov.f32	s3, s17
+ 1120 04b8 41EC100B 		vmov	d0, r0, r1
+ 1121 04bc FFF7FEFF 		bl	pow
+ 1122              	.LVL155:
+ 1123 04c0 57EC106B 		vmov	r6, r7, d0
+ 1124 04c4 B5F90600 		ldrsh	r0, [r5, #6]
+ 1125 04c8 B9F80030 		ldrh	r3, [r9]
+ 1126 04cc C01A     		subs	r0, r0, r3
+ 1127 04ce FFF7FEFF 		bl	__aeabi_i2d
+ 1128              	.LVL156:
+ 1129 04d2 B0EE481A 		vmov.f32	s2, s16
+ 1130 04d6 F0EE681A 		vmov.f32	s3, s17
+ 1131 04da 41EC100B 		vmov	d0, r0, r1
+ 1132 04de FFF7FEFF 		bl	pow
+ 1133              	.LVL157:
+ 1134 04e2 53EC102B 		vmov	r2, r3, d0
+ 1135 04e6 3046     		mov	r0, r6
+ 1136 04e8 3946     		mov	r1, r7
+ 1137 04ea FFF7FEFF 		bl	__aeabi_dadd
+ 1138              	.LVL158:
+ 1139 04ee 41EC100B 		vmov	d0, r0, r1
+ 1140 04f2 FFF7FEFF 		bl	sqrt
+ 1141              	.LVL159:
+ 1142 04f6 51EC100B 		vmov	r0, r1, d0
+ 1143 04fa FFF7FEFF 		bl	__aeabi_d2uiz
+ 1144              	.LVL160:
+ 1145 04fe A880     		strh	r0, [r5, #4]	@ movhi
+ 1146              	.LVL161:
+  91:Src/obstacle.c ****       //If it overlaps with another obstacle
+ 1147              		.loc 1 91 0
+ 1148 0500 0027     		movs	r7, #0
+ 1149              	.LVL162:
+ 1150              	.L32:
+  91:Src/obstacle.c ****       //If it overlaps with another obstacle
+ 1151              		.loc 1 91 0 is_stmt 0 discriminator 1
+ 1152 0502 BA45     		cmp	r10, r7
+ 1153 0504 7FF7B4AE 		ble	.L33
+ARM GAS  /tmp/ccwIJuYj.s 			page 29
+
+
+  93:Src/obstacle.c **** 	break;
+ 1154              		.loc 1 93 0 is_stmt 1
+ 1155 0508 BB00     		lsls	r3, r7, #2
+ 1156 050a 3B44     		add	r3, r3, r7
+ 1157 050c 9D00     		lsls	r5, r3, #2
+ 1158 050e 38AB     		add	r3, sp, #224
+ 1159 0510 1D44     		add	r5, r5, r3
+ 1160 0512 35F9A80C 		ldrsh	r0, [r5, #-168]
+ 1161 0516 A300     		lsls	r3, r4, #2
+ 1162 0518 2344     		add	r3, r3, r4
+ 1163 051a 9A00     		lsls	r2, r3, #2
+ 1164 051c 204E     		ldr	r6, .L61+16
+ 1165 051e 1644     		add	r6, r6, r2
+ 1166 0520 B6F90C30 		ldrsh	r3, [r6, #12]
+ 1167 0524 9FED1A8B 		vldr.64	d8, .L61
+ 1168 0528 C01A     		subs	r0, r0, r3
+ 1169 052a FFF7FEFF 		bl	__aeabi_i2d
+ 1170              	.LVL163:
+ 1171 052e B0EE481A 		vmov.f32	s2, s16
+ 1172 0532 F0EE681A 		vmov.f32	s3, s17
+ 1173 0536 41EC100B 		vmov	d0, r0, r1
+ 1174 053a FFF7FEFF 		bl	pow
+ 1175              	.LVL164:
+ 1176 053e B0EE409A 		vmov.f32	s18, s0
+ 1177 0542 F0EE609A 		vmov.f32	s19, s1
+ 1178 0546 35F9AA0C 		ldrsh	r0, [r5, #-170]
+ 1179 054a B6F90A30 		ldrsh	r3, [r6, #10]
+ 1180 054e C01A     		subs	r0, r0, r3
+ 1181 0550 FFF7FEFF 		bl	__aeabi_i2d
+ 1182              	.LVL165:
+ 1183 0554 B0EE481A 		vmov.f32	s2, s16
+ 1184 0558 F0EE681A 		vmov.f32	s3, s17
+ 1185 055c 41EC100B 		vmov	d0, r0, r1
+ 1186 0560 FFF7FEFF 		bl	pow
+ 1187              	.LVL166:
+ 1188 0564 53EC102B 		vmov	r2, r3, d0
+ 1189 0568 51EC190B 		vmov	r0, r1, d9
+ 1190 056c FFF7FEFF 		bl	__aeabi_dadd
+ 1191              	.LVL167:
+ 1192 0570 41EC100B 		vmov	d0, r0, r1
+ 1193 0574 FFF7FEFF 		bl	sqrt
+ 1194              	.LVL168:
+ 1195 0578 07A3     		adr	r3, .L61+8
+ 1196 057a D3E90023 		ldrd	r2, [r3]
+ 1197 057e 51EC100B 		vmov	r0, r1, d0
+ 1198 0582 FFF7FEFF 		bl	__aeabi_dcmplt
+ 1199              	.LVL169:
+ 1200 0586 0028     		cmp	r0, #0
+ 1201 0588 7FF472AE 		bne	.L33
+  91:Src/obstacle.c ****       //If it overlaps with another obstacle
+ 1202              		.loc 1 91 0 discriminator 2
+ 1203 058c 0137     		adds	r7, r7, #1
+ 1204              	.LVL170:
+ 1205 058e B8E7     		b	.L32
+ 1206              	.L62:
+ 1207              		.align	3
+ 1208              	.L61:
+ARM GAS  /tmp/ccwIJuYj.s 			page 30
+
+
+ 1209 0590 00000000 		.word	0
+ 1210 0594 00000040 		.word	1073741824
+ 1211 0598 00000000 		.word	0
+ 1212 059c 00C07740 		.word	1081589760
+ 1213 05a0 00000000 		.word	obstacle
+ 1214 05a4 00000000 		.word	.LANCHOR1
+ 1215              	.LVL171:
+ 1216              	.L45:
+ 1217              	.LBE4:
+ 145:Src/obstacle.c ****   }
+ 1218              		.loc 1 145 0 discriminator 3
+ 1219 05a8 B300     		lsls	r3, r6, #2
+ 1220 05aa 9919     		adds	r1, r3, r6
+ 1221 05ac 8A00     		lsls	r2, r1, #2
+ 1222 05ae 1446     		mov	r4, r2
+ 1223 05b0 38AB     		add	r3, sp, #224
+ 1224 05b2 1C44     		add	r4, r4, r3
+ 1225 05b4 094D     		ldr	r5, .L63
+ 1226 05b6 1544     		add	r5, r5, r2
+ 1227 05b8 B43C     		subs	r4, r4, #180
+ 1228 05ba 0FCC     		ldmia	r4!, {r0, r1, r2, r3}
+ 1229 05bc 0FC5     		stmia	r5!, {r0, r1, r2, r3}
+ 1230 05be 2368     		ldr	r3, [r4]
+ 1231 05c0 2B60     		str	r3, [r5]
+ 144:Src/obstacle.c ****     obstacle[i] = updated[i];
+ 1232              		.loc 1 144 0 discriminator 3
+ 1233 05c2 0136     		adds	r6, r6, #1
+ 1234              	.LVL172:
+ 1235              	.L44:
+ 144:Src/obstacle.c ****     obstacle[i] = updated[i];
+ 1236              		.loc 1 144 0 is_stmt 0 discriminator 1
+ 1237 05c4 5645     		cmp	r6, r10
+ 1238 05c6 EFDB     		blt	.L45
+ 147:Src/obstacle.c **** }
+ 1239              		.loc 1 147 0 is_stmt 1
+ 1240 05c8 054B     		ldr	r3, .L63+4
+ 1241 05ca C3F800A0 		str	r10, [r3]
+ 148:Src/obstacle.c **** 
+ 1242              		.loc 1 148 0
+ 1243 05ce 39B0     		add	sp, sp, #228
+ 1244              	.LCFI12:
+ 1245              		.cfi_remember_state
+ 1246              		.cfi_def_cfa_offset 52
+ 1247              		@ sp needed
+ 1248 05d0 BDEC048B 		vldm	sp!, {d8-d9}
+ 1249              	.LCFI13:
+ 1250              		.cfi_restore 82
+ 1251              		.cfi_restore 83
+ 1252              		.cfi_restore 80
+ 1253              		.cfi_restore 81
+ 1254              		.cfi_def_cfa_offset 36
+ 1255 05d4 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1256              	.LVL173:
+ 1257              	.L35:
+ 1258              	.LCFI14:
+ 1259              		.cfi_restore_state
+  67:Src/obstacle.c ****   }else{
+ARM GAS  /tmp/ccwIJuYj.s 			page 31
+
+
+ 1260              		.loc 1 67 0 discriminator 1
+ 1261 05d8 0026     		movs	r6, #0
+ 1262 05da F3E7     		b	.L44
+ 1263              	.L64:
+ 1264              		.align	2
+ 1265              	.L63:
+ 1266 05dc 00000000 		.word	obstacle
+ 1267 05e0 00000000 		.word	.LANCHOR1
+ 1268              		.cfi_endproc
+ 1269              	.LFE679:
+ 1271              		.section	.text.Print_Obstacles,"ax",%progbits
+ 1272              		.align	1
+ 1273              		.global	Print_Obstacles
+ 1274              		.syntax unified
+ 1275              		.thumb
+ 1276              		.thumb_func
+ 1277              		.fpu fpv4-sp-d16
+ 1279              	Print_Obstacles:
+ 1280              	.LFB681:
+ 187:Src/obstacle.c ****   int i = 0;
+ 1281              		.loc 1 187 0
+ 1282              		.cfi_startproc
+ 1283              		@ args = 0, pretend = 0, frame = 0
+ 1284              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1285 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 1286              	.LCFI15:
+ 1287              		.cfi_def_cfa_offset 20
+ 1288              		.cfi_offset 4, -20
+ 1289              		.cfi_offset 5, -16
+ 1290              		.cfi_offset 6, -12
+ 1291              		.cfi_offset 7, -8
+ 1292              		.cfi_offset 14, -4
+ 1293 0002 85B0     		sub	sp, sp, #20
+ 1294              	.LCFI16:
+ 1295              		.cfi_def_cfa_offset 40
+ 1296              	.LVL174:
+ 188:Src/obstacle.c ****   for(; i < nb_obstacles; i++){
+ 1297              		.loc 1 188 0
+ 1298 0004 0024     		movs	r4, #0
+ 189:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1299              		.loc 1 189 0
+ 1300 0006 1AE0     		b	.L66
+ 1301              	.LVL175:
+ 1302              	.L67:
+ 1303              	.LBB5:
+ 191:Src/obstacle.c **** 	  i,
+ 1304              		.loc 1 191 0 discriminator 2
+ 1305 0008 FFF7FEFF 		bl	HAL_GetTick
+ 1306              	.LVL176:
+ 1307 000c 0F4D     		ldr	r5, .L69
+ 1308 000e A300     		lsls	r3, r4, #2
+ 1309 0010 2344     		add	r3, r3, r4
+ 1310 0012 9A00     		lsls	r2, r3, #2
+ 1311 0014 A918     		adds	r1, r5, r2
+ 1312 0016 AA58     		ldr	r2, [r5, r2]
+ 1313 0018 8B88     		ldrh	r3, [r1, #4]
+ 1314 001a B1F90650 		ldrsh	r5, [r1, #6]
+ARM GAS  /tmp/ccwIJuYj.s 			page 32
+
+
+ 1315 001e B1F90860 		ldrsh	r6, [r1, #8]
+ 1316 0022 B1F90A70 		ldrsh	r7, [r1, #10]
+ 1317 0026 B1F90C10 		ldrsh	r1, [r1, #12]
+ 1318 002a 0391     		str	r1, [sp, #12]
+ 1319 002c 0297     		str	r7, [sp, #8]
+ 1320 002e 0196     		str	r6, [sp, #4]
+ 1321 0030 0095     		str	r5, [sp]
+ 1322 0032 821A     		subs	r2, r0, r2
+ 1323 0034 2146     		mov	r1, r4
+ 1324 0036 0648     		ldr	r0, .L69+4
+ 1325 0038 FFF7FEFF 		bl	PI_Log
+ 1326              	.LVL177:
+ 1327              	.LBE5:
+ 189:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1328              		.loc 1 189 0 discriminator 2
+ 1329 003c 0134     		adds	r4, r4, #1
+ 1330              	.LVL178:
+ 1331              	.L66:
+ 189:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1332              		.loc 1 189 0 is_stmt 0 discriminator 1
+ 1333 003e 054B     		ldr	r3, .L69+8
+ 1334 0040 1B68     		ldr	r3, [r3]
+ 1335 0042 A342     		cmp	r3, r4
+ 1336 0044 E0DC     		bgt	.L67
+ 200:Src/obstacle.c **** 
+ 1337              		.loc 1 200 0 is_stmt 1
+ 1338 0046 05B0     		add	sp, sp, #20
+ 1339              	.LCFI17:
+ 1340              		.cfi_def_cfa_offset 20
+ 1341              		@ sp needed
+ 1342 0048 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 1343              	.LVL179:
+ 1344              	.L70:
+ 1345 004a 00BF     		.align	2
+ 1346              	.L69:
+ 1347 004c 00000000 		.word	obstacle
+ 1348 0050 00000000 		.word	.LC1
+ 1349 0054 00000000 		.word	.LANCHOR1
+ 1350              		.cfi_endproc
+ 1351              	.LFE681:
+ 1353              		.global	__aeabi_dcmple
+ 1354              		.global	__aeabi_ddiv
+ 1355              		.section	.text.Materialize_Obstacle,"ax",%progbits
+ 1356              		.align	1
+ 1357              		.global	Materialize_Obstacle
+ 1358              		.syntax unified
+ 1359              		.thumb
+ 1360              		.thumb_func
+ 1361              		.fpu fpv4-sp-d16
+ 1363              	Materialize_Obstacle:
+ 1364              	.LFB682:
+ 203:Src/obstacle.c ****   //Check if the obstacle will not overlay our robot
+ 1365              		.loc 1 203 0
+ 1366              		.cfi_startproc
+ 1367              		@ args = 0, pretend = 0, frame = 8
+ 1368              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1369              	.LVL180:
+ARM GAS  /tmp/ccwIJuYj.s 			page 33
+
+
+ 1370 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 1371              	.LCFI18:
+ 1372              		.cfi_def_cfa_offset 36
+ 1373              		.cfi_offset 4, -36
+ 1374              		.cfi_offset 5, -32
+ 1375              		.cfi_offset 6, -28
+ 1376              		.cfi_offset 7, -24
+ 1377              		.cfi_offset 8, -20
+ 1378              		.cfi_offset 9, -16
+ 1379              		.cfi_offset 10, -12
+ 1380              		.cfi_offset 11, -8
+ 1381              		.cfi_offset 14, -4
+ 1382 0004 2DED028B 		vpush.64	{d8}
+ 1383              	.LCFI19:
+ 1384              		.cfi_def_cfa_offset 44
+ 1385              		.cfi_offset 80, -44
+ 1386              		.cfi_offset 81, -40
+ 1387 0008 83B0     		sub	sp, sp, #12
+ 1388              	.LCFI20:
+ 1389              		.cfi_def_cfa_offset 56
+ 1390 000a 0646     		mov	r6, r0
+ 1391 000c 0C46     		mov	r4, r1
+ 1392              	.LVL181:
+ 207:Src/obstacle.c ****     return -1;
+ 1393              		.loc 1 207 0
+ 1394 000e B0F90C00 		ldrsh	r0, [r0, #12]
+ 1395              	.LVL182:
+ 1396 0012 C94D     		ldr	r5, .L93+24
+ 1397 0014 6B88     		ldrh	r3, [r5, #2]
+ 1398 0016 9FEDC28B 		vldr.64	d8, .L93
+ 1399 001a C01A     		subs	r0, r0, r3
+ 1400 001c FFF7FEFF 		bl	__aeabi_i2d
+ 1401              	.LVL183:
+ 1402 0020 B0EE481A 		vmov.f32	s2, s16
+ 1403 0024 F0EE681A 		vmov.f32	s3, s17
+ 1404 0028 41EC100B 		vmov	d0, r0, r1
+ 1405 002c FFF7FEFF 		bl	pow
+ 1406              	.LVL184:
+ 1407 0030 59EC108B 		vmov	r8, r9, d0
+ 1408 0034 B6F90A00 		ldrsh	r0, [r6, #10]
+ 1409 0038 2B88     		ldrh	r3, [r5]
+ 1410 003a C01A     		subs	r0, r0, r3
+ 1411 003c FFF7FEFF 		bl	__aeabi_i2d
+ 1412              	.LVL185:
+ 1413 0040 B0EE481A 		vmov.f32	s2, s16
+ 1414 0044 F0EE681A 		vmov.f32	s3, s17
+ 1415 0048 41EC100B 		vmov	d0, r0, r1
+ 1416 004c FFF7FEFF 		bl	pow
+ 1417              	.LVL186:
+ 1418 0050 53EC102B 		vmov	r2, r3, d0
+ 1419 0054 4046     		mov	r0, r8
+ 1420 0056 4946     		mov	r1, r9
+ 1421 0058 FFF7FEFF 		bl	__aeabi_dadd
+ 1422              	.LVL187:
+ 1423 005c 41EC100B 		vmov	d0, r0, r1
+ 1424 0060 FFF7FEFF 		bl	sqrt
+ 1425              	.LVL188:
+ARM GAS  /tmp/ccwIJuYj.s 			page 34
+
+
+ 1426 0064 B0A3     		adr	r3, .L93+8
+ 1427 0066 D3E90023 		ldrd	r2, [r3]
+ 1428 006a 51EC100B 		vmov	r0, r1, d0
+ 1429 006e FFF7FEFF 		bl	__aeabi_dcmple
+ 1430              	.LVL189:
+ 1431 0072 0028     		cmp	r0, #0
+ 1432 0074 40F04281 		bne	.L85
+ 211:Src/obstacle.c ****   uint16_t dx = obs->x_c%SQUARE_SIZE, dy = obs->y_c%SQUARE_SIZE;
+ 1433              		.loc 1 211 0
+ 1434 0078 B6F90A50 		ldrsh	r5, [r6, #10]
+ 1435 007c AF4B     		ldr	r3, .L93+28
+ 1436 007e 83FB0521 		smull	r2, r1, r3, r5
+ 1437 0082 EA17     		asrs	r2, r5, #31
+ 1438 0084 C2EB2112 		rsb	r2, r2, r1, asr #4
+ 1439 0088 1FFA82FA 		uxth	r10, r2
+ 1440              	.LVL190:
+ 1441 008c B6F90C10 		ldrsh	r1, [r6, #12]
+ 1442 0090 83FB0106 		smull	r0, r6, r3, r1
+ 1443              	.LVL191:
+ 1444 0094 C817     		asrs	r0, r1, #31
+ 1445 0096 C0EB2610 		rsb	r0, r0, r6, asr #4
+ 1446 009a 1FFA80FB 		uxth	fp, r0
+ 1447              	.LVL192:
+ 212:Src/obstacle.c **** 
+ 1448              		.loc 1 212 0
+ 1449 009e 02EB8202 		add	r2, r2, r2, lsl #2
+ 1450 00a2 D600     		lsls	r6, r2, #3
+ 1451 00a4 AD1B     		subs	r5, r5, r6
+ 1452 00a6 ADB2     		uxth	r5, r5
+ 1453              	.LVL193:
+ 1454 00a8 00EB8000 		add	r0, r0, r0, lsl #2
+ 1455 00ac C200     		lsls	r2, r0, #3
+ 1456 00ae 891A     		subs	r1, r1, r2
+ 1457 00b0 8AB2     		uxth	r2, r1
+ 1458              	.LVL194:
+ 215:Src/obstacle.c ****   int N = 1 + (r - max(dx, max(dy, max(SQUARE_SIZE-dx, SQUARE_SIZE-dy)))) / SQUARE_SIZE;
+ 1459              		.loc 1 215 0
+ 1460 00b2 04F59674 		add	r4, r4, #300
+ 1461              	.LVL195:
+ 216:Src/obstacle.c ****   //Print("N : %d\n", N);
+ 1462              		.loc 1 216 0
+ 1463 00b6 C5F12801 		rsb	r1, r5, #40
+ 1464 00ba C2F12800 		rsb	r0, r2, #40
+ 1465 00be 8142     		cmp	r1, r0
+ 1466 00c0 B8BF     		it	lt
+ 1467 00c2 0146     		movlt	r1, r0
+ 1468 00c4 8A42     		cmp	r2, r1
+ 1469 00c6 B8BF     		it	lt
+ 1470 00c8 0A46     		movlt	r2, r1
+ 1471              	.LVL196:
+ 1472 00ca 9542     		cmp	r5, r2
+ 1473 00cc ACBF     		ite	ge
+ 1474 00ce 621B     		subge	r2, r4, r5
+ 1475 00d0 A21A     		sublt	r2, r4, r2
+ 1476 00d2 83FB0231 		smull	r3, r1, r3, r2
+ 1477              	.LVL197:
+ 1478 00d6 D317     		asrs	r3, r2, #31
+ARM GAS  /tmp/ccwIJuYj.s 			page 35
+
+
+ 1479 00d8 C3EB2113 		rsb	r3, r3, r1, asr #4
+ 1480 00dc 591C     		adds	r1, r3, #1
+ 1481 00de 0191     		str	r1, [sp, #4]
+ 1482              	.LVL198:
+ 220:Src/obstacle.c ****     return -1;
+ 1483              		.loc 1 220 0
+ 1484 00e0 5446     		mov	r4, r10
+ 1485              	.LVL199:
+ 1486 00e2 5345     		cmp	r3, r10
+ 1487 00e4 00F30D81 		bgt	.L86
+ 220:Src/obstacle.c ****     return -1;
+ 1488              		.loc 1 220 0 is_stmt 0 discriminator 1
+ 1489 00e8 C1F14B02 		rsb	r2, r1, #75
+ 1490 00ec 9245     		cmp	r10, r2
+ 1491 00ee 00F30B81 		bgt	.L87
+ 220:Src/obstacle.c ****     return -1;
+ 1492              		.loc 1 220 0 discriminator 2
+ 1493 00f2 5D46     		mov	r5, fp
+ 1494              	.LVL200:
+ 1495 00f4 5B45     		cmp	r3, fp
+ 1496 00f6 00F30A81 		bgt	.L88
+ 220:Src/obstacle.c ****     return -1;
+ 1497              		.loc 1 220 0 discriminator 3
+ 1498 00fa C1F13203 		rsb	r3, r1, #50
+ 1499 00fe 9B45     		cmp	fp, r3
+ 1500 0100 00F30881 		bgt	.L89
+ 1501              	.LVL201:
+ 226:Src/obstacle.c ****   int DX = 0;
+ 1502              		.loc 1 226 0 is_stmt 1
+ 1503 0104 01EB8103 		add	r3, r1, r1, lsl #2
+ 1504 0108 D800     		lsls	r0, r3, #3
+ 1505 010a FFF7FEFF 		bl	__aeabi_i2d
+ 1506              	.LVL202:
+ 1507 010e 0022     		movs	r2, #0
+ 1508 0110 8B4B     		ldr	r3, .L93+32
+ 1509 0112 FFF7FEFF 		bl	__aeabi_dsub
+ 1510              	.LVL203:
+ 1511 0116 FFF7FEFF 		bl	__aeabi_d2f
+ 1512              	.LVL204:
+ 1513 011a 08EE100A 		vmov	s16, r0
+ 1514              	.LVL205:
+ 230:Src/obstacle.c ****   float N_OR = sqrt(X_OR*X_OR + Y_OR*Y_OR);
+ 1515              		.loc 1 230 0
+ 1516 011e 864B     		ldr	r3, .L93+24
+ 1517 0120 1A88     		ldrh	r2, [r3]
+ 1518 0122 8849     		ldr	r1, .L93+36
+ 1519 0124 A1FB0202 		umull	r0, r2, r1, r2
+ 1520              	.LVL206:
+ 1521 0128 CAEB521A 		rsb	r10, r10, r2, lsr #5
+ 1522              	.LVL207:
+ 1523 012c 5B88     		ldrh	r3, [r3, #2]
+ 1524 012e A1FB0323 		umull	r2, r3, r1, r3
+ 1525 0132 CBEB531B 		rsb	fp, fp, r3, lsr #5
+ 1526              	.LVL208:
+ 231:Src/obstacle.c ****   X_OR *= (1. - 1.415 / N_OR);
+ 1527              		.loc 1 231 0
+ 1528 0136 0BFB0BF0 		mul	r0, fp, fp
+ARM GAS  /tmp/ccwIJuYj.s 			page 36
+
+
+ 1529 013a 0AFB0A00 		mla	r0, r10, r10, r0
+ 1530 013e FFF7FEFF 		bl	__aeabi_i2d
+ 1531              	.LVL209:
+ 1532 0142 41EC100B 		vmov	d0, r0, r1
+ 1533 0146 FFF7FEFF 		bl	sqrt
+ 1534              	.LVL210:
+ 1535 014a 51EC100B 		vmov	r0, r1, d0
+ 1536 014e FFF7FEFF 		bl	__aeabi_d2f
+ 1537              	.LVL211:
+ 232:Src/obstacle.c ****   Y_OR *= (1. - 1.415 / N_OR);
+ 1538              		.loc 1 232 0
+ 1539 0152 FFF7FEFF 		bl	__aeabi_f2d
+ 1540              	.LVL212:
+ 1541 0156 0646     		mov	r6, r0
+ 1542 0158 0F46     		mov	r7, r1
+ 1543 015a 0246     		mov	r2, r0
+ 1544 015c 0B46     		mov	r3, r1
+ 1545 015e 74A1     		adr	r1, .L93+16
+ 1546 0160 D1E90001 		ldrd	r0, [r1]
+ 1547 0164 FFF7FEFF 		bl	__aeabi_ddiv
+ 1548              	.LVL213:
+ 1549 0168 0246     		mov	r2, r0
+ 1550 016a 0B46     		mov	r3, r1
+ 1551 016c 0020     		movs	r0, #0
+ 1552 016e 7649     		ldr	r1, .L93+40
+ 1553 0170 FFF7FEFF 		bl	__aeabi_dsub
+ 1554              	.LVL214:
+ 1555 0174 8046     		mov	r8, r0
+ 1556 0176 8946     		mov	r9, r1
+ 1557 0178 5046     		mov	r0, r10
+ 1558 017a FFF7FEFF 		bl	__aeabi_i2d
+ 1559              	.LVL215:
+ 1560 017e 4246     		mov	r2, r8
+ 1561 0180 4B46     		mov	r3, r9
+ 1562 0182 FFF7FEFF 		bl	__aeabi_dmul
+ 1563              	.LVL216:
+ 1564 0186 FFF7FEFF 		bl	__aeabi_d2iz
+ 1565              	.LVL217:
+ 1566 018a 8246     		mov	r10, r0
+ 1567              	.LVL218:
+ 233:Src/obstacle.c ****   N_OR -= 1.415;
+ 1568              		.loc 1 233 0
+ 1569 018c 5846     		mov	r0, fp
+ 1570              	.LVL219:
+ 1571 018e FFF7FEFF 		bl	__aeabi_i2d
+ 1572              	.LVL220:
+ 1573 0192 4246     		mov	r2, r8
+ 1574 0194 4B46     		mov	r3, r9
+ 1575 0196 FFF7FEFF 		bl	__aeabi_dmul
+ 1576              	.LVL221:
+ 1577 019a FFF7FEFF 		bl	__aeabi_d2iz
+ 1578              	.LVL222:
+ 1579 019e 8046     		mov	r8, r0
+ 1580              	.LVL223:
+ 234:Src/obstacle.c **** 
+ 1581              		.loc 1 234 0
+ 1582 01a0 63A3     		adr	r3, .L93+16
+ARM GAS  /tmp/ccwIJuYj.s 			page 37
+
+
+ 1583 01a2 D3E90023 		ldrd	r2, [r3]
+ 1584 01a6 3046     		mov	r0, r6
+ 1585              	.LVL224:
+ 1586 01a8 3946     		mov	r1, r7
+ 1587 01aa FFF7FEFF 		bl	__aeabi_dsub
+ 1588              	.LVL225:
+ 1589 01ae FFF7FEFF 		bl	__aeabi_d2f
+ 1590              	.LVL226:
+ 236:Src/obstacle.c ****   for(X = 0; X < N; X++, DX += SQUARE_SIZE){
+ 1591              		.loc 1 236 0
+ 1592 01b2 07EE900A 		vmov	s15, r0
+ 1593 01b6 67EEA77A 		vmul.f32	s15, s15, s15
+ 1594 01ba B7EE007A 		vmov.f32	s14, #1.0e+0
+ 1595 01be 77EEC77A 		vsub.f32	s15, s15, s14
+ 1596 01c2 FDEEE77A 		vcvt.s32.f32	s15, s15
+ 1597 01c6 17EE907A 		vmov	r7, s15	@ int
+ 1598              	.LVL227:
+ 227:Src/obstacle.c **** 
+ 1599              		.loc 1 227 0
+ 1600 01ca 4FF00009 		mov	r9, #0
+ 237:Src/obstacle.c ****     float DY = sqrt(R*R - DX*DX);
+ 1601              		.loc 1 237 0
+ 1602 01ce 4E46     		mov	r6, r9
+ 1603 01d0 62E0     		b	.L73
+ 1604              	.LVL228:
+ 1605              	.L81:
+ 1606              	.LBB6:
+ 1607              	.LBB7:
+ 256:Src/obstacle.c ****     }
+ 1608              		.loc 1 256 0
+ 1609 01d2 A5EB0C03 		sub	r3, r5, ip
+ 1610 01d6 A11B     		subs	r1, r4, r6
+ 1611 01d8 03EB8303 		add	r3, r3, r3, lsl #2
+ 1612 01dc C3EB0312 		rsb	r2, r3, r3, lsl #4
+ 1613              	.LVL229:
+ 1614 01e0 0B46     		mov	r3, r1
+ 1615 01e2 1344     		add	r3, r3, r2
+ 1616 01e4 594A     		ldr	r2, .L93+44
+ 1617 01e6 02EB0313 		add	r3, r2, r3, lsl #4
+ 1618 01ea 0122     		movs	r2, #1
+ 1619 01ec 1A71     		strb	r2, [r3, #4]
+ 1620              	.L82:
+ 1621              	.LBE7:
+ 241:Src/obstacle.c ****       int p_scal = X_OR*X + Y_OR*Y;
+ 1622              		.loc 1 241 0 discriminator 2
+ 1623 01ee 0CF1010C 		add	ip, ip, #1
+ 1624              	.LVL230:
+ 1625              	.L74:
+ 241:Src/obstacle.c ****       int p_scal = X_OR*X + Y_OR*Y;
+ 1626              		.loc 1 241 0 is_stmt 0 discriminator 1
+ 1627 01f2 8445     		cmp	ip, r0
+ 1628 01f4 4DDA     		bge	.L91
+ 1629              	.LBB8:
+ 242:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 1630              		.loc 1 242 0 is_stmt 1
+ 1631 01f6 0AFB06FE 		mul	lr, r10, r6
+ 1632 01fa 08FB0CF1 		mul	r1, r8, ip
+ARM GAS  /tmp/ccwIJuYj.s 			page 38
+
+
+ 1633 01fe 0EEB0103 		add	r3, lr, r1
+ 1634              	.LVL231:
+ 243:Src/obstacle.c **** 	map[Y0 + Y][X0 + X].obstacle = 1;
+ 1635              		.loc 1 243 0
+ 1636 0202 002B     		cmp	r3, #0
+ 1637 0204 01DD     		ble	.L75
+ 243:Src/obstacle.c **** 	map[Y0 + Y][X0 + X].obstacle = 1;
+ 1638              		.loc 1 243 0 is_stmt 0 discriminator 1
+ 1639 0206 9F42     		cmp	r7, r3
+ 1640 0208 0CDD     		ble	.L76
+ 1641              	.L75:
+ 244:Src/obstacle.c **** 
+ 1642              		.loc 1 244 0 is_stmt 1
+ 1643 020a 05EB0C03 		add	r3, r5, ip
+ 1644              	.LVL232:
+ 1645 020e A219     		adds	r2, r4, r6
+ 1646 0210 03EB8303 		add	r3, r3, r3, lsl #2
+ 1647 0214 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 1648 0218 1344     		add	r3, r3, r2
+ 1649 021a 4C4A     		ldr	r2, .L93+44
+ 1650 021c 02EB0313 		add	r3, r2, r3, lsl #4
+ 1651 0220 0122     		movs	r2, #1
+ 1652 0222 1A71     		strb	r2, [r3, #4]
+ 1653              	.L76:
+ 246:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 1654              		.loc 1 246 0
+ 1655 0224 CAF10002 		rsb	r2, r10, #0
+ 1656 0228 06FB02F2 		mul	r2, r6, r2
+ 1657 022c 8B18     		adds	r3, r1, r2
+ 1658              	.LVL233:
+ 247:Src/obstacle.c **** 	map[Y0 + Y][X0 - X].obstacle = 1;
+ 1659              		.loc 1 247 0
+ 1660 022e 002B     		cmp	r3, #0
+ 1661 0230 01DD     		ble	.L77
+ 247:Src/obstacle.c **** 	map[Y0 + Y][X0 - X].obstacle = 1;
+ 1662              		.loc 1 247 0 is_stmt 0 discriminator 1
+ 1663 0232 9F42     		cmp	r7, r3
+ 1664 0234 0FDD     		ble	.L78
+ 1665              	.L77:
+ 248:Src/obstacle.c **** 
+ 1666              		.loc 1 248 0 is_stmt 1
+ 1667 0236 05EB0C03 		add	r3, r5, ip
+ 1668              	.LVL234:
+ 1669 023a A4EB060B 		sub	fp, r4, r6
+ 1670 023e 03EB8303 		add	r3, r3, r3, lsl #2
+ 1671 0242 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 1672 0246 9B44     		add	fp, fp, r3
+ 1673 0248 404B     		ldr	r3, .L93+44
+ 1674 024a 03EB0B13 		add	r3, r3, fp, lsl #4
+ 1675 024e 4FF0010B 		mov	fp, #1
+ 1676 0252 83F804B0 		strb	fp, [r3, #4]
+ 1677              	.L78:
+ 250:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 1678              		.loc 1 250 0
+ 1679 0256 AEEB010E 		sub	lr, lr, r1
+ 1680              	.LVL235:
+ 251:Src/obstacle.c **** 	map[Y0 - Y][X0 + X].obstacle = 1;
+ARM GAS  /tmp/ccwIJuYj.s 			page 39
+
+
+ 1681              		.loc 1 251 0
+ 1682 025a BEF1000F 		cmp	lr, #0
+ 1683 025e 01DD     		ble	.L79
+ 251:Src/obstacle.c **** 	map[Y0 - Y][X0 + X].obstacle = 1;
+ 1684              		.loc 1 251 0 is_stmt 0 discriminator 1
+ 1685 0260 7745     		cmp	r7, lr
+ 1686 0262 10DD     		ble	.L80
+ 1687              	.L79:
+ 252:Src/obstacle.c ****  
+ 1688              		.loc 1 252 0 is_stmt 1
+ 1689 0264 A5EB0C03 		sub	r3, r5, ip
+ 1690 0268 04EB060E 		add	lr, r4, r6
+ 1691              	.LVL236:
+ 1692 026c 03EB8303 		add	r3, r3, r3, lsl #2
+ 1693 0270 C3EB0313 		rsb	r3, r3, r3, lsl #4
+ 1694 0274 7344     		add	r3, r3, lr
+ 1695 0276 DFF8D4E0 		ldr	lr, .L93+44
+ 1696 027a 0EEB0313 		add	r3, lr, r3, lsl #4
+ 1697 027e 4FF0010E 		mov	lr, #1
+ 1698 0282 83F804E0 		strb	lr, [r3, #4]
+ 1699              	.L80:
+ 254:Src/obstacle.c ****       if(p_scal <= 0 || p_scal < treshold)
+ 1700              		.loc 1 254 0
+ 1701 0286 521A     		subs	r2, r2, r1
+ 1702              	.LVL237:
+ 255:Src/obstacle.c **** 	map[Y0 - Y][X0 - X].obstacle = 1;
+ 1703              		.loc 1 255 0
+ 1704 0288 002A     		cmp	r2, #0
+ 1705 028a A2DD     		ble	.L81
+ 255:Src/obstacle.c **** 	map[Y0 - Y][X0 - X].obstacle = 1;
+ 1706              		.loc 1 255 0 is_stmt 0 discriminator 1
+ 1707 028c 9742     		cmp	r7, r2
+ 1708 028e AEDD     		ble	.L82
+ 1709 0290 9FE7     		b	.L81
+ 1710              	.LVL238:
+ 1711              	.L91:
+ 1712              	.LBE8:
+ 1713              	.LBE6:
+ 237:Src/obstacle.c ****     float DY = sqrt(R*R - DX*DX);
+ 1714              		.loc 1 237 0 is_stmt 1 discriminator 2
+ 1715 0292 0136     		adds	r6, r6, #1
+ 1716              	.LVL239:
+ 1717 0294 09F12809 		add	r9, r9, #40
+ 1718              	.LVL240:
+ 1719              	.L73:
+ 237:Src/obstacle.c ****     float DY = sqrt(R*R - DX*DX);
+ 1720              		.loc 1 237 0 is_stmt 0 discriminator 1
+ 1721 0298 019B     		ldr	r3, [sp, #4]
+ 1722 029a 9E42     		cmp	r6, r3
+ 1723 029c 28DA     		bge	.L92
+ 1724              	.LBB9:
+ 238:Src/obstacle.c ****     int NB_Y = 1 + (DY-(float)SQUARE_SIZE/2.)/SQUARE_SIZE;
+ 1725              		.loc 1 238 0 is_stmt 1
+ 1726 029e 28EE087A 		vmul.f32	s14, s16, s16
+ 1727 02a2 09FB09F3 		mul	r3, r9, r9
+ 1728 02a6 07EE903A 		vmov	s15, r3	@ int
+ 1729 02aa F8EEE77A 		vcvt.f32.s32	s15, s15
+ARM GAS  /tmp/ccwIJuYj.s 			page 40
+
+
+ 1730 02ae 77EE677A 		vsub.f32	s15, s14, s15
+ 1731 02b2 17EE900A 		vmov	r0, s15
+ 1732 02b6 FFF7FEFF 		bl	__aeabi_f2d
+ 1733              	.LVL241:
+ 1734 02ba 41EC100B 		vmov	d0, r0, r1
+ 1735 02be FFF7FEFF 		bl	sqrt
+ 1736              	.LVL242:
+ 1737 02c2 51EC100B 		vmov	r0, r1, d0
+ 1738 02c6 FFF7FEFF 		bl	__aeabi_d2f
+ 1739              	.LVL243:
+ 239:Src/obstacle.c ****     int Y;
+ 1740              		.loc 1 239 0
+ 1741 02ca FFF7FEFF 		bl	__aeabi_f2d
+ 1742              	.LVL244:
+ 1743 02ce 0022     		movs	r2, #0
+ 1744 02d0 1B4B     		ldr	r3, .L93+32
+ 1745 02d2 FFF7FEFF 		bl	__aeabi_dsub
+ 1746              	.LVL245:
+ 1747 02d6 0022     		movs	r2, #0
+ 1748 02d8 1D4B     		ldr	r3, .L93+48
+ 1749 02da FFF7FEFF 		bl	__aeabi_ddiv
+ 1750              	.LVL246:
+ 1751 02de 0022     		movs	r2, #0
+ 1752 02e0 194B     		ldr	r3, .L93+40
+ 1753 02e2 FFF7FEFF 		bl	__aeabi_dadd
+ 1754              	.LVL247:
+ 1755 02e6 FFF7FEFF 		bl	__aeabi_d2iz
+ 1756              	.LVL248:
+ 241:Src/obstacle.c ****       int p_scal = X_OR*X + Y_OR*Y;
+ 1757              		.loc 1 241 0
+ 1758 02ea 4FF0000C 		mov	ip, #0
+ 1759 02ee 80E7     		b	.L74
+ 1760              	.LVL249:
+ 1761              	.L92:
+ 1762              	.LBE9:
+ 260:Src/obstacle.c **** }
+ 1763              		.loc 1 260 0
+ 1764 02f0 0020     		movs	r0, #0
+ 1765              	.LVL250:
+ 1766              	.L71:
+ 261:Src/obstacle.c **** 
+ 1767              		.loc 1 261 0
+ 1768 02f2 03B0     		add	sp, sp, #12
+ 1769              	.LCFI21:
+ 1770              		.cfi_remember_state
+ 1771              		.cfi_def_cfa_offset 44
+ 1772              		@ sp needed
+ 1773 02f4 BDEC028B 		vldm	sp!, {d8}
+ 1774              	.LCFI22:
+ 1775              		.cfi_restore 80
+ 1776              		.cfi_restore 81
+ 1777              		.cfi_def_cfa_offset 36
+ 1778 02f8 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1779              	.LVL251:
+ 1780              	.L85:
+ 1781              	.LCFI23:
+ 1782              		.cfi_restore_state
+ARM GAS  /tmp/ccwIJuYj.s 			page 41
+
+
+ 208:Src/obstacle.c ****   }
+ 1783              		.loc 1 208 0
+ 1784 02fc 4FF0FF30 		mov	r0, #-1
+ 1785 0300 F7E7     		b	.L71
+ 1786              	.LVL252:
+ 1787              	.L86:
+ 221:Src/obstacle.c ****   }
+ 1788              		.loc 1 221 0
+ 1789 0302 4FF0FF30 		mov	r0, #-1
+ 1790 0306 F4E7     		b	.L71
+ 1791              	.L87:
+ 1792 0308 4FF0FF30 		mov	r0, #-1
+ 1793 030c F1E7     		b	.L71
+ 1794              	.LVL253:
+ 1795              	.L88:
+ 1796 030e 4FF0FF30 		mov	r0, #-1
+ 1797 0312 EEE7     		b	.L71
+ 1798              	.L89:
+ 1799 0314 4FF0FF30 		mov	r0, #-1
+ 1800 0318 EBE7     		b	.L71
+ 1801              	.L94:
+ 1802 031a 00BFAFF3 		.align	3
+ 1802      0080
+ 1803              	.L93:
+ 1804 0320 00000000 		.word	0
+ 1805 0324 00000040 		.word	1073741824
+ 1806 0328 9A999999 		.word	2576980378
+ 1807 032c 99497640 		.word	1081493913
+ 1808 0330 A4703D0A 		.word	171798692
+ 1809 0334 D7A3F63F 		.word	1073128407
+ 1810 0338 00000000 		.word	me
+ 1811 033c 67666666 		.word	1717986919
+ 1812 0340 00003440 		.word	1077149696
+ 1813 0344 CDCCCCCC 		.word	-858993459
+ 1814 0348 0000F03F 		.word	1072693248
+ 1815 034c 00000000 		.word	map
+ 1816 0350 00004440 		.word	1078198272
+ 1817              		.cfi_endproc
+ 1818              	.LFE682:
+ 1820              		.section	.text.Materialize_Obstacles,"ax",%progbits
+ 1821              		.align	1
+ 1822              		.global	Materialize_Obstacles
+ 1823              		.syntax unified
+ 1824              		.thumb
+ 1825              		.thumb_func
+ 1826              		.fpu fpv4-sp-d16
+ 1828              	Materialize_Obstacles:
+ 1829              	.LFB683:
+ 263:Src/obstacle.c ****   int i;
+ 1830              		.loc 1 263 0
+ 1831              		.cfi_startproc
+ 1832              		@ args = 0, pretend = 0, frame = 0
+ 1833              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1834              	.LVL254:
+ 1835 0000 70B5     		push	{r4, r5, r6, lr}
+ 1836              	.LCFI24:
+ 1837              		.cfi_def_cfa_offset 16
+ARM GAS  /tmp/ccwIJuYj.s 			page 42
+
+
+ 1838              		.cfi_offset 4, -16
+ 1839              		.cfi_offset 5, -12
+ 1840              		.cfi_offset 6, -8
+ 1841              		.cfi_offset 14, -4
+ 1842 0002 0546     		mov	r5, r0
+ 1843              	.LVL255:
+ 265:Src/obstacle.c ****   for(i = 0; i < nb_obstacles; i++){
+ 1844              		.loc 1 265 0
+ 1845 0004 0026     		movs	r6, #0
+ 266:Src/obstacle.c ****     if(Materialize_Obstacle(&obstacle[i], margin) != 0){
+ 1846              		.loc 1 266 0
+ 1847 0006 3446     		mov	r4, r6
+ 1848 0008 00E0     		b	.L96
+ 1849              	.LVL256:
+ 1850              	.L97:
+ 266:Src/obstacle.c ****     if(Materialize_Obstacle(&obstacle[i], margin) != 0){
+ 1851              		.loc 1 266 0 is_stmt 0 discriminator 2
+ 1852 000a 0134     		adds	r4, r4, #1
+ 1853              	.LVL257:
+ 1854              	.L96:
+ 266:Src/obstacle.c ****     if(Materialize_Obstacle(&obstacle[i], margin) != 0){
+ 1855              		.loc 1 266 0 discriminator 1
+ 1856 000c 094B     		ldr	r3, .L102
+ 1857 000e 1B68     		ldr	r3, [r3]
+ 1858 0010 A342     		cmp	r3, r4
+ 1859 0012 0CDD     		ble	.L101
+ 267:Src/obstacle.c ****       status = -1;
+ 1860              		.loc 1 267 0 is_stmt 1
+ 1861 0014 04EB8402 		add	r2, r4, r4, lsl #2
+ 1862 0018 9300     		lsls	r3, r2, #2
+ 1863 001a 2946     		mov	r1, r5
+ 1864 001c 0648     		ldr	r0, .L102+4
+ 1865 001e 1844     		add	r0, r0, r3
+ 1866 0020 FFF7FEFF 		bl	Materialize_Obstacle
+ 1867              	.LVL258:
+ 1868 0024 0028     		cmp	r0, #0
+ 1869 0026 F0D0     		beq	.L97
+ 268:Src/obstacle.c ****     }
+ 1870              		.loc 1 268 0
+ 1871 0028 4FF0FF36 		mov	r6, #-1
+ 1872              	.LVL259:
+ 1873 002c EDE7     		b	.L97
+ 1874              	.LVL260:
+ 1875              	.L101:
+ 272:Src/obstacle.c **** 
+ 1876              		.loc 1 272 0
+ 1877 002e 3046     		mov	r0, r6
+ 1878 0030 70BD     		pop	{r4, r5, r6, pc}
+ 1879              	.LVL261:
+ 1880              	.L103:
+ 1881 0032 00BF     		.align	2
+ 1882              	.L102:
+ 1883 0034 00000000 		.word	.LANCHOR1
+ 1884 0038 00000000 		.word	obstacle
+ 1885              		.cfi_endproc
+ 1886              	.LFE683:
+ 1888              		.section	.text.Can_Rotate,"ax",%progbits
+ARM GAS  /tmp/ccwIJuYj.s 			page 43
+
+
+ 1889              		.align	1
+ 1890              		.global	Can_Rotate
+ 1891              		.syntax unified
+ 1892              		.thumb
+ 1893              		.thumb_func
+ 1894              		.fpu fpv4-sp-d16
+ 1896              	Can_Rotate:
+ 1897              	.LFB684:
+ 274:Src/obstacle.c ****   int i;
+ 1898              		.loc 1 274 0
+ 1899              		.cfi_startproc
+ 1900              		@ args = 0, pretend = 0, frame = 0
+ 1901              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1902 0000 2DE97043 		push	{r4, r5, r6, r8, r9, lr}
+ 1903              	.LCFI25:
+ 1904              		.cfi_def_cfa_offset 24
+ 1905              		.cfi_offset 4, -24
+ 1906              		.cfi_offset 5, -20
+ 1907              		.cfi_offset 6, -16
+ 1908              		.cfi_offset 8, -12
+ 1909              		.cfi_offset 9, -8
+ 1910              		.cfi_offset 14, -4
+ 1911 0004 2DED028B 		vpush.64	{d8}
+ 1912              	.LCFI26:
+ 1913              		.cfi_def_cfa_offset 32
+ 1914              		.cfi_offset 80, -32
+ 1915              		.cfi_offset 81, -28
+ 1916              	.LVL262:
+ 276:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1917              		.loc 1 276 0
+ 1918 0008 0024     		movs	r4, #0
+ 1919              	.LVL263:
+ 1920              	.L105:
+ 276:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1921              		.loc 1 276 0 is_stmt 0 discriminator 1
+ 1922 000a 294B     		ldr	r3, .L109+16
+ 1923 000c 1B68     		ldr	r3, [r3]
+ 1924 000e A342     		cmp	r3, r4
+ 1925 0010 39DD     		ble	.L106
+ 1926              	.LVL264:
+ 1927              	.LBB10:
+ 278:Src/obstacle.c ****       break;
+ 1928              		.loc 1 278 0 is_stmt 1
+ 1929 0012 A300     		lsls	r3, r4, #2
+ 1930 0014 2344     		add	r3, r3, r4
+ 1931 0016 9A00     		lsls	r2, r3, #2
+ 1932 0018 264D     		ldr	r5, .L109+20
+ 1933 001a 1544     		add	r5, r5, r2
+ 1934 001c B5F90800 		ldrsh	r0, [r5, #8]
+ 1935 0020 254E     		ldr	r6, .L109+24
+ 1936 0022 7388     		ldrh	r3, [r6, #2]
+ 1937 0024 9FED1E8B 		vldr.64	d8, .L109
+ 1938 0028 C01A     		subs	r0, r0, r3
+ 1939 002a FFF7FEFF 		bl	__aeabi_i2d
+ 1940              	.LVL265:
+ 1941 002e B0EE481A 		vmov.f32	s2, s16
+ 1942 0032 F0EE681A 		vmov.f32	s3, s17
+ARM GAS  /tmp/ccwIJuYj.s 			page 44
+
+
+ 1943 0036 41EC100B 		vmov	d0, r0, r1
+ 1944 003a FFF7FEFF 		bl	pow
+ 1945              	.LVL266:
+ 1946 003e 59EC108B 		vmov	r8, r9, d0
+ 1947 0042 B5F90600 		ldrsh	r0, [r5, #6]
+ 1948 0046 3388     		ldrh	r3, [r6]
+ 1949 0048 C01A     		subs	r0, r0, r3
+ 1950 004a FFF7FEFF 		bl	__aeabi_i2d
+ 1951              	.LVL267:
+ 1952 004e B0EE481A 		vmov.f32	s2, s16
+ 1953 0052 F0EE681A 		vmov.f32	s3, s17
+ 1954 0056 41EC100B 		vmov	d0, r0, r1
+ 1955 005a FFF7FEFF 		bl	pow
+ 1956              	.LVL268:
+ 1957 005e 53EC102B 		vmov	r2, r3, d0
+ 1958 0062 4046     		mov	r0, r8
+ 1959 0064 4946     		mov	r1, r9
+ 1960 0066 FFF7FEFF 		bl	__aeabi_dadd
+ 1961              	.LVL269:
+ 1962 006a 41EC100B 		vmov	d0, r0, r1
+ 1963 006e FFF7FEFF 		bl	sqrt
+ 1964              	.LVL270:
+ 1965 0072 0DA3     		adr	r3, .L109+8
+ 1966 0074 D3E90023 		ldrd	r2, [r3]
+ 1967 0078 51EC100B 		vmov	r0, r1, d0
+ 1968 007c FFF7FEFF 		bl	__aeabi_dcmplt
+ 1969              	.LVL271:
+ 1970 0080 08B9     		cbnz	r0, .L106
+ 1971              	.LBE10:
+ 276:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 1972              		.loc 1 276 0 discriminator 2
+ 1973 0082 0134     		adds	r4, r4, #1
+ 1974              	.LVL272:
+ 1975 0084 C1E7     		b	.L105
+ 1976              	.LVL273:
+ 1977              	.L106:
+ 283:Src/obstacle.c **** }
+ 1978              		.loc 1 283 0
+ 1979 0086 0A4B     		ldr	r3, .L109+16
+ 1980 0088 1868     		ldr	r0, [r3]
+ 284:Src/obstacle.c **** 
+ 1981              		.loc 1 284 0
+ 1982 008a A042     		cmp	r0, r4
+ 1983 008c 14BF     		ite	ne
+ 1984 008e 0020     		movne	r0, #0
+ 1985 0090 0120     		moveq	r0, #1
+ 1986 0092 BDEC028B 		vldm	sp!, {d8}
+ 1987              	.LCFI27:
+ 1988              		.cfi_restore 80
+ 1989              		.cfi_restore 81
+ 1990              		.cfi_def_cfa_offset 24
+ 1991 0096 BDE87083 		pop	{r4, r5, r6, r8, r9, pc}
+ 1992              	.LVL274:
+ 1993              	.L110:
+ 1994 009a 00BFAFF3 		.align	3
+ 1994      0080
+ 1995              	.L109:
+ARM GAS  /tmp/ccwIJuYj.s 			page 45
+
+
+ 1996 00a0 00000000 		.word	0
+ 1997 00a4 00000040 		.word	1073741824
+ 1998 00a8 33333333 		.word	858993459
+ 1999 00ac 33D36440 		.word	1080349491
+ 2000 00b0 00000000 		.word	.LANCHOR1
+ 2001 00b4 00000000 		.word	obstacle
+ 2002 00b8 00000000 		.word	me
+ 2003              		.cfi_endproc
+ 2004              	.LFE684:
+ 2006              		.global	__aeabi_dcmpgt
+ 2007              		.section	.text.Can_Move,"ax",%progbits
+ 2008              		.align	1
+ 2009              		.global	Can_Move
+ 2010              		.syntax unified
+ 2011              		.thumb
+ 2012              		.thumb_func
+ 2013              		.fpu fpv4-sp-d16
+ 2015              	Can_Move:
+ 2016              	.LFB685:
+ 286:Src/obstacle.c ****   int i;
+ 2017              		.loc 1 286 0
+ 2018              		.cfi_startproc
+ 2019              		@ args = 0, pretend = 0, frame = 0
+ 2020              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2021              	.LVL275:
+ 2022 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 2023              	.LCFI28:
+ 2024              		.cfi_def_cfa_offset 32
+ 2025              		.cfi_offset 3, -32
+ 2026              		.cfi_offset 4, -28
+ 2027              		.cfi_offset 5, -24
+ 2028              		.cfi_offset 6, -20
+ 2029              		.cfi_offset 7, -16
+ 2030              		.cfi_offset 8, -12
+ 2031              		.cfi_offset 9, -8
+ 2032              		.cfi_offset 14, -4
+ 2033 0004 2DED028B 		vpush.64	{d8}
+ 2034              	.LCFI29:
+ 2035              		.cfi_def_cfa_offset 40
+ 2036              		.cfi_offset 80, -40
+ 2037              		.cfi_offset 81, -36
+ 2038 0008 10EE108A 		vmov	r8, s0
+ 2039 000c 0546     		mov	r5, r0
+ 2040 000e 8946     		mov	r9, r1
+ 2041              	.LVL276:
+ 288:Src/obstacle.c ****   for(i = 0; i < nb_obstacles; i++){
+ 2042              		.loc 1 288 0
+ 2043 0010 DFED3D8A 		vldr.32	s17, .L128+8
+ 289:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 2044              		.loc 1 289 0
+ 2045 0014 0024     		movs	r4, #0
+ 2046 0016 1DE0     		b	.L112
+ 2047              	.LVL277:
+ 2048              	.L114:
+ 2049              	.LBB11:
+ 296:Src/obstacle.c ****         return 0;
+ 2050              		.loc 1 296 0
+ARM GAS  /tmp/ccwIJuYj.s 			page 46
+
+
+ 2051 0018 4046     		mov	r0, r8	@ float
+ 2052 001a FFF7FEFF 		bl	__aeabi_f2d
+ 2053              	.LVL278:
+ 2054 001e 0646     		mov	r6, r0
+ 2055 0020 0F46     		mov	r7, r1
+ 2056 0022 18EE100A 		vmov	r0, s16
+ 2057 0026 FFF7FEFF 		bl	__aeabi_f2d
+ 2058              	.LVL279:
+ 2059 002a 35A3     		adr	r3, .L128
+ 2060 002c D3E90023 		ldrd	r2, [r3]
+ 2061 0030 FFF7FEFF 		bl	__aeabi_dsub
+ 2062              	.LVL280:
+ 2063 0034 0246     		mov	r2, r0
+ 2064 0036 0B46     		mov	r3, r1
+ 2065 0038 3046     		mov	r0, r6
+ 2066 003a 3946     		mov	r1, r7
+ 2067 003c FFF7FEFF 		bl	__aeabi_dcmpgt
+ 2068              	.LVL281:
+ 2069 0040 0028     		cmp	r0, #0
+ 2070 0042 58D1     		bne	.L121
+ 299:Src/obstacle.c **** 	dist_min = obs_dist;
+ 2071              		.loc 1 299 0
+ 2072 0044 F4EEC88A 		vcmpe.f32	s17, s16
+ 2073 0048 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2074 004c 01DD     		ble	.L115
+ 300:Src/obstacle.c ****       }
+ 2075              		.loc 1 300 0
+ 2076 004e F0EE488A 		vmov.f32	s17, s16
+ 2077              	.LVL282:
+ 2078              	.L115:
+ 2079              	.LBE11:
+ 289:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 2080              		.loc 1 289 0 discriminator 2
+ 2081 0052 0134     		adds	r4, r4, #1
+ 2082              	.LVL283:
+ 2083              	.L112:
+ 289:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 2084              		.loc 1 289 0 is_stmt 0 discriminator 1
+ 2085 0054 2D4B     		ldr	r3, .L128+12
+ 2086 0056 1B68     		ldr	r3, [r3]
+ 2087 0058 A342     		cmp	r3, r4
+ 2088 005a 1ADD     		ble	.L127
+ 2089              	.LVL284:
+ 2090              	.LBB12:
+ 291:Src/obstacle.c **** 
+ 2091              		.loc 1 291 0 is_stmt 1
+ 2092 005c 04EB8403 		add	r3, r4, r4, lsl #2
+ 2093 0060 9A00     		lsls	r2, r3, #2
+ 2094 0062 2B4B     		ldr	r3, .L128+16
+ 2095 0064 1344     		add	r3, r3, r2
+ 2096 0066 9B88     		ldrh	r3, [r3, #4]
+ 2097 0068 07EE903A 		vmov	s15, r3	@ int
+ 2098 006c B8EE678A 		vcvt.f32.u32	s16, s15
+ 2099              	.LVL285:
+ 294:Src/obstacle.c ****        || (!forward && obs->range == IN_RANGE_BACKWARD)){
+ 2100              		.loc 1 294 0
+ 2101 0070 25B1     		cbz	r5, .L113
+ARM GAS  /tmp/ccwIJuYj.s 			page 47
+
+
+ 294:Src/obstacle.c ****        || (!forward && obs->range == IN_RANGE_BACKWARD)){
+ 2102              		.loc 1 294 0 is_stmt 0 discriminator 1
+ 2103 0072 274B     		ldr	r3, .L128+16
+ 2104 0074 1344     		add	r3, r3, r2
+ 2105 0076 5B7C     		ldrb	r3, [r3, #17]	@ zero_extendqisi2
+ 2106 0078 002B     		cmp	r3, #0
+ 2107 007a CDD0     		beq	.L114
+ 2108              	.L113:
+ 295:Src/obstacle.c ****       if(distance > obs_dist - (ROBOT_RADIUS + MARGIN_MIN)){
+ 2109              		.loc 1 295 0 is_stmt 1
+ 2110 007c 002D     		cmp	r5, #0
+ 2111 007e E8D1     		bne	.L115
+ 295:Src/obstacle.c ****       if(distance > obs_dist - (ROBOT_RADIUS + MARGIN_MIN)){
+ 2112              		.loc 1 295 0 is_stmt 0 discriminator 1
+ 2113 0080 04EB8403 		add	r3, r4, r4, lsl #2
+ 2114 0084 9A00     		lsls	r2, r3, #2
+ 2115 0086 224B     		ldr	r3, .L128+16
+ 2116 0088 1344     		add	r3, r3, r2
+ 2117 008a 5B7C     		ldrb	r3, [r3, #17]	@ zero_extendqisi2
+ 2118 008c 012B     		cmp	r3, #1
+ 2119 008e E0D1     		bne	.L115
+ 2120 0090 C2E7     		b	.L114
+ 2121              	.LVL286:
+ 2122              	.L127:
+ 2123              	.LBE12:
+ 305:Src/obstacle.c **** 
+ 2124              		.loc 1 305 0 is_stmt 1
+ 2125 0092 18EE900A 		vmov	r0, s17
+ 2126 0096 FFF7FEFF 		bl	__aeabi_f2d
+ 2127              	.LVL287:
+ 2128 009a 19A3     		adr	r3, .L128
+ 2129 009c D3E90023 		ldrd	r2, [r3]
+ 2130 00a0 FFF7FEFF 		bl	__aeabi_dsub
+ 2131              	.LVL288:
+ 2132 00a4 0022     		movs	r2, #0
+ 2133 00a6 1B4B     		ldr	r3, .L128+20
+ 2134 00a8 FFF7FEFF 		bl	__aeabi_ddiv
+ 2135              	.LVL289:
+ 2136 00ac 0446     		mov	r4, r0
+ 2137              	.LVL290:
+ 2138 00ae 0D46     		mov	r5, r1
+ 2139 00b0 0022     		movs	r2, #0
+ 2140 00b2 0023     		movs	r3, #0
+ 2141 00b4 FFF7FEFF 		bl	__aeabi_dcmple
+ 2142              	.LVL291:
+ 2143 00b8 78B9     		cbnz	r0, .L118
+ 305:Src/obstacle.c **** 
+ 2144              		.loc 1 305 0 is_stmt 0 discriminator 2
+ 2145 00ba 0022     		movs	r2, #0
+ 2146 00bc 164B     		ldr	r3, .L128+24
+ 2147 00be 2046     		mov	r0, r4
+ 2148 00c0 2946     		mov	r1, r5
+ 2149 00c2 FFF7FEFF 		bl	__aeabi_dcmplt
+ 2150              	.LVL292:
+ 2151 00c6 40B9     		cbnz	r0, .L118
+ 305:Src/obstacle.c **** 
+ 2152              		.loc 1 305 0
+ARM GAS  /tmp/ccwIJuYj.s 			page 48
+
+
+ 2153 00c8 4FF07E50 		mov	r0, #1065353216
+ 2154              	.L119:
+ 305:Src/obstacle.c **** 
+ 2155              		.loc 1 305 0 discriminator 10
+ 2156 00cc C9F80000 		str	r0, [r9]	@ float
+ 307:Src/obstacle.c **** }
+ 2157              		.loc 1 307 0 is_stmt 1 discriminator 10
+ 2158 00d0 0120     		movs	r0, #1
+ 2159              	.L111:
+ 308:Src/obstacle.c **** 
+ 2160              		.loc 1 308 0
+ 2161 00d2 BDEC028B 		vldm	sp!, {d8}
+ 2162              	.LCFI30:
+ 2163              		.cfi_remember_state
+ 2164              		.cfi_restore 80
+ 2165              		.cfi_restore 81
+ 2166              		.cfi_def_cfa_offset 32
+ 2167 00d6 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 2168              	.LVL293:
+ 2169              	.L118:
+ 2170              	.LCFI31:
+ 2171              		.cfi_restore_state
+ 305:Src/obstacle.c **** 
+ 2172              		.loc 1 305 0 discriminator 3
+ 2173 00da 0022     		movs	r2, #0
+ 2174 00dc 0023     		movs	r3, #0
+ 2175 00de 2046     		mov	r0, r4
+ 2176 00e0 2946     		mov	r1, r5
+ 2177 00e2 FFF7FEFF 		bl	__aeabi_dcmple
+ 2178              	.LVL294:
+ 2179 00e6 20B9     		cbnz	r0, .L124
+ 305:Src/obstacle.c **** 
+ 2180              		.loc 1 305 0 is_stmt 0 discriminator 6
+ 2181 00e8 2046     		mov	r0, r4
+ 2182 00ea 2946     		mov	r1, r5
+ 2183 00ec FFF7FEFF 		bl	__aeabi_d2f
+ 2184              	.LVL295:
+ 2185 00f0 ECE7     		b	.L119
+ 2186              	.L124:
+ 305:Src/obstacle.c **** 
+ 2187              		.loc 1 305 0
+ 2188 00f2 0020     		movs	r0, #0
+ 2189 00f4 EAE7     		b	.L119
+ 2190              	.LVL296:
+ 2191              	.L121:
+ 2192              	.LBB13:
+ 297:Src/obstacle.c ****       }
+ 2193              		.loc 1 297 0 is_stmt 1
+ 2194 00f6 0020     		movs	r0, #0
+ 2195 00f8 EBE7     		b	.L111
+ 2196              	.L129:
+ 2197 00fa 00BFAFF3 		.align	3
+ 2197      0080
+ 2198              	.L128:
+ 2199 0100 33333333 		.word	858993459
+ 2200 0104 33D36440 		.word	1080349491
+ 2201 0108 00401C46 		.word	1176256512
+ARM GAS  /tmp/ccwIJuYj.s 			page 49
+
+
+ 2202 010c 00000000 		.word	.LANCHOR1
+ 2203 0110 00000000 		.word	obstacle
+ 2204 0114 00408F40 		.word	1083129856
+ 2205 0118 0000F03F 		.word	1072693248
+ 2206              	.LBE13:
+ 2207              		.cfi_endproc
+ 2208              	.LFE685:
+ 2210              		.section	.text.Get_In_Range_Obstacle_Dist,"ax",%progbits
+ 2211              		.align	1
+ 2212              		.global	Get_In_Range_Obstacle_Dist
+ 2213              		.syntax unified
+ 2214              		.thumb
+ 2215              		.thumb_func
+ 2216              		.fpu fpv4-sp-d16
+ 2218              	Get_In_Range_Obstacle_Dist:
+ 2219              	.LFB686:
+ 310:Src/obstacle.c ****   float min_fwd = 10000., min_bwd = 10000.;
+ 2220              		.loc 1 310 0
+ 2221              		.cfi_startproc
+ 2222              		@ args = 0, pretend = 0, frame = 0
+ 2223              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2224              	.LVL297:
+ 2225 0000 38B5     		push	{r3, r4, r5, lr}
+ 2226              	.LCFI32:
+ 2227              		.cfi_def_cfa_offset 16
+ 2228              		.cfi_offset 3, -16
+ 2229              		.cfi_offset 4, -12
+ 2230              		.cfi_offset 5, -8
+ 2231              		.cfi_offset 14, -4
+ 2232 0002 2DED028B 		vpush.64	{d8}
+ 2233              	.LCFI33:
+ 2234              		.cfi_def_cfa_offset 24
+ 2235              		.cfi_offset 80, -24
+ 2236              		.cfi_offset 81, -20
+ 2237 0006 0546     		mov	r5, r0
+ 2238 0008 0C46     		mov	r4, r1
+ 2239              	.LVL298:
+ 314:Src/obstacle.c ****   
+ 2240              		.loc 1 314 0
+ 2241 000a FFF7FEFF 		bl	Refresh_Map
+ 2242              	.LVL299:
+ 318:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 2243              		.loc 1 318 0
+ 2244 000e 0023     		movs	r3, #0
+ 311:Src/obstacle.c **** 
+ 2245              		.loc 1 311 0
+ 2246 0010 9FED358A 		vldr.32	s16, .L148+8
+ 2247 0014 F0EE487A 		vmov.f32	s15, s16
+ 318:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 2248              		.loc 1 318 0
+ 2249 0018 11E0     		b	.L131
+ 2250              	.LVL300:
+ 2251              	.L133:
+ 2252              	.LBB14:
+ 322:Src/obstacle.c **** 	min_fwd = obs->distance;
+ 2253              		.loc 1 322 0
+ 2254 001a 03EB8302 		add	r2, r3, r3, lsl #2
+ARM GAS  /tmp/ccwIJuYj.s 			page 50
+
+
+ 2255 001e 9100     		lsls	r1, r2, #2
+ 2256 0020 324A     		ldr	r2, .L148+12
+ 2257 0022 0A44     		add	r2, r2, r1
+ 2258 0024 9288     		ldrh	r2, [r2, #4]
+ 2259 0026 07EE102A 		vmov	s14, r2	@ int
+ 2260 002a F8EEC76A 		vcvt.f32.s32	s13, s14
+ 2261 002e F4EEE76A 		vcmpe.f32	s13, s15
+ 2262 0032 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2263 0036 01D5     		bpl	.L132
+ 323:Src/obstacle.c ****       }
+ 2264              		.loc 1 323 0
+ 2265 0038 F8EE477A 		vcvt.f32.u32	s15, s14
+ 2266              	.LVL301:
+ 2267              	.L132:
+ 2268              	.LBE14:
+ 318:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 2269              		.loc 1 318 0 discriminator 2
+ 2270 003c 0133     		adds	r3, r3, #1
+ 2271              	.LVL302:
+ 2272              	.L131:
+ 318:Src/obstacle.c ****     Obstacle *const obs = &obstacle[i];
+ 2273              		.loc 1 318 0 is_stmt 0 discriminator 1
+ 2274 003e 2C4A     		ldr	r2, .L148+16
+ 2275 0040 1268     		ldr	r2, [r2]
+ 2276 0042 9A42     		cmp	r2, r3
+ 2277 0044 1BDD     		ble	.L145
+ 2278              	.LVL303:
+ 2279              	.LBB15:
+ 320:Src/obstacle.c ****     case IN_RANGE_FORWARD:
+ 2280              		.loc 1 320 0 is_stmt 1
+ 2281 0046 03EB8302 		add	r2, r3, r3, lsl #2
+ 2282 004a 9100     		lsls	r1, r2, #2
+ 2283 004c 274A     		ldr	r2, .L148+12
+ 2284 004e 0A44     		add	r2, r2, r1
+ 2285 0050 527C     		ldrb	r2, [r2, #17]	@ zero_extendqisi2
+ 2286 0052 002A     		cmp	r2, #0
+ 2287 0054 E1D0     		beq	.L133
+ 2288 0056 012A     		cmp	r2, #1
+ 2289 0058 F0D1     		bne	.L132
+ 327:Src/obstacle.c **** 	min_bwd = obs->distance;
+ 2290              		.loc 1 327 0
+ 2291 005a 03EB8302 		add	r2, r3, r3, lsl #2
+ 2292 005e 9100     		lsls	r1, r2, #2
+ 2293 0060 224A     		ldr	r2, .L148+12
+ 2294 0062 0A44     		add	r2, r2, r1
+ 2295 0064 9288     		ldrh	r2, [r2, #4]
+ 2296 0066 07EE102A 		vmov	s14, r2	@ int
+ 2297 006a F8EEC76A 		vcvt.f32.s32	s13, s14
+ 2298 006e F4EEC86A 		vcmpe.f32	s13, s16
+ 2299 0072 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2300 0076 E1D5     		bpl	.L132
+ 328:Src/obstacle.c ****       }
+ 2301              		.loc 1 328 0
+ 2302 0078 B8EE478A 		vcvt.f32.u32	s16, s14
+ 2303              	.LVL304:
+ 2304 007c DEE7     		b	.L132
+ 2305              	.LVL305:
+ARM GAS  /tmp/ccwIJuYj.s 			page 51
+
+
+ 2306              	.L145:
+ 2307              	.LBE15:
+ 337:Src/obstacle.c ****   min_bwd -= OBS_RADIUS + MARGIN_MIN;
+ 2308              		.loc 1 337 0
+ 2309 007e 17EE900A 		vmov	r0, s15
+ 2310 0082 FFF7FEFF 		bl	__aeabi_f2d
+ 2311              	.LVL306:
+ 2312 0086 16A3     		adr	r3, .L148
+ 2313 0088 D3E90023 		ldrd	r2, [r3]
+ 2314 008c FFF7FEFF 		bl	__aeabi_dsub
+ 2315              	.LVL307:
+ 2316 0090 FFF7FEFF 		bl	__aeabi_d2f
+ 2317              	.LVL308:
+ 2318 0094 08EE900A 		vmov	s17, r0
+ 2319              	.LVL309:
+ 338:Src/obstacle.c ****   if(min_fwd < 0) min_fwd = 0;
+ 2320              		.loc 1 338 0
+ 2321 0098 18EE100A 		vmov	r0, s16
+ 2322              	.LVL310:
+ 2323 009c FFF7FEFF 		bl	__aeabi_f2d
+ 2324              	.LVL311:
+ 2325 00a0 0FA3     		adr	r3, .L148
+ 2326 00a2 D3E90023 		ldrd	r2, [r3]
+ 2327 00a6 FFF7FEFF 		bl	__aeabi_dsub
+ 2328              	.LVL312:
+ 2329 00aa FFF7FEFF 		bl	__aeabi_d2f
+ 2330              	.LVL313:
+ 2331 00ae 07EE900A 		vmov	s15, r0
+ 2332              	.LVL314:
+ 339:Src/obstacle.c ****   if(min_bwd < 0) min_bwd = 0;
+ 2333              		.loc 1 339 0
+ 2334 00b2 F5EEC08A 		vcmpe.f32	s17, #0
+ 2335 00b6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2336 00ba 0BD4     		bmi	.L146
+ 2337              	.LVL315:
+ 2338              	.L138:
+ 340:Src/obstacle.c **** 
+ 2339              		.loc 1 340 0
+ 2340 00bc F5EEC07A 		vcmpe.f32	s15, #0
+ 2341 00c0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2342 00c4 09D4     		bmi	.L147
+ 2343              	.L139:
+ 2344              	.LVL316:
+ 342:Src/obstacle.c ****   *bwd_dist = min_bwd;
+ 2345              		.loc 1 342 0
+ 2346 00c6 C5ED008A 		vstr.32	s17, [r5]
+ 343:Src/obstacle.c **** }
+ 2347              		.loc 1 343 0
+ 2348 00ca C4ED007A 		vstr.32	s15, [r4]
+ 344:Src/obstacle.c **** 
+ 2349              		.loc 1 344 0
+ 2350 00ce BDEC028B 		vldm	sp!, {d8}
+ 2351              	.LCFI34:
+ 2352              		.cfi_remember_state
+ 2353              		.cfi_restore 80
+ 2354              		.cfi_restore 81
+ 2355              		.cfi_def_cfa_offset 16
+ARM GAS  /tmp/ccwIJuYj.s 			page 52
+
+
+ 2356 00d2 38BD     		pop	{r3, r4, r5, pc}
+ 2357              	.LVL317:
+ 2358              	.L146:
+ 2359              	.LCFI35:
+ 2360              		.cfi_restore_state
+ 339:Src/obstacle.c ****   if(min_bwd < 0) min_bwd = 0;
+ 2361              		.loc 1 339 0
+ 2362 00d4 DFED078A 		vldr.32	s17, .L148+20
+ 2363              	.LVL318:
+ 2364 00d8 F0E7     		b	.L138
+ 2365              	.LVL319:
+ 2366              	.L147:
+ 340:Src/obstacle.c **** 
+ 2367              		.loc 1 340 0
+ 2368 00da DFED067A 		vldr.32	s15, .L148+20
+ 2369 00de F2E7     		b	.L139
+ 2370              	.L149:
+ 2371              		.align	3
+ 2372              	.L148:
+ 2373 00e0 33333333 		.word	858993459
+ 2374 00e4 33D36E40 		.word	1081004851
+ 2375 00e8 00401C46 		.word	1176256512
+ 2376 00ec 00000000 		.word	obstacle
+ 2377 00f0 00000000 		.word	.LANCHOR1
+ 2378 00f4 00000000 		.word	0
+ 2379              		.cfi_endproc
+ 2380              	.LFE686:
+ 2382              		.section	.text.Get_Avoidance_Flexibility,"ax",%progbits
+ 2383              		.align	1
+ 2384              		.global	Get_Avoidance_Flexibility
+ 2385              		.syntax unified
+ 2386              		.thumb
+ 2387              		.thumb_func
+ 2388              		.fpu fpv4-sp-d16
+ 2390              	Get_Avoidance_Flexibility:
+ 2391              	.LFB687:
+ 346:Src/obstacle.c ****   Get_In_Range_Obstacle_Dist(fwd_dist, bwd_dist);
+ 2392              		.loc 1 346 0
+ 2393              		.cfi_startproc
+ 2394              		@ args = 0, pretend = 0, frame = 0
+ 2395              		@ frame_needed = 0, uses_anonymous_args = 0
+ 2396              	.LVL320:
+ 2397 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 2398              	.LCFI36:
+ 2399              		.cfi_def_cfa_offset 24
+ 2400              		.cfi_offset 3, -24
+ 2401              		.cfi_offset 4, -20
+ 2402              		.cfi_offset 5, -16
+ 2403              		.cfi_offset 6, -12
+ 2404              		.cfi_offset 7, -8
+ 2405              		.cfi_offset 14, -4
+ 2406 0002 2DED028B 		vpush.64	{d8}
+ 2407              	.LCFI37:
+ 2408              		.cfi_def_cfa_offset 32
+ 2409              		.cfi_offset 80, -32
+ 2410              		.cfi_offset 81, -28
+ 2411 0006 0446     		mov	r4, r0
+ARM GAS  /tmp/ccwIJuYj.s 			page 53
+
+
+ 2412 0008 0D46     		mov	r5, r1
+ 347:Src/obstacle.c **** 
+ 2413              		.loc 1 347 0
+ 2414 000a FFF7FEFF 		bl	Get_In_Range_Obstacle_Dist
+ 2415              	.LVL321:
+ 350:Src/obstacle.c ****   float angle_bwd = me.angle + M_PI;
+ 2416              		.loc 1 350 0
+ 2417 000e 94ED008A 		vldr.32	s16, [r4]
+ 2418 0012 2B4B     		ldr	r3, .L165+16
+ 2419 0014 93ED010A 		vldr.32	s0, [r3, #4]
+ 2420 0018 FFF7FEFF 		bl	Free_Blocks_Dir
+ 2421              	.LVL322:
+ 2422 001c B4EEC08A 		vcmpe.f32	s16, s0
+ 2423 0020 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2424 0024 37D5     		bpl	.L162
+ 350:Src/obstacle.c ****   float angle_bwd = me.angle + M_PI;
+ 2425              		.loc 1 350 0 is_stmt 0 discriminator 1
+ 2426 0026 94ED000A 		vldr.32	s0, [r4]
+ 2427              	.L153:
+ 350:Src/obstacle.c ****   float angle_bwd = me.angle + M_PI;
+ 2428              		.loc 1 350 0 discriminator 4
+ 2429 002a 84ED000A 		vstr.32	s0, [r4]
+ 351:Src/obstacle.c ****   if(me.angle > M_PI){
+ 2430              		.loc 1 351 0 is_stmt 1 discriminator 4
+ 2431 002e 244B     		ldr	r3, .L165+16
+ 2432 0030 5868     		ldr	r0, [r3, #4]	@ float
+ 2433 0032 FFF7FEFF 		bl	__aeabi_f2d
+ 2434              	.LVL323:
+ 2435 0036 0646     		mov	r6, r0
+ 2436 0038 0F46     		mov	r7, r1
+ 2437 003a 1DA3     		adr	r3, .L165
+ 2438 003c D3E90023 		ldrd	r2, [r3]
+ 2439 0040 FFF7FEFF 		bl	__aeabi_dadd
+ 2440              	.LVL324:
+ 2441 0044 FFF7FEFF 		bl	__aeabi_d2f
+ 2442              	.LVL325:
+ 2443 0048 08EE100A 		vmov	s16, r0
+ 2444              	.LVL326:
+ 352:Src/obstacle.c ****     me.angle -= 2*M_PI;
+ 2445              		.loc 1 352 0 discriminator 4
+ 2446 004c 18A3     		adr	r3, .L165
+ 2447 004e D3E90023 		ldrd	r2, [r3]
+ 2448 0052 3046     		mov	r0, r6
+ 2449              	.LVL327:
+ 2450 0054 3946     		mov	r1, r7
+ 2451 0056 FFF7FEFF 		bl	__aeabi_dcmpgt
+ 2452              	.LVL328:
+ 2453 005a 50B1     		cbz	r0, .L154
+ 353:Src/obstacle.c ****   }
+ 2454              		.loc 1 353 0
+ 2455 005c 16A3     		adr	r3, .L165+8
+ 2456 005e D3E90023 		ldrd	r2, [r3]
+ 2457 0062 3046     		mov	r0, r6
+ 2458 0064 3946     		mov	r1, r7
+ 2459 0066 FFF7FEFF 		bl	__aeabi_dsub
+ 2460              	.LVL329:
+ 2461 006a FFF7FEFF 		bl	__aeabi_d2f
+ARM GAS  /tmp/ccwIJuYj.s 			page 54
+
+
+ 2462              	.LVL330:
+ 2463 006e 144B     		ldr	r3, .L165+16
+ 2464 0070 5860     		str	r0, [r3, #4]	@ float
+ 2465              	.L154:
+ 355:Src/obstacle.c **** }
+ 2466              		.loc 1 355 0
+ 2467 0072 D5ED008A 		vldr.32	s17, [r5]
+ 2468 0076 B0EE480A 		vmov.f32	s0, s16
+ 2469 007a FFF7FEFF 		bl	Free_Blocks_Dir
+ 2470              	.LVL331:
+ 2471 007e F4EEC08A 		vcmpe.f32	s17, s0
+ 2472 0082 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 2473 0086 0CD5     		bpl	.L163
+ 355:Src/obstacle.c **** }
+ 2474              		.loc 1 355 0 is_stmt 0 discriminator 1
+ 2475 0088 95ED000A 		vldr.32	s0, [r5]
+ 2476              	.L158:
+ 355:Src/obstacle.c **** }
+ 2477              		.loc 1 355 0 discriminator 4
+ 2478 008c 85ED000A 		vstr.32	s0, [r5]
+ 356:Src/obstacle.c **** 
+ 2479              		.loc 1 356 0 is_stmt 1 discriminator 4
+ 2480 0090 BDEC028B 		vldm	sp!, {d8}
+ 2481              	.LCFI38:
+ 2482              		.cfi_remember_state
+ 2483              		.cfi_restore 80
+ 2484              		.cfi_restore 81
+ 2485              		.cfi_def_cfa_offset 24
+ 2486              	.LVL332:
+ 2487 0094 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 2488              	.LVL333:
+ 2489              	.L162:
+ 2490              	.LCFI39:
+ 2491              		.cfi_restore_state
+ 350:Src/obstacle.c ****   float angle_bwd = me.angle + M_PI;
+ 2492              		.loc 1 350 0 discriminator 2
+ 2493 0096 0A4B     		ldr	r3, .L165+16
+ 2494 0098 93ED010A 		vldr.32	s0, [r3, #4]
+ 2495 009c FFF7FEFF 		bl	Free_Blocks_Dir
+ 2496              	.LVL334:
+ 2497 00a0 C3E7     		b	.L153
+ 2498              	.LVL335:
+ 2499              	.L163:
+ 355:Src/obstacle.c **** }
+ 2500              		.loc 1 355 0 discriminator 2
+ 2501 00a2 B0EE480A 		vmov.f32	s0, s16
+ 2502 00a6 FFF7FEFF 		bl	Free_Blocks_Dir
+ 2503              	.LVL336:
+ 2504 00aa EFE7     		b	.L158
+ 2505              	.L166:
+ 2506 00ac AFF30080 		.align	3
+ 2507              	.L165:
+ 2508 00b0 182D4454 		.word	1413754136
+ 2509 00b4 FB210940 		.word	1074340347
+ 2510 00b8 182D4454 		.word	1413754136
+ 2511 00bc FB211940 		.word	1075388923
+ 2512 00c0 00000000 		.word	me
+ARM GAS  /tmp/ccwIJuYj.s 			page 55
+
+
+ 2513              		.cfi_endproc
+ 2514              	.LFE687:
+ 2516              		.comm	sensor_raw,8,4
+ 2517              		.global	nb_obstacles
+ 2518              		.comm	obstacle,80,4
+ 2519              		.section	.rodata
+ 2520              		.align	2
+ 2521              		.set	.LANCHOR0,. + 0
+ 2522              	.LC0:
+ 2523 0000 B5FF     		.short	-75
+ 2524 0002 4B00     		.short	75
+ 2525 0004 B5FF     		.short	-75
+ 2526 0006 4B00     		.short	75
+ 2527              		.section	.bss.nb_obstacles,"aw",%nobits
+ 2528              		.align	2
+ 2529              		.set	.LANCHOR1,. + 0
+ 2532              	nb_obstacles:
+ 2533 0000 00000000 		.space	4
+ 2534              		.section	.rodata.Print_Obstacles.str1.4,"aMS",%progbits,1
+ 2535              		.align	2
+ 2536              	.LC1:
+ 2537 0000 4F627374 		.ascii	"Obstacle n\302\260%d : %u ms, %hu mm, (%hd , %hd), "
+ 2537      61636C65 
+ 2537      206EC2B0 
+ 2537      2564203A 
+ 2537      20257520 
+ 2538 002d 63202825 		.ascii	"c (%hd, %hd)\012\000"
+ 2538      68642C20 
+ 2538      25686429 
+ 2538      0A00
+ 2539              		.text
+ 2540              	.Letext0:
+ 2541              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 2542              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 2543              		.file 4 "Inc/game_defs.h"
+ 2544              		.file 5 "Inc/obstacle.h"
+ 2545              		.file 6 "/usr/arm-none-eabi/include/sys/lock.h"
+ 2546              		.file 7 "/usr/arm-none-eabi/include/sys/_types.h"
+ 2547              		.file 8 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 2548              		.file 9 "/usr/arm-none-eabi/include/sys/reent.h"
+ 2549              		.file 10 "/usr/arm-none-eabi/include/stdlib.h"
+ 2550              		.file 11 "/usr/arm-none-eabi/include/math.h"
+ 2551              		.file 12 "Inc/strategy.h"
+ 2552              		.file 13 "Inc/map.h"
+ 2553              		.file 14 "Drivers/CMSIS/Include/core_cm4.h"
+ 2554              		.file 15 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h"
+ 2555              		.file 16 "Inc/crc_16.h"
+ 2556              		.file 17 "Inc/robotronik_protocol.h"
+ 2557              		.file 18 "Inc/usart.h"
+ 2558              		.file 19 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_dma.h"
+ 2559              		.file 20 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 2560              		.file 21 "Inc/pi_client.h"
+ARM GAS  /tmp/ccwIJuYj.s 			page 56
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 obstacle.c
+     /tmp/ccwIJuYj.s:25     .text.Compute_Obstacle:0000000000000000 $t
+     /tmp/ccwIJuYj.s:31     .text.Compute_Obstacle:0000000000000000 Compute_Obstacle
+     /tmp/ccwIJuYj.s:299    .text.Compute_Obstacle:0000000000000218 $d
+     /tmp/ccwIJuYj.s:308    .text.Free_Blocks_Dir:0000000000000000 $t
+     /tmp/ccwIJuYj.s:314    .text.Free_Blocks_Dir:0000000000000000 Free_Blocks_Dir
+     /tmp/ccwIJuYj.s:482    .text.Free_Blocks_Dir:0000000000000130 $d
+     /tmp/ccwIJuYj.s:493    .text.Update_Obstacles:0000000000000000 $t
+     /tmp/ccwIJuYj.s:500    .text.Update_Obstacles:0000000000000000 Update_Obstacles
+     /tmp/ccwIJuYj.s:834    .text.Update_Obstacles:0000000000000258 $d
+                            *COM*:0000000000000008 sensor_raw
+     /tmp/ccwIJuYj.s:844    .text.Update_Obstacles:0000000000000270 $t
+     /tmp/ccwIJuYj.s:1209   .text.Update_Obstacles:0000000000000590 $d
+                            *COM*:0000000000000050 obstacle
+     /tmp/ccwIJuYj.s:1219   .text.Update_Obstacles:00000000000005a8 $t
+     /tmp/ccwIJuYj.s:1266   .text.Update_Obstacles:00000000000005dc $d
+     /tmp/ccwIJuYj.s:1272   .text.Print_Obstacles:0000000000000000 $t
+     /tmp/ccwIJuYj.s:1279   .text.Print_Obstacles:0000000000000000 Print_Obstacles
+     /tmp/ccwIJuYj.s:1347   .text.Print_Obstacles:000000000000004c $d
+     /tmp/ccwIJuYj.s:1356   .text.Materialize_Obstacle:0000000000000000 $t
+     /tmp/ccwIJuYj.s:1363   .text.Materialize_Obstacle:0000000000000000 Materialize_Obstacle
+     /tmp/ccwIJuYj.s:1804   .text.Materialize_Obstacle:0000000000000320 $d
+     /tmp/ccwIJuYj.s:1821   .text.Materialize_Obstacles:0000000000000000 $t
+     /tmp/ccwIJuYj.s:1828   .text.Materialize_Obstacles:0000000000000000 Materialize_Obstacles
+     /tmp/ccwIJuYj.s:1883   .text.Materialize_Obstacles:0000000000000034 $d
+     /tmp/ccwIJuYj.s:1889   .text.Can_Rotate:0000000000000000 $t
+     /tmp/ccwIJuYj.s:1896   .text.Can_Rotate:0000000000000000 Can_Rotate
+     /tmp/ccwIJuYj.s:1996   .text.Can_Rotate:00000000000000a0 $d
+     /tmp/ccwIJuYj.s:2008   .text.Can_Move:0000000000000000 $t
+     /tmp/ccwIJuYj.s:2015   .text.Can_Move:0000000000000000 Can_Move
+     /tmp/ccwIJuYj.s:2199   .text.Can_Move:0000000000000100 $d
+     /tmp/ccwIJuYj.s:2211   .text.Get_In_Range_Obstacle_Dist:0000000000000000 $t
+     /tmp/ccwIJuYj.s:2218   .text.Get_In_Range_Obstacle_Dist:0000000000000000 Get_In_Range_Obstacle_Dist
+     /tmp/ccwIJuYj.s:2373   .text.Get_In_Range_Obstacle_Dist:00000000000000e0 $d
+     /tmp/ccwIJuYj.s:2383   .text.Get_Avoidance_Flexibility:0000000000000000 $t
+     /tmp/ccwIJuYj.s:2390   .text.Get_Avoidance_Flexibility:0000000000000000 Get_Avoidance_Flexibility
+     /tmp/ccwIJuYj.s:2508   .text.Get_Avoidance_Flexibility:00000000000000b0 $d
+     /tmp/ccwIJuYj.s:2532   .bss.nb_obstacles:0000000000000000 nb_obstacles
+     /tmp/ccwIJuYj.s:2520   .rodata:0000000000000000 $d
+     /tmp/ccwIJuYj.s:2528   .bss.nb_obstacles:0000000000000000 $d
+     /tmp/ccwIJuYj.s:2535   .rodata.Print_Obstacles.str1.4:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+__aeabi_i2d
+__aeabi_d2uiz
+__aeabi_f2d
+__aeabi_dmul
+__aeabi_dsub
+__aeabi_d2iz
+__aeabi_dadd
+HAL_GetTick
+sqrt
+cos
+sin
+pow
+__aeabi_d2f
+ARM GAS  /tmp/ccwIJuYj.s 			page 57
+
+
+Cell_From_Pos
+me
+__aeabi_dcmplt
+PI_Log
+__aeabi_dcmple
+__aeabi_ddiv
+map
+__aeabi_dcmpgt
+Refresh_Map

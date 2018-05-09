@@ -1,0 +1,944 @@
+ARM GAS  /tmp/ccO7PXeS.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"pi_client.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.PI_Init,"ax",%progbits
+  18              		.align	1
+  19              		.global	PI_Init
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	PI_Init:
+  26              	.LFB679:
+  27              		.file 1 "Src/pi_client.c"
+   1:Src/pi_client.c **** #include "pi_client.h"
+   2:Src/pi_client.c **** #include "game_defs.h"
+   3:Src/pi_client.c **** #include "strategy.h"
+   4:Src/pi_client.c **** 
+   5:Src/pi_client.c **** static RC_Client pi_client;
+   6:Src/pi_client.c **** 
+   7:Src/pi_client.c **** int PI_Init(){
+  28              		.loc 1 7 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+   8:Src/pi_client.c ****   RC_Client_Init(&pi_client, &pi_iface, 0);
+  37              		.loc 1 8 0
+  38 0002 244C     		ldr	r4, .L10
+  39 0004 0022     		movs	r2, #0
+  40 0006 2449     		ldr	r1, .L10+4
+  41 0008 2046     		mov	r0, r4
+  42 000a FFF7FEFF 		bl	RC_Client_Init
+  43              	.LVL0:
+   9:Src/pi_client.c ****   
+  10:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_START, "", "")) return -1;
+  44              		.loc 1 10 0
+  45 000e 234A     		ldr	r2, .L10+8
+  46 0010 1346     		mov	r3, r2
+  47 0012 0021     		movs	r1, #0
+  48 0014 2046     		mov	r0, r4
+ARM GAS  /tmp/ccO7PXeS.s 			page 2
+
+
+  49 0016 FFF7FEFF 		bl	RC_Client_Add_Function
+  50              	.LVL1:
+  51 001a 48BB     		cbnz	r0, .L3
+  11:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_STOP, "", "")) return -1;
+  52              		.loc 1 11 0
+  53 001c 1F4A     		ldr	r2, .L10+8
+  54 001e 1346     		mov	r3, r2
+  55 0020 0121     		movs	r1, #1
+  56 0022 2046     		mov	r0, r4
+  57 0024 FFF7FEFF 		bl	RC_Client_Add_Function
+  58              	.LVL2:
+  59 0028 28BB     		cbnz	r0, .L4
+  12:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_ERROR, "", "")) return -1;
+  60              		.loc 1 12 0
+  61 002a 1C4A     		ldr	r2, .L10+8
+  62 002c 1346     		mov	r3, r2
+  63 002e 0221     		movs	r1, #2
+  64 0030 2046     		mov	r0, r4
+  65 0032 FFF7FEFF 		bl	RC_Client_Add_Function
+  66              	.LVL3:
+  67 0036 08BB     		cbnz	r0, .L5
+  13:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_SCORE, "B", "")) return -1;
+  68              		.loc 1 13 0
+  69 0038 184B     		ldr	r3, .L10+8
+  70 003a 194A     		ldr	r2, .L10+12
+  71 003c 0321     		movs	r1, #3
+  72 003e 2046     		mov	r0, r4
+  73 0040 FFF7FEFF 		bl	RC_Client_Add_Function
+  74              	.LVL4:
+  75 0044 E8B9     		cbnz	r0, .L6
+  14:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_PLAN, "", "bs")) return -1;
+  76              		.loc 1 14 0
+  77 0046 174B     		ldr	r3, .L10+16
+  78 0048 144A     		ldr	r2, .L10+8
+  79 004a 0421     		movs	r1, #4
+  80 004c 2046     		mov	r0, r4
+  81 004e FFF7FEFF 		bl	RC_Client_Add_Function
+  82              	.LVL5:
+  83 0052 C8B9     		cbnz	r0, .L7
+  15:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_LOG, "s", "")) return -1;
+  84              		.loc 1 15 0
+  85 0054 114B     		ldr	r3, .L10+8
+  86 0056 144A     		ldr	r2, .L10+20
+  87 0058 0521     		movs	r1, #5
+  88 005a 2046     		mov	r0, r4
+  89 005c FFF7FEFF 		bl	RC_Client_Add_Function
+  90              	.LVL6:
+  91 0060 0446     		mov	r4, r0
+  92 0062 A0B9     		cbnz	r0, .L8
+  16:Src/pi_client.c ****   //if(RC_Client_Add_Function(&pi_client, PI_ASSER, "b", "bfffii")) return -1;
+  17:Src/pi_client.c **** 
+  18:Src/pi_client.c ****   /*
+  19:Src/pi_client.c ****    * RP_Sync is mandatory here : the Raspberry's fsm receiver is in an
+  20:Src/pi_client.c ****    * indeterminate state at program startup.
+  21:Src/pi_client.c ****    */
+  22:Src/pi_client.c ****   RP_Sync(&pi_iface, RC_TRANSFERT_TIMEOUT);
+  93              		.loc 1 22 0
+ARM GAS  /tmp/ccO7PXeS.s 			page 3
+
+
+  94 0064 0121     		movs	r1, #1
+  95 0066 0C48     		ldr	r0, .L10+4
+  96 0068 FFF7FEFF 		bl	RP_Sync
+  97              	.LVL7:
+  98              	.L1:
+  23:Src/pi_client.c ****   
+  24:Src/pi_client.c ****   return 0;
+  25:Src/pi_client.c **** }
+  99              		.loc 1 25 0
+ 100 006c 2046     		mov	r0, r4
+ 101 006e 10BD     		pop	{r4, pc}
+ 102              	.L3:
+  10:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_STOP, "", "")) return -1;
+ 103              		.loc 1 10 0
+ 104 0070 4FF0FF34 		mov	r4, #-1
+ 105 0074 FAE7     		b	.L1
+ 106              	.L4:
+  11:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_ERROR, "", "")) return -1;
+ 107              		.loc 1 11 0
+ 108 0076 4FF0FF34 		mov	r4, #-1
+ 109 007a F7E7     		b	.L1
+ 110              	.L5:
+  12:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_SCORE, "B", "")) return -1;
+ 111              		.loc 1 12 0
+ 112 007c 4FF0FF34 		mov	r4, #-1
+ 113 0080 F4E7     		b	.L1
+ 114              	.L6:
+  13:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_PLAN, "", "bs")) return -1;
+ 115              		.loc 1 13 0
+ 116 0082 4FF0FF34 		mov	r4, #-1
+ 117 0086 F1E7     		b	.L1
+ 118              	.L7:
+  14:Src/pi_client.c ****   if(RC_Client_Add_Function(&pi_client, PI_LOG, "s", "")) return -1;
+ 119              		.loc 1 14 0
+ 120 0088 4FF0FF34 		mov	r4, #-1
+ 121 008c EEE7     		b	.L1
+ 122              	.L8:
+  15:Src/pi_client.c ****   //if(RC_Client_Add_Function(&pi_client, PI_ASSER, "b", "bfffii")) return -1;
+ 123              		.loc 1 15 0
+ 124 008e 4FF0FF34 		mov	r4, #-1
+ 125 0092 EBE7     		b	.L1
+ 126              	.L11:
+ 127              		.align	2
+ 128              	.L10:
+ 129 0094 00000000 		.word	.LANCHOR0
+ 130 0098 00000000 		.word	pi_iface
+ 131 009c 00000000 		.word	.LC0
+ 132 00a0 04000000 		.word	.LC1
+ 133 00a4 08000000 		.word	.LC2
+ 134 00a8 0C000000 		.word	.LC3
+ 135              		.cfi_endproc
+ 136              	.LFE679:
+ 138              		.section	.text.PI_Start,"ax",%progbits
+ 139              		.align	1
+ 140              		.global	PI_Start
+ 141              		.syntax unified
+ 142              		.thumb
+ARM GAS  /tmp/ccO7PXeS.s 			page 4
+
+
+ 143              		.thumb_func
+ 144              		.fpu fpv4-sp-d16
+ 146              	PI_Start:
+ 147              	.LFB680:
+  26:Src/pi_client.c **** 
+  27:Src/pi_client.c **** int PI_Start(){
+ 148              		.loc 1 27 0
+ 149              		.cfi_startproc
+ 150              		@ args = 0, pretend = 0, frame = 0
+ 151              		@ frame_needed = 0, uses_anonymous_args = 0
+ 152 0000 08B5     		push	{r3, lr}
+ 153              	.LCFI1:
+ 154              		.cfi_def_cfa_offset 8
+ 155              		.cfi_offset 3, -8
+ 156              		.cfi_offset 14, -4
+  28:Src/pi_client.c **** 
+  29:Src/pi_client.c ****   
+  30:Src/pi_client.c ****   return RC_Call(&pi_client, PI_START);
+ 157              		.loc 1 30 0
+ 158 0002 0021     		movs	r1, #0
+ 159 0004 0148     		ldr	r0, .L14
+ 160 0006 FFF7FEFF 		bl	RC_Call
+ 161              	.LVL8:
+  31:Src/pi_client.c **** }
+ 162              		.loc 1 31 0
+ 163 000a 08BD     		pop	{r3, pc}
+ 164              	.L15:
+ 165              		.align	2
+ 166              	.L14:
+ 167 000c 00000000 		.word	.LANCHOR0
+ 168              		.cfi_endproc
+ 169              	.LFE680:
+ 171              		.section	.text.PI_Stop,"ax",%progbits
+ 172              		.align	1
+ 173              		.global	PI_Stop
+ 174              		.syntax unified
+ 175              		.thumb
+ 176              		.thumb_func
+ 177              		.fpu fpv4-sp-d16
+ 179              	PI_Stop:
+ 180              	.LFB681:
+  32:Src/pi_client.c **** 
+  33:Src/pi_client.c **** int PI_Stop(){
+ 181              		.loc 1 33 0
+ 182              		.cfi_startproc
+ 183              		@ args = 0, pretend = 0, frame = 0
+ 184              		@ frame_needed = 0, uses_anonymous_args = 0
+ 185 0000 08B5     		push	{r3, lr}
+ 186              	.LCFI2:
+ 187              		.cfi_def_cfa_offset 8
+ 188              		.cfi_offset 3, -8
+ 189              		.cfi_offset 14, -4
+  34:Src/pi_client.c ****   return RC_Call(&pi_client, PI_STOP);
+ 190              		.loc 1 34 0
+ 191 0002 0121     		movs	r1, #1
+ 192 0004 0148     		ldr	r0, .L18
+ 193 0006 FFF7FEFF 		bl	RC_Call
+ARM GAS  /tmp/ccO7PXeS.s 			page 5
+
+
+ 194              	.LVL9:
+  35:Src/pi_client.c **** }
+ 195              		.loc 1 35 0
+ 196 000a 08BD     		pop	{r3, pc}
+ 197              	.L19:
+ 198              		.align	2
+ 199              	.L18:
+ 200 000c 00000000 		.word	.LANCHOR0
+ 201              		.cfi_endproc
+ 202              	.LFE681:
+ 204              		.section	.text.PI_Error,"ax",%progbits
+ 205              		.align	1
+ 206              		.global	PI_Error
+ 207              		.syntax unified
+ 208              		.thumb
+ 209              		.thumb_func
+ 210              		.fpu fpv4-sp-d16
+ 212              	PI_Error:
+ 213              	.LFB682:
+  36:Src/pi_client.c **** 
+  37:Src/pi_client.c **** int PI_Error(){
+ 214              		.loc 1 37 0
+ 215              		.cfi_startproc
+ 216              		@ args = 0, pretend = 0, frame = 0
+ 217              		@ frame_needed = 0, uses_anonymous_args = 0
+ 218 0000 08B5     		push	{r3, lr}
+ 219              	.LCFI3:
+ 220              		.cfi_def_cfa_offset 8
+ 221              		.cfi_offset 3, -8
+ 222              		.cfi_offset 14, -4
+  38:Src/pi_client.c ****   return RC_Call(&pi_client, PI_ERROR);
+ 223              		.loc 1 38 0
+ 224 0002 0221     		movs	r1, #2
+ 225 0004 0148     		ldr	r0, .L22
+ 226 0006 FFF7FEFF 		bl	RC_Call
+ 227              	.LVL10:
+  39:Src/pi_client.c **** }
+ 228              		.loc 1 39 0
+ 229 000a 08BD     		pop	{r3, pc}
+ 230              	.L23:
+ 231              		.align	2
+ 232              	.L22:
+ 233 000c 00000000 		.word	.LANCHOR0
+ 234              		.cfi_endproc
+ 235              	.LFE682:
+ 237              		.section	.text.PI_Score,"ax",%progbits
+ 238              		.align	1
+ 239              		.global	PI_Score
+ 240              		.syntax unified
+ 241              		.thumb
+ 242              		.thumb_func
+ 243              		.fpu fpv4-sp-d16
+ 245              	PI_Score:
+ 246              	.LFB683:
+  40:Src/pi_client.c **** 
+  41:Src/pi_client.c **** int PI_Score(uint16_t score){
+ 247              		.loc 1 41 0
+ARM GAS  /tmp/ccO7PXeS.s 			page 6
+
+
+ 248              		.cfi_startproc
+ 249              		@ args = 0, pretend = 0, frame = 0
+ 250              		@ frame_needed = 0, uses_anonymous_args = 0
+ 251              	.LVL11:
+ 252 0000 08B5     		push	{r3, lr}
+ 253              	.LCFI4:
+ 254              		.cfi_def_cfa_offset 8
+ 255              		.cfi_offset 3, -8
+ 256              		.cfi_offset 14, -4
+  42:Src/pi_client.c ****   return RC_Call(&pi_client, PI_SCORE, score);
+ 257              		.loc 1 42 0
+ 258 0002 0246     		mov	r2, r0
+ 259 0004 0321     		movs	r1, #3
+ 260 0006 0248     		ldr	r0, .L26
+ 261              	.LVL12:
+ 262 0008 FFF7FEFF 		bl	RC_Call
+ 263              	.LVL13:
+  43:Src/pi_client.c **** }
+ 264              		.loc 1 43 0
+ 265 000c 08BD     		pop	{r3, pc}
+ 266              	.L27:
+ 267 000e 00BF     		.align	2
+ 268              	.L26:
+ 269 0010 00000000 		.word	.LANCHOR0
+ 270              		.cfi_endproc
+ 271              	.LFE683:
+ 273              		.section	.text.PI_Log,"ax",%progbits
+ 274              		.align	1
+ 275              		.global	PI_Log
+ 276              		.syntax unified
+ 277              		.thumb
+ 278              		.thumb_func
+ 279              		.fpu fpv4-sp-d16
+ 281              	PI_Log:
+ 282              	.LFB684:
+  44:Src/pi_client.c ****     
+  45:Src/pi_client.c **** int PI_Log(const char *fmt, ...){
+ 283              		.loc 1 45 0
+ 284              		.cfi_startproc
+ 285              		@ args = 4, pretend = 16, frame = 72
+ 286              		@ frame_needed = 0, uses_anonymous_args = 1
+ 287              	.LVL14:
+ 288 0000 0FB4     		push	{r0, r1, r2, r3}
+ 289              	.LCFI5:
+ 290              		.cfi_def_cfa_offset 16
+ 291              		.cfi_offset 0, -16
+ 292              		.cfi_offset 1, -12
+ 293              		.cfi_offset 2, -8
+ 294              		.cfi_offset 3, -4
+ 295 0002 00B5     		push	{lr}
+ 296              	.LCFI6:
+ 297              		.cfi_def_cfa_offset 20
+ 298              		.cfi_offset 14, -20
+ 299 0004 93B0     		sub	sp, sp, #76
+ 300              	.LCFI7:
+ 301              		.cfi_def_cfa_offset 96
+ 302 0006 14AB     		add	r3, sp, #80
+ARM GAS  /tmp/ccO7PXeS.s 			page 7
+
+
+ 303 0008 53F8042B 		ldr	r2, [r3], #4
+  46:Src/pi_client.c ****   va_list args;
+  47:Src/pi_client.c ****   va_start(args, fmt);
+ 304              		.loc 1 47 0
+ 305 000c 1193     		str	r3, [sp, #68]
+  48:Src/pi_client.c ****   
+  49:Src/pi_client.c ****   char log[RC_STR_SIZE];
+  50:Src/pi_client.c ****   vsnprintf(log, RC_STR_SIZE, fmt, args);  
+ 306              		.loc 1 50 0
+ 307 000e 4021     		movs	r1, #64
+ 308 0010 01A8     		add	r0, sp, #4
+ 309 0012 FFF7FEFF 		bl	vsnprintf
+ 310              	.LVL15:
+  51:Src/pi_client.c **** 
+  52:Src/pi_client.c ****   va_end(args);
+  53:Src/pi_client.c **** 
+  54:Src/pi_client.c ****   return RC_Call(&pi_client, PI_LOG, log);
+ 311              		.loc 1 54 0
+ 312 0016 01AA     		add	r2, sp, #4
+ 313 0018 0521     		movs	r1, #5
+ 314 001a 0448     		ldr	r0, .L30
+ 315 001c FFF7FEFF 		bl	RC_Call
+ 316              	.LVL16:
+  55:Src/pi_client.c **** }
+ 317              		.loc 1 55 0
+ 318 0020 13B0     		add	sp, sp, #76
+ 319              	.LCFI8:
+ 320              		.cfi_def_cfa_offset 20
+ 321              		@ sp needed
+ 322 0022 5DF804EB 		ldr	lr, [sp], #4
+ 323              	.LCFI9:
+ 324              		.cfi_restore 14
+ 325              		.cfi_def_cfa_offset 16
+ 326 0026 04B0     		add	sp, sp, #16
+ 327              	.LCFI10:
+ 328              		.cfi_restore 3
+ 329              		.cfi_restore 2
+ 330              		.cfi_restore 1
+ 331              		.cfi_restore 0
+ 332              		.cfi_def_cfa_offset 0
+ 333 0028 7047     		bx	lr
+ 334              	.L31:
+ 335 002a 00BF     		.align	2
+ 336              	.L30:
+ 337 002c 00000000 		.word	.LANCHOR0
+ 338              		.cfi_endproc
+ 339              	.LFE684:
+ 341              		.section	.text.PI_Plan,"ax",%progbits
+ 342              		.align	1
+ 343              		.global	PI_Plan
+ 344              		.syntax unified
+ 345              		.thumb
+ 346              		.thumb_func
+ 347              		.fpu fpv4-sp-d16
+ 349              	PI_Plan:
+ 350              	.LFB686:
+  56:Src/pi_client.c **** 
+ARM GAS  /tmp/ccO7PXeS.s 			page 8
+
+
+  57:Src/pi_client.c **** typedef enum CV_State_E{
+  58:Src/pi_client.c ****   CV_RUNNING,
+  59:Src/pi_client.c ****   CV_ERR_TIMEOUT,
+  60:Src/pi_client.c ****   CV_ERR,
+  61:Src/pi_client.c ****   CV_OK
+  62:Src/pi_client.c **** }CV_State;
+  63:Src/pi_client.c **** 
+  64:Src/pi_client.c **** static inline Cube_Color CV_To_Color(char c){
+  65:Src/pi_client.c ****   switch(c){
+  66:Src/pi_client.c ****   case 'O':
+  67:Src/pi_client.c ****     return ORANGE;
+  68:Src/pi_client.c ****     break;
+  69:Src/pi_client.c ****   case 'B':
+  70:Src/pi_client.c ****     return BLACK;
+  71:Src/pi_client.c ****     break;
+  72:Src/pi_client.c ****   case 'G':
+  73:Src/pi_client.c ****     return GREEN;
+  74:Src/pi_client.c ****     break;
+  75:Src/pi_client.c ****   case 'Y':
+  76:Src/pi_client.c ****     return YELLOW;
+  77:Src/pi_client.c ****     break;
+  78:Src/pi_client.c ****   case 'b':
+  79:Src/pi_client.c ****     return BLUE;
+  80:Src/pi_client.c ****     break;
+  81:Src/pi_client.c ****   default:
+  82:Src/pi_client.c ****     return 0;//Should not happen
+  83:Src/pi_client.c ****   }
+  84:Src/pi_client.c **** }
+  85:Src/pi_client.c **** 
+  86:Src/pi_client.c **** int PI_Plan(){
+ 351              		.loc 1 86 0
+ 352              		.cfi_startproc
+ 353              		@ args = 0, pretend = 0, frame = 72
+ 354              		@ frame_needed = 0, uses_anonymous_args = 0
+ 355 0000 10B5     		push	{r4, lr}
+ 356              	.LCFI11:
+ 357              		.cfi_def_cfa_offset 8
+ 358              		.cfi_offset 4, -8
+ 359              		.cfi_offset 14, -4
+ 360 0002 92B0     		sub	sp, sp, #72
+ 361              	.LCFI12:
+ 362              		.cfi_def_cfa_offset 80
+  87:Src/pi_client.c ****   char str[RC_STR_SIZE];
+  88:Src/pi_client.c ****   uint8_t state;
+  89:Src/pi_client.c ****   
+  90:Src/pi_client.c ****   if(RC_Call(&pi_client, PI_PLAN, &state, str) == -1){
+ 363              		.loc 1 90 0
+ 364 0004 02AB     		add	r3, sp, #8
+ 365 0006 0DF10702 		add	r2, sp, #7
+ 366 000a 0421     		movs	r1, #4
+ 367 000c 4E48     		ldr	r0, .L68
+ 368 000e FFF7FEFF 		bl	RC_Call
+ 369              	.LVL17:
+ 370 0012 B0F1FF3F 		cmp	r0, #-1
+ 371 0016 00F09180 		beq	.L32
+  91:Src/pi_client.c ****     return -1;
+  92:Src/pi_client.c ****   }
+ARM GAS  /tmp/ccO7PXeS.s 			page 9
+
+
+  93:Src/pi_client.c **** 
+  94:Src/pi_client.c ****   HAL_Delay(1000);
+ 372              		.loc 1 94 0
+ 373 001a 4FF47A70 		mov	r0, #1000
+ 374 001e FFF7FEFF 		bl	HAL_Delay
+ 375              	.LVL18:
+  95:Src/pi_client.c ****   int retry;
+  96:Src/pi_client.c ****   for(retry = 0; retry < 3; retry++){
+ 376              		.loc 1 96 0
+ 377 0022 0024     		movs	r4, #0
+ 378              	.LVL19:
+ 379              	.L34:
+ 380              		.loc 1 96 0 is_stmt 0 discriminator 1
+ 381 0024 022C     		cmp	r4, #2
+ 382 0026 00F38780 		bgt	.L67
+  97:Src/pi_client.c ****     if(RC_Call(&pi_client, PI_PLAN, &state, str) == -1){
+ 383              		.loc 1 97 0 is_stmt 1
+ 384 002a 02AB     		add	r3, sp, #8
+ 385 002c 0DF10702 		add	r2, sp, #7
+ 386 0030 0421     		movs	r1, #4
+ 387 0032 4548     		ldr	r0, .L68
+ 388 0034 FFF7FEFF 		bl	RC_Call
+ 389              	.LVL20:
+ 390 0038 B0F1FF3F 		cmp	r0, #-1
+ 391 003c 7ED0     		beq	.L32
+  98:Src/pi_client.c ****       return -1;
+  99:Src/pi_client.c ****     }
+ 100:Src/pi_client.c ****     switch((CV_State) state){
+ 392              		.loc 1 100 0
+ 393 003e 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 394 0042 032B     		cmp	r3, #3
+ 395 0044 09D8     		bhi	.L35
+ 396 0046 DFE803F0 		tbb	[pc, r3]
+ 397              	.L37:
+ 398 004a 04       		.byte	(.L36-.L37)/2
+ 399 004b 7B       		.byte	(.L62-.L37)/2
+ 400 004c 02       		.byte	(.L38-.L37)/2
+ 401 004d 0A       		.byte	(.L39-.L37)/2
+ 402              		.p2align 1
+ 403              	.L38:
+ 101:Src/pi_client.c ****     case CV_RUNNING:
+ 102:Src/pi_client.c ****       HAL_Delay(1000);
+ 103:Src/pi_client.c ****       break;
+ 104:Src/pi_client.c ****     case CV_ERR:
+ 105:Src/pi_client.c ****       return 0;
+ 404              		.loc 1 105 0
+ 405 004e 0020     		movs	r0, #0
+ 406 0050 74E0     		b	.L32
+ 407              	.L36:
+ 102:Src/pi_client.c ****       break;
+ 408              		.loc 1 102 0
+ 409 0052 4FF47A70 		mov	r0, #1000
+ 410 0056 FFF7FEFF 		bl	HAL_Delay
+ 411              	.LVL21:
+ 412              	.L35:
+  96:Src/pi_client.c ****     if(RC_Call(&pi_client, PI_PLAN, &state, str) == -1){
+ 413              		.loc 1 96 0 discriminator 2
+ARM GAS  /tmp/ccO7PXeS.s 			page 10
+
+
+ 414 005a 0134     		adds	r4, r4, #1
+ 415              	.LVL22:
+ 416 005c E2E7     		b	.L34
+ 417              	.L39:
+ 106:Src/pi_client.c ****       break;
+ 107:Src/pi_client.c ****     case CV_ERR_TIMEOUT:
+ 108:Src/pi_client.c ****       return -1;
+ 109:Src/pi_client.c ****       break;
+ 110:Src/pi_client.c ****     case CV_OK:
+ 111:Src/pi_client.c ****       Set_Construction_Plan(CV_To_Color(str[0]),
+ 418              		.loc 1 111 0
+ 419 005e 9DF80830 		ldrb	r3, [sp, #8]	@ zero_extendqisi2
+ 420              	.LVL23:
+ 421              	.LBB8:
+ 422              	.LBB9:
+  65:Src/pi_client.c ****   case 'O':
+ 423              		.loc 1 65 0
+ 424 0062 423B     		subs	r3, r3, #66
+ 425              	.LVL24:
+ 426 0064 202B     		cmp	r3, #32
+ 427 0066 1AD8     		bhi	.L40
+ 428 0068 DFE803F0 		tbb	[pc, r3]
+ 429              	.L42:
+ 430 006c 1B       		.byte	(.L63-.L42)/2
+ 431 006d 19       		.byte	(.L40-.L42)/2
+ 432 006e 19       		.byte	(.L40-.L42)/2
+ 433 006f 19       		.byte	(.L40-.L42)/2
+ 434 0070 19       		.byte	(.L40-.L42)/2
+ 435 0071 13       		.byte	(.L43-.L42)/2
+ 436 0072 19       		.byte	(.L40-.L42)/2
+ 437 0073 19       		.byte	(.L40-.L42)/2
+ 438 0074 19       		.byte	(.L40-.L42)/2
+ 439 0075 19       		.byte	(.L40-.L42)/2
+ 440 0076 19       		.byte	(.L40-.L42)/2
+ 441 0077 19       		.byte	(.L40-.L42)/2
+ 442 0078 19       		.byte	(.L40-.L42)/2
+ 443 0079 11       		.byte	(.L44-.L42)/2
+ 444 007a 19       		.byte	(.L40-.L42)/2
+ 445 007b 19       		.byte	(.L40-.L42)/2
+ 446 007c 19       		.byte	(.L40-.L42)/2
+ 447 007d 19       		.byte	(.L40-.L42)/2
+ 448 007e 19       		.byte	(.L40-.L42)/2
+ 449 007f 19       		.byte	(.L40-.L42)/2
+ 450 0080 19       		.byte	(.L40-.L42)/2
+ 451 0081 19       		.byte	(.L40-.L42)/2
+ 452 0082 19       		.byte	(.L40-.L42)/2
+ 453 0083 15       		.byte	(.L45-.L42)/2
+ 454 0084 19       		.byte	(.L40-.L42)/2
+ 455 0085 19       		.byte	(.L40-.L42)/2
+ 456 0086 19       		.byte	(.L40-.L42)/2
+ 457 0087 19       		.byte	(.L40-.L42)/2
+ 458 0088 19       		.byte	(.L40-.L42)/2
+ 459 0089 19       		.byte	(.L40-.L42)/2
+ 460 008a 19       		.byte	(.L40-.L42)/2
+ 461 008b 19       		.byte	(.L40-.L42)/2
+ 462 008c 17       		.byte	(.L46-.L42)/2
+ 463 008d 00       		.p2align 1
+ARM GAS  /tmp/ccO7PXeS.s 			page 11
+
+
+ 464              	.L44:
+  67:Src/pi_client.c ****     break;
+ 465              		.loc 1 67 0
+ 466 008e 0220     		movs	r0, #2
+ 467 0090 08E0     		b	.L41
+ 468              	.L43:
+  73:Src/pi_client.c ****     break;
+ 469              		.loc 1 73 0
+ 470 0092 0020     		movs	r0, #0
+ 471 0094 06E0     		b	.L41
+ 472              	.L45:
+  76:Src/pi_client.c ****     break;
+ 473              		.loc 1 76 0
+ 474 0096 0120     		movs	r0, #1
+ 475 0098 04E0     		b	.L41
+ 476              	.L46:
+  79:Src/pi_client.c ****     break;
+ 477              		.loc 1 79 0
+ 478 009a 0420     		movs	r0, #4
+ 479 009c 02E0     		b	.L41
+ 480              	.L40:
+  82:Src/pi_client.c ****   }
+ 481              		.loc 1 82 0
+ 482 009e 0020     		movs	r0, #0
+ 483 00a0 00E0     		b	.L41
+ 484              	.L63:
+  70:Src/pi_client.c ****     break;
+ 485              		.loc 1 70 0
+ 486 00a2 0320     		movs	r0, #3
+ 487              	.L41:
+ 488              	.LVL25:
+ 489              	.LBE9:
+ 490              	.LBE8:
+ 491              		.loc 1 111 0
+ 492 00a4 9DF80930 		ldrb	r3, [sp, #9]	@ zero_extendqisi2
+ 493              	.LVL26:
+ 494              	.LBB10:
+ 495              	.LBB11:
+  65:Src/pi_client.c ****   case 'O':
+ 496              		.loc 1 65 0
+ 497 00a8 423B     		subs	r3, r3, #66
+ 498              	.LVL27:
+ 499 00aa 202B     		cmp	r3, #32
+ 500 00ac 1AD8     		bhi	.L47
+ 501 00ae DFE803F0 		tbb	[pc, r3]
+ 502              	.L49:
+ 503 00b2 1B       		.byte	(.L64-.L49)/2
+ 504 00b3 19       		.byte	(.L47-.L49)/2
+ 505 00b4 19       		.byte	(.L47-.L49)/2
+ 506 00b5 19       		.byte	(.L47-.L49)/2
+ 507 00b6 19       		.byte	(.L47-.L49)/2
+ 508 00b7 13       		.byte	(.L50-.L49)/2
+ 509 00b8 19       		.byte	(.L47-.L49)/2
+ 510 00b9 19       		.byte	(.L47-.L49)/2
+ 511 00ba 19       		.byte	(.L47-.L49)/2
+ 512 00bb 19       		.byte	(.L47-.L49)/2
+ 513 00bc 19       		.byte	(.L47-.L49)/2
+ARM GAS  /tmp/ccO7PXeS.s 			page 12
+
+
+ 514 00bd 19       		.byte	(.L47-.L49)/2
+ 515 00be 19       		.byte	(.L47-.L49)/2
+ 516 00bf 11       		.byte	(.L51-.L49)/2
+ 517 00c0 19       		.byte	(.L47-.L49)/2
+ 518 00c1 19       		.byte	(.L47-.L49)/2
+ 519 00c2 19       		.byte	(.L47-.L49)/2
+ 520 00c3 19       		.byte	(.L47-.L49)/2
+ 521 00c4 19       		.byte	(.L47-.L49)/2
+ 522 00c5 19       		.byte	(.L47-.L49)/2
+ 523 00c6 19       		.byte	(.L47-.L49)/2
+ 524 00c7 19       		.byte	(.L47-.L49)/2
+ 525 00c8 19       		.byte	(.L47-.L49)/2
+ 526 00c9 15       		.byte	(.L52-.L49)/2
+ 527 00ca 19       		.byte	(.L47-.L49)/2
+ 528 00cb 19       		.byte	(.L47-.L49)/2
+ 529 00cc 19       		.byte	(.L47-.L49)/2
+ 530 00cd 19       		.byte	(.L47-.L49)/2
+ 531 00ce 19       		.byte	(.L47-.L49)/2
+ 532 00cf 19       		.byte	(.L47-.L49)/2
+ 533 00d0 19       		.byte	(.L47-.L49)/2
+ 534 00d1 19       		.byte	(.L47-.L49)/2
+ 535 00d2 17       		.byte	(.L53-.L49)/2
+ 536 00d3 00       		.p2align 1
+ 537              	.L51:
+  67:Src/pi_client.c ****     break;
+ 538              		.loc 1 67 0
+ 539 00d4 0221     		movs	r1, #2
+ 540 00d6 08E0     		b	.L48
+ 541              	.L50:
+  73:Src/pi_client.c ****     break;
+ 542              		.loc 1 73 0
+ 543 00d8 0021     		movs	r1, #0
+ 544 00da 06E0     		b	.L48
+ 545              	.L52:
+  76:Src/pi_client.c ****     break;
+ 546              		.loc 1 76 0
+ 547 00dc 0121     		movs	r1, #1
+ 548 00de 04E0     		b	.L48
+ 549              	.L53:
+  79:Src/pi_client.c ****     break;
+ 550              		.loc 1 79 0
+ 551 00e0 0421     		movs	r1, #4
+ 552 00e2 02E0     		b	.L48
+ 553              	.L47:
+  82:Src/pi_client.c ****   }
+ 554              		.loc 1 82 0
+ 555 00e4 0021     		movs	r1, #0
+ 556 00e6 00E0     		b	.L48
+ 557              	.L64:
+  70:Src/pi_client.c ****     break;
+ 558              		.loc 1 70 0
+ 559 00e8 0321     		movs	r1, #3
+ 560              	.L48:
+ 561              	.LVL28:
+ 562              	.LBE11:
+ 563              	.LBE10:
+ 564              		.loc 1 111 0
+ARM GAS  /tmp/ccO7PXeS.s 			page 13
+
+
+ 565 00ea 9DF80A30 		ldrb	r3, [sp, #10]	@ zero_extendqisi2
+ 566              	.LVL29:
+ 567              	.LBB12:
+ 568              	.LBB13:
+  65:Src/pi_client.c ****   case 'O':
+ 569              		.loc 1 65 0
+ 570 00ee 423B     		subs	r3, r3, #66
+ 571              	.LVL30:
+ 572 00f0 202B     		cmp	r3, #32
+ 573 00f2 1AD8     		bhi	.L54
+ 574 00f4 DFE803F0 		tbb	[pc, r3]
+ 575              	.L56:
+ 576 00f8 1B       		.byte	(.L65-.L56)/2
+ 577 00f9 19       		.byte	(.L54-.L56)/2
+ 578 00fa 19       		.byte	(.L54-.L56)/2
+ 579 00fb 19       		.byte	(.L54-.L56)/2
+ 580 00fc 19       		.byte	(.L54-.L56)/2
+ 581 00fd 13       		.byte	(.L57-.L56)/2
+ 582 00fe 19       		.byte	(.L54-.L56)/2
+ 583 00ff 19       		.byte	(.L54-.L56)/2
+ 584 0100 19       		.byte	(.L54-.L56)/2
+ 585 0101 19       		.byte	(.L54-.L56)/2
+ 586 0102 19       		.byte	(.L54-.L56)/2
+ 587 0103 19       		.byte	(.L54-.L56)/2
+ 588 0104 19       		.byte	(.L54-.L56)/2
+ 589 0105 11       		.byte	(.L58-.L56)/2
+ 590 0106 19       		.byte	(.L54-.L56)/2
+ 591 0107 19       		.byte	(.L54-.L56)/2
+ 592 0108 19       		.byte	(.L54-.L56)/2
+ 593 0109 19       		.byte	(.L54-.L56)/2
+ 594 010a 19       		.byte	(.L54-.L56)/2
+ 595 010b 19       		.byte	(.L54-.L56)/2
+ 596 010c 19       		.byte	(.L54-.L56)/2
+ 597 010d 19       		.byte	(.L54-.L56)/2
+ 598 010e 19       		.byte	(.L54-.L56)/2
+ 599 010f 15       		.byte	(.L59-.L56)/2
+ 600 0110 19       		.byte	(.L54-.L56)/2
+ 601 0111 19       		.byte	(.L54-.L56)/2
+ 602 0112 19       		.byte	(.L54-.L56)/2
+ 603 0113 19       		.byte	(.L54-.L56)/2
+ 604 0114 19       		.byte	(.L54-.L56)/2
+ 605 0115 19       		.byte	(.L54-.L56)/2
+ 606 0116 19       		.byte	(.L54-.L56)/2
+ 607 0117 19       		.byte	(.L54-.L56)/2
+ 608 0118 17       		.byte	(.L60-.L56)/2
+ 609 0119 00       		.p2align 1
+ 610              	.L58:
+  67:Src/pi_client.c ****     break;
+ 611              		.loc 1 67 0
+ 612 011a 0222     		movs	r2, #2
+ 613 011c 08E0     		b	.L55
+ 614              	.L57:
+  73:Src/pi_client.c ****     break;
+ 615              		.loc 1 73 0
+ 616 011e 0022     		movs	r2, #0
+ 617 0120 06E0     		b	.L55
+ 618              	.L59:
+ARM GAS  /tmp/ccO7PXeS.s 			page 14
+
+
+  76:Src/pi_client.c ****     break;
+ 619              		.loc 1 76 0
+ 620 0122 0122     		movs	r2, #1
+ 621 0124 04E0     		b	.L55
+ 622              	.L60:
+  79:Src/pi_client.c ****     break;
+ 623              		.loc 1 79 0
+ 624 0126 0422     		movs	r2, #4
+ 625 0128 02E0     		b	.L55
+ 626              	.L54:
+  82:Src/pi_client.c ****   }
+ 627              		.loc 1 82 0
+ 628 012a 0022     		movs	r2, #0
+ 629 012c 00E0     		b	.L55
+ 630              	.L65:
+  70:Src/pi_client.c ****     break;
+ 631              		.loc 1 70 0
+ 632 012e 0322     		movs	r2, #3
+ 633              	.L55:
+ 634              	.LVL31:
+ 635              	.LBE13:
+ 636              	.LBE12:
+ 637              		.loc 1 111 0
+ 638 0130 FFF7FEFF 		bl	Set_Construction_Plan
+ 639              	.LVL32:
+ 112:Src/pi_client.c **** 			    CV_To_Color(str[1]),
+ 113:Src/pi_client.c **** 			    CV_To_Color(str[2]));
+ 114:Src/pi_client.c ****       return 1;
+ 640              		.loc 1 114 0
+ 641 0134 0120     		movs	r0, #1
+ 642 0136 01E0     		b	.L32
+ 643              	.L67:
+ 115:Src/pi_client.c ****       break;
+ 116:Src/pi_client.c ****     }
+ 117:Src/pi_client.c ****   }
+ 118:Src/pi_client.c **** 
+ 119:Src/pi_client.c ****   return -1;
+ 644              		.loc 1 119 0
+ 645 0138 4FF0FF30 		mov	r0, #-1
+ 646              	.LVL33:
+ 647              	.L32:
+ 120:Src/pi_client.c **** }
+ 648              		.loc 1 120 0
+ 649 013c 12B0     		add	sp, sp, #72
+ 650              	.LCFI13:
+ 651              		.cfi_remember_state
+ 652              		.cfi_def_cfa_offset 8
+ 653              		@ sp needed
+ 654 013e 10BD     		pop	{r4, pc}
+ 655              	.LVL34:
+ 656              	.L62:
+ 657              	.LCFI14:
+ 658              		.cfi_restore_state
+ 108:Src/pi_client.c ****       break;
+ 659              		.loc 1 108 0
+ 660 0140 4FF0FF30 		mov	r0, #-1
+ 661 0144 FAE7     		b	.L32
+ARM GAS  /tmp/ccO7PXeS.s 			page 15
+
+
+ 662              	.L69:
+ 663 0146 00BF     		.align	2
+ 664              	.L68:
+ 665 0148 00000000 		.word	.LANCHOR0
+ 666              		.cfi_endproc
+ 667              	.LFE686:
+ 669              		.section	.bss.pi_client,"aw",%nobits
+ 670              		.align	2
+ 671              		.set	.LANCHOR0,. + 0
+ 674              	pi_client:
+ 675 0000 00000000 		.space	616
+ 675      00000000 
+ 675      00000000 
+ 675      00000000 
+ 675      00000000 
+ 676              		.section	.rodata.PI_Init.str1.4,"aMS",%progbits,1
+ 677              		.align	2
+ 678              	.LC0:
+ 679 0000 00       		.ascii	"\000"
+ 680 0001 000000   		.space	3
+ 681              	.LC1:
+ 682 0004 4200     		.ascii	"B\000"
+ 683 0006 0000     		.space	2
+ 684              	.LC2:
+ 685 0008 627300   		.ascii	"bs\000"
+ 686 000b 00       		.space	1
+ 687              	.LC3:
+ 688 000c 7300     		.ascii	"s\000"
+ 689              		.text
+ 690              	.Letext0:
+ 691              		.file 2 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stdarg.h"
+ 692              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 693              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 694              		.file 5 "Drivers/CMSIS/Include/core_cm4.h"
+ 695              		.file 6 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h"
+ 696              		.file 7 "/usr/arm-none-eabi/include/sys/lock.h"
+ 697              		.file 8 "/usr/arm-none-eabi/include/sys/_types.h"
+ 698              		.file 9 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 699              		.file 10 "/usr/arm-none-eabi/include/sys/reent.h"
+ 700              		.file 11 "<built-in>"
+ 701              		.file 12 "Inc/crc_16.h"
+ 702              		.file 13 "Inc/robotronik_protocol.h"
+ 703              		.file 14 "Inc/usart.h"
+ 704              		.file 15 "/usr/arm-none-eabi/include/stdlib.h"
+ 705              		.file 16 "Inc/remote_call.h"
+ 706              		.file 17 "Inc/pi_client.h"
+ 707              		.file 18 "Inc/game_defs.h"
+ 708              		.file 19 "Inc/strategy.h"
+ 709              		.file 20 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_dma.h"
+ 710              		.file 21 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 711              		.file 22 "/usr/arm-none-eabi/include/stdio.h"
+ARM GAS  /tmp/ccO7PXeS.s 			page 16
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 pi_client.c
+     /tmp/ccO7PXeS.s:18     .text.PI_Init:0000000000000000 $t
+     /tmp/ccO7PXeS.s:25     .text.PI_Init:0000000000000000 PI_Init
+     /tmp/ccO7PXeS.s:129    .text.PI_Init:0000000000000094 $d
+     /tmp/ccO7PXeS.s:139    .text.PI_Start:0000000000000000 $t
+     /tmp/ccO7PXeS.s:146    .text.PI_Start:0000000000000000 PI_Start
+     /tmp/ccO7PXeS.s:167    .text.PI_Start:000000000000000c $d
+     /tmp/ccO7PXeS.s:172    .text.PI_Stop:0000000000000000 $t
+     /tmp/ccO7PXeS.s:179    .text.PI_Stop:0000000000000000 PI_Stop
+     /tmp/ccO7PXeS.s:200    .text.PI_Stop:000000000000000c $d
+     /tmp/ccO7PXeS.s:205    .text.PI_Error:0000000000000000 $t
+     /tmp/ccO7PXeS.s:212    .text.PI_Error:0000000000000000 PI_Error
+     /tmp/ccO7PXeS.s:233    .text.PI_Error:000000000000000c $d
+     /tmp/ccO7PXeS.s:238    .text.PI_Score:0000000000000000 $t
+     /tmp/ccO7PXeS.s:245    .text.PI_Score:0000000000000000 PI_Score
+     /tmp/ccO7PXeS.s:269    .text.PI_Score:0000000000000010 $d
+     /tmp/ccO7PXeS.s:274    .text.PI_Log:0000000000000000 $t
+     /tmp/ccO7PXeS.s:281    .text.PI_Log:0000000000000000 PI_Log
+     /tmp/ccO7PXeS.s:337    .text.PI_Log:000000000000002c $d
+     /tmp/ccO7PXeS.s:342    .text.PI_Plan:0000000000000000 $t
+     /tmp/ccO7PXeS.s:349    .text.PI_Plan:0000000000000000 PI_Plan
+     /tmp/ccO7PXeS.s:398    .text.PI_Plan:000000000000004a $d
+     /tmp/ccO7PXeS.s:402    .text.PI_Plan:000000000000004e $t
+     /tmp/ccO7PXeS.s:430    .text.PI_Plan:000000000000006c $d
+     /tmp/ccO7PXeS.s:503    .text.PI_Plan:00000000000000b2 $d
+     /tmp/ccO7PXeS.s:576    .text.PI_Plan:00000000000000f8 $d
+     /tmp/ccO7PXeS.s:665    .text.PI_Plan:0000000000000148 $d
+     /tmp/ccO7PXeS.s:670    .bss.pi_client:0000000000000000 $d
+     /tmp/ccO7PXeS.s:674    .bss.pi_client:0000000000000000 pi_client
+     /tmp/ccO7PXeS.s:677    .rodata.PI_Init.str1.4:0000000000000000 $d
+     /tmp/ccO7PXeS.s:463    .text.PI_Plan:000000000000008d $d
+     /tmp/ccO7PXeS.s:463    .text.PI_Plan:000000000000008e $t
+     /tmp/ccO7PXeS.s:536    .text.PI_Plan:00000000000000d3 $d
+     /tmp/ccO7PXeS.s:536    .text.PI_Plan:00000000000000d4 $t
+     /tmp/ccO7PXeS.s:609    .text.PI_Plan:0000000000000119 $d
+     /tmp/ccO7PXeS.s:609    .text.PI_Plan:000000000000011a $t
+
+UNDEFINED SYMBOLS
+RC_Client_Init
+RC_Client_Add_Function
+RP_Sync
+pi_iface
+RC_Call
+vsnprintf
+HAL_Delay
+Set_Construction_Plan

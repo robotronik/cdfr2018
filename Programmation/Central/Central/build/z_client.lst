@@ -1,0 +1,813 @@
+ARM GAS  /tmp/ccvRgxHE.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"z_client.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.Z_Init,"ax",%progbits
+  18              		.align	1
+  19              		.global	Z_Init
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	Z_Init:
+  26              	.LFB679:
+  27              		.file 1 "Src/z_client.c"
+   1:Src/z_client.c **** #include "z_client.h"
+   2:Src/z_client.c **** #include "remote_call.h"
+   3:Src/z_client.c **** #include "usart.h"
+   4:Src/z_client.c **** 
+   5:Src/z_client.c **** static RC_Client z_client;
+   6:Src/z_client.c **** 
+   7:Src/z_client.c **** int Z_Init(){
+  28              		.loc 1 7 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+   8:Src/z_client.c ****   RC_Client_Init(&z_client, &z_iface, 0);
+  37              		.loc 1 8 0
+  38 0002 3E4C     		ldr	r4, .L15
+  39 0004 0022     		movs	r2, #0
+  40 0006 3E49     		ldr	r1, .L15+4
+  41 0008 2046     		mov	r0, r4
+  42 000a FFF7FEFF 		bl	RC_Client_Init
+  43              	.LVL0:
+   9:Src/z_client.c **** 
+  10:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_GET_STATE, "", "b") != 0) return -1;
+  44              		.loc 1 10 0
+  45 000e 3D4B     		ldr	r3, .L15+8
+  46 0010 3D4A     		ldr	r2, .L15+12
+  47 0012 0021     		movs	r1, #0
+  48 0014 2046     		mov	r0, r4
+ARM GAS  /tmp/ccvRgxHE.s 			page 2
+
+
+  49 0016 FFF7FEFF 		bl	RC_Client_Add_Function
+  50              	.LVL1:
+  51 001a 0028     		cmp	r0, #0
+  52 001c 4FD1     		bne	.L3
+  11:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_RESET, "", "") != 0) return -1;
+  53              		.loc 1 11 0
+  54 001e 3A4A     		ldr	r2, .L15+12
+  55 0020 1346     		mov	r3, r2
+  56 0022 0121     		movs	r1, #1
+  57 0024 2046     		mov	r0, r4
+  58 0026 FFF7FEFF 		bl	RC_Client_Add_Function
+  59              	.LVL2:
+  60 002a 0028     		cmp	r0, #0
+  61 002c 4AD1     		bne	.L4
+  12:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_SET_ASSER, "fffif", "") != 0) return -1;
+  62              		.loc 1 12 0
+  63 002e 364B     		ldr	r3, .L15+12
+  64 0030 364A     		ldr	r2, .L15+16
+  65 0032 0221     		movs	r1, #2
+  66 0034 2046     		mov	r0, r4
+  67 0036 FFF7FEFF 		bl	RC_Client_Add_Function
+  68              	.LVL3:
+  69 003a 0028     		cmp	r0, #0
+  70 003c 45D1     		bne	.L5
+  13:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_BALEC, "", "") != 0) return -1;
+  71              		.loc 1 13 0
+  72 003e 324A     		ldr	r2, .L15+12
+  73 0040 1346     		mov	r3, r2
+  74 0042 0321     		movs	r1, #3
+  75 0044 2046     		mov	r0, r4
+  76 0046 FFF7FEFF 		bl	RC_Client_Add_Function
+  77              	.LVL4:
+  78 004a 0028     		cmp	r0, #0
+  79 004c 40D1     		bne	.L6
+  14:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_PUNCH_BEE, "", "") != 0) return -1;
+  80              		.loc 1 14 0
+  81 004e 2E4A     		ldr	r2, .L15+12
+  82 0050 1346     		mov	r3, r2
+  83 0052 0421     		movs	r1, #4
+  84 0054 2046     		mov	r0, r4
+  85 0056 FFF7FEFF 		bl	RC_Client_Add_Function
+  86              	.LVL5:
+  87 005a 0028     		cmp	r0, #0
+  88 005c 3BD1     		bne	.L7
+  15:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_ARM_OUT, "", "") != 0) return -1;
+  89              		.loc 1 15 0
+  90 005e 2A4A     		ldr	r2, .L15+12
+  91 0060 1346     		mov	r3, r2
+  92 0062 0521     		movs	r1, #5
+  93 0064 2046     		mov	r0, r4
+  94 0066 FFF7FEFF 		bl	RC_Client_Add_Function
+  95              	.LVL6:
+  96 006a B8BB     		cbnz	r0, .L8
+  16:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_ARM_IN, "", "") != 0) return -1;
+  97              		.loc 1 16 0
+  98 006c 264A     		ldr	r2, .L15+12
+  99 006e 1346     		mov	r3, r2
+ARM GAS  /tmp/ccvRgxHE.s 			page 3
+
+
+ 100 0070 0621     		movs	r1, #6
+ 101 0072 2046     		mov	r0, r4
+ 102 0074 FFF7FEFF 		bl	RC_Client_Add_Function
+ 103              	.LVL7:
+ 104 0078 98BB     		cbnz	r0, .L9
+  17:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_STACK, "", "") != 0) return -1;
+ 105              		.loc 1 17 0
+ 106 007a 234A     		ldr	r2, .L15+12
+ 107 007c 1346     		mov	r3, r2
+ 108 007e 0821     		movs	r1, #8
+ 109 0080 2046     		mov	r0, r4
+ 110 0082 FFF7FEFF 		bl	RC_Client_Add_Function
+ 111              	.LVL8:
+ 112 0086 78BB     		cbnz	r0, .L10
+  18:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_STACK_LAST, "", "") != 0) return -1;
+ 113              		.loc 1 18 0
+ 114 0088 1F4A     		ldr	r2, .L15+12
+ 115 008a 1346     		mov	r3, r2
+ 116 008c 0921     		movs	r1, #9
+ 117 008e 2046     		mov	r0, r4
+ 118 0090 FFF7FEFF 		bl	RC_Client_Add_Function
+ 119              	.LVL9:
+ 120 0094 58BB     		cbnz	r0, .L11
+  19:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_UNSTACK, "", "") != 0) return -1;
+ 121              		.loc 1 19 0
+ 122 0096 1C4A     		ldr	r2, .L15+12
+ 123 0098 1346     		mov	r3, r2
+ 124 009a 0A21     		movs	r1, #10
+ 125 009c 2046     		mov	r0, r4
+ 126 009e FFF7FEFF 		bl	RC_Client_Add_Function
+ 127              	.LVL10:
+ 128 00a2 38BB     		cbnz	r0, .L12
+  20:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_PLACE, "", "") != 0) return -1;
+ 129              		.loc 1 20 0
+ 130 00a4 184A     		ldr	r2, .L15+12
+ 131 00a6 1346     		mov	r3, r2
+ 132 00a8 0B21     		movs	r1, #11
+ 133 00aa 2046     		mov	r0, r4
+ 134 00ac FFF7FEFF 		bl	RC_Client_Add_Function
+ 135              	.LVL11:
+ 136 00b0 0346     		mov	r3, r0
+ 137 00b2 08B9     		cbnz	r0, .L14
+ 138              	.L1:
+  21:Src/z_client.c ****   
+  22:Src/z_client.c ****   return 0;
+  23:Src/z_client.c **** }
+ 139              		.loc 1 23 0
+ 140 00b4 1846     		mov	r0, r3
+ 141 00b6 10BD     		pop	{r4, pc}
+ 142              	.L14:
+  20:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_PLACE, "", "") != 0) return -1;
+ 143              		.loc 1 20 0
+ 144 00b8 4FF0FF33 		mov	r3, #-1
+ 145 00bc FAE7     		b	.L1
+ 146              	.L3:
+  10:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_RESET, "", "") != 0) return -1;
+ 147              		.loc 1 10 0
+ARM GAS  /tmp/ccvRgxHE.s 			page 4
+
+
+ 148 00be 4FF0FF33 		mov	r3, #-1
+ 149 00c2 F7E7     		b	.L1
+ 150              	.L4:
+  11:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_SET_ASSER, "fffif", "") != 0) return -1;
+ 151              		.loc 1 11 0
+ 152 00c4 4FF0FF33 		mov	r3, #-1
+ 153 00c8 F4E7     		b	.L1
+ 154              	.L5:
+  12:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_BALEC, "", "") != 0) return -1;
+ 155              		.loc 1 12 0
+ 156 00ca 4FF0FF33 		mov	r3, #-1
+ 157 00ce F1E7     		b	.L1
+ 158              	.L6:
+  13:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_PUNCH_BEE, "", "") != 0) return -1;
+ 159              		.loc 1 13 0
+ 160 00d0 4FF0FF33 		mov	r3, #-1
+ 161 00d4 EEE7     		b	.L1
+ 162              	.L7:
+  14:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_ARM_OUT, "", "") != 0) return -1;
+ 163              		.loc 1 14 0
+ 164 00d6 4FF0FF33 		mov	r3, #-1
+ 165 00da EBE7     		b	.L1
+ 166              	.L8:
+  15:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_ARM_IN, "", "") != 0) return -1;
+ 167              		.loc 1 15 0
+ 168 00dc 4FF0FF33 		mov	r3, #-1
+ 169 00e0 E8E7     		b	.L1
+ 170              	.L9:
+  16:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_STACK, "", "") != 0) return -1;
+ 171              		.loc 1 16 0
+ 172 00e2 4FF0FF33 		mov	r3, #-1
+ 173 00e6 E5E7     		b	.L1
+ 174              	.L10:
+  17:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_STACK_LAST, "", "") != 0) return -1;
+ 175              		.loc 1 17 0
+ 176 00e8 4FF0FF33 		mov	r3, #-1
+ 177 00ec E2E7     		b	.L1
+ 178              	.L11:
+  18:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_UNSTACK, "", "") != 0) return -1;
+ 179              		.loc 1 18 0
+ 180 00ee 4FF0FF33 		mov	r3, #-1
+ 181 00f2 DFE7     		b	.L1
+ 182              	.L12:
+  19:Src/z_client.c ****   if(RC_Client_Add_Function(&z_client, Z_PLACE, "", "") != 0) return -1;
+ 183              		.loc 1 19 0
+ 184 00f4 4FF0FF33 		mov	r3, #-1
+ 185 00f8 DCE7     		b	.L1
+ 186              	.L16:
+ 187 00fa 00BF     		.align	2
+ 188              	.L15:
+ 189 00fc 00000000 		.word	.LANCHOR0
+ 190 0100 00000000 		.word	z_iface
+ 191 0104 00000000 		.word	.LC0
+ 192 0108 04000000 		.word	.LC1
+ 193 010c 08000000 		.word	.LC2
+ 194              		.cfi_endproc
+ 195              	.LFE679:
+ARM GAS  /tmp/ccvRgxHE.s 			page 5
+
+
+ 197              		.section	.text.Z_Get_State,"ax",%progbits
+ 198              		.align	1
+ 199              		.global	Z_Get_State
+ 200              		.syntax unified
+ 201              		.thumb
+ 202              		.thumb_func
+ 203              		.fpu fpv4-sp-d16
+ 205              	Z_Get_State:
+ 206              	.LFB680:
+  24:Src/z_client.c **** 
+  25:Src/z_client.c **** int Z_Get_State(Z_State *state){
+ 207              		.loc 1 25 0
+ 208              		.cfi_startproc
+ 209              		@ args = 0, pretend = 0, frame = 0
+ 210              		@ frame_needed = 0, uses_anonymous_args = 0
+ 211              	.LVL12:
+ 212 0000 08B5     		push	{r3, lr}
+ 213              	.LCFI1:
+ 214              		.cfi_def_cfa_offset 8
+ 215              		.cfi_offset 3, -8
+ 216              		.cfi_offset 14, -4
+  26:Src/z_client.c ****   return RC_Call(&z_client, Z_GET_STATE, state);
+ 217              		.loc 1 26 0
+ 218 0002 0246     		mov	r2, r0
+ 219 0004 0021     		movs	r1, #0
+ 220 0006 0248     		ldr	r0, .L19
+ 221              	.LVL13:
+ 222 0008 FFF7FEFF 		bl	RC_Call
+ 223              	.LVL14:
+  27:Src/z_client.c **** }
+ 224              		.loc 1 27 0
+ 225 000c 08BD     		pop	{r3, pc}
+ 226              	.L20:
+ 227 000e 00BF     		.align	2
+ 228              	.L19:
+ 229 0010 00000000 		.word	.LANCHOR0
+ 230              		.cfi_endproc
+ 231              	.LFE680:
+ 233              		.section	.text.Z_Wait_State,"ax",%progbits
+ 234              		.align	1
+ 235              		.global	Z_Wait_State
+ 236              		.syntax unified
+ 237              		.thumb
+ 238              		.thumb_func
+ 239              		.fpu fpv4-sp-d16
+ 241              	Z_Wait_State:
+ 242              	.LFB681:
+  28:Src/z_client.c **** #include "pi_client.h"
+  29:Src/z_client.c **** int Z_Wait_State(Z_State *state){
+ 243              		.loc 1 29 0
+ 244              		.cfi_startproc
+ 245              		@ args = 0, pretend = 0, frame = 0
+ 246              		@ frame_needed = 0, uses_anonymous_args = 0
+ 247              	.LVL15:
+ 248 0000 38B5     		push	{r3, r4, r5, lr}
+ 249              	.LCFI2:
+ 250              		.cfi_def_cfa_offset 16
+ARM GAS  /tmp/ccvRgxHE.s 			page 6
+
+
+ 251              		.cfi_offset 3, -16
+ 252              		.cfi_offset 4, -12
+ 253              		.cfi_offset 5, -8
+ 254              		.cfi_offset 14, -4
+ 255 0002 0446     		mov	r4, r0
+  30:Src/z_client.c ****   if(Z_Get_State(state)) return -1;
+ 256              		.loc 1 30 0
+ 257 0004 FFF7FEFF 		bl	Z_Get_State
+ 258              	.LVL16:
+ 259 0008 0546     		mov	r5, r0
+ 260 000a 40B1     		cbz	r0, .L23
+ 261 000c 4FF0FF35 		mov	r5, #-1
+ 262 0010 0EE0     		b	.L21
+ 263              	.L25:
+  31:Src/z_client.c **** 
+  32:Src/z_client.c ****   while((Z_Get_State(state) == 0) && (*state == Z_RUNNING)){
+  33:Src/z_client.c ****     PI_Log("%d\n", *state);
+ 264              		.loc 1 33 0
+ 265 0012 0A48     		ldr	r0, .L29
+ 266 0014 FFF7FEFF 		bl	PI_Log
+ 267              	.LVL17:
+  34:Src/z_client.c ****     HAL_Delay(100);
+ 268              		.loc 1 34 0
+ 269 0018 6420     		movs	r0, #100
+ 270 001a FFF7FEFF 		bl	HAL_Delay
+ 271              	.LVL18:
+ 272              	.L23:
+  32:Src/z_client.c ****     PI_Log("%d\n", *state);
+ 273              		.loc 1 32 0
+ 274 001e 2046     		mov	r0, r4
+ 275 0020 FFF7FEFF 		bl	Z_Get_State
+ 276              	.LVL19:
+ 277 0024 10B9     		cbnz	r0, .L24
+  32:Src/z_client.c ****     PI_Log("%d\n", *state);
+ 278              		.loc 1 32 0 is_stmt 0 discriminator 1
+ 279 0026 2178     		ldrb	r1, [r4]	@ zero_extendqisi2
+ 280 0028 0029     		cmp	r1, #0
+ 281 002a F2D0     		beq	.L25
+ 282              	.L24:
+  35:Src/z_client.c ****   }
+  36:Src/z_client.c **** 
+  37:Src/z_client.c ****   if(*state == Z_RUNNING) return -1;
+ 283              		.loc 1 37 0 is_stmt 1
+ 284 002c 2378     		ldrb	r3, [r4]	@ zero_extendqisi2
+ 285 002e 0BB1     		cbz	r3, .L28
+ 286              	.L21:
+  38:Src/z_client.c ****   
+  39:Src/z_client.c ****   return 0;
+  40:Src/z_client.c **** }
+ 287              		.loc 1 40 0
+ 288 0030 2846     		mov	r0, r5
+ 289 0032 38BD     		pop	{r3, r4, r5, pc}
+ 290              	.LVL20:
+ 291              	.L28:
+  37:Src/z_client.c ****   
+ 292              		.loc 1 37 0
+ 293 0034 4FF0FF35 		mov	r5, #-1
+ARM GAS  /tmp/ccvRgxHE.s 			page 7
+
+
+ 294 0038 FAE7     		b	.L21
+ 295              	.L30:
+ 296 003a 00BF     		.align	2
+ 297              	.L29:
+ 298 003c 00000000 		.word	.LC3
+ 299              		.cfi_endproc
+ 300              	.LFE681:
+ 302              		.section	.text.Z_Reset,"ax",%progbits
+ 303              		.align	1
+ 304              		.global	Z_Reset
+ 305              		.syntax unified
+ 306              		.thumb
+ 307              		.thumb_func
+ 308              		.fpu fpv4-sp-d16
+ 310              	Z_Reset:
+ 311              	.LFB682:
+  41:Src/z_client.c **** 
+  42:Src/z_client.c **** int Z_Reset(){
+ 312              		.loc 1 42 0
+ 313              		.cfi_startproc
+ 314              		@ args = 0, pretend = 0, frame = 0
+ 315              		@ frame_needed = 0, uses_anonymous_args = 0
+ 316 0000 08B5     		push	{r3, lr}
+ 317              	.LCFI3:
+ 318              		.cfi_def_cfa_offset 8
+ 319              		.cfi_offset 3, -8
+ 320              		.cfi_offset 14, -4
+  43:Src/z_client.c ****   return RC_Call(&z_client, Z_RESET);
+ 321              		.loc 1 43 0
+ 322 0002 0121     		movs	r1, #1
+ 323 0004 0148     		ldr	r0, .L33
+ 324 0006 FFF7FEFF 		bl	RC_Call
+ 325              	.LVL21:
+  44:Src/z_client.c **** }
+ 326              		.loc 1 44 0
+ 327 000a 08BD     		pop	{r3, pc}
+ 328              	.L34:
+ 329              		.align	2
+ 330              	.L33:
+ 331 000c 00000000 		.word	.LANCHOR0
+ 332              		.cfi_endproc
+ 333              	.LFE682:
+ 335              		.global	__aeabi_f2d
+ 336              		.section	.text.Z_Set_Asser,"ax",%progbits
+ 337              		.align	1
+ 338              		.global	Z_Set_Asser
+ 339              		.syntax unified
+ 340              		.thumb
+ 341              		.thumb_func
+ 342              		.fpu fpv4-sp-d16
+ 344              	Z_Set_Asser:
+ 345              	.LFB683:
+  45:Src/z_client.c **** 
+  46:Src/z_client.c **** int Z_Set_Asser(float Kp, float Ki, float Kd, int position_tolerance, float speed_tolerance){
+ 346              		.loc 1 46 0
+ 347              		.cfi_startproc
+ 348              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  /tmp/ccvRgxHE.s 			page 8
+
+
+ 349              		@ frame_needed = 0, uses_anonymous_args = 0
+ 350              	.LVL22:
+ 351 0000 2DE9F043 		push	{r4, r5, r6, r7, r8, r9, lr}
+ 352              	.LCFI4:
+ 353              		.cfi_def_cfa_offset 28
+ 354              		.cfi_offset 4, -28
+ 355              		.cfi_offset 5, -24
+ 356              		.cfi_offset 6, -20
+ 357              		.cfi_offset 7, -16
+ 358              		.cfi_offset 8, -12
+ 359              		.cfi_offset 9, -8
+ 360              		.cfi_offset 14, -4
+ 361 0004 89B0     		sub	sp, sp, #36
+ 362              	.LCFI5:
+ 363              		.cfi_def_cfa_offset 64
+ 364 0006 10EE908A 		vmov	r8, s1
+ 365 000a 11EE107A 		vmov	r7, s2
+ 366 000e 0646     		mov	r6, r0
+ 367 0010 11EE909A 		vmov	r9, s3
+  47:Src/z_client.c ****   return RC_Call(&z_client, Z_SET_ASSER, Kp, Ki, Kd, position_tolerance, speed_tolerance);
+ 368              		.loc 1 47 0
+ 369 0014 10EE100A 		vmov	r0, s0
+ 370              	.LVL23:
+ 371 0018 FFF7FEFF 		bl	__aeabi_f2d
+ 372              	.LVL24:
+ 373 001c 0446     		mov	r4, r0
+ 374 001e 0D46     		mov	r5, r1
+ 375 0020 4846     		mov	r0, r9	@ float
+ 376 0022 FFF7FEFF 		bl	__aeabi_f2d
+ 377              	.LVL25:
+ 378 0026 CDE90601 		strd	r0, [sp, #24]
+ 379 002a 0496     		str	r6, [sp, #16]
+ 380 002c 3846     		mov	r0, r7	@ float
+ 381 002e FFF7FEFF 		bl	__aeabi_f2d
+ 382              	.LVL26:
+ 383 0032 CDE90201 		strd	r0, [sp, #8]
+ 384 0036 4046     		mov	r0, r8	@ float
+ 385 0038 FFF7FEFF 		bl	__aeabi_f2d
+ 386              	.LVL27:
+ 387 003c CDE90001 		strd	r0, [sp]
+ 388 0040 2246     		mov	r2, r4
+ 389 0042 2B46     		mov	r3, r5
+ 390 0044 0221     		movs	r1, #2
+ 391 0046 0348     		ldr	r0, .L37
+ 392 0048 FFF7FEFF 		bl	RC_Call
+ 393              	.LVL28:
+  48:Src/z_client.c **** }
+ 394              		.loc 1 48 0
+ 395 004c 09B0     		add	sp, sp, #36
+ 396              	.LCFI6:
+ 397              		.cfi_def_cfa_offset 28
+ 398              		@ sp needed
+ 399 004e BDE8F083 		pop	{r4, r5, r6, r7, r8, r9, pc}
+ 400              	.LVL29:
+ 401              	.L38:
+ 402 0052 00BF     		.align	2
+ 403              	.L37:
+ARM GAS  /tmp/ccvRgxHE.s 			page 9
+
+
+ 404 0054 00000000 		.word	.LANCHOR0
+ 405              		.cfi_endproc
+ 406              	.LFE683:
+ 408              		.section	.text.Z_Punch_Bee,"ax",%progbits
+ 409              		.align	1
+ 410              		.global	Z_Punch_Bee
+ 411              		.syntax unified
+ 412              		.thumb
+ 413              		.thumb_func
+ 414              		.fpu fpv4-sp-d16
+ 416              	Z_Punch_Bee:
+ 417              	.LFB684:
+  49:Src/z_client.c **** 
+  50:Src/z_client.c **** int Z_Punch_Bee(){
+ 418              		.loc 1 50 0
+ 419              		.cfi_startproc
+ 420              		@ args = 0, pretend = 0, frame = 0
+ 421              		@ frame_needed = 0, uses_anonymous_args = 0
+ 422 0000 08B5     		push	{r3, lr}
+ 423              	.LCFI7:
+ 424              		.cfi_def_cfa_offset 8
+ 425              		.cfi_offset 3, -8
+ 426              		.cfi_offset 14, -4
+  51:Src/z_client.c ****   return RC_Call(&z_client, Z_PUNCH_BEE);
+ 427              		.loc 1 51 0
+ 428 0002 0421     		movs	r1, #4
+ 429 0004 0148     		ldr	r0, .L41
+ 430 0006 FFF7FEFF 		bl	RC_Call
+ 431              	.LVL30:
+  52:Src/z_client.c **** }
+ 432              		.loc 1 52 0
+ 433 000a 08BD     		pop	{r3, pc}
+ 434              	.L42:
+ 435              		.align	2
+ 436              	.L41:
+ 437 000c 00000000 		.word	.LANCHOR0
+ 438              		.cfi_endproc
+ 439              	.LFE684:
+ 441              		.section	.text.Z_Arm_In,"ax",%progbits
+ 442              		.align	1
+ 443              		.global	Z_Arm_In
+ 444              		.syntax unified
+ 445              		.thumb
+ 446              		.thumb_func
+ 447              		.fpu fpv4-sp-d16
+ 449              	Z_Arm_In:
+ 450              	.LFB685:
+  53:Src/z_client.c **** 
+  54:Src/z_client.c **** int Z_Arm_In(){
+ 451              		.loc 1 54 0
+ 452              		.cfi_startproc
+ 453              		@ args = 0, pretend = 0, frame = 0
+ 454              		@ frame_needed = 0, uses_anonymous_args = 0
+ 455 0000 08B5     		push	{r3, lr}
+ 456              	.LCFI8:
+ 457              		.cfi_def_cfa_offset 8
+ 458              		.cfi_offset 3, -8
+ARM GAS  /tmp/ccvRgxHE.s 			page 10
+
+
+ 459              		.cfi_offset 14, -4
+  55:Src/z_client.c ****   return RC_Call(&z_client, Z_ARM_IN);
+ 460              		.loc 1 55 0
+ 461 0002 0621     		movs	r1, #6
+ 462 0004 0148     		ldr	r0, .L45
+ 463 0006 FFF7FEFF 		bl	RC_Call
+ 464              	.LVL31:
+  56:Src/z_client.c **** }
+ 465              		.loc 1 56 0
+ 466 000a 08BD     		pop	{r3, pc}
+ 467              	.L46:
+ 468              		.align	2
+ 469              	.L45:
+ 470 000c 00000000 		.word	.LANCHOR0
+ 471              		.cfi_endproc
+ 472              	.LFE685:
+ 474              		.section	.text.Z_Arm_Out,"ax",%progbits
+ 475              		.align	1
+ 476              		.global	Z_Arm_Out
+ 477              		.syntax unified
+ 478              		.thumb
+ 479              		.thumb_func
+ 480              		.fpu fpv4-sp-d16
+ 482              	Z_Arm_Out:
+ 483              	.LFB686:
+  57:Src/z_client.c **** 
+  58:Src/z_client.c **** int Z_Arm_Out(){
+ 484              		.loc 1 58 0
+ 485              		.cfi_startproc
+ 486              		@ args = 0, pretend = 0, frame = 0
+ 487              		@ frame_needed = 0, uses_anonymous_args = 0
+ 488 0000 08B5     		push	{r3, lr}
+ 489              	.LCFI9:
+ 490              		.cfi_def_cfa_offset 8
+ 491              		.cfi_offset 3, -8
+ 492              		.cfi_offset 14, -4
+  59:Src/z_client.c ****   return RC_Call(&z_client, Z_ARM_OUT);
+ 493              		.loc 1 59 0
+ 494 0002 0521     		movs	r1, #5
+ 495 0004 0148     		ldr	r0, .L49
+ 496 0006 FFF7FEFF 		bl	RC_Call
+ 497              	.LVL32:
+  60:Src/z_client.c **** }
+ 498              		.loc 1 60 0
+ 499 000a 08BD     		pop	{r3, pc}
+ 500              	.L50:
+ 501              		.align	2
+ 502              	.L49:
+ 503 000c 00000000 		.word	.LANCHOR0
+ 504              		.cfi_endproc
+ 505              	.LFE686:
+ 507              		.section	.text.Z_Stack,"ax",%progbits
+ 508              		.align	1
+ 509              		.global	Z_Stack
+ 510              		.syntax unified
+ 511              		.thumb
+ 512              		.thumb_func
+ARM GAS  /tmp/ccvRgxHE.s 			page 11
+
+
+ 513              		.fpu fpv4-sp-d16
+ 515              	Z_Stack:
+ 516              	.LFB687:
+  61:Src/z_client.c **** 
+  62:Src/z_client.c **** int Z_Stack(bool last){
+ 517              		.loc 1 62 0
+ 518              		.cfi_startproc
+ 519              		@ args = 0, pretend = 0, frame = 0
+ 520              		@ frame_needed = 0, uses_anonymous_args = 0
+ 521              	.LVL33:
+ 522 0000 08B5     		push	{r3, lr}
+ 523              	.LCFI10:
+ 524              		.cfi_def_cfa_offset 8
+ 525              		.cfi_offset 3, -8
+ 526              		.cfi_offset 14, -4
+  63:Src/z_client.c ****   return RC_Call(&z_client, (last)?Z_STACK_LAST:Z_STACK);
+ 527              		.loc 1 63 0
+ 528 0002 20B9     		cbnz	r0, .L55
+ 529 0004 0821     		movs	r1, #8
+ 530              	.L52:
+ 531              		.loc 1 63 0 is_stmt 0 discriminator 4
+ 532 0006 0348     		ldr	r0, .L56
+ 533              	.LVL34:
+ 534 0008 FFF7FEFF 		bl	RC_Call
+ 535              	.LVL35:
+  64:Src/z_client.c **** }
+ 536              		.loc 1 64 0 is_stmt 1 discriminator 4
+ 537 000c 08BD     		pop	{r3, pc}
+ 538              	.LVL36:
+ 539              	.L55:
+  63:Src/z_client.c ****   return RC_Call(&z_client, (last)?Z_STACK_LAST:Z_STACK);
+ 540              		.loc 1 63 0
+ 541 000e 0921     		movs	r1, #9
+ 542 0010 F9E7     		b	.L52
+ 543              	.L57:
+ 544 0012 00BF     		.align	2
+ 545              	.L56:
+ 546 0014 00000000 		.word	.LANCHOR0
+ 547              		.cfi_endproc
+ 548              	.LFE687:
+ 550              		.section	.text.Z_Unstack,"ax",%progbits
+ 551              		.align	1
+ 552              		.global	Z_Unstack
+ 553              		.syntax unified
+ 554              		.thumb
+ 555              		.thumb_func
+ 556              		.fpu fpv4-sp-d16
+ 558              	Z_Unstack:
+ 559              	.LFB688:
+  65:Src/z_client.c **** 
+  66:Src/z_client.c **** int Z_Unstack(){
+ 560              		.loc 1 66 0
+ 561              		.cfi_startproc
+ 562              		@ args = 0, pretend = 0, frame = 0
+ 563              		@ frame_needed = 0, uses_anonymous_args = 0
+ 564 0000 08B5     		push	{r3, lr}
+ 565              	.LCFI11:
+ARM GAS  /tmp/ccvRgxHE.s 			page 12
+
+
+ 566              		.cfi_def_cfa_offset 8
+ 567              		.cfi_offset 3, -8
+ 568              		.cfi_offset 14, -4
+  67:Src/z_client.c ****   return RC_Call(&z_client, Z_UNSTACK);
+ 569              		.loc 1 67 0
+ 570 0002 0A21     		movs	r1, #10
+ 571 0004 0148     		ldr	r0, .L60
+ 572 0006 FFF7FEFF 		bl	RC_Call
+ 573              	.LVL37:
+  68:Src/z_client.c **** }
+ 574              		.loc 1 68 0
+ 575 000a 08BD     		pop	{r3, pc}
+ 576              	.L61:
+ 577              		.align	2
+ 578              	.L60:
+ 579 000c 00000000 		.word	.LANCHOR0
+ 580              		.cfi_endproc
+ 581              	.LFE688:
+ 583              		.section	.text.Z_Place,"ax",%progbits
+ 584              		.align	1
+ 585              		.global	Z_Place
+ 586              		.syntax unified
+ 587              		.thumb
+ 588              		.thumb_func
+ 589              		.fpu fpv4-sp-d16
+ 591              	Z_Place:
+ 592              	.LFB689:
+  69:Src/z_client.c **** 
+  70:Src/z_client.c **** int Z_Place(){
+ 593              		.loc 1 70 0
+ 594              		.cfi_startproc
+ 595              		@ args = 0, pretend = 0, frame = 0
+ 596              		@ frame_needed = 0, uses_anonymous_args = 0
+ 597 0000 08B5     		push	{r3, lr}
+ 598              	.LCFI12:
+ 599              		.cfi_def_cfa_offset 8
+ 600              		.cfi_offset 3, -8
+ 601              		.cfi_offset 14, -4
+  71:Src/z_client.c ****   return RC_Call(&z_client, Z_PLACE);
+ 602              		.loc 1 71 0
+ 603 0002 0B21     		movs	r1, #11
+ 604 0004 0148     		ldr	r0, .L64
+ 605 0006 FFF7FEFF 		bl	RC_Call
+ 606              	.LVL38:
+  72:Src/z_client.c **** }
+ 607              		.loc 1 72 0
+ 608 000a 08BD     		pop	{r3, pc}
+ 609              	.L65:
+ 610              		.align	2
+ 611              	.L64:
+ 612 000c 00000000 		.word	.LANCHOR0
+ 613              		.cfi_endproc
+ 614              	.LFE689:
+ 616              		.section	.bss.z_client,"aw",%nobits
+ 617              		.align	2
+ 618              		.set	.LANCHOR0,. + 0
+ 621              	z_client:
+ARM GAS  /tmp/ccvRgxHE.s 			page 13
+
+
+ 622 0000 00000000 		.space	616
+ 622      00000000 
+ 622      00000000 
+ 622      00000000 
+ 622      00000000 
+ 623              		.section	.rodata.Z_Init.str1.4,"aMS",%progbits,1
+ 624              		.align	2
+ 625              	.LC0:
+ 626 0000 6200     		.ascii	"b\000"
+ 627 0002 0000     		.space	2
+ 628              	.LC1:
+ 629 0004 00       		.ascii	"\000"
+ 630 0005 000000   		.space	3
+ 631              	.LC2:
+ 632 0008 66666669 		.ascii	"fffif\000"
+ 632      6600
+ 633              		.section	.rodata.Z_Wait_State.str1.4,"aMS",%progbits,1
+ 634              		.align	2
+ 635              	.LC3:
+ 636 0000 25640A00 		.ascii	"%d\012\000"
+ 637              		.text
+ 638              	.Letext0:
+ 639              		.file 2 "Inc/z_client.h"
+ 640              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 641              		.file 4 "/usr/arm-none-eabi/include/sys/lock.h"
+ 642              		.file 5 "/usr/arm-none-eabi/include/sys/_types.h"
+ 643              		.file 6 "/usr/lib/gcc/arm-none-eabi/7.3.0/include/stddef.h"
+ 644              		.file 7 "/usr/arm-none-eabi/include/sys/reent.h"
+ 645              		.file 8 "/usr/arm-none-eabi/include/stdlib.h"
+ 646              		.file 9 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 647              		.file 10 "Inc/crc_16.h"
+ 648              		.file 11 "Inc/robotronik_protocol.h"
+ 649              		.file 12 "Inc/remote_call.h"
+ 650              		.file 13 "Drivers/CMSIS/Include/core_cm4.h"
+ 651              		.file 14 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/system_stm32f4xx.h"
+ 652              		.file 15 "Inc/usart.h"
+ 653              		.file 16 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_dma.h"
+ 654              		.file 17 "Inc/pi_client.h"
+ 655              		.file 18 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  /tmp/ccvRgxHE.s 			page 14
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 z_client.c
+     /tmp/ccvRgxHE.s:18     .text.Z_Init:0000000000000000 $t
+     /tmp/ccvRgxHE.s:25     .text.Z_Init:0000000000000000 Z_Init
+     /tmp/ccvRgxHE.s:189    .text.Z_Init:00000000000000fc $d
+     /tmp/ccvRgxHE.s:198    .text.Z_Get_State:0000000000000000 $t
+     /tmp/ccvRgxHE.s:205    .text.Z_Get_State:0000000000000000 Z_Get_State
+     /tmp/ccvRgxHE.s:229    .text.Z_Get_State:0000000000000010 $d
+     /tmp/ccvRgxHE.s:234    .text.Z_Wait_State:0000000000000000 $t
+     /tmp/ccvRgxHE.s:241    .text.Z_Wait_State:0000000000000000 Z_Wait_State
+     /tmp/ccvRgxHE.s:298    .text.Z_Wait_State:000000000000003c $d
+     /tmp/ccvRgxHE.s:303    .text.Z_Reset:0000000000000000 $t
+     /tmp/ccvRgxHE.s:310    .text.Z_Reset:0000000000000000 Z_Reset
+     /tmp/ccvRgxHE.s:331    .text.Z_Reset:000000000000000c $d
+     /tmp/ccvRgxHE.s:337    .text.Z_Set_Asser:0000000000000000 $t
+     /tmp/ccvRgxHE.s:344    .text.Z_Set_Asser:0000000000000000 Z_Set_Asser
+     /tmp/ccvRgxHE.s:404    .text.Z_Set_Asser:0000000000000054 $d
+     /tmp/ccvRgxHE.s:409    .text.Z_Punch_Bee:0000000000000000 $t
+     /tmp/ccvRgxHE.s:416    .text.Z_Punch_Bee:0000000000000000 Z_Punch_Bee
+     /tmp/ccvRgxHE.s:437    .text.Z_Punch_Bee:000000000000000c $d
+     /tmp/ccvRgxHE.s:442    .text.Z_Arm_In:0000000000000000 $t
+     /tmp/ccvRgxHE.s:449    .text.Z_Arm_In:0000000000000000 Z_Arm_In
+     /tmp/ccvRgxHE.s:470    .text.Z_Arm_In:000000000000000c $d
+     /tmp/ccvRgxHE.s:475    .text.Z_Arm_Out:0000000000000000 $t
+     /tmp/ccvRgxHE.s:482    .text.Z_Arm_Out:0000000000000000 Z_Arm_Out
+     /tmp/ccvRgxHE.s:503    .text.Z_Arm_Out:000000000000000c $d
+     /tmp/ccvRgxHE.s:508    .text.Z_Stack:0000000000000000 $t
+     /tmp/ccvRgxHE.s:515    .text.Z_Stack:0000000000000000 Z_Stack
+     /tmp/ccvRgxHE.s:546    .text.Z_Stack:0000000000000014 $d
+     /tmp/ccvRgxHE.s:551    .text.Z_Unstack:0000000000000000 $t
+     /tmp/ccvRgxHE.s:558    .text.Z_Unstack:0000000000000000 Z_Unstack
+     /tmp/ccvRgxHE.s:579    .text.Z_Unstack:000000000000000c $d
+     /tmp/ccvRgxHE.s:584    .text.Z_Place:0000000000000000 $t
+     /tmp/ccvRgxHE.s:591    .text.Z_Place:0000000000000000 Z_Place
+     /tmp/ccvRgxHE.s:612    .text.Z_Place:000000000000000c $d
+     /tmp/ccvRgxHE.s:617    .bss.z_client:0000000000000000 $d
+     /tmp/ccvRgxHE.s:621    .bss.z_client:0000000000000000 z_client
+     /tmp/ccvRgxHE.s:624    .rodata.Z_Init.str1.4:0000000000000000 $d
+     /tmp/ccvRgxHE.s:634    .rodata.Z_Wait_State.str1.4:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+RC_Client_Init
+RC_Client_Add_Function
+z_iface
+RC_Call
+PI_Log
+HAL_Delay
+__aeabi_f2d

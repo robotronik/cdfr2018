@@ -187,7 +187,7 @@ int main(void)
   //Rotate(me.angle + 3.14/4);
   //Go_Straight(me.x + 25,  me.y, true, 0.1);
 
-  int i;
+  /*int i;
   switch(team){
   case GREEN_TEAM:
     Pos_Go_Forward(100, 300);
@@ -238,7 +238,7 @@ int main(void)
     }
     break;
   }
-    
+  */
     
   Z_Arm_In();
   HAL_Delay(1000);
