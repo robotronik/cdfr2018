@@ -243,7 +243,6 @@ int main(void)
   me.x = AREA_WIDTH/2;
   me.y = AREA_HEIGHT/2;
   while (1){
-    Pos_Get_Position();
     /*__disable_irq();
     Print_Obstacles();
     PI_Log("\n\n");
