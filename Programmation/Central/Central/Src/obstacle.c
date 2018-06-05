@@ -106,9 +106,10 @@ void Update_Obstacles(const Robot *ref, uint16_t fl_d, uint16_t fr_d, uint16_t r
       x_ro = (float) x_ro*cos(-ref->angle) - (float) y_ro*sin(-ref->angle);
       y_ro = (float) x_ro*sin(-ref->angle) + (float) y_ro*cos(-ref->angle);
 
+      //Update range
+      obs->range = (x_ro > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
+      
       if((y_ro >= -SENSOR_DIST_TANGENT && y_ro <= SENSOR_DIST_TANGENT)){//Should be in range
-	//Update range
-	obs->range = (x_ro > 0)?IN_RANGE_FORWARD:IN_RANGE_BACKWARD;
 	
 	if((x_ro > 0
 	     && (!fl_d || (x_ro + OBS_RADIUS < fl_d))//No detection at left
@@ -188,14 +189,15 @@ void Print_Obstacles(void){
   int i = 0;
   for(; i < nb_obstacles; i++){
     Obstacle *const obs = &obstacle[i];
-    Print("Obstacle n°%d : %u ms, %" PRIu16 " mm, (%" PRId16 " , %" PRId16"), c (%"PRId16", %"PRId16")\n",
+    Print("Obstacle n°%d : %u ms, %" PRIu16 " mm, (%" PRId16 " , %" PRId16"), c (%"PRId16", %"PRId16" %d)\n",
 	  i,
 	  (HAL_GetTick() - obs->last_detection),
 	  obs->distance,
 	  obs->x,
 	  obs->y,
 	  obs->x_c,
-	  obs->y_c);
+	  obs->y_c,
+	  (int) obs->range);
   }
 }
 
@@ -275,7 +277,7 @@ int Can_Rotate(){
   int i;
   for(i = 0; i < nb_obstacles; i++){
     Obstacle *const obs = &obstacle[i];
-    if(dist(me.x, me.y, obs->x, obs->y) < ROBOT_RADIUS + MARGIN_MIN){
+    if(dist(me.x, me.y, obs->x, obs->y) < ROBOT_RADIUS + MARGIN_MAX){
       break;
     }
   }
@@ -291,17 +293,20 @@ int Can_Move(float distance, bool forward, float *max_speed_ratio){
     float obs_dist = obs->distance;
 
     //If the obstacle is in direction range
+    //PI_Log("%f %d\n", obs_dist, obs->range==IN_RANGE_FORWARD);
     if((forward && obs->range == IN_RANGE_FORWARD)
        || (!forward && obs->range == IN_RANGE_BACKWARD)){
-      if(distance > obs_dist - (ROBOT_RADIUS + MARGIN_MIN)){
-        return 0;
+      
+      if(distance > obs_dist - (ROBOT_RADIUS + MARGIN_MAX)){
+	PI_Log("Obstacle at %f mm\n", obs_dist);
+	return 0;
       }
       if(obs_dist < dist_min){
 	dist_min = obs_dist;
       }
     }
   }
-
+  
   *max_speed_ratio = min(max(0., (dist_min - (ROBOT_RADIUS + MARGIN_MIN))/1000.), 1.);
 
   return 1;

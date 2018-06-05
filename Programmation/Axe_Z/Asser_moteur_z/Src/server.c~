@@ -79,7 +79,8 @@ void unstack(RC_Server* pserver)
 
 void place(RC_Server* pserver)
 {
-  fsm_place.instance.run=FSM_Place_Init;
-  fsm = (FSM_Instance*volatile) &fsm_place;
+  //fsm_place.instance.run=FSM_Place_Init;
+  //fsm = (FSM_Instance*volatile) &fsm_place;
+  Z_Open();
   RC_Server_Return(pserver);
 }

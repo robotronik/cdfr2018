@@ -6,7 +6,7 @@
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether
+  * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
@@ -120,17 +120,24 @@ int main(void)
   MX_TIM15_Init();
   //MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
-
+  Z_Init_AX();
+  HAL_Delay(2000);
+  Z_Enable_AX(true);
+  HAL_Delay(2000);
+  AX_Set_Goal_Position(&servo_ar, AX_ARM_START, AX_NOW);
+  
+  while(1);
+  
   //==================================================
   //                    UART
   //==================================================
-  RP_Init_Interface(&Z_interface, USART2, RP_UART_Transmit, HAL_GetTick);
-  RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
+  //RP_Init_Interface(&Z_interface, USART2, RP_UART_Transmit, HAL_GetTick);
+  //RP_INIT_UART_DMA(DMA1, LL_DMA_CHANNEL_6, USART2, Z_interface);
 
   //==================================================
   //              Remote Call Server
   //==================================================
-  RC_Server_Init(&Z_server,&Z_interface);
+  //RC_Server_Init(&Z_server,&Z_interface);
 
   RC_Server_Add_Function(&Z_server, Z_RESET, reset, "", "", RC_IMMEDIATE);
   RC_Server_Add_Function(&Z_server, Z_SET_ASSER, set_asser, "fffif", "", RC_IMMEDIATE);
@@ -150,7 +157,10 @@ int main(void)
   //==================================================
   //                  AX-12A
   //==================================================
+  HAL_Delay(500);
   Z_Init_AX();
+  HAL_Delay(1000);
+  Z_Open();
 
   //==================================================
   //                  Default PID
@@ -178,6 +188,7 @@ int main(void)
   //==================================================
   FSM_Start fsm_start;
   fsm = (FSM_Instance*volatile) &fsm_start;
+  fsm->run = FSM_Start_Init;
 
   /* USER CODE END 2 */
 
@@ -206,13 +217,14 @@ int main(void)
   imp_goal=0;//warning no negative values
   //fsm_stack.last = 0;
   //fsm->run=FSM_Stack_Init;
-  stack(&Z_server);
+  //stack(&Z_server);
   while (1)
   {
     //Watchdog refresh
   //  HAL_WWDG_Refresh(&hwwdg);
 
     //Asser
+    imp_goal=30000;
     float voltage = pid(&pid_z, -imp_goal + encoder.steps);
     if(HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin)==1)//fin de course percute=probleme
     {
@@ -245,7 +257,7 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -258,7 +270,7 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks
+    /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -280,11 +292,11 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
-    /**Configure the Systick interrupt time
+    /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
-    /**Configure the Systick
+    /**Configure the Systick 
     */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
@@ -321,7 +333,7 @@ void _Error_Handler(char *file, int line)
   * @retval None
   */
 void assert_failed(uint8_t* file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

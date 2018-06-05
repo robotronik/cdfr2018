@@ -22,17 +22,36 @@ int Position_Init(){
   if(RC_Client_Add_Function(&pos_client, POS_ADD_POINT, "BB", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_FOLLOW_PATH, "", "")) return -1;
   if(RC_Client_Add_Function(&pos_client, POS_CONFIG_CURVE, "ffffffff", "")) return -1;
-  
+  if(RC_Client_Add_Function(&pos_client, POS_ENABLE, "", "")) return -1;
+  if(RC_Client_Add_Function(&pos_client, POS_DISABLE, "", "")) return -1;
   return 0;
 }
 
-int Position_Init_Odometry(){
+int Pos_Set_Odo(uint16_t x, uint16_t y, float angle){
   HAL_NVIC_DisableIRQ(TIM3_IRQn);
-  int r = RC_Call(&pos_client, POS_SET_ODO, me.x, me.y, me.angle);
+  int r = RC_Call(&pos_client, POS_SET_ODO, x, y, angle);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);
   return r;
 }
 
+int Position_Init_Odometry(){
+  return Pos_Set_Odo(me.x, me.y, me.angle);
+}
+
+int Pos_Enable(){
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_ENABLE);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
+}
+
+int Pos_Disable(){
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
+  int r = RC_Call(&pos_client, POS_DISABLE);
+  HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  return r;
+}
+  
 int Pos_Reset(){
   HAL_NVIC_DisableIRQ(TIM3_IRQn);
   int r = RC_Call(&pos_client, POS_RESET);

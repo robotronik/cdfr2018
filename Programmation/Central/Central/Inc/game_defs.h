@@ -23,8 +23,8 @@
 #define PATTERN_SIZE 3
 
 //ROBOT
-#define ROBOT_X0 (178+70)
-#define ROBOT_Y0 (438+105)
+#define ROBOT_X0 (168+70)
+#define ROBOT_Y0 (119+105)
 #define ROBOT_A0 0
 
 //Cubes sets

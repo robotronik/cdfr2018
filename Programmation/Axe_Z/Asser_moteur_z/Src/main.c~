@@ -43,7 +43,6 @@
 #include "i2c.h"
 #include "tim.h"
 #include "usart.h"
-#include "wwdg.h"
 #include "gpio.h"
 
 /* USER CODE BEGIN Includes */
@@ -76,11 +75,11 @@ void SystemClock_Config(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
-void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* p_hwwdg){
+/*void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* p_hwwdg){
   if(p_hwwdg == &hwwdg){
 
   }
-}
+}*/
 /* USER CODE END 0 */
 
 /**
@@ -118,7 +117,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM15_Init();
-  //MX_WWDG_Init();
   /* USER CODE BEGIN 2 */
 
   //==================================================
@@ -137,15 +135,15 @@ int main(void)
 
   RC_Server_Add_Function(&Z_server, Z_GET_STATE, get_state, "", "b", RC_IMMEDIATE);
 
-  RC_Server_Add_Function(&Z_server, Z_BALEC, balec, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_IN, arm_in, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_ARM_OUT, arm_out, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_BALEC, balec, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PUNCH_BEE, punch_bee, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_IN, arm_in, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_ARM_OUT, arm_out, "", "", RC_IMMEDIATE);
   //RC_Server_Add_Function(&Z_server, Z_STACK_FIRST, stack_first, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK, stack, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last, "", "b",RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "", "b", RC_IMMEDIATE);
-  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "", "b", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK, stack, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_STACK_LAST, stack_last, "", "",RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_UNSTACK,unstack, "", "", RC_IMMEDIATE);
+  RC_Server_Add_Function(&Z_server, Z_PLACE,place, "", "", RC_IMMEDIATE);
 
   //==================================================
   //                  AX-12A
@@ -155,23 +153,37 @@ int main(void)
   //==================================================
   //                  Default PID
   //==================================================
-  pid_z.Kp=0.0001;
-  pid_z.Ki=0.0001;
-  pid_z.Kd=0;
+  pid_z.Kp=0.004*0.6;//Ziegler-Nichols
+  pid_z.Ki=0.005/2;
+  pid_z.Kd=0.00001;
   pid_z.Te=0.01;
-  pid_z.position_tolerance=100;
-  pid_z.speed_tolerance=100;
+  pid_z.position_tolerance=500;
+  pid_z.speed_tolerance=1000;
   pid_init(&pid_z);
+
+  /*AX_Power_Off(&servo_d,1);
+  AX_Power_Off(&servo_g,1);
+  AX_Power_Off(&servo_ar,1);
+  AX_Configure_Baud_Rate(&servo_d, AX_BAUD_RATE_115200);
+  AX_Configure_Baud_Rate(&servo_g, AX_BAUD_RATE_115200);
+  AX_Configure_Baud_Rate(&servo_ar, AX_BAUD_RATE_115200);*/
 
   //==================================================
   //              Motor & Encoder
   //==================================================
+  __disable_irq();
   AX_Set_Goal_Position(&servo_g, AX_LEFT_CLOSE, AX_NOW);
   AX_Set_Goal_Position(&servo_d, AX_RIGHT_CLOSE, AX_NOW);
+  __enable_irq();
   MOTOR_INIT;
   MOTOR_FC;
-  init_encoder(&encoder, &htim2, &htim15);
-  start_encoder(&encoder);
+  //init_encoder(&encoder, &htim2, &htim15);
+  //start_encoder(&encoder);
+
+  __disable_irq();
+  Z_Close();
+  __enable_irq();
+  HAL_Delay(1000);
 
   //==================================================
   //                    FSM
@@ -203,20 +215,31 @@ int main(void)
   }*/
 
 
-  imp_goal=0;//warning no negative values
-  fsm->run=FSM_Start_Init;
+  imp_goal=0;//1 up -1 down
+  fsm_stack.last = 0;
+  fsm->run=FSM_Stack_Init;
+  //stack(&Z_server);
   while (1)
   {
     //Watchdog refresh
   //  HAL_WWDG_Refresh(&hwwdg);
 
     //Asser
-    imp_goal=10000;
     float voltage = pid(&pid_z, -imp_goal + encoder.steps);
+    if(imp_goal==1)//up
+    {
+      voltage=4;
+      if(HAL_GPIO_ReadPin(FC_GPIO_Port,FC_Pin)) voltage==0;
+    }
+    else
+    {
+      voltage=-1;
+      if(HAL_GPIO_ReadPin(FC_DE_TES_MORTS_GPIO_Port,FC_DE_TES_MORTS_Pin)) voltage==0;
+    }
     MOTOR_VOLTAGE(voltage);
 
     //FSM
-    fsm->run(fsm);
+    //fsm->run(fsm);
 
     //Delay
     HAL_Delay(Z_DELAY);

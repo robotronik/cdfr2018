@@ -45,6 +45,7 @@
 #include "obstacle.h"
 #include "strategy.h"
 #include "position_client.h"
+#include "gas.h"
 
 static int tim2 = 4+1;
 extern ToF_Handler tof[NB_TOF];
@@ -66,9 +67,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
     }
     Update_Obstacles(&me,
 		     ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]),
-		     ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]),
+		     ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]) ,
 		     ToF_Get_Last_Range(&tof[TOF_REAR_LEFT]),
 		     ToF_Get_Last_Range(&tof[TOF_REAR_RIGHT]));
+    /*if(ToF_Get_Last_Range(&tof[TOF_FRONT_LEFT]) < 300
+       || ToF_Get_Last_Range(&tof[TOF_FRONT_RIGHT]) < 300){
+      Brake();
+      }*/
     __enable_irq();
   }
 }
@@ -165,7 +170,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* tim_baseHandle)
     __HAL_RCC_TIM3_CLK_ENABLE();
 
     /* TIM3 interrupt Init */
-    HAL_NVIC_SetPriority(TIM3_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(TIM3_IRQn, 1, 0);
     HAL_NVIC_EnableIRQ(TIM3_IRQn);
   /* USER CODE BEGIN TIM3_MspInit 1 */
 

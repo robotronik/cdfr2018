@@ -90,7 +90,7 @@ static int Init_ToF(ToF_Handler *htof, uint8_t i2c_addr, GPIO_TypeDef *xshut_por
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -136,38 +136,42 @@ int main(void)
   //==================================================//
   //           UART Protocol Init                     //
   //==================================================//
-
+  
   //Raspberry
   RP_Init_Interface(&pi_iface, USART1, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_2, USART1, pi_iface);
-
+  
   //Position
   RP_Init_Interface(&pos_iface, USART2, RP_UART_Transmit, HAL_GetTick);
   RP_INIT_UART_DMA(DMA1, LL_DMA_STREAM_5, USART2, pos_iface);
-
+  
   //Z-Axis
-  RP_Init_Interface(&z_iface, USART6, RP_UART_Transmit, HAL_GetTick);
-  RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_1, USART6, z_iface);
+  //RP_Init_Interface(&z_iface, USART6, RP_UART_Transmit, HAL_GetTick);
+  //RP_INIT_UART_DMA(DMA2, LL_DMA_STREAM_1, USART6, z_iface);
 
   //==================================================//
   //           Remote Call Client Init                //
   //==================================================//
   PI_Init();
+  
   Position_Init();
+
+  Pos_Disable();
   
-  Pos_Reset();
-  Brake();
-
-  Z_Init();
-  Z_Reset();
-
-  HAL_Delay(1000);
-
-  
+  //Z_Init();
+    
+  //HAL_Delay(1000);
   //==================================================//
   //                 Wait Start                       //
   //==================================================//
   wait_start();
+
+  Pos_Reset();
+  HAL_Delay(500);
+  Init_Strategy(team);
+  Position_Init_Odometry();
+  Pos_Enable();
+  
   switch(team){
   case GREEN_TEAM:
     PI_Log("Green team\n");
@@ -175,19 +179,137 @@ int main(void)
   case ORANGE_TEAM:
     PI_Log("Orange team\n");
     break;
-  }
+    }
   PI_Start();
-  
-  Init_Strategy(team);
-  Position_Init_Odometry();
 
+  
+  
+  PI_Score(48);
+  uint32_t t;
+  switch(team){
+  case GREEN_TEAM:
+    Print_Position();
+    while(Go_Straight(CZ_X+CZ_W/2-70/2, me.y, true, 0.2) == -1);
+    HAL_Delay(1000);
+    Pos_Set_Angle(1, -3.14/2);
+    HAL_Delay(1000);
+    while(Go_Straight(me.x, me.y-50, true, 0.2) == -1);
+    HAL_Delay(1000);
+    while(Go_Straight(me.x, me.y+150, false, 0.2) == -1);
+    HAL_Delay(1000);
+    Pos_Set_Angle(1, 0.1);
+    HAL_Delay(5000);
+    while(Go_Straight(1075, me.y, true, 0.2) == -1);
+    HAL_Delay(1000);
+    Pos_Set_Angle(1, 3.14/2);
+    HAL_Delay(5000);
+    t = HAL_GetTick();
+    while(Go_Straight(me.x, 50, false, 0.5) == -1){
+      if(HAL_GetTick() > t + 10000){
+	Pos_Disable();
+      }
+    }
+    break;
+  case ORANGE_TEAM:
+    Print_Position();
+    while(Go_Straight(AREA_WIDTH-(CZ_X+CZ_W/2-70/2), me.y, true, 0.2) == -1);
+    HAL_Delay(1000);
+    Pos_Set_Angle(1, -3.14/2);
+    HAL_Delay(1000);
+    while(Go_Straight(me.x, me.y-50, true, 0.2) == -1);
+    HAL_Delay(1000);
+    while(Go_Straight(me.x, me.y+150, false, 0.2) == -1);
+    HAL_Delay(1000);
+    Pos_Set_Angle(1, -3.14/2);
+    HAL_Delay(5000);
+    Pos_Set_Angle(1, -3.14);
+    HAL_Delay(5000);
+    while(Go_Straight(AREA_WIDTH-1075, me.y, true, 0.2) == -1);
+    HAL_Delay(1000);
+    Pos_Set_Angle(1, -3.14/2);
+    HAL_Delay(2000);
+    Pos_Set_Angle(1, 0.1);
+    HAL_Delay(2000);
+    Pos_Set_Angle(1, 3.14/2);
+    HAL_Delay(5000);
+    while(Go_Straight(me.x, 50, false, 0.5) == -1);
+    while(Go_Straight(me.x, me.y+300, false, 0.1) == -1);
+    break;
+  }
+ 
+  /*
+  Print_Position();
+  Go_Straight(300, me.y, true, 1.);
+  Go_Straight(600, me.y, true, 1.);
+  Go_Straight(900, me.y, true, 1.);
+  Go_Straight(1075, me.y, true, 1.);
+  Print_Position();*/
+  //Pos_Set_Angle(3.14, 3.14/2);
+  //Pos_Go_Forward(100, 50);
+  
+  
+  //GOGOGO(AREA_WIDTH-200, AREA_HEIGHT-200);
+  
+  /*
+  int i;
+  switch(team){
+  case GREEN_TEAM:
+    Balec_Move(me.x + 400, me.y, true, 0.4);
+    HAL_Delay(5000);
+    //Rotate(-3.14/2);
+    for(i = 0; i < 4; i++){
+      Rotate(i*(-3.14)/8);
+      HAL_Delay(1000);
+    }
+    HAL_Delay(5000);
+    Balec_Move(me.x, me.y - 200, true, 0.4);
+    HAL_Delay(5000);
+    Z_Place();
+    break;
+
+  case ORANGE_TEAM:
+    Balec_Move(me.x - 400, me.y, true, 0.4);
+    HAL_Delay(5000);
+    for(i = 0; i < 4; i++){
+      Rotate(i*(3.14)/8);
+      HAL_Delay(1000);
+    }
+    HAL_Delay(5000);
+    Balec_Move(me.x, me.y - 200, true, 0.4);
+    HAL_Delay(5000);
+    Z_Place();
+    break;
+  }
+  */
+
+  
+  //Go_Straight(me.x + 50, me.y, true, 0.2);
+  //Balec_Move(me.x + 500, me.y, true, 0.2);
+  /*HAL_Delay(5000);
+    Brake();*/
+
+  
+  /*
+  while(1){
+    float msr;
+    int r = Can_Move(100, false, &msr);
+     PI_Log("(%d, %d) %f %d\n", me.x, me.y, msr, r);
+    //PI_Log("(%d, %d, %f)", (int)me.x, (int)me.y, (float)me.angle);
+    //Print_Obstacles();
+    HAL_Delay(500);
+    }*/
+  
+  
+  //Rotate(3.141592/4.);
+  
   //Pos_Go_Forward(100, 25);
   //Rotate(me.angle -3.14/4);
   //HAL_Delay(5000);
   //Rotate(me.angle + 3.14/4);
-  //Go_Straight(me.x + 25,  me.y, true, 0.1);
+  //Go_Straight(me.x + 20,  me.y, true, 0.2);
 
-  Z_Arm_In();
+  
+  /*Z_Arm_In();
   HAL_Delay(1000);
   Z_Arm_Out();
   HAL_Delay(1000);
@@ -210,7 +332,7 @@ int main(void)
     PI_Log("Pos get : pas de réponse.\n");
   }else{
     PI_Log("%u %u %f\n", me.x, me.y, me.angle);
-  }
+  }*/
 
   
   
@@ -240,15 +362,16 @@ int main(void)
 
 
   //me.angle = 0;
-  me.x = AREA_WIDTH/2;
-  me.y = AREA_HEIGHT/2;
+  //me.x = AREA_WIDTH/2;
+  //me.y = AREA_HEIGHT/2;
   while (1){
-    /*__disable_irq();
-    Print_Obstacles();
-    PI_Log("\n\n");
-    __enable_irq();*/
+    //__disable_irq();
+    //Print_Obstacles();
+    //PI_Log("\n\n");
+    //PI_Log("%u %u %f\n", me.x, me.y, me.angle);
+    //__enable_irq();
     //Print_ToF();
-    PI_Log("%u %u %f\n", me.x, me.y, me.angle);
+    
     HAL_Delay(500);
   /* USER CODE END WHILE */
 

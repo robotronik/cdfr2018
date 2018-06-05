@@ -1,4 +1,5 @@
 #include "server.h"
+#include <math.h>
 
 FSM_Instance *volatile fsm;
 FSM_Position_Pts fsm_pos_pts;
@@ -69,7 +70,7 @@ void go_forward(RC_Server* pserver) //2 parameters
 {
   RC_Server_Get_Args(pserver,
          &fsm_pos_abs.linear_speed,
-         &fsm_pos_abs.pos);
+		     &fsm_pos_abs.pos);
   fsm_pos_abs.instance.run=FSM_Pos_Init;
   fsm = (FSM_Instance*volatile) &fsm_pos_abs;
   RC_Server_Return(pserver);

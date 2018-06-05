@@ -7,7 +7,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include "stm32f3xx_hal.h"
+#include "stm32f3xx_hal.h" 
 #include "ax_12a.h"
 #include "ax_12a_hal.h"
 #include "Robotronik_corp_pid.h"
@@ -131,13 +131,13 @@ int cube_present();
 #define MOTOR_VOLTAGE(voltage){\
     uint16_t value;\
     if(voltage > 0){\
-      HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);\
-      HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);\
+      HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,1);\
+      HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,0);\
       value = (uint16_t) (voltage * (255.0 / 12.0));\
     }\
     else{\
-      HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,1);\
-      HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,0);\
+      HAL_GPIO_WritePin(IN1_GPIO_Port, IN1_Pin,0);\
+      HAL_GPIO_WritePin(IN2_GPIO_Port, IN2_Pin,1);\
       value = (uint16_t) (-voltage * (255.0 / 12.0));\
     }\
     \

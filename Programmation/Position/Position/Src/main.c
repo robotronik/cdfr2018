@@ -184,14 +184,16 @@ int main(void)
   pid_sum = (PID_DATA) {.Te = 0.01,
 				 .Kp = 0.01,
 				 .Ki = 0.01,
-				 .Kd = 0.0001};
+			.Kd = 0.0001,
+			.position_tolerance = 100};
   pid_init(&pid_sum);
 
   //PID Diff
   pid_diff = (PID_DATA) {.Te = 0.01,
 				  .Kp = 0.01,
 				  .Ki = 0.01,
-				  .Kd = 0.0001};
+			 .Kd = 0.0001,
+  .position_tolerance = 100};
   pid_init(&pid_diff);
 
   fsm_pos_pts.pid_speed_l=(PID_SPEED_DATA) {.Te = 0.01,

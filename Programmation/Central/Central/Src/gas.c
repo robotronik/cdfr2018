@@ -14,7 +14,7 @@
 void Brake(){
   while(Pos_Brake() != 0){
     PI_Log("Pos_Brake : pas de réponse.\n");
-    HAL_Delay(10);
+    HAL_Delay(500);
   }
 }
 
@@ -57,6 +57,8 @@ static void FSM_ROTATION_INIT(FSM_Rotation *fsm){
     fsm->run = FSM_ROTATION_END;
     return;
   }
+
+  //  PI_Log("ROTATION INIT\n");
   
   if(Can_Rotate()){
     fsm->run = FSM_ROTATION_CMD;
@@ -68,17 +70,18 @@ static void FSM_ROTATION_INIT(FSM_Rotation *fsm){
 }
 
 static void FSM_ROTATION_CMD(FSM_Rotation *fsm){
-  if(Pos_Set_Angle(ROTATION_SPEED, me.angle - fsm->goal) != 0){
+  if(Pos_Set_Angle(ROTATION_SPEED, fsm->goal) != 0){
     PI_Log("Pos_Set_Angle : pas de réponse.\n");
     fsm->state = FSM_ERROR;
     fsm->run = FSM_ROTATION_END;
     return;
   }
-  
+  //PI_Log("ROTATION CMD\n");
   fsm->run = FSM_ROTATION_WAIT;
 }
 
 static void FSM_ROTATION_WAIT(FSM_Rotation *fsm){
+  //PI_Log("ROTATION WAIT\n");
   Position_State pos_state;
   if(Pos_Get_State(&pos_state) != 0){
     PI_Log("Pos_Get_State : pas de réponse.\n");
@@ -103,9 +106,10 @@ static void FSM_ROTATION_WAIT(FSM_Rotation *fsm){
 }
 
 static void FSM_ROTATION_STOP(FSM_Rotation *fsm){
+  PI_Log("ROTATION STOP\n");
   Brake();
   HAL_Delay(WAIT_TIME);
-  fsm->run = FSM_ROTATION_INIT;
+  fsm->run = FSM_ROTATION_INIT;//TODO
 }
 
 static void FSM_ROTATION_END(FSM_Rotation *fsm){
@@ -115,6 +119,51 @@ static void FSM_ROTATION_END(FSM_Rotation *fsm){
 //==================================================
 //               Straight move
 //==================================================
+
+int Balec_Move(uint16_t x, uint16_t y, bool forward, float speed_ratio){
+    //Compute angle and distance
+  float g_angle = angle(me.x, me.y, x, y);
+  if(!forward){
+    g_angle += M_PI;
+  }
+  if(g_angle > M_PI){
+    g_angle -= 2*M_PI;
+  }
+
+  //Rotate and cancel if it fails
+  if(Rotate(g_angle) != 0){
+    return -1;
+  }
+
+  float msr;
+  float distance = ((forward)?(1):(-1)) * dist(me.x, me.y, x, y);
+  if(!Can_Move(distance, forward, &msr)){
+    return -1;
+  }
+  float speed = min(MAX_SPEED * speed_ratio,
+		    MIN_SPEED + (MAX_SPEED-MIN_SPEED)*msr);
+  
+
+  Pos_Go_Forward(speed, distance);
+
+  Position_State state;
+  do{
+    if(Pos_Get_State(&state) != 0){
+      PI_Log("Pos_Get_State : pas de réponse.\n");
+    }
+    float fwd, bwd;
+    Get_In_Range_Obstacle_Dist(&fwd, &bwd);
+    if((forward && fwd < dist(me.x, me.y, x, y))
+       || (!forward && bwd < dist(me.x, me.y, x, y))){
+      Brake();
+      return -1;
+    }
+      
+  }while(state == POS_RUNNING);
+
+  return (state==POS_SUCCESS)?0:-1;
+}
+
 typedef struct FSM_Move_S{
   void (*run)(struct FSM_Move_S* fsm);
   FSM_State state;
@@ -143,6 +192,10 @@ static int Go_Straight_Direct(uint16_t x, uint16_t y, bool forward, float speed_
  */
 
 int Go_Straight(uint16_t x, uint16_t y, bool forward, float speed_ratio){
+  if(dist(me.x, me.y, x, y) < 20){
+    return 0;
+  }
+
   //Compute angle and distance
   float g_angle = angle(me.x, me.y, x, y);
   if(!forward){
@@ -155,8 +208,8 @@ int Go_Straight(uint16_t x, uint16_t y, bool forward, float speed_ratio){
   //Rotate and cancel if it fails
   if(Rotate(g_angle) != 0){
     return -1;
-  }
-
+  }  
+  
   return Go_Straight_Direct(x, y, forward, speed_ratio);
 }
 
@@ -168,7 +221,7 @@ static int Go_Straight_Direct(uint16_t x, uint16_t y, bool forward, float speed_
     .x = x,
     .y = y,
     .forward = forward,
-    .speed_ratio = min(0., max(speed_ratio, 1.))
+    .speed_ratio = max(0., min(speed_ratio, 1.))
   };
   
 
@@ -186,7 +239,6 @@ static void FSM_MOVE_INIT(FSM_Move *fsm){
   }
 
   fsm->g_dist = dist(me.x, me.y, fsm->x, fsm->y);
-
   if(Can_Move(fsm->g_dist, fsm->forward, &fsm->max_speed_ratio)){
     fsm->run = FSM_MOVE_CMD;
   }else{
@@ -197,20 +249,26 @@ static void FSM_MOVE_INIT(FSM_Move *fsm){
 }
 
 static void FSM_MOVE_CMD(FSM_Move *fsm){
+  
   float speed = min(MAX_SPEED * fsm->speed_ratio,
 		    MIN_SPEED + (MAX_SPEED-MIN_SPEED)*fsm->max_speed_ratio);
   float distance = ((fsm->forward)?(1):(-1)) * fsm->g_dist;
+  //PI_Log("%d %d %d %d\n", (int) me.x, (int) me.y, (int) fsm->x, (int) fsm->y);
+  //PI_Log("MOVE_CMD max_speed_ratio %f speed %f dist %f\n", fsm->max_speed_ratio, speed, distance);
   if(Pos_Go_Forward(speed, distance) != 0){
     PI_Log("Pos_Go_Forward : pas de réponse.\n");
     fsm->state = FSM_ERROR;
     fsm->run = FSM_MOVE_END;
     return;
+  }else{
+    PI_Log("cmd %f %f", speed, distance);
   }
-
+  
   fsm->run = FSM_MOVE_WAIT;
 }
 
 static void FSM_MOVE_WAIT(FSM_Move *fsm){
+  //PI_Log("MOVE_WAIT\n");
   Position_State state;
   if(Pos_Get_State(&state) != 0){
     PI_Log("Pos_Get_State : pas de réponse.\n");
@@ -229,22 +287,32 @@ static void FSM_MOVE_WAIT(FSM_Move *fsm){
   //If there is an obstacle
   fsm->g_dist = dist(me.x, me.y, fsm->x, fsm->y);
   if(!Can_Move(fsm->g_dist, fsm->forward, &fsm->max_speed_ratio) || state == POS_ERROR){
+    PI_Log("dist : %f\n", fsm->g_dist);
+    Print_Position();
+    PI_Log("x_goal %d y_goal %d\n", (int)fsm->x, (int)fsm->y);
     fsm->retry_count--;
     fsm->run = FSM_MOVE_STOP;
     return;
   }
 
-  fsm->run = FSM_MOVE_CMD;
+  if(fsm->y == 50 && !(fsm->retry_count--)){
+    fsm->run = FSM_MOVE_END;
+  }
+  
+  //fsm->run = FSM_MOVE_CMD;
   HAL_Delay(WAIT_TIME);
 }
 
 static void FSM_MOVE_STOP(FSM_Move *fsm){
+  PI_Log("MOVE_STOP");
   Brake();
   HAL_Delay(WAIT_TIME);
-  fsm->run = FSM_MOVE_INIT;
+  fsm->run = FSM_MOVE_INIT;//TODO
 }
 
 static void FSM_MOVE_END(FSM_Move *fsm){
+  //PI_Log("MOVE_END");
+  //Brake();
   //NOP NOP NOP
 }
 

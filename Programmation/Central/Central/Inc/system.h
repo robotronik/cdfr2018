@@ -18,5 +18,9 @@ void stop();
 void remote_stop();
 void hlt();
 void Print_ToF();
+void Print_Position();
+void Test_Odometry();
+void Test_Line();
+void Test_Rotation();
 
 #endif
