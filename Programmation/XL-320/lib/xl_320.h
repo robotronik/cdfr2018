@@ -211,7 +211,7 @@ uint8_t XL_Say_Hello(XL *servo);
  * Vérifie l'existence du servomoteur et fait clignoter sa LED autant
  * de fois que son ID, avec une fréquence de 1Hz.
  * La LED clignote en rouge s'il y a une erreur, en vert sinon.
- * Renvoie 0 si le servomoteur existe, -1 sinon.
+ * Renvoie 0 si le servomoteur existe, 1 sinon.
  */
 
 uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data);
@@ -219,7 +219,7 @@ uint8_t XL_Read(XL *servo, XL_Field field, uint16_t *data);
  * Lis une donnée dans la table de contrôle du servomoteur. En cas de
  * succès, le status return est stocké dans l'interface et la donnée
  * est récupérée dans data. 
- * Renvoie 0 en cas de succès, -1 en cas
+ * Renvoie 0 en cas de succès, 1 en cas
  * d'échec.
  * Le XL_Status_Packet d'une interface n'est
  * consultable que jusqu'à la prochaine action.
@@ -229,7 +229,7 @@ uint8_t XL_Action(XL *servo);
 /*
  * Exécute l'action contenue dans le paquet d'instruction
  * préalablement écris sur le servo grâce à une instruction REG_WRITE
- * (XL_Write(...) avec now = 0).  Renvoie 0 en cas de succès, -1 en
+ * (XL_Write(...) avec now = 0).  Renvoie 0 en cas de succès, 1 en
  * cas d'échec.  Remarque : Cette fonction ne vérifie pas si l'action
  * a fonctionné, mais simplement si le paquet a pu être envoyé.
  */
